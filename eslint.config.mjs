@@ -6,6 +6,9 @@ import { defineConfig } from 'eslint/config'
 
 export default defineConfig(
   {
+    ignores: ['**/*.test.ts', '**/*.spec.ts', '.github/**/*.js'],
+  },
+  {
     languageOptions: {
       globals: {
         ...globals.browser,

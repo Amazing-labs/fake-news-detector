@@ -5,7 +5,8 @@ export interface IDomainEventPublisher {
 }
 
 export class NoopDomainEventPublisher implements IDomainEventPublisher {
-  async publish(_event: DomainEvent): Promise<void> {
+  async publish(event: DomainEvent): Promise<void> {
+    void event
     return
   }
 }
