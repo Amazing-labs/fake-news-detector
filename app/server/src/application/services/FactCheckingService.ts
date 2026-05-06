@@ -36,12 +36,19 @@ import type {
   MediaCategory,
   Verdict,
 } from '../../domain/entities/Investigation'
+import {
+  InboxSubjectDeletedEvent,
+  InvestigationCanceledEvent,
+  NoopDomainEventPublisher,
+  type IDomainEventPublisher,
+} from '../../domain/events'
 import type { MediaType, InvestigationMedia } from '../../domain/value-objects'
 import type { SourceType } from '../../domain/entities/AuthoritySource'
 import { copySourceMediaToInvestigationMedia } from '../../domain/processes/investigationMediaCopy'
 import {
   directorAcceptUnverifiableArchiveWithAudit,
   directorApproveInvestigationWithAudit,
+  directorCancelInvestigationWithAudit,
   directorRejectInvestigationWithAudit,
   submitInvestigationForReviewWithAudit,
 } from '../../domain/processes/investigationStatusWorkflow'
@@ -90,6 +97,7 @@ export class FactCheckingService {
     private readonly inboxSubjectRepository: IInboxSubjectRepository,
     private readonly inboxSubjectMediaRepository: IInboxSubjectMediaRepository,
     private readonly authoritySourceRepository: IAuthoritySourceRepository,
+    private readonly domainEventPublisher: IDomainEventPublisher = new NoopDomainEventPublisher(),
   ) {}
 
   // ---------------------------------------------------------------------------
@@ -487,6 +495,16 @@ export class FactCheckingService {
 
     await this.investigationRepository.update(investigation)
     await this.workflowAuditRepository.save(audit)
+    if (investigation.status === 'CANCELED') {
+      await this._handleCancellationSideEffects(
+        investigation,
+        director.id,
+        'MAX_REVISION_ATTEMPTS_REACHED',
+        'Investigation annulée en raison d’un nombre excessif de tentatives de révision (risque d’attaque DoS)',
+        true,
+      )
+      return
+    }
 
     const notification = NotificationFactory.createInvestigationNotification(
       investigation.journalistId,
@@ -494,6 +512,96 @@ export class FactCheckingService {
       `Votre enquête a été rejetée: ${reason}`,
     )
     await this.notificationRepository.save(notification)
+  }
+
+  async cancelInvestigation(
+    directorId: string,
+    investigationId: string,
+    reason: string,
+  ): Promise<void> {
+    if (!reason.trim()) {
+      throw new ValidationError('Cancellation reason is required')
+    }
+    const director = await this.directorRepository.findById(directorId)
+    if (!director) throw new NotFoundError('Director', directorId)
+
+    const investigation =
+      await this.investigationRepository.findById(investigationId)
+    if (!investigation) {
+      throw new NotFoundError('Investigation', investigationId)
+    }
+
+    const audit = directorCancelInvestigationWithAudit(
+      director,
+      investigation,
+      reason,
+    )
+    await this.investigationRepository.update(investigation)
+    await this.workflowAuditRepository.save(audit)
+
+    await this._handleCancellationSideEffects(
+      investigation,
+      director.id,
+      'MANUAL_DIRECTOR_CANCELLATION',
+      reason,
+      false,
+    )
+  }
+
+  async deleteInboxSubjectByDirector(
+    directorId: string,
+    inboxSubjectId: string,
+    reason: string,
+  ): Promise<void> {
+    if (!reason.trim()) {
+      throw new ValidationError('Deletion reason is required')
+    }
+    const director = await this.directorRepository.findById(directorId)
+    if (!director) throw new NotFoundError('Director', directorId)
+
+    const subject = await this.inboxSubjectRepository.findById(inboxSubjectId)
+    if (!subject) throw new NotFoundError('InboxSubject', inboxSubjectId)
+
+    const linkedInvestigation =
+      await this.investigationRepository.findByInboxSubjectId(inboxSubjectId)
+    if (linkedInvestigation) {
+      throw new BusinessRuleError(
+        'InboxSubject cannot be deleted after an investigation has started',
+      )
+    }
+
+    let reportCitizenId: string | null = null
+    if (subject.origin === 'REPORT' && subject.reportId) {
+      const report = await this.reportRepository.findById(subject.reportId)
+      if (!report) throw new NotFoundError('Report', subject.reportId)
+      reportCitizenId = report.citizenId
+      const citizen = await this.citizenRepository.findById(report.citizenId)
+      if (citizen) {
+        citizen.reportResolved()
+        await this.citizenRepository.update(citizen)
+      }
+      await this.reportRepository.delete(report.id)
+    }
+    await this.inboxSubjectRepository.delete(subject.id)
+
+    if (subject.origin === 'REPORT' && reportCitizenId) {
+      const notification = NotificationFactory.createAlertNotification(
+        reportCitizenId,
+        'Signalement supprimé',
+        `Votre signalement a été supprimé définitivement: ${reason}`,
+      )
+      await this.notificationRepository.save(notification)
+    }
+
+    await this.domainEventPublisher.publish(
+      new InboxSubjectDeletedEvent(
+        subject.id,
+        director.id,
+        subject.origin,
+        reason,
+        subject.reportId,
+      ),
+    )
   }
 
   async archiveUnverifiableInvestigation(
@@ -645,6 +753,116 @@ export class FactCheckingService {
     return 'Une enquête à laquelle vous avez contribué en tant que vigie a été archivée (verdict invérifiable).'
   }
 
+  private canceledMessageForStakeholder(
+    actorId: string,
+    journalistId: string,
+    reportingCitizenId: string | null,
+    automatic: boolean,
+  ): string {
+    let subject: string
+    let pastParticiple: string
+    if (actorId === journalistId) {
+      subject = 'Votre enquête'
+      pastParticiple = 'annulée'
+    } else if (reportingCitizenId && actorId === reportingCitizenId) {
+      subject = 'Votre signalement associé'
+      pastParticiple = 'annulé'
+    } else {
+      subject = 'Une enquête à laquelle vous avez contribué en tant que vigie'
+      pastParticiple = 'annulée'
+    }
+    const reason = automatic
+      ? 'automatiquement en raison d’un nombre excessif de tentatives de révision (risque d’attaque DoS)'
+      : 'par le directeur de publication'
+    return `${subject} a été ${pastParticiple} ${reason}.`
+  }
+
+  private async collectInvestigationStakeholders(
+    investigation: Investigation,
+    report: Report | null,
+  ): Promise<Set<string>> {
+    const evidenceList = await this.evidenceRepository.findByInvestigationId(
+      investigation.id,
+    )
+    const contributingWatcherIds = Array.from(
+      new Set(evidenceList.map((e) => e.watcherId)),
+    )
+    const stakeholderIds = new Set<string>([
+      investigation.journalistId,
+      ...contributingWatcherIds,
+    ])
+    if (report) {
+      stakeholderIds.add(report.citizenId)
+    }
+    return stakeholderIds
+  }
+
+  private async notifyInvestigationCanceled(
+    investigation: Investigation,
+    report: Report | null,
+    actorId: string,
+    reasonCode:
+      | 'MANUAL_DIRECTOR_CANCELLATION'
+      | 'MAX_REVISION_ATTEMPTS_REACHED',
+    reasonMessage: string,
+    includeDirector: boolean,
+  ): Promise<void> {
+    const stakeholderIds = await this.collectInvestigationStakeholders(
+      investigation,
+      report,
+    )
+    if (includeDirector) {
+      stakeholderIds.add(actorId)
+    }
+    const automatic = reasonCode === 'MAX_REVISION_ATTEMPTS_REACHED'
+    const notifications = Array.from(stakeholderIds).map((stakeholderId) =>
+      NotificationFactory.createArchivedPublicationNotification(
+        stakeholderId,
+        'Enquête annulée',
+        this.canceledMessageForStakeholder(
+          stakeholderId,
+          investigation.journalistId,
+          report?.citizenId ?? null,
+          automatic,
+        ),
+        investigation.id,
+      ),
+    )
+    if (notifications.length > 0) {
+      await this.notificationRepository.saveMany(notifications)
+    }
+    await this.domainEventPublisher.publish(
+      new InvestigationCanceledEvent(
+        investigation.id,
+        actorId,
+        reasonCode,
+        reasonMessage,
+      ),
+    )
+  }
+
+  private async _handleCancellationSideEffects(
+    investigation: Investigation,
+    directorId: string,
+    reasonCode:
+      | 'MANUAL_DIRECTOR_CANCELLATION'
+      | 'MAX_REVISION_ATTEMPTS_REACHED',
+    reasonMessage: string,
+    includeDirector: boolean,
+  ): Promise<void> {
+    const report =
+      await this.closeReportAndLinkedInboxAfterInvestigation(investigation)
+    await this.finalizeJournalistInvestigationSlot(investigation)
+    await this.notifyInvestigationCanceled(
+      investigation,
+      report,
+      directorId,
+      reasonCode,
+      reasonMessage,
+      includeDirector,
+    )
+  }
+
   private async closeReportAndLinkedInboxAfterInvestigation(
     investigation: Investigation,
   ): Promise<Report | null> {
@@ -690,7 +908,7 @@ export class FactCheckingService {
     if (!journalist) {
       throw new NotFoundError('Journalist', investigation.journalistId)
     }
-    journalist.onInvestigationPublished(investigation)
+    journalist.onInvestigationFinalized(investigation)
     await this.journalistRepository.update(journalist)
   }
 

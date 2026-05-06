@@ -6,27 +6,27 @@ const AGENT_CONFIG = {
     maxOutputTokens: 700,
     diffChars: 10000,
     dddChars: 3500,
-    readmeChars: 1800
+    readmeChars: 1800,
   },
   application: {
     maxPromptChars: 18000,
     maxOutputTokens: 700,
     diffChars: 10000,
     dddChars: 2800,
-    readmeChars: 1800
+    readmeChars: 1800,
   },
   infrastructure: {
     maxPromptChars: 18000,
     maxOutputTokens: 700,
     diffChars: 10000,
     dddChars: 2800,
-    readmeChars: 1800
+    readmeChars: 1800,
   },
   orchestrator: {
     maxPromptChars: 22000,
     maxOutputTokens: 1400,
-    readmeChars: 1500
-  }
+    readmeChars: 1500,
+  },
 }
 
 // ==========================================
@@ -176,7 +176,7 @@ You will receive:
 
 ## Report Template Structure:
 Follow the provided TEMPLATE exactly, replacing X/10 with actual scores.
-If a section has no entries, write "- N/A" instead of leaving it empty.`
+If a section has no entries, write "- N/A" instead of leaving it empty.`,
 }
 
 // ==========================================
@@ -189,11 +189,16 @@ export async function runAgent(type, inputs) {
   const systemPrompt = SYSTEM_PROMPTS[type]
   logPromptBudget(type, inputs)
   const userPrompt = buildUserPrompt(type, inputs)
-  const config = AGENT_CONFIG[type] || { maxPromptChars: 18000, maxOutputTokens: 700 }
+  const config = AGENT_CONFIG[type] || {
+    maxPromptChars: 18000,
+    maxOutputTokens: 700,
+  }
 
   const fullPrompt = `${systemPrompt}\n\n---USER INPUT---\n${userPrompt}`
   const promptLength = fullPrompt.length
-  console.log(`     Prompt size: ${promptLength} chars (truncated to ${config.maxPromptChars})`)
+  console.log(
+    `     Prompt size: ${promptLength} chars (truncated to ${config.maxPromptChars})`,
+  )
 
   const promptArg = fullPrompt.substring(0, config.maxPromptChars)
 
@@ -203,7 +208,9 @@ export async function runAgent(type, inputs) {
 
       const response = await groqGenerate(promptArg, config.maxOutputTokens)
 
-      console.log(`     ${type} agent completed (output: ${response.length} chars)`)
+      console.log(
+        `     ${type} agent completed (output: ${response.length} chars)`,
+      )
       return parseAgentOutput(response, type)
     } catch (error) {
       const retryDelayMs = getRetryDelayMs(error.message, attempt)
@@ -229,23 +236,41 @@ function logPromptBudget(type, inputs) {
 
   if (type === 'orchestrator') {
     const domainJson = JSON.stringify(inputs.agentResults?.domain || {})
-    const applicationJson = JSON.stringify(inputs.agentResults?.application || {})
-    const infrastructureJson = JSON.stringify(inputs.agentResults?.infrastructure || {})
+    const applicationJson = JSON.stringify(
+      inputs.agentResults?.application || {},
+    )
+    const infrastructureJson = JSON.stringify(
+      inputs.agentResults?.infrastructure || {},
+    )
 
-    console.log(`     Budget: prompt<=${config.maxPromptChars || 'n/a'} chars, output<=${config.maxOutputTokens || 'n/a'} tokens`)
-    console.log(`     Sections: template=${(inputs.template || '').length} readme=${(inputs.readme || '').length}->${compactText(inputs.readme || '', config.readmeChars).length} domainResult=${domainJson.length} applicationResult=${applicationJson.length} infrastructureResult=${infrastructureJson.length}`)
+    console.log(
+      `     Budget: prompt<=${config.maxPromptChars || 'n/a'} chars, output<=${config.maxOutputTokens || 'n/a'} tokens`,
+    )
+    console.log(
+      `     Sections: template=${(inputs.template || '').length} readme=${(inputs.readme || '').length}->${compactText(inputs.readme || '', config.readmeChars).length} domainResult=${domainJson.length} applicationResult=${applicationJson.length} infrastructureResult=${infrastructureJson.length}`,
+    )
     return
   }
 
   const originalDiff = (inputs.diff || '').length
   const compactedDiff = compactDiff(inputs.diff || '', config.diffChars).length
   const originalDdd = (inputs.dddSummary || '').length
-  const compactedDdd = compactText(inputs.dddSummary || '', config.dddChars).length
+  const compactedDdd = compactText(
+    inputs.dddSummary || '',
+    config.dddChars,
+  ).length
   const originalReadme = (inputs.readme || '').length
-  const compactedReadme = compactText(inputs.readme || '', config.readmeChars).length
+  const compactedReadme = compactText(
+    inputs.readme || '',
+    config.readmeChars,
+  ).length
 
-  console.log(`     Budget: prompt<=${config.maxPromptChars || 'n/a'} chars, output<=${config.maxOutputTokens || 'n/a'} tokens`)
-  console.log(`     Sections: diff=${originalDiff}->${compactedDiff} ddd=${originalDdd}->${compactedDdd} readme=${originalReadme}->${compactedReadme}`)
+  console.log(
+    `     Budget: prompt<=${config.maxPromptChars || 'n/a'} chars, output<=${config.maxOutputTokens || 'n/a'} tokens`,
+  )
+  console.log(
+    `     Sections: diff=${originalDiff}->${compactedDiff} ddd=${originalDdd}->${compactedDdd} readme=${originalReadme}->${compactedReadme}`,
+  )
 }
 
 function getRetryDelayMs(message = '', attempt = 1) {
@@ -287,11 +312,15 @@ function groqGenerate(prompt, maxOutputTokens = 700) {
     const payload = {
       model: 'llama-3.3-70b-versatile',
       messages: [
-        { role: 'system', content: 'You are a DDD expert analyzing code changes. Always respond with valid JSON only.' },
-        { role: 'user', content: cleanPrompt }
+        {
+          role: 'system',
+          content:
+            'You are a DDD expert analyzing code changes. Always respond with valid JSON only.',
+        },
+        { role: 'user', content: cleanPrompt },
       ],
       temperature: 0.3,
-      max_tokens: maxOutputTokens
+      max_tokens: maxOutputTokens,
     }
 
     const data = JSON.stringify(payload)
@@ -307,13 +336,15 @@ function groqGenerate(prompt, maxOutputTokens = 700) {
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'Content-Length': dataLength
-      }
+        'Content-Length': dataLength,
+      },
     }
 
     const req = https.request(options, (res) => {
       let body = ''
-      res.on('data', (chunk) => { body += chunk })
+      res.on('data', (chunk) => {
+        body += chunk
+      })
       res.on('end', () => {
         if (res.statusCode !== 200) {
           reject(new Error(`HTTP ${res.statusCode}: ${body}`))
@@ -460,8 +491,8 @@ function compactDiff(diff = '', maxChars = 10000) {
 
 function parseAgentOutput(output, type = 'unknown') {
   try {
-    const jsonMatch = output.match(/```json\n?([\s\S]*?)\n?```/) ||
-      output.match(/{[\s\S]*}/)
+    const jsonMatch =
+      output.match(/```json\n?([\s\S]*?)\n?```/) || output.match(/{[\s\S]*}/)
 
     const jsonStr = jsonMatch ? jsonMatch[1] || jsonMatch[0] : output
     const result = JSON.parse(jsonStr.trim())
@@ -469,16 +500,20 @@ function parseAgentOutput(output, type = 'unknown') {
     return result
   } catch (error) {
     console.error(`     Failed to parse ${type} agent output:`, error.message)
-    console.log(`     Raw output (first 200 chars): ${output.substring(0, 200)}...`)
+    console.log(
+      `     Raw output (first 200 chars): ${output.substring(0, 200)}...`,
+    )
     return {
       score: 7,
-      issues: [{
-        severity: 'LOW',
-        category: 'AGENT_PARSE_ERROR',
-        message: `${type} agent returned invalid JSON`,
-        suggestion: 'Review the model response formatting'
-      }],
-      summary: 'Parse error - using fallback response'
+      issues: [
+        {
+          severity: 'LOW',
+          category: 'AGENT_PARSE_ERROR',
+          message: `${type} agent returned invalid JSON`,
+          suggestion: 'Review the model response formatting',
+        },
+      ],
+      summary: 'Parse error - using fallback response',
     }
   }
 }
@@ -486,13 +521,15 @@ function parseAgentOutput(output, type = 'unknown') {
 function getDefaultResponse(type) {
   return {
     score: 7,
-    issues: [{
-      severity: 'LOW',
-      category: 'AGENT_ERROR',
-      message: `${type} agent failed to execute`,
-      suggestion: 'Check Groq quota, prompt budget, or network availability'
-    }],
-    summary: `${type} analysis could not complete`
+    issues: [
+      {
+        severity: 'LOW',
+        category: 'AGENT_ERROR',
+        message: `${type} agent failed to execute`,
+        suggestion: 'Check Groq quota, prompt budget, or network availability',
+      },
+    ],
+    summary: `${type} analysis could not complete`,
   }
 }
 
@@ -504,8 +541,16 @@ export async function runDDDReview(diff, dddSummary, readme, template) {
   console.log('Starting DDD Multi-Agent Review...\n')
 
   const domain = await runAgent('domain', { diff, dddSummary, readme })
-  const application = await runAgent('application', { diff, dddSummary, readme })
-  const infrastructure = await runAgent('infrastructure', { diff, dddSummary, readme })
+  const application = await runAgent('application', {
+    diff,
+    dddSummary,
+    readme,
+  })
+  const infrastructure = await runAgent('infrastructure', {
+    diff,
+    dddSummary,
+    readme,
+  })
 
   console.log('Domain Score:', domain.score)
   console.log('Application Score:', application.score)
@@ -514,24 +559,28 @@ export async function runDDDReview(diff, dddSummary, readme, template) {
   const orchestratorResult = await runAgent('orchestrator', {
     readme,
     template,
-    agentResults: { domain, application, infrastructure }
+    agentResults: { domain, application, infrastructure },
   })
 
   const scores = orchestratorResult.scores || {
     domain: domain.score,
     application: application.score,
     infrastructure: infrastructure.score,
-    global: Math.round((domain.score + application.score + infrastructure.score) / 3)
+    global: Math.round(
+      (domain.score + application.score + infrastructure.score) / 3,
+    ),
   }
 
   const allIssues = [
     ...(domain.issues || []),
     ...(application.issues || []),
-    ...(infrastructure.issues || [])
+    ...(infrastructure.issues || []),
   ]
 
   const hasHighIssues = allIssues.some((issue) => issue.severity === 'HIGH')
-  const status = orchestratorResult.status || (hasHighIssues || scores.global < 6 ? 'FAIL' : 'PASS')
+  const status =
+    orchestratorResult.status ||
+    (hasHighIssues || scores.global < 6 ? 'FAIL' : 'PASS')
 
   return {
     scores,
@@ -539,19 +588,32 @@ export async function runDDDReview(diff, dddSummary, readme, template) {
     issues: {
       domain: domain.issues || [],
       application: application.issues || [],
-      infrastructure: infrastructure.issues || []
+      infrastructure: infrastructure.issues || [],
     },
     markdownReport: normalizeMarkdownReport(
-      orchestratorResult.markdownReport || generateDefaultReport(scores, status, domain, application, infrastructure)
-    )
+      orchestratorResult.markdownReport ||
+        generateDefaultReport(
+          scores,
+          status,
+          domain,
+          application,
+          infrastructure,
+        ),
+    ),
   }
 }
 
-function generateDefaultReport(scores, status, domain, application, infrastructure) {
+function generateDefaultReport(
+  scores,
+  status,
+  domain,
+  application,
+  infrastructure,
+) {
   const allIssues = [
     ...(domain.issues || []),
     ...(application.issues || []),
-    ...(infrastructure.issues || [])
+    ...(infrastructure.issues || []),
   ]
 
   const criticalIssues = allIssues.filter((issue) => issue.severity === 'HIGH')
@@ -568,16 +630,27 @@ function generateDefaultReport(scores, status, domain, application, infrastructu
 ---
 
 ### Critical Issues
-${criticalIssues.length > 0
-  ? criticalIssues.map((issue) => `- **${issue.category}**: ${issue.message}\n  Suggestion: ${issue.suggestion}`).join('\n')
-  : '- No critical issues detected'}
+${
+  criticalIssues.length > 0
+    ? criticalIssues
+        .map(
+          (issue) =>
+            `- **${issue.category}**: ${issue.message}\n  Suggestion: ${issue.suggestion}`,
+        )
+        .join('\n')
+    : '- No critical issues detected'
+}
 
 ---
 
 ### Suggestions
-${suggestions.length > 0
-  ? suggestions.map((issue) => `- **${issue.category}**: ${issue.message}`).join('\n')
-  : '- No suggestions'}
+${
+  suggestions.length > 0
+    ? suggestions
+        .map((issue) => `- **${issue.category}**: ${issue.message}`)
+        .join('\n')
+    : '- No suggestions'
+}
 
 ---
 
@@ -589,7 +662,7 @@ ${status === 'PASS' ? 'PASS' : 'FAIL'}
 function normalizeMarkdownReport(markdownReport = '') {
   return ensureSectionHasFallback(
     ensureSectionHasFallback(markdownReport, '### Critical Issues'),
-    '### Suggestions'
+    '### Suggestions',
   )
 }
 

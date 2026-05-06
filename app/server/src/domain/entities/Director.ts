@@ -50,12 +50,12 @@ export class Director {
   rejectInvestigation(
     investigation: Investigation,
     newStatus: InvestigationStatus = 'NEEDS_REVISION',
-  ): void {
+  ): InvestigationStatus {
     if (!this.isActive()) {
       throw new BusinessRuleError('Director account is not active')
     }
     this.validateInvestigation(investigation)
-    investigation.requestRevision(newStatus)
+    return investigation.requestRevision(newStatus)
   }
 
   publishInvestigation(investigation: Investigation): void {
@@ -73,6 +73,13 @@ export class Director {
     }
     this.validateInvestigation(investigation)
     investigation.markAsArchived()
+  }
+
+  cancelInvestigation(investigation: Investigation): void {
+    if (!this.isActive()) {
+      throw new BusinessRuleError('Director account is not active')
+    }
+    investigation.cancelManually()
   }
 
   // Watcher applications

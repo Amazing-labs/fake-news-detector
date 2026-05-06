@@ -25,6 +25,10 @@ export class WorkflowAudit {
     return this.newStatus === 'ARCHIVED'
   }
 
+  isCanceled(): boolean {
+    return this.newStatus === 'CANCELED'
+  }
+
   getDescription(): string {
     if (this.comment) {
       return `Status changed from ${this.previousStatus} to ${this.newStatus}: ${this.comment}`

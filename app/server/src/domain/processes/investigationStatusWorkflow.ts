@@ -50,12 +50,21 @@ export function directorRejectInvestigationWithAudit(
   reason: string,
 ): WorkflowAudit {
   const previousStatus = investigation.status
-  director.rejectInvestigation(investigation)
+  const newStatus = director.rejectInvestigation(investigation)
+  if (newStatus === 'CANCELED') {
+    return WorkflowAuditFactory.createCancellation(
+      investigation.id,
+      director.id,
+      previousStatus,
+      reason,
+    )
+  }
   return WorkflowAuditFactory.createRejection(
     investigation.id,
     director.id,
     previousStatus,
     reason,
+    newStatus,
   )
 }
 
@@ -71,5 +80,20 @@ export function directorAcceptUnverifiableArchiveWithAudit(
     director.id,
     previousStatus,
     comment,
+  )
+}
+
+export function directorCancelInvestigationWithAudit(
+  director: Director,
+  investigation: Investigation,
+  reason: string,
+): WorkflowAudit {
+  const previousStatus = investigation.status
+  director.cancelInvestigation(investigation)
+  return WorkflowAuditFactory.createCancellation(
+    investigation.id,
+    director.id,
+    previousStatus,
+    reason,
   )
 }

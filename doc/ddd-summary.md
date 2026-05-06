@@ -9,6 +9,7 @@
 ## 🏗️ Architecture Overview
 
 ### Bounded Context
+
 - **Core Domain**: Fact-checking workflow and content verification
 - **Supporting Domains**: User management, notifications, watcher applications
 
@@ -17,9 +18,11 @@
 ## 👥 Domain Actors (Aggregates)
 
 ### 1. Actor (Base Entity)
+
 The central entity unifying all user types via the `role` field.
 
 **Attributes:**
+
 - `id`: Unique identifier
 - `name`, `email`: Contact information
 - `role`: CITIZEN | JOURNALIST | EDITORIAL_DIRECTOR
@@ -28,35 +31,44 @@ The central entity unifying all user types via the `role` field.
 - `engagementScore`: User activity metric
 
 **Behaviors:**
+
 - `isActive()`, `canLogin()`
 - `incrementEngagementScore()`
 - `markInboxAsRead()`
 
 ### 2. Citizen (extends Actor)
+
 Regular users who submit reports and can become Watchers.
 
 **Invariants:**
+
 - Max 3 open reports simultaneously
 - Must be WATCHER to submit evidence
 
 **Behaviors:**
+
 - `submitReport()`, `submitEvidence()`
 - `applyForWatcher()`, `promoteToWatcher()`
 
 ### 3. Journalist (extends Actor)
+
 Users who investigate reports and produce verifications.
 
 **Invariants:**
+
 - Max 1 active investigation at a time
 
 **Behaviors:**
+
 - `pickReport()`, `submitInvestigationDraft()`
 - `submitForReview()`, `correctInvestigation()`
 
 ### 4. Director (extends Actor)
+
 Editorial directors who validate and publish investigations.
 
 **Behaviors:**
+
 - `validateInvestigation()`, `rejectInvestigation()`
 - `publishInvestigation()`, `markAsUnverifiable()`
 - `manageUsers()`, `approveWatcherApplication()`
@@ -66,21 +78,26 @@ Editorial directors who validate and publish investigations.
 ## 📦 Core Domain Entities
 
 ### Report
+
 A user-submitted claim to be verified.
 
 **Attributes:**
+
 - `theme`, `title`, `content`
 - `status`: OPEN | IN_PROGRESS | RESOLVED
 - `citizenId`: Submitter reference
 
 **Invariants:**
+
 - Can only be picked if status is OPEN
 - Citizen must have available report slots
 
 ### Investigation
+
 The fact-checking process for a Report.
 
 **Attributes:**
+
 - `mediaCategory`: Category of media being checked
 - `draftVerdict`: TRUE | FALSE | UNVERIFIABLE
 - `investigationNotes`: Detailed analysis
@@ -88,22 +105,27 @@ The fact-checking process for a Report.
 - `status`: DRAFT | PENDING_REVIEW | PUBLISHED
 
 **Lifecycle:**
+
 1. DRAFT → Journalist works on investigation
 2. PENDING_REVIEW → Submitted for Director validation
 3. PUBLISHED → Approved and public
 
 ### Evidence
+
 Supporting documentation submitted by Watchers.
 
 **Attributes:**
+
 - `content`, `title`
 - `investigationId`: Linked investigation
 - `watcherId`: Submitter (must be WATCHER type)
 
 ### Publication
+
 Final published result of an investigation.
 
 **Attributes:**
+
 - `finalVerdict`: TRUE | FALSE | UNVERIFIABLE
 - `publishedAt`: Publication timestamp
 - `isCorrection`: Whether this corrects a previous publication
@@ -141,32 +163,36 @@ Citizen 1--0..1 WatcherApplication (applies for)
 ## 🎭 Role-Based Permissions Matrix
 
 ### 📋 Report & Evidence Management
-| Permission | Citizen | Journalist | Director | Notes |
-|:-----------|:-------:|:----------:|:--------:|:------|
-| Submit Report | ✅ | ❌ | ❌ | Max 3 open reports |
-| Submit Evidence | ✅ | ❌ | ❌ | Watcher role required |
-| Pick Report | ❌ | ✅ | ❌ | Status must be OPEN |
-| Conduct Investigation | ❌ | ✅ | ❌ | Max 1 active at a time |
+
+| Permission            | Citizen | Journalist | Director | Notes                  |
+| :-------------------- | :-----: | :--------: | :------: | :--------------------- |
+| Submit Report         |   ✅    |     ❌     |    ❌    | Max 3 open reports     |
+| Submit Evidence       |   ✅    |     ❌     |    ❌    | Watcher role required  |
+| Pick Report           |   ❌    |     ✅     |    ❌    | Status must be OPEN    |
+| Conduct Investigation |   ❌    |     ✅     |    ❌    | Max 1 active at a time |
 
 ### ✅ Validation & Publishing
-| Permission | Citizen | Journalist | Director | Notes |
-|:-----------|:-------:|:----------:|:--------:|:------|
-| Draft Investigation | ❌ | ✅ | ❌ | Initial analysis phase |
-| Submit for Review | ❌ | ✅ | ❌ | Send to Director |
-| Validate Investigation | ❌ | ❌ | ✅ | Approve/reject |
-| Publish Result | ❌ | ❌ | ✅ | Final publication |
-| Mark Unverifiable | ❌ | ❌ | ✅ | Cannot be verified |
-| Publish Correction | ❌ | ❌ | ✅ | Fix published content |
+
+| Permission             | Citizen | Journalist | Director | Notes                  |
+| :--------------------- | :-----: | :--------: | :------: | :--------------------- |
+| Draft Investigation    |   ❌    |     ✅     |    ❌    | Initial analysis phase |
+| Submit for Review      |   ❌    |     ✅     |    ❌    | Send to Director       |
+| Validate Investigation |   ❌    |     ❌     |    ✅    | Approve/reject         |
+| Publish Result         |   ❌    |     ❌     |    ✅    | Final publication      |
+| Mark Unverifiable      |   ❌    |     ❌     |    ✅    | Cannot be verified     |
+| Publish Correction     |   ❌    |     ❌     |    ✅    | Fix published content  |
 
 ### 👥 User Management
-| Permission | Citizen | Journalist | Director | Notes |
-|:-----------|:-------:|:----------:|:--------:|:------|
-| Ban/Disable Users | ❌ | ❌ | ✅ | All actor types |
-| Activate Users | ❌ | ❌ | ✅ | Reactivate accounts |
-| Approve Watcher Apps | ❌ | ❌ | ✅ | Promote citizens |
-| Create Inbox Topics | ❌ | ❌ | ✅ | Manage subjects |
+
+| Permission           | Citizen | Journalist | Director | Notes               |
+| :------------------- | :-----: | :--------: | :------: | :------------------ |
+| Ban/Disable Users    |   ❌    |     ❌     |    ✅    | All actor types     |
+| Activate Users       |   ❌    |     ❌     |    ✅    | Reactivate accounts |
+| Approve Watcher Apps |   ❌    |     ❌     |    ✅    | Promote citizens    |
+| Create Inbox Topics  |   ❌    |     ❌     |    ✅    | Manage subjects     |
 
 ### 📊 Legend
+
 - ✅ **Allowed** — Role has permission
 - ❌ **Denied** — Role cannot perform action
 
@@ -175,21 +201,27 @@ Citizen 1--0..1 WatcherApplication (applies for)
 ## 📊 Enums & Value Objects
 
 ### Role
+
 - CITIZEN, JOURNALIST, EDITORIAL_DIRECTOR
 
 ### AccountStatus
+
 - ACTIVE, DISABLED, BANNED
 
 ### CitizenType
+
 - REGULAR, WATCHER
 
 ### ReportStatus
+
 - OPEN, IN_PROGRESS, RESOLVED
 
 ### InvestigationStatus
+
 - DRAFT, PENDING_REVIEW, PUBLISHED
 
 ### Verdict
+
 - TRUE, FALSE, UNVERIFIABLE
 
 ---

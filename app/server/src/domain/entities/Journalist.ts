@@ -123,15 +123,18 @@ export class Journalist {
     )
   }
 
-  onInvestigationPublished(investigation: Investigation): void {
+  onInvestigationFinalized(investigation: Investigation): void {
     if (
       investigation.journalistId === this.id &&
       this.activeInvestigationsCount > 0 &&
       (investigation.status === 'PUBLISHED' ||
-        investigation.status === 'ARCHIVED')
+        investigation.status === 'ARCHIVED' ||
+        investigation.status === 'CANCELED')
     ) {
       this.activeInvestigationsCount--
-      this.incrementEngagementScore(2)
+      if (investigation.status !== 'CANCELED') {
+        this.incrementEngagementScore(2)
+      }
       this.updatedAt = new Date()
     }
   }
