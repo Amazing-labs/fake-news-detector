@@ -12,7 +12,7 @@ model Notification {
   isRead Boolean @default(false)
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   actorId String
   actor   Actor  @relation("ActorNotifications", fields: [actorId], references: [id])
@@ -52,5 +52,5 @@ model Correction {
   correctedBy   Actor  @relation("DirectorCorrections", fields: [correctedById], references: [id])
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 }

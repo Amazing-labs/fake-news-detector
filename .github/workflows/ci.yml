@@ -77,3 +77,6 @@ jobs:
 
       - name: Build 🔨
         run: bun run --filter server build
+
+      - name: Run Domain Tests 🧪
+        run: bun test --filter server src/domain/**/*.test.ts

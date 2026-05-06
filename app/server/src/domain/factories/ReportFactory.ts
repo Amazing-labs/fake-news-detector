@@ -36,5 +36,5 @@ export class ReportFactory {
       title,
       content,
     })
-  } 
+  }
 }

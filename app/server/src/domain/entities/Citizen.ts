@@ -15,8 +15,6 @@ export type CitizenRole = ActorRole
 export type CitizenStatus = ActorStatus
 export type CitizenStatusReason = StatusReason
 
-
-
 export class Citizen {
   constructor(
     public readonly id: string,
@@ -125,7 +123,6 @@ export class Citizen {
     })
     return application
   }
-    
 
   reportResolved(): void {
     if (this.openReportsCount > 0) {

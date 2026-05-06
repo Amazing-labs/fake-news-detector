@@ -1,6 +1,18 @@
-import { InvestigationMedia, VerifiedLink, InboxSubjectMedia, EvidenceMedia, VerifiedMedia } from '../value-objects/Media'
+import {
+  InvestigationMedia,
+  VerifiedLink,
+  InboxSubjectMedia,
+  EvidenceMedia,
+  VerifiedMedia,
+} from '../value-objects/Media'
 
-import type { MediaType, MediaOrigin, Verdict, MediaCategory } from '../value-objects'
+import type {
+  MediaType,
+  MediaOrigin,
+  Verdict,
+  MediaCategory,
+  InboxSubjectMediaOrigin,
+} from '../value-objects'
 
 export interface CreateInvestigationMediaParams {
   id: number
@@ -58,6 +70,31 @@ export class InvestigationMediaFactory {
     })
   }
 
+  static createFromDirectorInboxSource(
+    id: number,
+    order: number,
+    url: string,
+    type: MediaType,
+    investigationId: string,
+    uploadedById: string,
+    category?: MediaCategory,
+    reliability?: Verdict,
+    justification?: string,
+  ): InvestigationMedia {
+    return this.create({
+      id,
+      order,
+      url,
+      type,
+      origin: 'DIRECTOR_INITIATED',
+      investigationId,
+      uploadedById,
+      category,
+      reliability,
+      justification,
+    })
+  }
+
   static createFromJournalistProof(
     id: number,
     order: number,
@@ -106,6 +143,33 @@ export class InvestigationMediaFactory {
     )
   }
 
+  static updateDirectorInboxSourceInInvestigationMedia(
+    investigationMedia: InvestigationMedia,
+    url: string,
+    type: MediaType,
+    order: number,
+    investigationId: string,
+    uploadedById: string,
+    category?: MediaCategory,
+    reliability?: Verdict,
+    justification?: string,
+    authoritySourceId?: string,
+  ): InvestigationMedia {
+    return investigationMedia.updateInvestigationMedia(
+      investigationMedia.id,
+      url,
+      type,
+      order,
+      'DIRECTOR_INITIATED',
+      investigationId,
+      uploadedById,
+      category,
+      reliability,
+      justification,
+      authoritySourceId,
+    )
+  }
+
   static updateJournalistInvestigationMedia(
     investigationMedia: InvestigationMedia,
     url: string,
@@ -130,7 +194,6 @@ export class InvestigationMediaFactory {
     )
   }
 }
-
 
 // Evidence Media
 
@@ -226,7 +289,7 @@ export class VerifiedMediaFactory {
       params.uploadedById,
       params.authoritySourceId,
       new Date(),
-      new Date()
+      new Date(),
     )
   }
 
@@ -246,7 +309,7 @@ export class VerifiedMediaFactory {
       url,
       type,
       uploadedById,
-      authoritySourceId
+      authoritySourceId,
     })
   }
 
@@ -283,7 +346,7 @@ export class VerifiedLinkFactory {
       params.uploadedById,
       params.authoritySourceId,
       new Date(),
-      new Date()
+      new Date(),
     )
   }
 
@@ -299,7 +362,7 @@ export class VerifiedLinkFactory {
       publicationId,
       url,
       uploadedById,
-      authoritySourceId
+      authoritySourceId,
     })
   }
 
@@ -316,12 +379,13 @@ export class VerifiedLinkFactory {
 // Inbox Subject Media
 
 export interface CreateSubjectInboxMediaParams {
-  id: number,
-  url: string,
-  type: MediaType,
-  order: number,
-  inboxSubjectId: string,
-  uploadedById: string,
+  id: number
+  url: string
+  type: MediaType
+  order: number
+  inboxSubjectId: string
+  uploadedById: string
+  origin?: InboxSubjectMediaOrigin
 }
 
 export class InboxSubjectMediaFactory {
@@ -333,8 +397,9 @@ export class InboxSubjectMediaFactory {
       params.order,
       params.inboxSubjectId,
       params.uploadedById,
+      params.origin ?? 'DIRECTOR_INITIATED',
       new Date(),
-      new Date()
+      new Date(),
     )
   }
 }

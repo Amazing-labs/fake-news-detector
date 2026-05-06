@@ -11,6 +11,7 @@ export class InboxSubject {
     public theme: string,
     public description: string,
     public createdById: string,
+    public reportId: string | null = null,
     public status: InboxSubjectStatus = 'OPEN',
     public origin: InboxSubjectOrigin = 'REPORT',
     public readonly createdAt: Date = new Date(),

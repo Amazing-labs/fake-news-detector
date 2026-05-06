@@ -1,6 +1,11 @@
 // domain/entities/AuthoritySource.ts
 
-export type SourceType = 'OFFICIAL_DECREE' | 'ORIGINAL_RETRACTION' | 'DIRECT_EVIDENCE' | 'MEDIA_CROSSCHECK' | 'AUTHORITY_STATEMENT'
+export type SourceType =
+  | 'OFFICIAL_DECREE'
+  | 'ORIGINAL_RETRACTION'
+  | 'DIRECT_EVIDENCE'
+  | 'MEDIA_CROSSCHECK'
+  | 'AUTHORITY_STATEMENT'
 
 export class AuthoritySource {
   constructor(
@@ -11,7 +16,9 @@ export class AuthoritySource {
   ) {}
 
   isOfficial(): boolean {
-    return this.type === 'OFFICIAL_DECREE' || this.type === 'AUTHORITY_STATEMENT'
+    return (
+      this.type === 'OFFICIAL_DECREE' || this.type === 'AUTHORITY_STATEMENT'
+    )
   }
 
   isMedia(): boolean {

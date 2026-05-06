@@ -21,20 +21,23 @@ describe('NotificationFactory', () => {
 
   test('createBatch throws DomainError when publicationId is blank', () => {
     expect(() =>
-      NotificationFactory.createBatch(['actor-1'], 'Nouveau verdict publie', '   '),
+      NotificationFactory.createBatch(
+        ['actor-1'],
+        'Nouveau verdict publie',
+        '   ',
+      ),
     ).toThrow(DomainError)
   })
 
-  test('createArchivedPublicationBatch attaches investigationId to each notification', () => {
-    const notifications = NotificationFactory.createArchivedPublicationBatch(
-      ['a1', 'a2'],
+  test('createArchivedPublicationNotification attaches investigationId', () => {
+    const n = NotificationFactory.createArchivedPublicationNotification(
+      'a1',
+      'Enquête archivée',
+      'Message',
       'inv-7',
-      'Enquête archivée (invérifiable).',
     )
-    expect(notifications).toHaveLength(2)
-    expect(notifications[0].investigationId).toBe('inv-7')
-    expect(notifications[1].investigationId).toBe('inv-7')
-    expect(notifications[0].type).toBe('ARCHIVED_PUBLICATION')
+    expect(n.investigationId).toBe('inv-7')
+    expect(n.type).toBe('ARCHIVED_PUBLICATION')
+    expect(n.actorId).toBe('a1')
   })
-
 })

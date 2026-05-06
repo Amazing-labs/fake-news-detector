@@ -1,5 +1,7 @@
 // domain/entities/Evidence.ts
 
+import type { EvidenceMedia } from '../value-objects/Media'
+
 export class Evidence {
   constructor(
     public readonly id: string,
@@ -7,6 +9,7 @@ export class Evidence {
     public title: string,
     public investigationId: string,
     public watcherId: string,
+    public media: EvidenceMedia[] = [],
     public readonly createdAt: Date = new Date(),
     public updatedAt: Date = new Date(),
   ) {}

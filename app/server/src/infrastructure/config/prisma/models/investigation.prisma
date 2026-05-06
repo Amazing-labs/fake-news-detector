@@ -3,11 +3,11 @@
 //
 
 model Investigation {
-  id String @id @default(uuid())
+  id     String              @id @default(uuid())
   status InvestigationStatus @default(OPEN)
 
-  reportId String @unique
-  report   Report @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  inboxSubjectId String       @unique
+  inboxSubject   InboxSubject @relation(fields: [inboxSubjectId], references: [id], onDelete: Cascade)
 
   journalistId String
   journalist   Actor  @relation("JournalistInvestigations", fields: [journalistId], references: [id])
@@ -22,13 +22,13 @@ model Investigation {
 
   evidence Evidence[]
 
-  media InvestigationMedia[]
+  media          InvestigationMedia[]
   workflowAudits WorkflowAudit[]
 
   notifications Notification[]
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@map("investigations")
 }
@@ -43,10 +43,10 @@ model InvestigationMedia {
   type  MediaType
   order Int
 
-  origin      MediaOrigin
-  category    MediaCategory?
-  reliability Verdict?
-  justification String? @db.Text
+  origin        MediaOrigin
+  category      MediaCategory?
+  reliability   Verdict?
+  justification String?        @db.Text
 
   investigationId String
   investigation   Investigation @relation(fields: [investigationId], references: [id], onDelete: Cascade)
@@ -58,7 +58,7 @@ model InvestigationMedia {
   uploadedBy   Actor  @relation(fields: [uploadedById], references: [id])
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@index([investigationId])
   @@index([authoritySourceId])

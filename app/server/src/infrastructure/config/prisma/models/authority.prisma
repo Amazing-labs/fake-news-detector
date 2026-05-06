@@ -3,7 +3,7 @@
 //
 
 model AuthoritySource {
-  id   String @id @default(uuid())
+  id   String     @id @default(uuid())
   name String
   type SourceType
 

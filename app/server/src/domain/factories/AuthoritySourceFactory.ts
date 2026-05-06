@@ -9,11 +9,7 @@ export interface CreateAuthoritySourceParams {
 
 export class AuthoritySourceFactory {
   static create(params: CreateAuthoritySourceParams): AuthoritySource {
-    return new AuthoritySource(
-      randomUUID(),
-      params.name,
-      params.type,
-    )
+    return new AuthoritySource(randomUUID(), params.name, params.type)
   }
 
   static createOfficialDecree(name: string): AuthoritySource {

@@ -3,9 +3,11 @@
 import { IEmailService } from '../../domain/interfaces/IEmailService'
 
 export class EmailAdapter implements IEmailService {
-  async send(to: string, subject: string, _body: string): Promise<void> {
+  async send(to: string, subject: string, body: string): Promise<void> {
     // Implemented   with Nodemailer or SendGrid
-    console.log(`Sending email to ${to}: ${subject}`)
+    console.log(
+      `Sending email to ${to}: ${subject} - ${body.substring(0, 50)}...`,
+    )
   }
 
   async sendBulk(

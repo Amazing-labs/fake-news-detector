@@ -1,5 +1,9 @@
 // domain/factories/JournalistFactory.ts
-import { Journalist, JournalistStatus, JournalistRole } from '../entities/Journalist'
+import {
+  Journalist,
+  JournalistStatus,
+  JournalistRole,
+} from '../entities/Journalist'
 import { randomUUID } from 'crypto'
 
 export interface CreateJournalistParams {
@@ -39,7 +43,11 @@ export class JournalistFactory {
     })
   }
 
-  static createExperienced(name: string, email: string, completedInvestigations: number): Journalist {
+  static createExperienced(
+    name: string,
+    email: string,
+    completedInvestigations: number,
+  ): Journalist {
     const journalist = this.create({ name, email })
     // Simulate completed investigations by adjusting score
     for (let i = 0; i < completedInvestigations; i++) {

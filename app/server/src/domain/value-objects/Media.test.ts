@@ -56,4 +56,39 @@ describe('InvestigationMedia', () => {
     expect(media.reliability).toBe('MISLEADING')
     expect(media.justification).toBe('Indice de montage detecte')
   })
+
+  test('allows DIRECTOR_INITIATED with same classification updates as citizen source', () => {
+    const media = new InvestigationMedia(
+      1,
+      'https://example.com/d.png',
+      'IMAGE',
+      0,
+      'DIRECTOR_INITIATED',
+      'investigation-1',
+      'dir-1',
+    )
+    media.submitCategory('OTHER')
+    media.submitReliabilityVerdict('MISLEADING')
+    media.submitJustification('Analyse requise')
+    expect(media.requiresJournalistClassification()).toBe(true)
+  })
+
+  test('rejects JOURNALIST_PROOF with justification', () => {
+    expect(
+      () =>
+        new InvestigationMedia(
+          1,
+          'https://example.com/file.png',
+          'IMAGE',
+          1,
+          'JOURNALIST_PROOF',
+          'investigation-1',
+          'actor-1',
+          undefined,
+          undefined,
+          'should not be set',
+          'authority-1',
+        ),
+    ).toThrow(BusinessRuleError)
+  })
 })

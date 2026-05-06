@@ -1,6 +1,6 @@
 // domain/entities/Report.ts
 
-export type ReportStatus = 'OPEN' | 'IN_PROGRESS' | 'PENDING_REVIEW' | 'NEEDS_REVISION' | 'PUBLISHED' | 'UNVERIFIABLE'
+export type ReportStatus = 'OPEN' | 'ARCHIVED'
 
 export class Report {
   constructor(
@@ -18,7 +18,7 @@ export class Report {
     return this.status === 'OPEN'
   }
 
-  canBePicked(): boolean {
+  canBeArchived(): boolean {
     return this.status === 'OPEN'
   }
 
@@ -28,7 +28,11 @@ export class Report {
     this.updatedAt = new Date()
   }
 
-  updateContent(title: string | null, content: string | null, theme: string): void {
+  updateContent(
+    title: string | null,
+    content: string | null,
+    theme: string,
+  ): void {
     this.title = title
     this.content = content
     this.theme = theme

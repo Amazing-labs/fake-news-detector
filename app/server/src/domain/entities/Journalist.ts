@@ -2,9 +2,12 @@
 // Bounded Context: Investigation Management
 
 import { Investigation, MediaCategory, Verdict } from './Investigation'
-import { Report } from './Report'
+import { InboxSubject } from './InboxSubject'
 import { BusinessRuleError, DomainError } from '../../shared/errors'
-import { MAX_CORRECTION_ATTEMPTS, MAX_INVESTIGATIONS_PER_JOURNALIST_AT_A_TIME } from '../../shared'
+import {
+  MAX_CORRECTION_ATTEMPTS,
+  MAX_INVESTIGATIONS_PER_JOURNALIST_AT_A_TIME,
+} from '../../shared'
 import { StatusReason, ActorStatus, ActorRole } from '../../shared/types'
 
 export type JournalistRole = ActorRole
@@ -50,25 +53,28 @@ export class Journalist {
   }
 
   // Business actions
-  pickReport(report: Report): Investigation {
+  pickInboxSubject(subject: InboxSubject): Investigation {
     if (!this.canPickReport()) {
       throw new BusinessRuleError(
-        'Cannot pick report: maximum active investigations reached',
+        'Cannot pick inbox subject: maximum active investigations reached',
       )
     }
-    if (!report.canBePicked()) {
-      throw new BusinessRuleError('Report is not available for picking')
+    if (!subject.isOpen()) {
+      throw new BusinessRuleError('Inbox subject is not available for picking')
+    }
+    if (subject.isArchived()) {
+      throw new BusinessRuleError('Inbox subject is archived')
     }
 
     this.activeInvestigationsCount++
     this.incrementEngagementScore()
     this.updatedAt = new Date()
 
-    report.changeStatus('IN_PROGRESS')
+    subject.startProgress()
 
     return new Investigation(
       crypto.randomUUID(),
-      report.id,
+      subject.id,
       this.id,
       null,
       'UNVERIFIABLE',
@@ -121,7 +127,8 @@ export class Journalist {
     if (
       investigation.journalistId === this.id &&
       this.activeInvestigationsCount > 0 &&
-      (investigation.status === 'PUBLISHED' || investigation.status === 'ARCHIVED')
+      (investigation.status === 'PUBLISHED' ||
+        investigation.status === 'ARCHIVED')
     ) {
       this.activeInvestigationsCount--
       this.incrementEngagementScore(2)

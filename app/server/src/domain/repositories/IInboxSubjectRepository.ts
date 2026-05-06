@@ -13,5 +13,6 @@ export interface IInboxSubjectRepository {
   findByStatus(status: InboxSubjectStatus): Promise<InboxSubject[]>
   findByOrigin(origin: InboxSubjectOrigin): Promise<InboxSubject[]>
   findByCreatedBy(createdById: string): Promise<InboxSubject[]>
+  findByReportId(reportId: string): Promise<InboxSubject | null>
   delete(id: string): Promise<void>
 }

@@ -7,7 +7,7 @@ model Evidence {
   content   String   @db.Text
   title     String
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   investigationId String
   investigation   Investigation @relation(fields: [investigationId], references: [id], onDelete: Cascade)
@@ -30,9 +30,9 @@ model EvidenceMedia {
   type  MediaType
   order Int
 
-  category    MediaCategory?
-  reliability Verdict?
-  justification String? @db.Text
+  category      MediaCategory?
+  reliability   Verdict?
+  justification String?        @db.Text
 
   evidenceId String
   evidence   Evidence @relation(fields: [evidenceId], references: [id], onDelete: Cascade)
@@ -41,7 +41,7 @@ model EvidenceMedia {
   uploadedBy   Actor  @relation(fields: [uploadedById], references: [id])
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   @@index([evidenceId])
 }

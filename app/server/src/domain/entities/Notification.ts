@@ -1,7 +1,7 @@
 // domain/entities/Notification.ts
 
-import { randomUUID } from "crypto"
-import { DomainError } from "../../shared"
+import { randomUUID } from 'crypto'
+import { DomainError } from '../../shared'
 
 export type NotificationType =
   | 'PUBLICATION'
@@ -60,7 +60,10 @@ export class Notification {
     const normalizedPublicationId = publicationId?.trim() || undefined
     const normalizedInvestigationId = investigationId?.trim() || undefined
 
-    if ((type === 'PUBLICATION' || type === 'CORRECTION') && !normalizedPublicationId) {
+    if (
+      (type === 'PUBLICATION' || type === 'CORRECTION') &&
+      !normalizedPublicationId
+    ) {
       throw new DomainError(`${type} notification requires a publicationId`)
     }
 
@@ -139,15 +142,41 @@ export class Notification {
     }
   }
 
-  static createPublicationNotification(citizenId: string, publicationTheme: string, publicationMessage: string, publicationId: string): Notification {
-    return this.create('PUBLICATION', publicationTheme, publicationMessage, citizenId, publicationId)
+  static createPublicationNotification(
+    citizenId: string,
+    publicationTheme: string,
+    publicationMessage: string,
+    publicationId: string,
+  ): Notification {
+    return this.create(
+      'PUBLICATION',
+      publicationTheme,
+      publicationMessage,
+      citizenId,
+      publicationId,
+    )
   }
 
-  static createCorrectionNotification(actorId: string, correctionTitle: string, correctionMessage: string, publicationId: string): Notification {
-    return this.create('CORRECTION', correctionTitle, correctionMessage, actorId, publicationId)
+  static createCorrectionNotification(
+    actorId: string,
+    correctionTitle: string,
+    correctionMessage: string,
+    publicationId: string,
+  ): Notification {
+    return this.create(
+      'CORRECTION',
+      correctionTitle,
+      correctionMessage,
+      actorId,
+      publicationId,
+    )
   }
 
-  static createAlertNotification(journalistId: string, theme: string, message: string): Notification {
+  static createAlertNotification(
+    journalistId: string,
+    theme: string,
+    message: string,
+  ): Notification {
     return this.create('ALERT', theme, message, journalistId)
   }
 

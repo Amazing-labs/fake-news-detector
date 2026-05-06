@@ -29,7 +29,7 @@ export type InvestigationStatus =
 export class Investigation {
   constructor(
     public readonly id: string,
-    public reportId: string,
+    public inboxSubjectId: string,
     public journalistId: string,
     public mediaCategory: MediaCategory | null = null,
     public draftVerdict: Verdict = 'UNVERIFIABLE',

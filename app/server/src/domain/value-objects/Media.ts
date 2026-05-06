@@ -2,10 +2,28 @@
 
 import { BusinessRuleError } from '../../shared'
 
-export type MediaType = 'AUDIO' | 'LINK' | 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT'
-export type MediaCategory = 'CONTEXT_COLLAPSE' | 'MANIPULATED' | 'FABRICATED' | 'SATIRE' | 'MISLEADING' | 'IMPOSTOR' | 'OTHER'
-export type MediaOrigin = 'CITIZEN_REPORT' | 'JOURNALIST_PROOF'
+export type MediaType =
+  | 'AUDIO'
+  | 'LINK'
+  | 'TEXT'
+  | 'IMAGE'
+  | 'VIDEO'
+  | 'DOCUMENT'
+export type MediaCategory =
+  | 'CONTEXT_COLLAPSE'
+  | 'MANIPULATED'
+  | 'FABRICATED'
+  | 'SATIRE'
+  | 'MISLEADING'
+  | 'IMPOSTOR'
+  | 'OTHER'
+export type MediaOrigin =
+  | 'CITIZEN_REPORT'
+  | 'JOURNALIST_PROOF'
+  | 'DIRECTOR_INITIATED'
 export type Verdict = 'TRUE' | 'FALSE' | 'MISLEADING' | 'UNVERIFIABLE'
+
+export type InboxSubjectMediaOrigin = 'DIRECTOR_INITIATED'
 
 // Report Media (from Citizen)
 export class ReportMedia {
@@ -41,19 +59,21 @@ export class InvestigationMedia {
     this.validateConsistency()
   }
 
-  isFromCitizen(): boolean {
-    return this.origin === 'CITIZEN_REPORT'
+  requiresJournalistClassification(): boolean {
+    return (
+      this.origin === 'CITIZEN_REPORT' || this.origin === 'DIRECTOR_INITIATED'
+    )
   }
 
-  isFromJournalist(): boolean {
+  isFromJournalistProof(): boolean {
     return this.origin === 'JOURNALIST_PROOF'
   }
 
   private validateConsistency(): void {
-    if (this.isFromJournalist()) {
-      if (this.category || this.reliability) {
+    if (this.isFromJournalistProof()) {
+      if (this.category || this.reliability || this.justification) {
         throw new BusinessRuleError(
-          'JOURNALIST_PROOF cannot define category or reliability',
+          'JOURNALIST_PROOF cannot define category, reliability, or justification',
         )
       }
       if (!this.authoritySourceId) {
@@ -65,9 +85,9 @@ export class InvestigationMedia {
   }
 
   submitReliabilityVerdict(reliability: Verdict): void {
-    if (!this.isFromCitizen()) {
+    if (!this.requiresJournalistClassification()) {
       throw new BusinessRuleError(
-        'Journalist can submit reliability verdict only if origin = CITIZEN_REPORT',
+        'Journalist can submit reliability verdict only for source media (citizen or director inbox)',
       )
     }
 
@@ -75,18 +95,18 @@ export class InvestigationMedia {
     this.updatedAt = new Date()
   }
   submitCategory(category: MediaCategory): void {
-    if (!this.isFromCitizen()) {
+    if (!this.requiresJournalistClassification()) {
       throw new BusinessRuleError(
-        'Journalist can submit media category only if origin = CITIZEN_REPORT',
+        'Journalist can submit media category only for source media (citizen or director inbox)',
       )
     }
     this.category = category
     this.updatedAt = new Date()
   }
   submitJustification(justification: string): void {
-    if (!this.isFromCitizen()) {
+    if (!this.requiresJournalistClassification()) {
       throw new BusinessRuleError(
-        'Journalist can submit justification only if origin = CITIZEN_REPORT',
+        'Journalist can submit justification only for source media (citizen or director inbox)',
       )
     }
     this.justification = justification
@@ -94,7 +114,7 @@ export class InvestigationMedia {
   }
 
   submitAuthoritySource(authoritySource: string): void {
-    if (!this.isFromJournalist()) {
+    if (!this.isFromJournalistProof()) {
       throw new BusinessRuleError(
         'Journalist can submit authority source only if origin = JOURNALIST_PROOF',
       )
@@ -105,7 +125,7 @@ export class InvestigationMedia {
     this.authoritySourceId = authoritySource
     this.updatedAt = new Date()
   }
-  
+
   updateInvestigationMedia(
     investigationMediaId: number,
     url: string,
@@ -120,7 +140,9 @@ export class InvestigationMedia {
     authoritySourceId?: string,
   ): InvestigationMedia {
     if (investigationMediaId !== this.id) {
-      throw new BusinessRuleError("Cannot update investigation media: id doesn't match")
+      throw new BusinessRuleError(
+        "Cannot update investigation media: id doesn't match",
+      )
     }
     if (investigationId !== this.investigationId) {
       throw new BusinessRuleError(
@@ -139,7 +161,7 @@ export class InvestigationMedia {
     this.origin = origin
     this.uploadedById = uploadedById
 
-    if (origin === 'CITIZEN_REPORT') {
+    if (origin === 'CITIZEN_REPORT' || origin === 'DIRECTOR_INITIATED') {
       this.category = category
       this.reliability = reliability
       this.justification = justification
@@ -213,6 +235,7 @@ export class InboxSubjectMedia {
     public order: number,
     public inboxSubjectId: string,
     public uploadedById: string,
+    public origin: InboxSubjectMediaOrigin = 'DIRECTOR_INITIATED',
     public readonly createdAt: Date = new Date(),
     public updatedAt: Date = new Date(),
   ) {}

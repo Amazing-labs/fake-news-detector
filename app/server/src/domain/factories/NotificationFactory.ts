@@ -27,7 +27,12 @@ export class NotificationFactory {
     publicationMessage: string,
     publicationId: string,
   ): Notification {
-    return Notification.createPublicationNotification(citizenId, publicationTheme, publicationMessage, publicationId)
+    return Notification.createPublicationNotification(
+      citizenId,
+      publicationTheme,
+      publicationMessage,
+      publicationId,
+    )
   }
 
   static createInvestigationNotification(
@@ -52,7 +57,12 @@ export class NotificationFactory {
     correctionMessage: string,
     publicationId: string,
   ): Notification {
-    return Notification.createCorrectionNotification(actorId, correctionTitle, correctionMessage, publicationId)
+    return Notification.createCorrectionNotification(
+      actorId,
+      correctionTitle,
+      correctionMessage,
+      publicationId,
+    )
   }
 
   static createArchivedPublicationNotification(
@@ -69,29 +79,18 @@ export class NotificationFactory {
     )
   }
 
-  static createArchivedPublicationBatch(
-    actorIds: string[],
-    investigationId: string,
-    message: string,
-    theme: string = 'Archived publication',
-  ): Notification[] {
-    return actorIds.map((id) =>
-      Notification.createArchivedPublicationNotification(
-        id,
-        theme,
-        message,
-        investigationId,
-      ),
-    )
-  }
-
   static createPublicationForJournalist(
     journalistId: string,
     theme: string,
     message: string,
     publicationId: string,
   ): Notification {
-    return Notification.createPublicationNotification(journalistId, theme, message, publicationId)
+    return Notification.createPublicationNotification(
+      journalistId,
+      theme,
+      message,
+      publicationId,
+    )
   }
 
   static createBatch(

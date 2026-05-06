@@ -8,7 +8,7 @@ model WatcherApplication {
   status     WatcherApplicationStatus @default(PENDING)
 
   createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt @default(now())
+  updatedAt DateTime @default(now()) @updatedAt
 
   actorId String @unique
   actor   Actor  @relation("WatcherApplicationAuthor", fields: [actorId], references: [id])

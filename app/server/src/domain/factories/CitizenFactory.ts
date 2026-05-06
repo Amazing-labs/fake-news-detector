@@ -1,5 +1,10 @@
 // domain/factories/CitizenFactory.ts
-import { Citizen, CitizenType, CitizenStatus, CitizenRole } from '../entities/Citizen'
+import {
+  Citizen,
+  CitizenType,
+  CitizenStatus,
+  CitizenRole,
+} from '../entities/Citizen'
 import { randomUUID } from 'crypto'
 
 export interface CreateCitizenParams {
@@ -50,4 +55,3 @@ export class CitizenFactory {
     })
   }
 }
-

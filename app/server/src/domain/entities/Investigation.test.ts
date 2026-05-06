@@ -6,7 +6,7 @@ describe('Investigation director review invariants', () => {
   test('approve rejects UNVERIFIABLE verdict', () => {
     const inv = new Investigation(
       'i1',
-      'r1',
+      'is1',
       'j1',
       'MISLEADING',
       'UNVERIFIABLE',
@@ -20,7 +20,7 @@ describe('Investigation director review invariants', () => {
   test('approve allows TRUE from PENDING_REVIEW', () => {
     const inv = new Investigation(
       'i1',
-      'r1',
+      'is1',
       'j1',
       'MISLEADING',
       'TRUE',
@@ -35,7 +35,7 @@ describe('Investigation director review invariants', () => {
   test('markAsArchived allows UNVERIFIABLE in PENDING_REVIEW', () => {
     const inv = new Investigation(
       'i1',
-      'r1',
+      'is1',
       'j1',
       'MISLEADING',
       'UNVERIFIABLE',
@@ -50,7 +50,7 @@ describe('Investigation director review invariants', () => {
   test('requestRevision requires PENDING_REVIEW', () => {
     const inv = new Investigation(
       'i1',
-      'r1',
+      'is1',
       'j1',
       'MISLEADING',
       'TRUE',
@@ -58,6 +58,8 @@ describe('Investigation director review invariants', () => {
       0,
       'IN_PROGRESS',
     )
-    expect(() => inv.requestRevision('NEEDS_REVISION')).toThrow(BusinessRuleError)
+    expect(() => inv.requestRevision('NEEDS_REVISION')).toThrow(
+      BusinessRuleError,
+    )
   })
 })

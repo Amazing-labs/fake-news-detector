@@ -39,11 +39,7 @@ enum CitizenType {
 
 enum ReportStatus {
   OPEN
-  IN_PROGRESS
-  PENDING_REVIEW
-  NEEDS_REVISION
-  PUBLISHED
-  UNVERIFIABLE
+  ARCHIVED
 }
 
 enum WatcherApplicationStatus {
@@ -89,6 +85,10 @@ enum InboxSubjectStatus {
   ARCHIVED
 }
 
+enum InboxSubjectMediaOrigin {
+  DIRECTOR_INITIATED
+}
+
 enum SourceType {
   OFFICIAL_DECREE
   ORIGINAL_RETRACTION
@@ -100,6 +100,7 @@ enum SourceType {
 enum MediaOrigin {
   CITIZEN_REPORT
   JOURNALIST_PROOF
+  DIRECTOR_INITIATED
 }
 
 enum NotificationType {

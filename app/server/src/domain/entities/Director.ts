@@ -161,6 +161,7 @@ export class Director {
       theme,
       description,
       this.id,
+      null,
       'OPEN',
       'DIRECTOR_INITIATED',
     )

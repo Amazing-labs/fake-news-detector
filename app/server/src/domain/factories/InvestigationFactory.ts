@@ -1,9 +1,13 @@
 // domain/factories/InvestigationFactory.ts
-import { Investigation, MediaCategory, Verdict } from '../entities/Investigation'
+import {
+  Investigation,
+  MediaCategory,
+  Verdict,
+} from '../entities/Investigation'
 import { randomUUID } from 'crypto'
 
 export interface CreateInvestigationParams {
-  reportId: string
+  inboxSubjectId: string
   journalistId: string
   mediaCategory?: MediaCategory | null
   draftVerdict?: Verdict
@@ -14,7 +18,7 @@ export class InvestigationFactory {
   static create(params: CreateInvestigationParams): Investigation {
     return new Investigation(
       randomUUID(),
-      params.reportId,
+      params.inboxSubjectId,
       params.journalistId,
       params.mediaCategory || null,
       params.draftVerdict || 'UNVERIFIABLE',
@@ -24,9 +28,12 @@ export class InvestigationFactory {
     )
   }
 
-  static createDraft(reportId: string, journalistId: string): Investigation {
+  static createDraftFromInboxSubject(
+    inboxSubjectId: string,
+    journalistId: string,
+  ): Investigation {
     return this.create({
-      reportId,
+      inboxSubjectId,
       journalistId,
     })
   }

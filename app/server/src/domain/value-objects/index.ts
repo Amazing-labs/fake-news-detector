@@ -3,6 +3,7 @@ export {
   MediaType,
   MediaCategory,
   MediaOrigin,
+  InboxSubjectMediaOrigin,
   Verdict,
   ReportMedia,
   InvestigationMedia,

@@ -11,12 +11,18 @@ import {
 
 describe('investigationStatusWorkflow', () => {
   const director = new Director('d1', 'Dir', 'd@test', 'ACTIVE')
-  const journalist = new Journalist('j1', 'Jour', 'j@test', 'JOURNALIST', 'ACTIVE')
+  const journalist = new Journalist(
+    'j1',
+    'Jour',
+    'j@test',
+    'JOURNALIST',
+    'ACTIVE',
+  )
 
   test('submitInvestigationForReviewWithAudit records transition to PENDING_REVIEW', () => {
     const inv = new Investigation(
       'i1',
-      'r1',
+      'is1',
       journalist.id,
       'FABRICATED',
       'FALSE',
@@ -24,7 +30,7 @@ describe('investigationStatusWorkflow', () => {
       0,
       'IN_PROGRESS',
     )
-    const audit = submitInvestigationForReviewWithAudit(journalist, inv)
+    const audit = submitInvestigationForReviewWithAudit(journalist, inv, [], [])
     expect(inv.status).toBe('PENDING_REVIEW')
     expect(audit.newStatus).toBe('PENDING_REVIEW')
     expect(audit.previousStatus).toBe('IN_PROGRESS')
@@ -34,7 +40,7 @@ describe('investigationStatusWorkflow', () => {
   test('directorApproveInvestigationWithAudit records PUBLISHED', () => {
     const inv = new Investigation(
       'i1',
-      'r1',
+      'is1',
       journalist.id,
       'FABRICATED',
       'TRUE',
@@ -51,7 +57,7 @@ describe('investigationStatusWorkflow', () => {
   test('directorRejectInvestigationWithAudit records NEEDS_REVISION with comment', () => {
     const inv = new Investigation(
       'i1',
-      'r1',
+      'is1',
       journalist.id,
       'FABRICATED',
       'TRUE',
@@ -59,7 +65,11 @@ describe('investigationStatusWorkflow', () => {
       0,
       'PENDING_REVIEW',
     )
-    const audit = directorRejectInvestigationWithAudit(director, inv, 'Sources insuffisantes')
+    const audit = directorRejectInvestigationWithAudit(
+      director,
+      inv,
+      'Sources insuffisantes',
+    )
     expect(inv.status).toBe('NEEDS_REVISION')
     expect(audit.isRejection()).toBe(true)
     expect(audit.comment).toBe('Sources insuffisantes')
@@ -69,7 +79,7 @@ describe('investigationStatusWorkflow', () => {
   test('directorAcceptUnverifiableArchiveWithAudit records ARCHIVED', () => {
     const inv = new Investigation(
       'i1',
-      'r1',
+      'is1',
       journalist.id,
       'FABRICATED',
       'UNVERIFIABLE',
@@ -77,7 +87,11 @@ describe('investigationStatusWorkflow', () => {
       0,
       'PENDING_REVIEW',
     )
-    const audit = directorAcceptUnverifiableArchiveWithAudit(director, inv, null)
+    const audit = directorAcceptUnverifiableArchiveWithAudit(
+      director,
+      inv,
+      null,
+    )
     expect(inv.status).toBe('ARCHIVED')
     expect(audit.isArchived()).toBe(true)
   })

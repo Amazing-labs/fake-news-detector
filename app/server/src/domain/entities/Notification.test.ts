@@ -25,7 +25,13 @@ describe('Notification', () => {
 
   test('throws DomainError when CORRECTION has blank publicationId', () => {
     expect(() =>
-      Notification.create('CORRECTION', 'Correction', 'Message', 'actor-1', '   '),
+      Notification.create(
+        'CORRECTION',
+        'Correction',
+        'Message',
+        'actor-1',
+        '   ',
+      ),
     ).toThrow(DomainError)
   })
 

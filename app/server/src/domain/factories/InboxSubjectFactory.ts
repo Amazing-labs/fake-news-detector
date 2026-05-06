@@ -2,13 +2,14 @@ import {
   InboxSubject,
   type InboxSubjectOrigin,
   type InboxSubjectStatus,
-} from "../entities/InboxSubject"
+} from '../entities/InboxSubject'
 import { randomUUID } from 'crypto'
 
 type CreateInboxSubjectParams = {
   theme: string
   description: string
   createdById: string
+  reportId?: string | null
   status?: InboxSubjectStatus
   origin?: InboxSubjectOrigin
   createdAt?: Date
@@ -17,13 +18,23 @@ type CreateInboxSubjectParams = {
 
 export class InboxSubjectFactory {
   static create(params: CreateInboxSubjectParams): InboxSubject {
-    const { theme, description, createdById, status, origin, createdAt, updatedAt } = params
+    const {
+      theme,
+      description,
+      createdById,
+      reportId = null,
+      status = 'OPEN',
+      origin = 'REPORT',
+      createdAt = new Date(),
+      updatedAt = new Date(),
+    } = params
     const id = randomUUID()
     return new InboxSubject(
       id,
       theme,
       description,
       createdById,
+      reportId,
       status,
       origin,
       createdAt,
@@ -31,7 +42,11 @@ export class InboxSubjectFactory {
     )
   }
 
-  static createFromDirector(directorId: string, theme: string, description: string): InboxSubject {
+  static createFromDirector(
+    directorId: string,
+    theme: string,
+    description: string,
+  ): InboxSubject {
     return this.create({
       theme,
       description,
@@ -43,11 +58,17 @@ export class InboxSubjectFactory {
     })
   }
 
-  static createFromExistingReport(citizenId: string, theme: string, description: string): InboxSubject {
+  static createFromExistingReport(
+    citizenId: string,
+    theme: string,
+    description: string,
+    reportId: string,
+  ): InboxSubject {
     return this.create({
       theme,
       description,
       createdById: citizenId,
+      reportId,
       status: 'OPEN',
       origin: 'REPORT',
       createdAt: new Date(),
