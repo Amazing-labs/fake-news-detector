@@ -225,17 +225,20 @@ describe('FactCheckingService new workflows', () => {
       'REPORT',
     )
     const report = new Report('r1', 'c1', 'theme', 'title', 'content', 'OPEN')
+    const citizen = new Citizen('c1', 'Citizen', 'c@test', 'CITIZEN', 'ACTIVE')
 
     const ctx = buildService()
     ctx.directorRepository.findById.mockResolvedValue(director)
     ctx.inboxSubjectRepository.findById.mockResolvedValue(subject)
     ctx.investigationRepository.findByInboxSubjectId.mockResolvedValue(null)
     ctx.reportRepository.findById.mockResolvedValue(report)
+    ctx.citizenRepository.findById.mockResolvedValue(citizen)
 
     await ctx.service.deleteInboxSubjectByDirector(director.id, subject.id, 'spam')
 
     expect(ctx.reportRepository.delete).toHaveBeenCalledWith('r1')
     expect(ctx.inboxSubjectRepository.delete).toHaveBeenCalledWith('s1')
+    expect(ctx.citizenRepository.update).toHaveBeenCalledOnce()
     expect(ctx.notificationRepository.save).toHaveBeenCalledOnce()
     expect(ctx.domainEventPublisher.publish).toHaveBeenCalledOnce()
   })

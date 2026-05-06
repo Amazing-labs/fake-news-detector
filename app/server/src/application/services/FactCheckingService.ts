@@ -496,12 +496,8 @@ export class FactCheckingService {
     await this.investigationRepository.update(investigation)
     await this.workflowAuditRepository.save(audit)
     if (investigation.status === 'CANCELED') {
-      const report =
-        await this.closeReportAndLinkedInboxAfterInvestigation(investigation)
-      await this.finalizeJournalistInvestigationSlot(investigation)
-      await this.notifyInvestigationCanceled(
+      await this._handleCancellationSideEffects(
         investigation,
-        report,
         director.id,
         'MAX_REVISION_ATTEMPTS_REACHED',
         "Investigation annulée en raison d’un nombre excessif de tentatives de révision (risque d’attaque DoS)",
@@ -543,12 +539,8 @@ export class FactCheckingService {
     await this.investigationRepository.update(investigation)
     await this.workflowAuditRepository.save(audit)
 
-    const report =
-      await this.closeReportAndLinkedInboxAfterInvestigation(investigation)
-    await this.finalizeJournalistInvestigationSlot(investigation)
-    await this.notifyInvestigationCanceled(
+    await this._handleCancellationSideEffects(
       investigation,
-      report,
       director.id,
       'MANUAL_DIRECTOR_CANCELLATION',
       reason,
@@ -583,6 +575,11 @@ export class FactCheckingService {
       const report = await this.reportRepository.findById(subject.reportId)
       if (!report) throw new NotFoundError('Report', subject.reportId)
       reportCitizenId = report.citizenId
+      const citizen = await this.citizenRepository.findById(report.citizenId)
+      if (citizen) {
+        citizen.reportResolved()
+        await this.citizenRepository.update(citizen)
+      }
       await this.reportRepository.delete(report.id)
     }
     await this.inboxSubjectRepository.delete(subject.id)
@@ -762,22 +759,22 @@ export class FactCheckingService {
     reportingCitizenId: string | null,
     automatic: boolean,
   ): string {
-    if (automatic) {
-      if (actorId === journalistId) {
-        return "Votre enquête a été annulée automatiquement en raison d’un nombre excessif de tentatives de révision (risque d’attaque DoS)."
-      }
-      if (reportingCitizenId && actorId === reportingCitizenId) {
-        return "Votre signalement associé a été annulé automatiquement en raison d’un nombre excessif de tentatives de révision (risque d’attaque DoS)."
-      }
-      return "Une enquête à laquelle vous avez contribué en tant que vigie a été annulée automatiquement en raison d’un nombre excessif de tentatives de révision (risque d’attaque DoS)."
-    }
+    let subject: string
+    let pastParticiple: string
     if (actorId === journalistId) {
-      return 'Votre enquête a été annulée par le directeur de publication.'
+      subject = 'Votre enquête'
+      pastParticiple = 'annulée'
+    } else if (reportingCitizenId && actorId === reportingCitizenId) {
+      subject = 'Votre signalement associé'
+      pastParticiple = 'annulé'
+    } else {
+      subject = 'Une enquête à laquelle vous avez contribué en tant que vigie'
+      pastParticiple = 'annulée'
     }
-    if (reportingCitizenId && actorId === reportingCitizenId) {
-      return 'Votre signalement associé a été annulé par le directeur de publication.'
-    }
-    return 'Une enquête à laquelle vous avez contribué en tant que vigie a été annulée par le directeur de publication.'
+    const reason = automatic
+      ? 'automatiquement en raison d’un nombre excessif de tentatives de révision (risque d’attaque DoS)'
+      : 'par le directeur de publication'
+    return `${subject} a été ${pastParticiple} ${reason}.`
   }
 
   private async collectInvestigationStakeholders(
@@ -842,6 +839,27 @@ export class FactCheckingService {
     )
   }
 
+  private async _handleCancellationSideEffects(
+    investigation: Investigation,
+    directorId: string,
+    reasonCode: 'MANUAL_DIRECTOR_CANCELLATION' | 'MAX_REVISION_ATTEMPTS_REACHED',
+    reasonMessage: string,
+    includeDirector: boolean,
+  ): Promise<void> {
+    const report = await this.closeReportAndLinkedInboxAfterInvestigation(
+      investigation,
+    )
+    await this.finalizeJournalistInvestigationSlot(investigation)
+    await this.notifyInvestigationCanceled(
+      investigation,
+      report,
+      directorId,
+      reasonCode,
+      reasonMessage,
+      includeDirector,
+    )
+  }
+
   private async closeReportAndLinkedInboxAfterInvestigation(
     investigation: Investigation,
   ): Promise<Report | null> {
@@ -887,7 +905,7 @@ export class FactCheckingService {
     if (!journalist) {
       throw new NotFoundError('Journalist', investigation.journalistId)
     }
-    journalist.onInvestigationPublished(investigation)
+    journalist.onInvestigationFinalized(investigation)
     await this.journalistRepository.update(journalist)
   }
 
