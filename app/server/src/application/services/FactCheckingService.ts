@@ -500,7 +500,7 @@ export class FactCheckingService {
         investigation,
         director.id,
         'MAX_REVISION_ATTEMPTS_REACHED',
-        "Investigation annulée en raison d’un nombre excessif de tentatives de révision (risque d’attaque DoS)",
+        'Investigation annulée en raison d’un nombre excessif de tentatives de révision (risque d’attaque DoS)',
         true,
       )
       return
@@ -801,7 +801,9 @@ export class FactCheckingService {
     investigation: Investigation,
     report: Report | null,
     actorId: string,
-    reasonCode: 'MANUAL_DIRECTOR_CANCELLATION' | 'MAX_REVISION_ATTEMPTS_REACHED',
+    reasonCode:
+      | 'MANUAL_DIRECTOR_CANCELLATION'
+      | 'MAX_REVISION_ATTEMPTS_REACHED',
     reasonMessage: string,
     includeDirector: boolean,
   ): Promise<void> {
@@ -842,13 +844,14 @@ export class FactCheckingService {
   private async _handleCancellationSideEffects(
     investigation: Investigation,
     directorId: string,
-    reasonCode: 'MANUAL_DIRECTOR_CANCELLATION' | 'MAX_REVISION_ATTEMPTS_REACHED',
+    reasonCode:
+      | 'MANUAL_DIRECTOR_CANCELLATION'
+      | 'MAX_REVISION_ATTEMPTS_REACHED',
     reasonMessage: string,
     includeDirector: boolean,
   ): Promise<void> {
-    const report = await this.closeReportAndLinkedInboxAfterInvestigation(
-      investigation,
-    )
+    const report =
+      await this.closeReportAndLinkedInboxAfterInvestigation(investigation)
     await this.finalizeJournalistInvestigationSlot(investigation)
     await this.notifyInvestigationCanceled(
       investigation,

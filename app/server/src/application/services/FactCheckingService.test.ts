@@ -202,7 +202,11 @@ describe('FactCheckingService new workflows', () => {
       { watcherId: 'w1' },
     ])
 
-    await ctx.service.rejectInvestigation(director.id, investigation.id, 'reason')
+    await ctx.service.rejectInvestigation(
+      director.id,
+      investigation.id,
+      'reason',
+    )
 
     expect(investigation.status).toBe('CANCELED')
     expect(ctx.workflowAuditRepository.save).toHaveBeenCalledOnce()
@@ -234,7 +238,11 @@ describe('FactCheckingService new workflows', () => {
     ctx.reportRepository.findById.mockResolvedValue(report)
     ctx.citizenRepository.findById.mockResolvedValue(citizen)
 
-    await ctx.service.deleteInboxSubjectByDirector(director.id, subject.id, 'spam')
+    await ctx.service.deleteInboxSubjectByDirector(
+      director.id,
+      subject.id,
+      'spam',
+    )
 
     expect(ctx.reportRepository.delete).toHaveBeenCalledWith('r1')
     expect(ctx.inboxSubjectRepository.delete).toHaveBeenCalledWith('s1')
@@ -263,7 +271,11 @@ describe('FactCheckingService new workflows', () => {
     )
 
     await expect(
-      ctx.service.deleteInboxSubjectByDirector(director.id, subject.id, 'cleanup'),
+      ctx.service.deleteInboxSubjectByDirector(
+        director.id,
+        subject.id,
+        'cleanup',
+      ),
     ).rejects.toThrow(BusinessRuleError)
   })
 })

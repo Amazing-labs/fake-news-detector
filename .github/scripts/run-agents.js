@@ -63,11 +63,18 @@ const result = await runDDDReview(diff, dddSummary, readme, template)
 // SAVE OUTPUTS
 // ==========================================
 
-fs.writeFileSync('result.json', JSON.stringify({
-  scores: result.scores,
-  status: result.status,
-  issues: result.issues
-}, null, 2))
+fs.writeFileSync(
+  'result.json',
+  JSON.stringify(
+    {
+      scores: result.scores,
+      status: result.status,
+      issues: result.issues,
+    },
+    null,
+    2,
+  ),
+)
 
 fs.writeFileSync('review.md', result.markdownReport)
 
