@@ -5,9 +5,11 @@ import { Investigation } from '../entities/Investigation'
 import {
   directorAcceptUnverifiableArchiveWithAudit,
   directorApproveInvestigationWithAudit,
+  directorCancelInvestigationWithAudit,
   directorRejectInvestigationWithAudit,
   submitInvestigationForReviewWithAudit,
 } from './investigationStatusWorkflow'
+import { MAX_REVISION_ATTEMPTS } from '../../shared/constants'
 
 describe('investigationStatusWorkflow', () => {
   const director = new Director('d1', 'Dir', 'd@test', 'ACTIVE')
@@ -74,6 +76,46 @@ describe('investigationStatusWorkflow', () => {
     expect(audit.isRejection()).toBe(true)
     expect(audit.comment).toBe('Sources insuffisantes')
     expect(inv.attemptCount).toBe(1)
+  })
+
+  test('directorRejectInvestigationWithAudit records CANCELED when max attempts reached', () => {
+    const inv = new Investigation(
+      'i1',
+      'is1',
+      journalist.id,
+      'FABRICATED',
+      'TRUE',
+      'n',
+      MAX_REVISION_ATTEMPTS,
+      'PENDING_REVIEW',
+    )
+    const audit = directorRejectInvestigationWithAudit(
+      director,
+      inv,
+      'Trop de révisions',
+    )
+    expect(inv.status).toBe('CANCELED')
+    expect(audit.isCanceled()).toBe(true)
+  })
+
+  test('directorCancelInvestigationWithAudit records CANCELED', () => {
+    const inv = new Investigation(
+      'i1',
+      'is1',
+      journalist.id,
+      'FABRICATED',
+      'TRUE',
+      'n',
+      0,
+      'IN_PROGRESS',
+    )
+    const audit = directorCancelInvestigationWithAudit(
+      director,
+      inv,
+      'Arrêt éditorial',
+    )
+    expect(inv.status).toBe('CANCELED')
+    expect(audit.isCanceled()).toBe(true)
   })
 
   test('directorAcceptUnverifiableArchiveWithAudit records ARCHIVED', () => {

@@ -20,5 +20,8 @@ export * from './repositories'
 // Factories
 export * from './factories'
 
+// Domain events
+export * from './events'
+
 // Processes (workflow + audit composition)
 export * from './processes/investigationStatusWorkflow'

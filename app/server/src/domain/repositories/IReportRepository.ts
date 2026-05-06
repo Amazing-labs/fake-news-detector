@@ -9,4 +9,5 @@ export interface IReportRepository {
   findByTheme(theme: string): Promise<Report[]>
   listInbox(): Promise<Report[]>
   findByCitizenId(citizenId: string): Promise<Report[]>
+  delete(id: string): Promise<void>
 }

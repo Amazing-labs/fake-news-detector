@@ -1,5 +1,5 @@
 // domain/entities/Investigation.ts
-import { DomainError, BusinessRuleError } from '../../shared/errors'
+import { BusinessRuleError } from '../../shared/errors'
 import { MAX_REVISION_ATTEMPTS } from '../../shared/constants'
 
 export type MediaCategory =
@@ -25,6 +25,7 @@ export type InvestigationStatus =
   | 'NEEDS_REVISION'
   | 'PUBLISHED'
   | 'ARCHIVED'
+  | 'CANCELED'
 
 export class Investigation {
   constructor(
@@ -66,6 +67,18 @@ export class Investigation {
     )
   }
 
+  isCanceled(): boolean {
+    return this.status === 'CANCELED'
+  }
+
+  isTerminal(): boolean {
+    return (
+      this.status === 'PUBLISHED' ||
+      this.status === 'ARCHIVED' ||
+      this.status === 'CANCELED'
+    )
+  }
+
   // Journalist actions
   updateDraft(
     mediaCategory: MediaCategory | null,
@@ -97,7 +110,7 @@ export class Investigation {
   }
 
   // Director rejection
-  requestRevision(newStatus: InvestigationStatus): void {
+  requestRevision(newStatus: InvestigationStatus): InvestigationStatus {
     if (newStatus !== 'NEEDS_REVISION') {
       throw new BusinessRuleError('Invalid status for rejection')
     }
@@ -107,11 +120,14 @@ export class Investigation {
       )
     }
     if (this.attemptCount >= MAX_REVISION_ATTEMPTS) {
-      throw new DomainError('Maximum rejection attempts reached')
+      this.status = 'CANCELED'
+      this.updatedAt = new Date()
+      return this.status
     }
     this.status = newStatus
     this.attemptCount++
     this.updatedAt = new Date()
+    return this.status
   }
 
   // Director approval
@@ -138,6 +154,16 @@ export class Investigation {
       )
     }
     this.status = 'ARCHIVED'
+    this.updatedAt = new Date()
+  }
+
+  cancelManually(): void {
+    if (this.isTerminal()) {
+      throw new BusinessRuleError(
+        'Investigation cannot be canceled from a terminal status',
+      )
+    }
+    this.status = 'CANCELED'
     this.updatedAt = new Date()
   }
 }

@@ -30,6 +30,7 @@ enum InvestigationStatus {
   NEEDS_REVISION
   PUBLISHED
   ARCHIVED
+  CANCELED
 }
 
 enum CitizenType {

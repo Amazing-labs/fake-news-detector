@@ -128,7 +128,8 @@ export class Journalist {
       investigation.journalistId === this.id &&
       this.activeInvestigationsCount > 0 &&
       (investigation.status === 'PUBLISHED' ||
-        investigation.status === 'ARCHIVED')
+        investigation.status === 'ARCHIVED' ||
+        investigation.status === 'CANCELED')
     ) {
       this.activeInvestigationsCount--
       this.incrementEngagementScore(2)

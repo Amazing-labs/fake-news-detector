@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'vitest'
 import { Investigation } from './Investigation'
 import { BusinessRuleError } from '../../shared/errors'
+import { MAX_REVISION_ATTEMPTS } from '../../shared/constants'
 
 describe('Investigation director review invariants', () => {
   test('approve rejects UNVERIFIABLE verdict', () => {
@@ -61,5 +62,35 @@ describe('Investigation director review invariants', () => {
     expect(() => inv.requestRevision('NEEDS_REVISION')).toThrow(
       BusinessRuleError,
     )
+  })
+
+  test('requestRevision auto-cancels when max attempts reached', () => {
+    const inv = new Investigation(
+      'i1',
+      'is1',
+      'j1',
+      'MISLEADING',
+      'TRUE',
+      '',
+      MAX_REVISION_ATTEMPTS,
+      'PENDING_REVIEW',
+    )
+    const status = inv.requestRevision('NEEDS_REVISION')
+    expect(status).toBe('CANCELED')
+    expect(inv.status).toBe('CANCELED')
+  })
+
+  test('cancelManually rejects terminal statuses', () => {
+    const inv = new Investigation(
+      'i1',
+      'is1',
+      'j1',
+      'MISLEADING',
+      'TRUE',
+      '',
+      0,
+      'PUBLISHED',
+    )
+    expect(() => inv.cancelManually()).toThrow(BusinessRuleError)
   })
 })

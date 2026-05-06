@@ -82,6 +82,21 @@ export class WorkflowAuditFactory {
     })
   }
 
+  static createCancellation(
+    investigationId: string,
+    directorId: string,
+    previousStatus: InvestigationStatus,
+    comment?: string | null,
+  ): WorkflowAudit {
+    return this.create({
+      investigationId,
+      actorId: directorId,
+      newStatus: 'CANCELED',
+      previousStatus,
+      comment: comment ?? null,
+    })
+  }
+
   static createStatusChange(
     investigationId: string,
     actorId: string,
