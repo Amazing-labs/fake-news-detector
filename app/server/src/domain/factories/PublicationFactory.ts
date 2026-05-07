@@ -1,7 +1,11 @@
 // domain/factories/PublicationFactory.ts
 import { Publication } from '../entities/Publication'
 import { randomUUID } from 'crypto'
-import { type Verdict, type VerifiedLink, type VerifiedMedia } from '../value-objects'
+import {
+  type Verdict,
+  type VerifiedLink,
+  type VerifiedMedia,
+} from '../value-objects'
 
 export interface CreatePublicationParams {
   id?: string

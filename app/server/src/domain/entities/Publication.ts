@@ -11,7 +11,9 @@ export class Publication {
     public finalVerdict: Verdict,
     public publishedAt: Date = new Date(),
     public isCorrection: boolean = false,
-    public readonly verifiedLinks: ReadonlyArray<VerifiedLink> = Object.freeze([]),
+    public readonly verifiedLinks: ReadonlyArray<VerifiedLink> = Object.freeze(
+      [],
+    ),
     public readonly verifiedMedia: ReadonlyArray<VerifiedMedia> = Object.freeze(
       [],
     ),
