@@ -145,6 +145,7 @@ function buildService(deps: any = {}) {
     service,
     reportRepository,
     investigationRepository,
+    publicationRepository,
     notificationRepository,
     workflowAuditRepository,
     journalistRepository,
@@ -152,11 +153,148 @@ function buildService(deps: any = {}) {
     evidenceRepository,
     inboxSubjectRepository,
     citizenRepository,
+    authoritySourceRepository,
     domainEventPublisher,
   }
 }
 
 describe('FactCheckingService new workflows', () => {
+  test('approveInvestigation keeps current flow when no publication evidence is provided', async () => {
+    const director = new Director('d1', 'Director', 'd@test')
+    const journalist = new Journalist(
+      'j1',
+      'Journalist',
+      'j@test',
+      'JOURNALIST',
+      'ACTIVE',
+      0,
+      new Date(),
+      1,
+    )
+    const investigation = new Investigation(
+      'i1',
+      's1',
+      journalist.id,
+      'FABRICATED',
+      'TRUE',
+      'notes',
+      0,
+      'PENDING_REVIEW',
+    )
+    const subject = new InboxSubject(
+      's1',
+      'theme',
+      'description',
+      director.id,
+      'r1',
+      'IN_PROGRESS',
+      'REPORT',
+    )
+    const report = new Report('r1', 'c1', 'theme', 'title', 'content', 'OPEN')
+    const citizen = new Citizen('c1', 'Citizen', 'c@test', 'CITIZEN', 'ACTIVE')
+
+    const ctx = buildService()
+    ctx.directorRepository.findById.mockResolvedValue(director)
+    ctx.investigationRepository.findById.mockResolvedValue(investigation)
+    ctx.inboxSubjectRepository.findById.mockResolvedValue(subject)
+    ctx.reportRepository.findById.mockResolvedValue(report)
+    ctx.citizenRepository.findById.mockResolvedValue(citizen)
+    ctx.journalistRepository.findById.mockResolvedValue(journalist)
+    ctx.citizenRepository.findAll.mockResolvedValue([citizen])
+
+    const publicationId = await ctx.service.approveInvestigation(
+      director.id,
+      investigation.id,
+    )
+
+    expect(publicationId).toBeTruthy()
+    expect(investigation.status).toBe('PUBLISHED')
+    expect(ctx.authoritySourceRepository.save).not.toHaveBeenCalled()
+    expect(ctx.publicationRepository.save).toHaveBeenCalledOnce()
+    const publication = ctx.publicationRepository.save.mock.calls[0][0]
+    expect(publication.verifiedLinks).toEqual([])
+    expect(publication.verifiedMedia).toEqual([])
+    expect(ctx.notificationRepository.save).toHaveBeenCalledOnce()
+    expect(ctx.notificationRepository.saveMany).toHaveBeenCalledOnce()
+  })
+
+  test('approveInvestigation attaches optional verified evidence to the publication', async () => {
+    const director = new Director('d1', 'Director', 'd@test')
+    const journalist = new Journalist(
+      'j1',
+      'Journalist',
+      'j@test',
+      'JOURNALIST',
+      'ACTIVE',
+      0,
+      new Date(),
+      1,
+    )
+    const investigation = new Investigation(
+      'i1',
+      's1',
+      journalist.id,
+      'FABRICATED',
+      'TRUE',
+      'notes',
+      0,
+      'PENDING_REVIEW',
+    )
+    const subject = new InboxSubject(
+      's1',
+      'theme',
+      'description',
+      director.id,
+      'r1',
+      'IN_PROGRESS',
+      'REPORT',
+    )
+    const report = new Report('r1', 'c1', 'theme', 'title', 'content', 'OPEN')
+    const citizen = new Citizen('c1', 'Citizen', 'c@test', 'CITIZEN', 'ACTIVE')
+
+    const ctx = buildService()
+    ctx.directorRepository.findById.mockResolvedValue(director)
+    ctx.investigationRepository.findById.mockResolvedValue(investigation)
+    ctx.inboxSubjectRepository.findById.mockResolvedValue(subject)
+    ctx.reportRepository.findById.mockResolvedValue(report)
+    ctx.citizenRepository.findById.mockResolvedValue(citizen)
+    ctx.journalistRepository.findById.mockResolvedValue(journalist)
+    ctx.citizenRepository.findAll.mockResolvedValue([citizen])
+
+    await ctx.service.approveInvestigation(director.id, investigation.id, {
+      verifiedLinks: [
+        {
+          url: 'https://example.com/source',
+          authoritySource: {
+            name: 'Ministere',
+            type: 'OFFICIAL_DECREE',
+          },
+        },
+      ],
+      verifiedMedia: [
+        {
+          url: 'https://example.com/evidence.jpg',
+          type: 'IMAGE',
+          authoritySource: {
+            name: 'AFP Factuel',
+            type: 'MEDIA_CROSSCHECK',
+          },
+        },
+      ],
+    })
+
+    expect(ctx.authoritySourceRepository.save).toHaveBeenCalledTimes(2)
+    expect(ctx.publicationRepository.save).toHaveBeenCalledOnce()
+    const publication = ctx.publicationRepository.save.mock.calls[0][0]
+    expect(publication.verifiedLinks).toHaveLength(1)
+    expect(publication.verifiedMedia).toHaveLength(1)
+    expect(publication.verifiedLinks[0].publicationId).toBe(publication.id)
+    expect(publication.verifiedLinks[0].addedById).toBe(director.id)
+    expect(publication.verifiedMedia[0].publicationId).toBe(publication.id)
+    expect(publication.verifiedMedia[0].addedById).toBe(director.id)
+    expect(publication.hasVerifiedEvidence()).toBe(true)
+  })
+
   test('rejectInvestigation auto-cancels and notifies stakeholders + director', async () => {
     const director = new Director('d1', 'Director', 'd@test')
     const journalist = new Journalist(

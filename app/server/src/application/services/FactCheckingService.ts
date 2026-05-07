@@ -3,6 +3,7 @@
 // Orchestrates the fact-checking workflow:
 //   citizen report -> journalist investigation -> director review (publish | revise | archive)
 // using domain aggregates, factories, and the investigation workflow process.
+import { randomUUID } from 'crypto'
 
 import {
   type ICitizenRepository,
@@ -29,7 +30,11 @@ import { NotificationFactory } from '../../domain/factories/NotificationFactory'
 import { WatcherApplicationFactory } from '../../domain/factories/WatcherApplicationFactory'
 import { EvidenceFactory } from '../../domain/factories/EvidenceFactory'
 import { AuthoritySourceFactory } from '../../domain/factories/AuthoritySourceFactory'
-import { InvestigationMediaFactory } from '../../domain/factories/MediaFactory'
+import {
+  InvestigationMediaFactory,
+  VerifiedLinkFactory,
+  VerifiedMediaFactory,
+} from '../../domain/factories/MediaFactory'
 import { Investigation } from '../../domain/entities/Investigation'
 import { Report } from '../../domain/entities/Report'
 import type {
@@ -42,7 +47,12 @@ import {
   NoopDomainEventPublisher,
   type IDomainEventPublisher,
 } from '../../domain/events'
-import type { MediaType, InvestigationMedia } from '../../domain/value-objects'
+import type {
+  MediaType,
+  InvestigationMedia,
+  VerifiedLink,
+  VerifiedMedia,
+} from '../../domain/value-objects'
 import type { SourceType } from '../../domain/entities/AuthoritySource'
 import { copySourceMediaToInvestigationMedia } from '../../domain/processes/investigationMediaCopy'
 import {
@@ -78,6 +88,28 @@ export interface CreateDirectorInboxSubjectInput {
   theme: string
   description: string
   media?: Array<{ url: string; type: MediaType; order?: number }>
+}
+
+export interface PublicationAuthoritySourceInput {
+  name: string
+  type: SourceType
+}
+
+export interface PublicationVerifiedLinkInput {
+  url: string
+  authoritySource?: PublicationAuthoritySourceInput
+}
+
+export interface PublicationVerifiedMediaInput {
+  url: string
+  type: MediaType
+  order?: number
+  authoritySource?: PublicationAuthoritySourceInput
+}
+
+export interface ApproveInvestigationInput {
+  verifiedLinks?: PublicationVerifiedLinkInput[]
+  verifiedMedia?: PublicationVerifiedMediaInput[]
 }
 
 export class FactCheckingService {
@@ -437,6 +469,7 @@ export class FactCheckingService {
   async approveInvestigation(
     directorId: string,
     investigationId: string,
+    input: ApproveInvestigationInput = {},
   ): Promise<string> {
     const director = await this.directorRepository.findById(directorId)
     if (!director) throw new NotFoundError('Director', directorId)
@@ -448,14 +481,28 @@ export class FactCheckingService {
     }
 
     const audit = directorApproveInvestigationWithAudit(director, investigation)
+    const publicationId = randomUUID()
+    const evidenceBundle = this.buildPublicationEvidence(
+      director.id,
+      input,
+      publicationId,
+    )
     const publication = PublicationFactory.createPublication(
+      publicationId,
       investigation.id,
       director.id,
       investigation.draftVerdict,
+      {
+        verifiedLinks: evidenceBundle.verifiedLinks,
+        verifiedMedia: evidenceBundle.verifiedMedia,
+      },
     )
 
     await this.investigationRepository.update(investigation)
     await this.directorRepository.update(director)
+    for (const authoritySource of evidenceBundle.authoritySources) {
+      await this.authoritySourceRepository.save(authoritySource)
+    }
     await this.publicationRepository.save(publication)
     await this.workflowAuditRepository.save(audit)
 
@@ -873,13 +920,13 @@ export class FactCheckingService {
       throw new NotFoundError('InboxSubject', investigation.inboxSubjectId)
     }
 
-    // Archiver l'inbox subject
+    // Archive the inbox subject
     if (!subject.isArchived()) {
       subject.archive()
       await this.inboxSubjectRepository.update(subject)
     }
 
-    // Si le sujet vient d'un report, archiver le report et mettre à jour le citoyen
+    // If the subject comes from a report, archive the report and update the citizen
     if (subject.origin === 'REPORT' && subject.reportId) {
       const report = await this.reportRepository.findById(subject.reportId)
       if (!report) {
@@ -936,5 +983,118 @@ export class FactCheckingService {
       publicationId,
     )
     await this.notificationRepository.saveMany(notifications)
+  }
+
+  private buildPublicationEvidence(
+    directorId: string,
+    input: ApproveInvestigationInput,
+    publicationId: string,
+  ): {
+    authoritySources: ReturnType<typeof AuthoritySourceFactory.create>[]
+    verifiedLinks: VerifiedLink[]
+    verifiedMedia: VerifiedMedia[]
+  } {
+    const authoritySources: ReturnType<typeof AuthoritySourceFactory.create>[] =
+      []
+    let nextTemporaryLinkId = -1
+    let nextTemporaryMediaId = -1
+    const verifiedLinks = (input.verifiedLinks ?? []).map((link) => {
+      const authoritySourceId = link.authoritySource
+        ? this.createPublicationAuthoritySource(
+            authoritySources,
+            link.authoritySource,
+          )
+        : undefined
+      this.assertPublicationEvidenceUrl(link.url, 'verified link')
+      return VerifiedLinkFactory.createForPublication(
+        nextTemporaryLinkId--,
+        publicationId,
+        link.url,
+        directorId,
+        authoritySourceId,
+      )
+    })
+    const mediaOrders = this.resolvePublicationMediaOrders(
+      input.verifiedMedia ?? [],
+    )
+    const verifiedMedia = (input.verifiedMedia ?? []).map((media, index) => {
+      const authoritySourceId = media.authoritySource
+        ? this.createPublicationAuthoritySource(
+            authoritySources,
+            media.authoritySource,
+          )
+        : undefined
+      this.assertPublicationEvidenceUrl(media.url, 'verified media')
+      return VerifiedMediaFactory.createForPublication(
+        nextTemporaryMediaId--,
+        mediaOrders[index],
+        publicationId,
+        media.url,
+        media.type,
+        directorId,
+        authoritySourceId,
+      )
+    })
+
+    return {
+      authoritySources,
+      verifiedLinks,
+      verifiedMedia,
+    }
+  }
+
+  private createPublicationAuthoritySource(
+    authoritySources: ReturnType<typeof AuthoritySourceFactory.create>[],
+    input: PublicationAuthoritySourceInput,
+  ): string {
+    if (!input.name.trim()) {
+      throw new ValidationError('Authority source name is required')
+    }
+    const authoritySource = AuthoritySourceFactory.create({
+      name: input.name.trim(),
+      type: input.type,
+    })
+    authoritySources.push(authoritySource)
+    return authoritySource.id
+  }
+
+  private resolvePublicationMediaOrders(
+    media: PublicationVerifiedMediaInput[],
+  ): number[] {
+    const usedOrders = new Set<number>()
+    const resolvedOrders = new Array<number>(media.length)
+
+    media.forEach((item, index) => {
+      if (item.order === undefined) return
+      if (!Number.isInteger(item.order) || item.order < 0) {
+        throw new ValidationError(
+          'Verified media order must be a non-negative integer',
+        )
+      }
+      if (usedOrders.has(item.order)) {
+        throw new ValidationError('Verified media order must be unique')
+      }
+      usedOrders.add(item.order)
+      resolvedOrders[index] = item.order
+    })
+
+    let nextAvailableOrder = 0
+    media.forEach((_, index) => {
+      if (resolvedOrders[index] !== undefined) return
+      while (usedOrders.has(nextAvailableOrder)) {
+        nextAvailableOrder++
+      }
+      resolvedOrders[index] = nextAvailableOrder
+      usedOrders.add(nextAvailableOrder)
+      nextAvailableOrder++
+    })
+
+    return resolvedOrders
+  }
+
+  private assertPublicationEvidenceUrl(url: string, label: string): void {
+    if (!url.trim()) {
+      throw new ValidationError(`${label} url is required`)
+    }
   }
 }
