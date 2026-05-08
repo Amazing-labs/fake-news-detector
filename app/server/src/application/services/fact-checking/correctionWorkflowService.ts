@@ -146,7 +146,10 @@ export class CorrectionWorkflowService {
     }
   }
 
-  private assertRequiredText(value: string | null | undefined, message: string): string {
+  private assertRequiredText(
+    value: string | null | undefined,
+    message: string,
+  ): string {
     const normalized = (value ?? '').trim()
     if (!normalized) {
       throw new ValidationError(message)
