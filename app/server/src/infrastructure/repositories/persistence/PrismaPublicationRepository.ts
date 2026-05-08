@@ -52,6 +52,16 @@ export class PrismaPublicationRepository implements IPublicationRepository {
     })
   }
 
+  async markAsCorrected(publicationId: string, updatedAt: Date): Promise<void> {
+    await prisma.publication.update({
+      where: { id: publicationId },
+      data: {
+        isCorrection: true,
+        updatedAt,
+      },
+    })
+  }
+
   async findById(id: string): Promise<Publication | null> {
     const row = await prisma.publication.findUnique({
       where: { id },

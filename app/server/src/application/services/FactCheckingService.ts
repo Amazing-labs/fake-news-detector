@@ -6,10 +6,12 @@
 
 import {
   CitizenWorkflowService,
+  CorrectionWorkflowService,
   DirectorWorkflowService,
   JournalistWorkflowService,
   type ApproveInvestigationInput,
   type CreateDirectorInboxSubjectInput,
+  type PublishCorrectionInput,
   type SubmitReportInput,
   type SubmitWatcherEvidenceInput,
 } from './fact-checking'
@@ -29,6 +31,7 @@ export class FactCheckingService {
     private readonly citizenWorkflowService: CitizenWorkflowService,
     private readonly journalistWorkflowService: JournalistWorkflowService,
     private readonly directorWorkflowService: DirectorWorkflowService,
+    private readonly correctionWorkflowService: CorrectionWorkflowService,
     private readonly transactionRunner?: FactCheckingServiceTransactionRunner,
   ) {}
 
@@ -162,6 +165,20 @@ export class FactCheckingService {
       this.directorWorkflowService.approveInvestigation(
         directorId,
         investigationId,
+        input,
+      ),
+    )
+  }
+
+  async publishCorrection(
+    directorId: string,
+    publicationId: string,
+    input: PublishCorrectionInput,
+  ): Promise<string> {
+    return this.runInTransaction(() =>
+      this.correctionWorkflowService.publishCorrection(
+        directorId,
+        publicationId,
         input,
       ),
     )

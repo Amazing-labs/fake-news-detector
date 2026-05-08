@@ -28,6 +28,7 @@ export type Permission =
   | 'investigation.submitForReview'
   // Director
   | 'investigation.approve'
+  | 'publication.correct'
   | 'investigation.reject'
   | 'investigation.archive'
   | 'watcherApplication.decide'
@@ -51,6 +52,7 @@ const ROLE_PERMISSIONS: Record<ActorRole, ReadonlySet<Permission>> = {
   ]),
   EDITORIAL_DIRECTOR: new Set<Permission>([
     'investigation.approve',
+    'publication.correct',
     'investigation.reject',
     'investigation.archive',
     'watcherApplication.decide',
