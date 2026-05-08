@@ -116,6 +116,7 @@ function buildService(deps: any = {}) {
   }
   const authoritySourceRepository = {
     save: vi.fn(),
+    saveMany: vi.fn(),
     ...deps.authoritySourceRepository,
   }
   const domainEventPublisher = {
@@ -212,7 +213,7 @@ describe('FactCheckingService new workflows', () => {
 
     expect(publicationId).toBeTruthy()
     expect(investigation.status).toBe('PUBLISHED')
-    expect(ctx.authoritySourceRepository.save).not.toHaveBeenCalled()
+    expect(ctx.authoritySourceRepository.saveMany).toHaveBeenCalledWith([])
     expect(ctx.publicationRepository.save).toHaveBeenCalledOnce()
     const publication = ctx.publicationRepository.save.mock.calls[0][0]
     expect(publication.verifiedLinks).toEqual([])
@@ -286,7 +287,16 @@ describe('FactCheckingService new workflows', () => {
       ],
     })
 
-    expect(ctx.authoritySourceRepository.save).toHaveBeenCalledTimes(2)
+    expect(ctx.authoritySourceRepository.saveMany).toHaveBeenCalledTimes(1)
+    expect(ctx.authoritySourceRepository.saveMany).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        expect.objectContaining({ name: 'Ministere', type: 'OFFICIAL_DECREE' }),
+        expect.objectContaining({
+          name: 'AFP Factuel',
+          type: 'MEDIA_CROSSCHECK',
+        }),
+      ]),
+    )
     expect(ctx.publicationRepository.save).toHaveBeenCalledOnce()
     const publication = ctx.publicationRepository.save.mock.calls[0][0]
     expect(publication.verifiedLinks).toHaveLength(1)
