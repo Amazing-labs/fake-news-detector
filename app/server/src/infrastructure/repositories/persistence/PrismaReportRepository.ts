@@ -8,26 +8,17 @@ type PrismaReportRow = NonNullable<
 
 export class PrismaReportRepository implements IReportRepository {
   async save(report: Report): Promise<void> {
-    const existing = await prisma.report.findUnique({
+    await prisma.report.upsert({
       where: { id: report.id },
-    })
-    if (existing) {
-      await prisma.report.update({
-        where: { id: report.id },
-        data: {
-          citizenId: report.citizenId,
-          theme: report.theme,
-          title: report.title,
-          content: report.content,
-          status: report.status,
-          updatedAt: report.updatedAt,
-        },
-      })
-      return
-    }
-
-    await prisma.report.create({
-      data: {
+      update: {
+        citizenId: report.citizenId,
+        theme: report.theme,
+        title: report.title,
+        content: report.content,
+        status: report.status,
+        updatedAt: report.updatedAt,
+      },
+      create: {
         id: report.id,
         citizenId: report.citizenId,
         theme: report.theme,

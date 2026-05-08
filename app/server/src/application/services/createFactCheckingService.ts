@@ -19,7 +19,10 @@ import type {
   IWatcherApplicationRepository,
   IWorkflowAuditRepository,
 } from '../../domain/repositories'
-import { FactCheckingService } from './FactCheckingService'
+import {
+  FactCheckingService,
+  type FactCheckingServiceTransactionRunner,
+} from './FactCheckingService'
 import {
   CitizenWorkflowService,
   DirectorWorkflowService,
@@ -48,6 +51,7 @@ export interface FactCheckingServiceRepositoryDependencies {
 export function createFactCheckingService(
   dependencies: FactCheckingServiceRepositoryDependencies,
   domainEventPublisher: IDomainEventPublisher = new NoopDomainEventPublisher(),
+  transactionRunner?: FactCheckingServiceTransactionRunner,
 ): FactCheckingService {
   const investigationLifecycleService = new InvestigationLifecycleService(
     dependencies.reportRepository,
@@ -101,5 +105,6 @@ export function createFactCheckingService(
     citizenWorkflowService,
     journalistWorkflowService,
     directorWorkflowService,
+    transactionRunner,
   )
 }

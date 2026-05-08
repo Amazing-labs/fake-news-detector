@@ -59,11 +59,12 @@ export class PrismaJournalistRepository implements IJournalistRepository {
       where: {
         role: 'JOURNALIST',
         status: 'ACTIVE',
+        activeInvestigationsCount: {
+          lt: MAX_INVESTIGATIONS_PER_JOURNALIST_AT_A_TIME,
+        },
       },
     })
-    return rows
-      .map((row) => this.toDomain(row))
-      .filter((journalist) => journalist.canAnalyze())
+    return rows.map((row) => this.toDomain(row))
   }
 
   async update(journalist: Journalist): Promise<void> {

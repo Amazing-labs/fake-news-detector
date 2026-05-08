@@ -19,6 +19,19 @@ export class PrismaAuthoritySourceRepository implements IAuthoritySourceReposito
     })
   }
 
+  async saveMany(authoritySources: AuthoritySource[]): Promise<void> {
+    if (authoritySources.length === 0) return
+
+    await prisma.authoritySource.createMany({
+      data: authoritySources.map((authoritySource) => ({
+        id: authoritySource.id,
+        name: authoritySource.name,
+        type: authoritySource.type,
+        createdAt: authoritySource.createdAt,
+      })),
+    })
+  }
+
   async findById(id: string): Promise<AuthoritySource | null> {
     const row = await prisma.authoritySource.findUnique({
       where: {

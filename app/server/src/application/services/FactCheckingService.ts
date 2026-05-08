@@ -20,47 +20,62 @@ import {
 import type { SourceType } from '../../domain/entities/AuthoritySource'
 import type { MediaType } from '../../domain/value-objects'
 
+export type FactCheckingServiceTransactionRunner = <T>(
+  work: () => Promise<T>,
+) => Promise<T>
+
 export class FactCheckingService {
   constructor(
     private readonly citizenWorkflowService: CitizenWorkflowService,
     private readonly journalistWorkflowService: JournalistWorkflowService,
     private readonly directorWorkflowService: DirectorWorkflowService,
+    private readonly transactionRunner?: FactCheckingServiceTransactionRunner,
   ) {}
 
   async submitReport(input: SubmitReportInput): Promise<string> {
-    return this.citizenWorkflowService.submitReport(input)
+    return this.runInTransaction(() =>
+      this.citizenWorkflowService.submitReport(input),
+    )
   }
 
   async submitWatcherApplication(
     citizenId: string,
     motivation: string,
   ): Promise<string> {
-    return this.citizenWorkflowService.submitWatcherApplication(
-      citizenId,
-      motivation,
+    return this.runInTransaction(() =>
+      this.citizenWorkflowService.submitWatcherApplication(
+        citizenId,
+        motivation,
+      ),
     )
   }
 
   async submitWatcherEvidence(
     input: SubmitWatcherEvidenceInput,
   ): Promise<string> {
-    return this.citizenWorkflowService.submitWatcherEvidence(input)
+    return this.runInTransaction(() =>
+      this.citizenWorkflowService.submitWatcherEvidence(input),
+    )
   }
 
   async createDirectorInboxSubject(
     directorId: string,
     input: CreateDirectorInboxSubjectInput,
   ): Promise<string> {
-    return this.directorWorkflowService.createDirectorInboxSubject(
-      directorId,
-      input,
+    return this.runInTransaction(() =>
+      this.directorWorkflowService.createDirectorInboxSubject(
+        directorId,
+        input,
+      ),
     )
   }
 
   async pickInboxSubject(journalistId: string, inboxSubjectId: string) {
-    return this.journalistWorkflowService.pickInboxSubject(
-      journalistId,
-      inboxSubjectId,
+    return this.runInTransaction(() =>
+      this.journalistWorkflowService.pickInboxSubject(
+        journalistId,
+        inboxSubjectId,
+      ),
     )
   }
 
@@ -68,9 +83,11 @@ export class FactCheckingService {
     journalistId: string,
     investigationId: string,
   ): Promise<void> {
-    return this.journalistWorkflowService.submitInvestigationForReview(
-      journalistId,
-      investigationId,
+    return this.runInTransaction(() =>
+      this.journalistWorkflowService.submitInvestigationForReview(
+        journalistId,
+        investigationId,
+      ),
     )
   }
 
@@ -84,11 +101,13 @@ export class FactCheckingService {
       justification: string
     },
   ): Promise<void> {
-    return this.journalistWorkflowService.updateInvestigationSourceMediaItem(
-      journalistId,
-      investigationId,
-      mediaId,
-      input,
+    return this.runInTransaction(() =>
+      this.journalistWorkflowService.updateInvestigationSourceMediaItem(
+        journalistId,
+        investigationId,
+        mediaId,
+        input,
+      ),
     )
   }
 
@@ -103,12 +122,14 @@ export class FactCheckingService {
       justification: string
     },
   ): Promise<void> {
-    return this.journalistWorkflowService.updateWatcherEvidenceMediaItem(
-      journalistId,
-      investigationId,
-      evidenceId,
-      mediaId,
-      input,
+    return this.runInTransaction(() =>
+      this.journalistWorkflowService.updateWatcherEvidenceMediaItem(
+        journalistId,
+        investigationId,
+        evidenceId,
+        mediaId,
+        input,
+      ),
     )
   }
 
@@ -123,10 +144,12 @@ export class FactCheckingService {
       authoritySourceType: SourceType
     },
   ): Promise<void> {
-    return this.journalistWorkflowService.addJournalistProofMedia(
-      journalistId,
-      investigationId,
-      input,
+    return this.runInTransaction(() =>
+      this.journalistWorkflowService.addJournalistProofMedia(
+        journalistId,
+        investigationId,
+        input,
+      ),
     )
   }
 
@@ -135,10 +158,12 @@ export class FactCheckingService {
     investigationId: string,
     input: ApproveInvestigationInput = {},
   ): Promise<string> {
-    return this.directorWorkflowService.approveInvestigation(
-      directorId,
-      investigationId,
-      input,
+    return this.runInTransaction(() =>
+      this.directorWorkflowService.approveInvestigation(
+        directorId,
+        investigationId,
+        input,
+      ),
     )
   }
 
@@ -147,10 +172,12 @@ export class FactCheckingService {
     investigationId: string,
     reason: string,
   ): Promise<void> {
-    return this.directorWorkflowService.rejectInvestigation(
-      directorId,
-      investigationId,
-      reason,
+    return this.runInTransaction(() =>
+      this.directorWorkflowService.rejectInvestigation(
+        directorId,
+        investigationId,
+        reason,
+      ),
     )
   }
 
@@ -159,10 +186,12 @@ export class FactCheckingService {
     investigationId: string,
     reason: string,
   ): Promise<void> {
-    return this.directorWorkflowService.cancelInvestigation(
-      directorId,
-      investigationId,
-      reason,
+    return this.runInTransaction(() =>
+      this.directorWorkflowService.cancelInvestigation(
+        directorId,
+        investigationId,
+        reason,
+      ),
     )
   }
 
@@ -171,10 +200,12 @@ export class FactCheckingService {
     inboxSubjectId: string,
     reason: string,
   ): Promise<void> {
-    return this.directorWorkflowService.deleteInboxSubjectByDirector(
-      directorId,
-      inboxSubjectId,
-      reason,
+    return this.runInTransaction(() =>
+      this.directorWorkflowService.deleteInboxSubjectByDirector(
+        directorId,
+        inboxSubjectId,
+        reason,
+      ),
     )
   }
 
@@ -183,10 +214,12 @@ export class FactCheckingService {
     investigationId: string,
     comment?: string,
   ): Promise<void> {
-    return this.directorWorkflowService.archiveUnverifiableInvestigation(
-      directorId,
-      investigationId,
-      comment,
+    return this.runInTransaction(() =>
+      this.directorWorkflowService.archiveUnverifiableInvestigation(
+        directorId,
+        investigationId,
+        comment,
+      ),
     )
   }
 
@@ -194,9 +227,11 @@ export class FactCheckingService {
     directorId: string,
     applicationId: string,
   ): Promise<void> {
-    return this.directorWorkflowService.approveWatcherApplication(
-      directorId,
-      applicationId,
+    return this.runInTransaction(() =>
+      this.directorWorkflowService.approveWatcherApplication(
+        directorId,
+        applicationId,
+      ),
     )
   }
 
@@ -204,9 +239,18 @@ export class FactCheckingService {
     directorId: string,
     applicationId: string,
   ): Promise<void> {
-    return this.directorWorkflowService.rejectWatcherApplication(
-      directorId,
-      applicationId,
+    return this.runInTransaction(() =>
+      this.directorWorkflowService.rejectWatcherApplication(
+        directorId,
+        applicationId,
+      ),
     )
+  }
+
+  private runInTransaction<T>(work: () => Promise<T>): Promise<T> {
+    if (!this.transactionRunner) {
+      return work()
+    }
+    return this.transactionRunner(work)
   }
 }

@@ -344,9 +344,7 @@ export class DirectorWorkflowService {
     if (director) {
       await this.directorRepository.update(director)
     }
-    for (const authoritySource of authoritySources) {
-      await this.authoritySourceRepository.save(authoritySource)
-    }
+    await this.authoritySourceRepository.saveMany(authoritySources)
     await this.publicationRepository.save(publication)
     await this.workflowAuditRepository.save(audit)
   }

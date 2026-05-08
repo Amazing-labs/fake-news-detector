@@ -3,7 +3,7 @@ import type { IDirectorRepository } from '../../../domain/repositories/IDirector
 import { prisma } from '../../config/database'
 
 type PrismaDirectorRow = NonNullable<
-  Awaited<ReturnType<typeof prisma.actor.findUnique>>
+  Awaited<ReturnType<typeof prisma.actor.findFirst>>
 >
 
 export class PrismaDirectorRepository implements IDirectorRepository {
@@ -24,15 +24,21 @@ export class PrismaDirectorRepository implements IDirectorRepository {
   }
 
   async findById(id: string): Promise<Director | null> {
-    const row = await prisma.actor.findUnique({
-      where: { id },
+    const row = await prisma.actor.findFirst({
+      where: {
+        id,
+        role: 'EDITORIAL_DIRECTOR',
+      },
     })
     return row ? this.toDomain(row) : null
   }
 
   async findByEmail(email: string): Promise<Director | null> {
-    const row = await prisma.actor.findUnique({
-      where: { email },
+    const row = await prisma.actor.findFirst({
+      where: {
+        email,
+        role: 'EDITORIAL_DIRECTOR',
+      },
     })
     return row ? this.toDomain(row) : null
   }
