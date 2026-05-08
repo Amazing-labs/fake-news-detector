@@ -44,3 +44,8 @@ export interface ApproveInvestigationInput {
   verifiedLinks?: PublicationVerifiedLinkInput[]
   verifiedMedia?: PublicationVerifiedMediaInput[]
 }
+
+export interface PublishCorrectionInput {
+  title: string
+  content: string
+}

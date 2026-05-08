@@ -52,6 +52,19 @@ export class PrismaPublicationRepository implements IPublicationRepository {
     })
   }
 
+  async update(publication: Publication): Promise<void> {
+    await prisma.publication.update({
+      where: { id: publication.id },
+      data: {
+        approvedById: publication.approvedById,
+        finalVerdict: publication.finalVerdict,
+        publishedAt: publication.publishedAt,
+        isCorrection: publication.isCorrection,
+        updatedAt: publication.updatedAt,
+      },
+    })
+  }
+
   async findById(id: string): Promise<Publication | null> {
     const row = await prisma.publication.findUnique({
       where: { id },

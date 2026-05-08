@@ -3,6 +3,7 @@ import { Publication } from '../entities/Publication'
 
 export interface IPublicationRepository {
   save(publication: Publication): Promise<void>
+  update(publication: Publication): Promise<void>
   findById(id: string): Promise<Publication | null>
   findByInvestigationId(investigationId: string): Promise<Publication | null>
   findAll(options?: {

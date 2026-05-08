@@ -11,9 +11,11 @@ export { InvestigationLifecycleService } from './investigationLifecycleService'
 export { JournalistWorkflowService } from './journalistWorkflowService'
 export { DirectorWorkflowService } from './directorWorkflowService'
 export { CitizenWorkflowService } from './citizenWorkflowService'
+export { CorrectionWorkflowService } from './correctionWorkflowService'
 export type {
   ApproveInvestigationInput,
   CreateDirectorInboxSubjectInput,
+  PublishCorrectionInput,
   PublicationAuthoritySourceInput,
   PublicationVerifiedLinkInput,
   PublicationVerifiedMediaInput,

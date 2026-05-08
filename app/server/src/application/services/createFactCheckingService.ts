@@ -5,6 +5,7 @@ import {
 import type {
   IAuthoritySourceRepository,
   ICitizenRepository,
+  ICorrectionRepository,
   IDirectorRepository,
   IEvidenceRepository,
   IInboxSubjectMediaRepository,
@@ -25,6 +26,7 @@ import {
 } from './FactCheckingService'
 import {
   CitizenWorkflowService,
+  CorrectionWorkflowService,
   DirectorWorkflowService,
   InvestigationLifecycleService,
   JournalistWorkflowService,
@@ -36,6 +38,7 @@ export interface FactCheckingServiceRepositoryDependencies {
   investigationRepository: IInvestigationRepository
   investigationMediaRepository: IInvestigationMediaRepository
   publicationRepository: IPublicationRepository
+  correctionRepository: ICorrectionRepository
   notificationRepository: INotificationRepository
   workflowAuditRepository: IWorkflowAuditRepository
   citizenRepository: ICitizenRepository
@@ -101,10 +104,20 @@ export function createFactCheckingService(
     investigationLifecycleService,
   )
 
+  const correctionWorkflowService = new CorrectionWorkflowService(
+    dependencies.directorRepository,
+    dependencies.publicationRepository,
+    dependencies.correctionRepository,
+    dependencies.notificationRepository,
+    dependencies.citizenRepository,
+    dependencies.investigationRepository,
+  )
+
   return new FactCheckingService(
     citizenWorkflowService,
     journalistWorkflowService,
     directorWorkflowService,
+    correctionWorkflowService,
     transactionRunner,
   )
 }
