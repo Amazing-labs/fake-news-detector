@@ -1,5 +1,6 @@
 import { describe, expect, test, vi } from 'vitest'
 import { FactCheckingService } from './FactCheckingService'
+import { createFactCheckingService } from './createFactCheckingService'
 import { Director } from '../../domain/entities/Director'
 import { Investigation } from '../../domain/entities/Investigation'
 import { InboxSubject } from '../../domain/entities/InboxSubject'
@@ -122,22 +123,24 @@ function buildService(deps: any = {}) {
     ...deps.domainEventPublisher,
   }
 
-  const service = new FactCheckingService(
-    reportRepository as any,
-    reportMediaRepository as any,
-    investigationRepository as any,
-    investigationMediaRepository as any,
-    publicationRepository as any,
-    notificationRepository as any,
-    workflowAuditRepository as any,
-    citizenRepository as any,
-    journalistRepository as any,
-    directorRepository as any,
-    watcherApplicationRepository as any,
-    evidenceRepository as any,
-    inboxSubjectRepository as any,
-    inboxSubjectMediaRepository as any,
-    authoritySourceRepository as any,
+  const service = createFactCheckingService(
+    {
+      reportRepository: reportRepository as any,
+      reportMediaRepository: reportMediaRepository as any,
+      investigationRepository: investigationRepository as any,
+      investigationMediaRepository: investigationMediaRepository as any,
+      publicationRepository: publicationRepository as any,
+      notificationRepository: notificationRepository as any,
+      workflowAuditRepository: workflowAuditRepository as any,
+      citizenRepository: citizenRepository as any,
+      journalistRepository: journalistRepository as any,
+      directorRepository: directorRepository as any,
+      watcherApplicationRepository: watcherApplicationRepository as any,
+      evidenceRepository: evidenceRepository as any,
+      inboxSubjectRepository: inboxSubjectRepository as any,
+      inboxSubjectMediaRepository: inboxSubjectMediaRepository as any,
+      authoritySourceRepository: authoritySourceRepository as any,
+    },
     domainEventPublisher as any,
   )
 
