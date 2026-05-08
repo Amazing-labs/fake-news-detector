@@ -18,6 +18,8 @@ import {
 import type { PublishCorrectionInput } from './types'
 
 export class CorrectionWorkflowService {
+  private static readonly CITIZEN_NOTIFICATION_BATCH_SIZE = 500
+
   constructor(
     private readonly directorRepository: IDirectorRepository,
     private readonly publicationRepository: IPublicationRepository,
@@ -71,20 +73,20 @@ export class CorrectionWorkflowService {
       journalistNotification.id,
     )
 
-    const citizens = await this.citizenRepository.findAll()
-    const citizenNotifications = citizens.map((citizen) =>
-      NotificationFactory.createCorrectionNotification(
-        citizen.id,
-        title,
-        content,
-        publication.id,
-      ),
-    )
+    const citizenIds = await this.citizenRepository.findAllIds()
 
-    await this.publicationRepository.update(publication)
+    await this.publicationRepository.markAsCorrected(
+      publication.id,
+      publication.updatedAt,
+    )
     await this.notificationRepository.save(journalistNotification)
     await this.correctionRepository.save(correction)
-    await this.notificationRepository.saveMany(citizenNotifications)
+    await this.notifyCitizensAboutCorrection(
+      citizenIds,
+      title,
+      content,
+      publication.id,
+    )
 
     return correction.id
   }
@@ -117,8 +119,35 @@ export class CorrectionWorkflowService {
     return investigation
   }
 
-  private assertRequiredText(value: string, message: string): string {
-    const normalized = value.trim()
+  private async notifyCitizensAboutCorrection(
+    citizenIds: string[],
+    title: string,
+    content: string,
+    publicationId: string,
+  ): Promise<void> {
+    for (
+      let index = 0;
+      index < citizenIds.length;
+      index += CorrectionWorkflowService.CITIZEN_NOTIFICATION_BATCH_SIZE
+    ) {
+      const batch = citizenIds.slice(
+        index,
+        index + CorrectionWorkflowService.CITIZEN_NOTIFICATION_BATCH_SIZE,
+      )
+      const notifications = batch.map((citizenId) =>
+        NotificationFactory.createCorrectionNotification(
+          citizenId,
+          title,
+          content,
+          publicationId,
+        ),
+      )
+      await this.notificationRepository.saveMany(notifications)
+    }
+  }
+
+  private assertRequiredText(value: string | null | undefined, message: string): string {
+    const normalized = (value ?? '').trim()
     if (!normalized) {
       throw new ValidationError(message)
     }

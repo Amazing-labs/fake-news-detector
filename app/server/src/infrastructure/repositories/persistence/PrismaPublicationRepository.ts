@@ -52,15 +52,12 @@ export class PrismaPublicationRepository implements IPublicationRepository {
     })
   }
 
-  async update(publication: Publication): Promise<void> {
+  async markAsCorrected(publicationId: string, updatedAt: Date): Promise<void> {
     await prisma.publication.update({
-      where: { id: publication.id },
+      where: { id: publicationId },
       data: {
-        approvedById: publication.approvedById,
-        finalVerdict: publication.finalVerdict,
-        publishedAt: publication.publishedAt,
-        isCorrection: publication.isCorrection,
-        updatedAt: publication.updatedAt,
+        isCorrection: true,
+        updatedAt,
       },
     })
   }

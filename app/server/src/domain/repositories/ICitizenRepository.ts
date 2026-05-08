@@ -6,6 +6,7 @@ export interface ICitizenRepository {
   findById(id: string): Promise<Citizen | null>
   findByEmail(email: string): Promise<Citizen | null>
   findAll(): Promise<Citizen[]>
+  findAllIds(): Promise<string[]>
   findByStatus(status: CitizenStatus): Promise<Citizen[]>
   findByCitizenType(type: CitizenType): Promise<Citizen[]>
   update(citizen: Citizen): Promise<void>

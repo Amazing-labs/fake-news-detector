@@ -53,6 +53,14 @@ export class PrismaCitizenRepository implements ICitizenRepository {
     return rows.map((row) => this.toDomain(row))
   }
 
+  async findAllIds(): Promise<string[]> {
+    const rows = await prisma.actor.findMany({
+      where: { role: 'CITIZEN' },
+      select: { id: true },
+    })
+    return rows.map((row) => row.id)
+  }
+
   async findByStatus(status: CitizenStatus): Promise<Citizen[]> {
     const rows = await prisma.actor.findMany({
       where: {

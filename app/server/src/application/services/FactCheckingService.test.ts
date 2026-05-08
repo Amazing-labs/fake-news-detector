@@ -47,7 +47,7 @@ function buildService(deps: any = {}) {
   }
   const publicationRepository = {
     save: vi.fn(),
-    update: vi.fn(),
+    markAsCorrected: vi.fn(),
     findById: vi.fn(),
     findByInvestigationId: vi.fn(),
     findAll: vi.fn(),
@@ -75,6 +75,7 @@ function buildService(deps: any = {}) {
   }
   const citizenRepository = {
     findById: vi.fn(),
+    findAllIds: vi.fn(),
     update: vi.fn(),
     findAll: vi.fn(),
     ...deps.citizenRepository,
@@ -369,7 +370,10 @@ describe('FactCheckingService new workflows', () => {
     ctx.directorRepository.findById.mockResolvedValue(director)
     ctx.publicationRepository.findById.mockResolvedValue(publication)
     ctx.investigationRepository.findById.mockResolvedValue(investigation)
-    ctx.citizenRepository.findAll.mockResolvedValue([citizenA, citizenB])
+    ctx.citizenRepository.findAllIds.mockResolvedValue([
+      citizenA.id,
+      citizenB.id,
+    ])
 
     const correctionId = await ctx.service.publishCorrection(
       director.id,
@@ -382,7 +386,10 @@ describe('FactCheckingService new workflows', () => {
 
     expect(correctionId).toBeTruthy()
     expect(publication.isCorrection).toBe(true)
-    expect(ctx.publicationRepository.update).toHaveBeenCalledWith(publication)
+    expect(ctx.publicationRepository.markAsCorrected).toHaveBeenCalledWith(
+      publication.id,
+      publication.updatedAt,
+    )
     expect(ctx.notificationRepository.save).toHaveBeenCalledOnce()
     expect(ctx.correctionRepository.save).toHaveBeenCalledOnce()
     const savedCorrection = ctx.correctionRepository.save.mock.calls[0][0]
