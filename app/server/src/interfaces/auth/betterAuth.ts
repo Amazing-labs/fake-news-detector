@@ -10,6 +10,39 @@ const DEFAULT_TRUSTED_ORIGINS = [
   'http://localhost:5173',
 ]
 
+function resolveBetterAuthSecret(): string {
+  const secret = process.env.BETTER_AUTH_SECRET ?? DEFAULT_SECRET
+
+  if (process.env.NODE_ENV === 'production' && secret === DEFAULT_SECRET) {
+    throw new Error(
+      'BETTER_AUTH_SECRET must be set in production. Refusing to use the default development secret.',
+    )
+  }
+
+  return secret
+}
+
+type ActorAccessCandidate = {
+  id: string
+  role: 'CITIZEN' | 'JOURNALIST' | 'EDITORIAL_DIRECTOR'
+  status: 'ACTIVE' | 'DISABLED' | 'BANNED'
+}
+
+export function canAttachActorToSession(
+  actor: ActorAccessCandidate | null,
+  emailVerified: boolean,
+): boolean {
+  if (!actor) {
+    return false
+  }
+
+  if (actor.role === 'CITIZEN') {
+    return true
+  }
+
+  return emailVerified
+}
+
 function readTrustedOrigins(): string[] {
   const configured = process.env.BETTER_AUTH_TRUSTED_ORIGINS
   if (!configured) {
@@ -23,7 +56,7 @@ function readTrustedOrigins(): string[] {
 }
 
 export const auth = betterAuth({
-  secret: process.env.BETTER_AUTH_SECRET ?? DEFAULT_SECRET,
+  secret: resolveBetterAuthSecret(),
   baseURL: process.env.BETTER_AUTH_URL ?? DEFAULT_BASE_URL,
   trustedOrigins: readTrustedOrigins(),
   database: prismaAdapter(prisma, {
@@ -70,13 +103,14 @@ export const auth = betterAuth({
           status: true,
         },
       })
+      const canAttachActor = canAttachActorToSession(actor, user.emailVerified)
 
       return {
         user: {
           ...user,
-          actorId: actor?.id ?? null,
-          actorRole: actor?.role ?? null,
-          actorStatus: actor?.status ?? null,
+          actorId: canAttachActor ? actor!.id : null,
+          actorRole: canAttachActor ? actor!.role : null,
+          actorStatus: canAttachActor ? actor!.status : null,
         },
         session,
       }
