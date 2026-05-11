@@ -1,6 +1,6 @@
 // domain/factories/AuthoritySourceFactory.ts
 import { AuthoritySource, SourceType } from '../entities/AuthoritySource'
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 export interface CreateAuthoritySourceParams {
   name: string

@@ -1,6 +1,6 @@
 // domain/entities/Notification.ts
 
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 import { DomainError } from '../../shared'
 
 export type NotificationType =

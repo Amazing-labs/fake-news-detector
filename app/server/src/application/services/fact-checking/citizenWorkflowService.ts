@@ -1,6 +1,7 @@
 import type {
   ICitizenRepository,
   IEvidenceRepository,
+  IInboxSubjectRepository,
   IInvestigationRepository,
   INotificationRepository,
   IReportMediaRepository,
@@ -9,6 +10,7 @@ import type {
 } from '../../../domain/repositories'
 import type { ReportMediaInsert } from '../../../domain/repositories/IReportMediaRepository'
 import { EvidenceFactory } from '../../../domain/factories/EvidenceFactory'
+import { InboxSubjectFactory } from '../../../domain/factories/InboxSubjectFactory'
 import { NotificationFactory } from '../../../domain/factories/NotificationFactory'
 import { ReportFactory } from '../../../domain/factories/ReportFactory'
 import { WatcherApplicationFactory } from '../../../domain/factories/WatcherApplicationFactory'
@@ -24,6 +26,7 @@ export class CitizenWorkflowService {
     private readonly citizenRepository: ICitizenRepository,
     private readonly reportRepository: IReportRepository,
     private readonly reportMediaRepository: IReportMediaRepository,
+    private readonly inboxSubjectRepository: IInboxSubjectRepository,
     private readonly investigationRepository: IInvestigationRepository,
     private readonly evidenceRepository: IEvidenceRepository,
     private readonly notificationRepository: INotificationRepository,
@@ -44,10 +47,19 @@ export class CitizenWorkflowService {
       title: input.title,
       content: input.content,
     })
+    const inboxDescription = this.resolveInboxSubjectDescription(report)
     citizen.incrementEngagementScore()
     citizen.openReportsCount++
 
     await this.reportRepository.save(report)
+
+    const inboxSubject = InboxSubjectFactory.createFromExistingReport(
+      input.citizenId,
+      report.theme,
+      inboxDescription,
+      report.id,
+    )
+    await this.inboxSubjectRepository.save(inboxSubject)
 
     if (input.media?.length) {
       const rows: ReportMediaInsert[] = input.media.map((media, index) => ({
@@ -147,5 +159,23 @@ export class CitizenWorkflowService {
     if (!value.trim()) {
       throw new ValidationError(message)
     }
+  }
+
+  private resolveInboxSubjectDescription(report: {
+    content: string | null
+    title: string | null
+    theme: string
+  }): string {
+    const description = [report.content, report.title, report.theme]
+      .map((value) => (value ?? '').trim())
+      .find((value) => value.length > 0)
+
+    if (!description) {
+      throw new ValidationError(
+        'Report does not contain enough information to build an inbox subject',
+      )
+    }
+
+    return description
   }
 }

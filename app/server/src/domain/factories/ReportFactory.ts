@@ -1,6 +1,6 @@
 // domain/factories/ReportFactory.ts
 import { Report, ReportStatus } from '../entities/Report'
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 export interface CreateReportParams {
   citizenId: string

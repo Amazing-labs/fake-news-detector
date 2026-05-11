@@ -2,7 +2,7 @@ import {
   WatcherApplication,
   type WatcherApplicationStatus,
 } from '../entities/WatcherApplication'
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 type CreateWatcherApplicationParams = {
   actorId: string

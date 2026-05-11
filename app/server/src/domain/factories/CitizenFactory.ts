@@ -5,7 +5,7 @@ import {
   CitizenStatus,
   CitizenRole,
 } from '../entities/Citizen'
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 export interface CreateCitizenParams {
   name: string

@@ -1,14 +1,15 @@
 // domain/entities/Journalist.ts
 // Bounded Context: Investigation Management
 
-import { Investigation, MediaCategory, Verdict } from './Investigation'
+import { Investigation } from './Investigation'
+import type { MediaCategory, Verdict } from './Investigation'
 import { InboxSubject } from './InboxSubject'
 import { BusinessRuleError, DomainError } from '../../shared/errors'
 import {
   MAX_CORRECTION_ATTEMPTS,
   MAX_INVESTIGATIONS_PER_JOURNALIST_AT_A_TIME,
 } from '../../shared'
-import { StatusReason, ActorStatus, ActorRole } from '../../shared/types'
+import type { StatusReason, ActorStatus, ActorRole } from '../../shared/types'
 
 export type JournalistRole = ActorRole
 export type JournalistStatus = ActorStatus

@@ -1,13 +1,13 @@
 // domain/entities/Director.ts
 // Bounded Context: Editorial Management
 
-import { Investigation, InvestigationStatus } from './Investigation'
+import type { Investigation, InvestigationStatus } from './Investigation'
 import { InboxSubject } from './InboxSubject'
-import { Citizen, CitizenStatusReason } from './Citizen'
-import { Journalist, JournalistStatusReason } from './Journalist'
-import { WatcherApplication } from './WatcherApplication'
+import type { Citizen, CitizenStatusReason } from './Citizen'
+import type { Journalist, JournalistStatusReason } from './Journalist'
+import type { WatcherApplication } from './WatcherApplication'
 import { DomainError, BusinessRuleError } from '../../shared/errors'
-import { ActorStatus, ActorRole } from '../../shared/types'
+import type { ActorStatus, ActorRole } from '../../shared/types'
 
 export type DirectorStatus = ActorStatus
 export type DirectorRole = ActorRole

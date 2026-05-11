@@ -29,11 +29,13 @@ export type Permission =
   // Director
   | 'investigation.approve'
   | 'publication.correct'
+  | 'investigation.cancel'
   | 'investigation.reject'
   | 'investigation.archive'
   | 'watcherApplication.decide'
   | 'journalist.manage'
-  | 'admin.dashboard.read'
+  | 'inbox.manage'
+  | 'director.dashboard.read'
   // Shared
   | 'notifications.read'
 
@@ -53,11 +55,13 @@ const ROLE_PERMISSIONS: Record<ActorRole, ReadonlySet<Permission>> = {
   EDITORIAL_DIRECTOR: new Set<Permission>([
     'investigation.approve',
     'publication.correct',
+    'investigation.cancel',
     'investigation.reject',
     'investigation.archive',
     'watcherApplication.decide',
     'journalist.manage',
-    'admin.dashboard.read',
+    'inbox.manage',
+    'director.dashboard.read',
     'notifications.read',
   ]),
 }

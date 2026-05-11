@@ -3,9 +3,8 @@
 export * from './entities'
 
 // Value Objects (exclude MediaCategory and Verdict to avoid conflicts)
+export type { MediaType, MediaOrigin } from './value-objects'
 export {
-  MediaType,
-  MediaOrigin,
   ReportMedia,
   InvestigationMedia,
   EvidenceMedia,
