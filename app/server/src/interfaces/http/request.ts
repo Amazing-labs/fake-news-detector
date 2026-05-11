@@ -12,3 +12,14 @@ export function requiredParam(
   }
   return value
 }
+
+export function requiredNumericParam(
+  c: Context<{ Variables: AppVariables }>,
+  key: string,
+): number {
+  const value = Number(requiredParam(c, key))
+  if (!Number.isInteger(value) || value < 0) {
+    throw new ValidationError(`Route param ${key} must be a valid number`)
+  }
+  return value
+}

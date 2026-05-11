@@ -1,4 +1,5 @@
 import type { Context } from 'hono'
+import { ZodError } from 'zod'
 import {
   BusinessRuleError,
   DomainError,
@@ -39,6 +40,24 @@ export function toErrorResponse(c: Context, error: unknown) {
 
   if (error instanceof ValidationError) {
     return c.json({ success: false, error: error.message }, 400)
+  }
+
+  if (error instanceof ZodError) {
+    return c.json(
+      {
+        success: false,
+        error: 'Invalid request payload',
+        details: error.issues.map((issue) => ({
+          path: issue.path.join('.'),
+          message: issue.message,
+        })),
+      },
+      400,
+    )
+  }
+
+  if (error instanceof SyntaxError) {
+    return c.json({ success: false, error: 'Invalid JSON payload' }, 400)
   }
 
   if (error instanceof BusinessRuleError) {

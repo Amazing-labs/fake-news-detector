@@ -3,7 +3,7 @@ import { FactCheckingService } from '../../application/services/FactCheckingServ
 import type { IInvestigationRepository } from '../../domain/repositories'
 import { created, noContent, ok } from '../http/responses'
 import type { AppVariables } from '../http/types'
-import { requiredParam } from '../http/request'
+import { requiredNumericParam, requiredParam } from '../http/request'
 import {
   approveInvestigationSchema,
   archiveSchema,
@@ -59,7 +59,7 @@ export class InvestigationController {
     await this.factCheckingService.updateInvestigationSourceMediaItem(
       body.journalistId,
       requiredParam(c, 'investigationId'),
-      Number(requiredParam(c, 'mediaId')),
+      requiredNumericParam(c, 'mediaId'),
       {
         category: body.category,
         reliability: body.reliability,
@@ -77,7 +77,7 @@ export class InvestigationController {
       body.journalistId,
       requiredParam(c, 'investigationId'),
       requiredParam(c, 'evidenceId'),
-      Number(requiredParam(c, 'mediaId')),
+      requiredNumericParam(c, 'mediaId'),
       {
         category: body.category,
         reliability: body.reliability,

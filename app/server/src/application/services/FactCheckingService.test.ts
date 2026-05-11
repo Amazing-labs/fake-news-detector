@@ -222,6 +222,25 @@ describe('FactCheckingService new workflows', () => {
     expect(ctx.citizenRepository.update).toHaveBeenCalledWith(citizen)
   })
 
+  test('submitReport rejects reports that cannot produce a valid inbox description', async () => {
+    const citizen = new Citizen('c1', 'Citizen', 'c@test', 'CITIZEN', 'ACTIVE')
+    const ctx = buildService()
+    ctx.citizenRepository.findById.mockResolvedValue(citizen)
+
+    await expect(
+      ctx.service.submitReport({
+        citizenId: citizen.id,
+        theme: '   ',
+        title: '',
+        content: '',
+      }),
+    ).rejects.toThrow(
+      'Report does not contain enough information to build an inbox subject',
+    )
+
+    expect(ctx.inboxSubjectRepository.save).not.toHaveBeenCalled()
+  })
+
   test('approveInvestigation keeps current flow when no publication evidence is provided', async () => {
     const director = new Director('d1', 'Director', 'd@test')
     const journalist = new Journalist(

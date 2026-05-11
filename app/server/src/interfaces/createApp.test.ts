@@ -1,6 +1,9 @@
 import { describe, expect, test, vi } from 'vitest'
 import { createApp } from './createApp'
 import { SecurityService } from '../application/services/SecurityService'
+import { ReportController } from './controllers/ReportController'
+import { InboxSubjectController } from './controllers/InboxSubjectController'
+import { InvestigationController } from './controllers/InvestigationController'
 
 function buildApp() {
   const reportController = {
@@ -142,6 +145,147 @@ describe('createApp', () => {
     expect(reportController.createReport).toHaveBeenCalledOnce()
   })
 
+  test('rejects report submission when body citizenId does not match authenticated actor', async () => {
+    const submitReport = vi.fn()
+    const securityService = new SecurityService({
+      verify: vi.fn(async () => ({
+        isValid: true,
+        actorId: 'citizen-1',
+        role: 'CITIZEN' as const,
+      })),
+    })
+    const app = createApp({
+      securityService,
+      reportController: new ReportController(
+        { submitReport } as any,
+        { findByCitizenId: vi.fn(), findAll: vi.fn() } as any,
+      ),
+      inboxSubjectController: {
+        list: vi.fn(),
+        listOpenReports: vi.fn(),
+        createDirectorSubject: vi.fn(),
+        pick: vi.fn(),
+        delete: vi.fn(),
+      } as any,
+      investigationController: {
+        list: vi.fn(),
+        submitForReview: vi.fn(),
+        updateSourceMedia: vi.fn(),
+        updateWatcherEvidenceMedia: vi.fn(),
+        addProofMedia: vi.fn(),
+        approve: vi.fn(),
+        reject: vi.fn(),
+        archive: vi.fn(),
+        cancel: vi.fn(),
+        submitWatcherEvidence: vi.fn(),
+      } as any,
+      publicationController: {
+        list: vi.fn(),
+        publishCorrection: vi.fn(),
+      } as any,
+      watcherApplicationController: {
+        submit: vi.fn(),
+        list: vi.fn(),
+        approve: vi.fn(),
+        reject: vi.fn(),
+      } as any,
+      journalistManagementController: {
+        create: vi.fn(),
+        ban: vi.fn(),
+        disable: vi.fn(),
+        activate: vi.fn(),
+      } as any,
+      directorController: {
+        getDashboard: vi.fn(),
+      } as any,
+    })
+
+    const response = await app.request('/api/reports', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer citizen-1:CITIZEN',
+      },
+      body: JSON.stringify({
+        citizenId: 'citizen-2',
+        theme: 'health',
+        title: 'Title',
+        content: 'Body',
+      }),
+    })
+
+    expect(response.status).toBe(400)
+    expect(submitReport).not.toHaveBeenCalled()
+  })
+
+  test('returns 400 when request JSON is malformed', async () => {
+    const submitReport = vi.fn()
+    const securityService = new SecurityService({
+      verify: vi.fn(async () => ({
+        isValid: true,
+        actorId: 'citizen-1',
+        role: 'CITIZEN' as const,
+      })),
+    })
+    const app = createApp({
+      securityService,
+      reportController: new ReportController(
+        { submitReport } as any,
+        { findByCitizenId: vi.fn(), findAll: vi.fn() } as any,
+      ),
+      inboxSubjectController: {
+        list: vi.fn(),
+        listOpenReports: vi.fn(),
+        createDirectorSubject: vi.fn(),
+        pick: vi.fn(),
+        delete: vi.fn(),
+      } as any,
+      investigationController: {
+        list: vi.fn(),
+        submitForReview: vi.fn(),
+        updateSourceMedia: vi.fn(),
+        updateWatcherEvidenceMedia: vi.fn(),
+        addProofMedia: vi.fn(),
+        approve: vi.fn(),
+        reject: vi.fn(),
+        archive: vi.fn(),
+        cancel: vi.fn(),
+        submitWatcherEvidence: vi.fn(),
+      } as any,
+      publicationController: {
+        list: vi.fn(),
+        publishCorrection: vi.fn(),
+      } as any,
+      watcherApplicationController: {
+        submit: vi.fn(),
+        list: vi.fn(),
+        approve: vi.fn(),
+        reject: vi.fn(),
+      } as any,
+      journalistManagementController: {
+        create: vi.fn(),
+        ban: vi.fn(),
+        disable: vi.fn(),
+        activate: vi.fn(),
+      } as any,
+      directorController: {
+        getDashboard: vi.fn(),
+      } as any,
+    })
+
+    const response = await app.request('/api/reports', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer citizen-1:CITIZEN',
+      },
+      body: '{',
+    })
+
+    expect(response.status).toBe(400)
+    expect(submitReport).not.toHaveBeenCalled()
+  })
+
   test('forbids director dashboard to a citizen token', async () => {
     const { app } = buildApp()
     const response = await app.request('/api/director/dashboard', {
@@ -151,6 +295,71 @@ describe('createApp', () => {
     })
 
     expect(response.status).toBe(403)
+  })
+
+  test('rejects invalid inbox subject status query', async () => {
+    const findByStatus = vi.fn()
+    const findAll = vi.fn()
+    const securityService = new SecurityService({
+      verify: vi.fn(async () => ({
+        isValid: true,
+        actorId: 'citizen-1',
+        role: 'CITIZEN' as const,
+      })),
+    })
+    const app = createApp({
+      securityService,
+      reportController: {
+        listReports: vi.fn(),
+        createReport: vi.fn(),
+      } as any,
+      inboxSubjectController: new InboxSubjectController(
+        {} as any,
+        { findByStatus, findAll } as any,
+        { listInbox: vi.fn() } as any,
+      ),
+      investigationController: {
+        list: vi.fn(),
+        submitForReview: vi.fn(),
+        updateSourceMedia: vi.fn(),
+        updateWatcherEvidenceMedia: vi.fn(),
+        addProofMedia: vi.fn(),
+        approve: vi.fn(),
+        reject: vi.fn(),
+        archive: vi.fn(),
+        cancel: vi.fn(),
+        submitWatcherEvidence: vi.fn(),
+      } as any,
+      publicationController: {
+        list: vi.fn(),
+        publishCorrection: vi.fn(),
+      } as any,
+      watcherApplicationController: {
+        submit: vi.fn(),
+        list: vi.fn(),
+        approve: vi.fn(),
+        reject: vi.fn(),
+      } as any,
+      journalistManagementController: {
+        create: vi.fn(),
+        ban: vi.fn(),
+        disable: vi.fn(),
+        activate: vi.fn(),
+      } as any,
+      directorController: {
+        getDashboard: vi.fn(),
+      } as any,
+    })
+
+    const response = await app.request('/api/inbox-subjects?status=INVALID', {
+      headers: {
+        Authorization: 'Bearer citizen-1:CITIZEN',
+      },
+    })
+
+    expect(response.status).toBe(400)
+    expect(findByStatus).not.toHaveBeenCalled()
+    expect(findAll).not.toHaveBeenCalled()
   })
 
   test('routes correction publishing through publication endpoint', async () => {
@@ -299,5 +508,73 @@ describe('createApp', () => {
 
     expect(response.status).toBe(201)
     expect(investigationController.approve).toHaveBeenCalledOnce()
+  })
+
+  test('rejects invalid numeric mediaId before reaching the investigation service', async () => {
+    const updateInvestigationSourceMediaItem = vi.fn()
+    const securityService = new SecurityService({
+      verify: vi.fn(async () => ({
+        isValid: true,
+        actorId: 'journalist-1',
+        role: 'JOURNALIST' as const,
+      })),
+    })
+    const app = createApp({
+      securityService,
+      reportController: {
+        listReports: vi.fn(),
+        createReport: vi.fn(),
+      } as any,
+      inboxSubjectController: {
+        list: vi.fn(),
+        listOpenReports: vi.fn(),
+        createDirectorSubject: vi.fn(),
+        pick: vi.fn(),
+        delete: vi.fn(),
+      } as any,
+      investigationController: new InvestigationController(
+        { updateInvestigationSourceMediaItem } as any,
+        {} as any,
+      ),
+      publicationController: {
+        list: vi.fn(),
+        publishCorrection: vi.fn(),
+      } as any,
+      watcherApplicationController: {
+        submit: vi.fn(),
+        list: vi.fn(),
+        approve: vi.fn(),
+        reject: vi.fn(),
+      } as any,
+      journalistManagementController: {
+        create: vi.fn(),
+        ban: vi.fn(),
+        disable: vi.fn(),
+        activate: vi.fn(),
+      } as any,
+      directorController: {
+        getDashboard: vi.fn(),
+      } as any,
+    })
+
+    const response = await app.request(
+      '/api/investigations/inv-1/source-media/not-a-number',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer journalist-1:JOURNALIST',
+        },
+        body: JSON.stringify({
+          journalistId: 'journalist-1',
+          category: 'FABRICATED',
+          reliability: 'TRUE',
+          justification: 'Checked source',
+        }),
+      },
+    )
+
+    expect(response.status).toBe(400)
+    expect(updateInvestigationSourceMediaItem).not.toHaveBeenCalled()
   })
 })

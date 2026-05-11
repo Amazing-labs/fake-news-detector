@@ -16,6 +16,13 @@ import {
 import { presentInboxSubjectList } from '../presenters/inboxSubjectPresenter'
 import { presentInvestigation } from '../presenters/investigationPresenter'
 import { presentReportList } from '../presenters/reportPresenter'
+import { z } from 'zod'
+
+const inboxSubjectStatusQuerySchema = z.enum([
+  'OPEN',
+  'IN_PROGRESS',
+  'ARCHIVED',
+])
 
 export class InboxSubjectController {
   constructor(
@@ -25,7 +32,10 @@ export class InboxSubjectController {
   ) {}
 
   list = async (c: Context<{ Variables: AppVariables }>) => {
-    const status = c.req.query('status')
+    const rawStatus = c.req.query('status')
+    const status = rawStatus
+      ? inboxSubjectStatusQuerySchema.parse(rawStatus)
+      : undefined
     const items = status
       ? await this.inboxSubjectRepository.findByStatus(
           status as InboxSubjectStatus,

@@ -47,6 +47,7 @@ export class CitizenWorkflowService {
       title: input.title,
       content: input.content,
     })
+    const inboxDescription = this.resolveInboxSubjectDescription(report)
     citizen.incrementEngagementScore()
     citizen.openReportsCount++
 
@@ -55,7 +56,7 @@ export class CitizenWorkflowService {
     const inboxSubject = InboxSubjectFactory.createFromExistingReport(
       input.citizenId,
       report.theme,
-      report.content ?? report.title ?? report.theme,
+      inboxDescription,
       report.id,
     )
     await this.inboxSubjectRepository.save(inboxSubject)
@@ -158,5 +159,23 @@ export class CitizenWorkflowService {
     if (!value.trim()) {
       throw new ValidationError(message)
     }
+  }
+
+  private resolveInboxSubjectDescription(report: {
+    content: string | null
+    title: string | null
+    theme: string
+  }): string {
+    const description = [report.content, report.title, report.theme]
+      .map((value) => (value ?? '').trim())
+      .find((value) => value.length > 0)
+
+    if (!description) {
+      throw new ValidationError(
+        'Report does not contain enough information to build an inbox subject',
+      )
+    }
+
+    return description
   }
 }
