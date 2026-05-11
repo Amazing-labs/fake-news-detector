@@ -103,14 +103,16 @@ export const auth = betterAuth({
           status: true,
         },
       })
-      const canAttachActor = canAttachActorToSession(actor, user.emailVerified)
+      const attachedActor = canAttachActorToSession(actor, user.emailVerified)
+        ? actor
+        : null
 
       return {
         user: {
           ...user,
-          actorId: canAttachActor ? actor!.id : null,
-          actorRole: canAttachActor ? actor!.role : null,
-          actorStatus: canAttachActor ? actor!.status : null,
+          actorId: attachedActor?.id ?? null,
+          actorRole: attachedActor?.role ?? null,
+          actorStatus: attachedActor?.status ?? null,
         },
         session,
       }
