@@ -3,7 +3,7 @@ import {
   type InboxSubjectOrigin,
   type InboxSubjectStatus,
 } from '../entities/InboxSubject'
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 type CreateInboxSubjectParams = {
   theme: string

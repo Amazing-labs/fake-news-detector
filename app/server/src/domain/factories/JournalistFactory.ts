@@ -4,7 +4,7 @@ import {
   JournalistStatus,
   JournalistRole,
 } from '../entities/Journalist'
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 export interface CreateJournalistParams {
   name: string

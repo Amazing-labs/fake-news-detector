@@ -1,4 +1,4 @@
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 
 import { AuthoritySourceFactory } from '../../../domain/factories/AuthoritySourceFactory'
 import {

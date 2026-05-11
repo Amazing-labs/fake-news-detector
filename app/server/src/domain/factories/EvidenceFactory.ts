@@ -1,6 +1,6 @@
 // domain/factories/EvidenceFactory.ts
 import { Evidence } from '../entities/Evidence'
-import { randomUUID } from 'crypto'
+import { randomUUID } from 'node:crypto'
 import type { MediaType } from '../value-objects/Media'
 import { EvidenceMediaFactory } from './MediaFactory'
 import { DomainError } from '../../shared/errors'
