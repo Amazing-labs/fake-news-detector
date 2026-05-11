@@ -1,6 +1,6 @@
 // domain/entities/Publication.ts
 
-import { Verdict } from './Investigation'
+import type { Verdict } from './Investigation'
 import { VerifiedLink, VerifiedMedia } from '../value-objects'
 
 export class Publication {

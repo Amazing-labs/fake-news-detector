@@ -1,6 +1,7 @@
 import type {
   ICitizenRepository,
   IEvidenceRepository,
+  IInboxSubjectRepository,
   IInvestigationRepository,
   INotificationRepository,
   IReportMediaRepository,
@@ -9,6 +10,7 @@ import type {
 } from '../../../domain/repositories'
 import type { ReportMediaInsert } from '../../../domain/repositories/IReportMediaRepository'
 import { EvidenceFactory } from '../../../domain/factories/EvidenceFactory'
+import { InboxSubjectFactory } from '../../../domain/factories/InboxSubjectFactory'
 import { NotificationFactory } from '../../../domain/factories/NotificationFactory'
 import { ReportFactory } from '../../../domain/factories/ReportFactory'
 import { WatcherApplicationFactory } from '../../../domain/factories/WatcherApplicationFactory'
@@ -24,6 +26,7 @@ export class CitizenWorkflowService {
     private readonly citizenRepository: ICitizenRepository,
     private readonly reportRepository: IReportRepository,
     private readonly reportMediaRepository: IReportMediaRepository,
+    private readonly inboxSubjectRepository: IInboxSubjectRepository,
     private readonly investigationRepository: IInvestigationRepository,
     private readonly evidenceRepository: IEvidenceRepository,
     private readonly notificationRepository: INotificationRepository,
@@ -48,6 +51,14 @@ export class CitizenWorkflowService {
     citizen.openReportsCount++
 
     await this.reportRepository.save(report)
+
+    const inboxSubject = InboxSubjectFactory.createFromExistingReport(
+      input.citizenId,
+      report.theme,
+      report.content ?? report.title ?? report.theme,
+      report.id,
+    )
+    await this.inboxSubjectRepository.save(inboxSubject)
 
     if (input.media?.length) {
       const rows: ReportMediaInsert[] = input.media.map((media, index) => ({

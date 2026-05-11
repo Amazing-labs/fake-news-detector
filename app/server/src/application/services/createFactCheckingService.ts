@@ -70,6 +70,7 @@ export function createFactCheckingService(
     dependencies.citizenRepository,
     dependencies.reportRepository,
     dependencies.reportMediaRepository,
+    dependencies.inboxSubjectRepository,
     dependencies.investigationRepository,
     dependencies.evidenceRepository,
     dependencies.notificationRepository,

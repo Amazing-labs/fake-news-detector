@@ -1,10 +1,12 @@
 // domain/value-objects/index.ts
-export {
+export type {
   MediaType,
   MediaCategory,
   MediaOrigin,
   InboxSubjectMediaOrigin,
   Verdict,
+} from './Media'
+export {
   ReportMedia,
   InvestigationMedia,
   EvidenceMedia,

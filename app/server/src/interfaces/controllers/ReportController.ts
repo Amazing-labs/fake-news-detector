@@ -1,16 +1,29 @@
-// interfaces/controllers/ReportController.ts
-import { Context } from 'hono'
 import { FactCheckingService } from '../../application/services/FactCheckingService'
+import type { IReportRepository } from '../../domain/repositories'
+import { created, ok } from '../http/responses'
+import type { AppVariables } from '../http/types'
+import type { Context } from 'hono'
+import { submitReportSchema } from '../http/schemas/reportSchemas'
+import { presentReportList } from '../presenters/reportPresenter'
 
 export class ReportController {
-  constructor(private factCheckingService: FactCheckingService) {}
+  constructor(
+    private readonly factCheckingService: FactCheckingService,
+    private readonly reportRepository: IReportRepository,
+  ) {}
 
-  async createReport(c: Context) {
-    const body = await c.req.json()
-    return c.json({ message: 'Signalement créé', data: body }, 201)
+  createReport = async (c: Context<{ Variables: AppVariables }>) => {
+    const body = submitReportSchema.parse(await c.req.json())
+    const reportId = await this.factCheckingService.submitReport(body)
+    return created(c, { id: reportId }, 'Signalement cree')
   }
 
-  async listInbox(c: Context) {
-    return c.json({ reports: [] })
+  listReports = async (c: Context<{ Variables: AppVariables }>) => {
+    const citizenId = c.req.query('citizenId')
+    const reports = citizenId
+      ? await this.reportRepository.findByCitizenId(citizenId)
+      : await this.reportRepository.findAll()
+
+    return ok(c, presentReportList(reports))
   }
 }

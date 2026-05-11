@@ -1,6 +1,6 @@
 // domain/entities/WorkflowAudit.ts
 
-import { InvestigationStatus } from './Investigation'
+import type { InvestigationStatus } from './Investigation'
 
 export class WorkflowAudit {
   constructor(

@@ -1,0 +1,51 @@
+import type { Context } from 'hono'
+import { FactCheckingService } from '../../application/services/FactCheckingService'
+import type { IWatcherApplicationRepository } from '../../domain/repositories'
+import { created, noContent, ok } from '../http/responses'
+import type { AppVariables } from '../http/types'
+import { requiredParam } from '../http/request'
+import {
+  submitWatcherApplicationSchema,
+  watcherDecisionSchema,
+} from '../http/schemas/watcherApplicationSchemas'
+import { presentWatcherApplicationList } from '../presenters/watcherApplicationPresenter'
+
+export class WatcherApplicationController {
+  constructor(
+    private readonly factCheckingService: FactCheckingService,
+    private readonly watcherApplicationRepository: IWatcherApplicationRepository,
+  ) {}
+
+  submit = async (c: Context<{ Variables: AppVariables }>) => {
+    const body = submitWatcherApplicationSchema.parse(await c.req.json())
+    const applicationId =
+      await this.factCheckingService.submitWatcherApplication(
+        body.citizenId,
+        body.motivation,
+      )
+    return created(c, { id: applicationId }, 'Candidature watcher envoyee')
+  }
+
+  list = async (c: Context<{ Variables: AppVariables }>) => {
+    const items = await this.watcherApplicationRepository.findAll()
+    return ok(c, presentWatcherApplicationList(items))
+  }
+
+  approve = async (c: Context<{ Variables: AppVariables }>) => {
+    const body = watcherDecisionSchema.parse(await c.req.json())
+    await this.factCheckingService.approveWatcherApplication(
+      body.directorId,
+      requiredParam(c, 'applicationId'),
+    )
+    return noContent(c)
+  }
+
+  reject = async (c: Context<{ Variables: AppVariables }>) => {
+    const body = watcherDecisionSchema.parse(await c.req.json())
+    await this.factCheckingService.rejectWatcherApplication(
+      body.directorId,
+      requiredParam(c, 'applicationId'),
+    )
+    return noContent(c)
+  }
+}

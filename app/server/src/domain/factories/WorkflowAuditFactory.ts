@@ -1,6 +1,6 @@
 // domain/factories/WorkflowAuditFactory.ts
 import { WorkflowAudit } from '../entities/WorkflowAudit'
-import { InvestigationStatus } from '../entities/Investigation'
+import type { InvestigationStatus } from '../entities/Investigation'
 import { randomUUID } from 'crypto'
 
 export interface CreateWorkflowAuditParams {

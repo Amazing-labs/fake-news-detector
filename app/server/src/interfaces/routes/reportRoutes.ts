@@ -1,10 +1,28 @@
-// interfaces/routes/reportRoutes.ts
 import { Hono } from 'hono'
+import type { SecurityService } from '../../application/services/SecurityService'
+import { ReportController } from '../controllers/ReportController'
+import {
+  createAuthMiddleware,
+  createPermissionMiddleware,
+} from '../middlewares/authMiddleware'
+import type { AppVariables } from '../http/types'
 
-const reportRoutes = new Hono()
+export function createReportRoutes(
+  reportController: ReportController,
+  securityService: SecurityService,
+) {
+  const reportRoutes = new Hono<{ Variables: AppVariables }>()
+  const auth = createAuthMiddleware(securityService)
 
-reportRoutes.get('/', (c) => c.json({ message: 'Reports list' }))
-reportRoutes.post('/', (c) => c.json({ message: 'Report created' }, 201))
-reportRoutes.get('/inbox', (c) => c.json({ message: 'Inbox list' }))
+  reportRoutes.use('*', auth)
 
-export { reportRoutes }
+  reportRoutes.get('/', reportController.listReports)
+
+  reportRoutes.post(
+    '/',
+    createPermissionMiddleware(securityService, 'report.submit'),
+    reportController.createReport,
+  )
+
+  return reportRoutes
+}
