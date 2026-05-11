@@ -6,7 +6,7 @@ import { defineConfig } from 'eslint/config'
 
 export default defineConfig(
   {
-    ignores: ['**/*.test.ts', '**/*.spec.ts', '.github/**/*.js'],
+    ignores: ['**/*.test.ts', '**/*.spec.ts', '.github/**/*.js', '**/dist/**'],
   },
   {
     languageOptions: {
