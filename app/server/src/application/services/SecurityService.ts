@@ -11,10 +11,11 @@ export interface AuthenticationResult {
   isValid: boolean
   actorId?: string
   role?: ActorRole
+  status?: 'ACTIVE' | 'DISABLED' | 'BANNED'
 }
 
-export interface ITokenVerifier {
-  verify(token: string): Promise<AuthenticationResult>
+export interface IRequestAuthenticator {
+  authenticate(headers: Headers): Promise<AuthenticationResult>
 }
 
 export type Permission =
@@ -67,15 +68,14 @@ const ROLE_PERMISSIONS: Record<ActorRole, ReadonlySet<Permission>> = {
 }
 
 export class SecurityService {
-  constructor(private readonly tokenVerifier?: ITokenVerifier) {}
+  constructor(private readonly requestAuthenticator?: IRequestAuthenticator) {}
 
-  async authenticate(token: string): Promise<AuthenticationResult> {
-    if (!token.trim()) return { isValid: false }
-    if (!this.tokenVerifier) {
+  async authenticate(headers: Headers): Promise<AuthenticationResult> {
+    if (!this.requestAuthenticator) {
       // No verifier wired yet; reject by default to avoid silent allow-all.
       return { isValid: false }
     }
-    return this.tokenVerifier.verify(token)
+    return this.requestAuthenticator.authenticate(headers)
   }
 
   hasPermission(role: ActorRole, permission: Permission): boolean {

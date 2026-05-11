@@ -17,7 +17,7 @@ import { PrismaReportMediaRepository } from '../infrastructure/repositories/pers
 import { PrismaReportRepository } from '../infrastructure/repositories/persistence/PrismaReportRepository'
 import { PrismaWatcherApplicationRepository } from '../infrastructure/repositories/persistence/PrismaWatcherApplicationRepository'
 import { PrismaWorkflowAuditRepository } from '../infrastructure/repositories/persistence/PrismaWorkflowAuditRepository'
-import { SimpleTokenVerifier } from './auth/SimpleTokenVerifier'
+import { BetterAuthRequestAuthenticator } from './auth/BetterAuthRequestAuthenticator'
 import { DirectorController } from './controllers/DirectorController'
 import { InboxSubjectController } from './controllers/InboxSubjectController'
 import { InvestigationController } from './controllers/InvestigationController'
@@ -78,7 +78,9 @@ export function createAppDependencies(): AppDependencies {
     directorRepository,
     journalistRepository,
   )
-  const securityService = new SecurityService(new SimpleTokenVerifier())
+  const securityService = new SecurityService(
+    new BetterAuthRequestAuthenticator(),
+  )
 
   return {
     securityService,

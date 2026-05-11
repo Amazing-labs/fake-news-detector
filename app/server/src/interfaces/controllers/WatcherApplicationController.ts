@@ -17,10 +17,11 @@ export class WatcherApplicationController {
   ) {}
 
   submit = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
     const body = submitWatcherApplicationSchema.parse(await c.req.json())
     const applicationId =
       await this.factCheckingService.submitWatcherApplication(
-        body.citizenId,
+        actor.actorId,
         body.motivation,
       )
     return created(c, { id: applicationId }, 'Candidature watcher envoyee')
@@ -32,18 +33,20 @@ export class WatcherApplicationController {
   }
 
   approve = async (c: Context<{ Variables: AppVariables }>) => {
-    const body = watcherDecisionSchema.parse(await c.req.json())
+    const actor = c.get('actor')
+    watcherDecisionSchema.parse(await c.req.json())
     await this.factCheckingService.approveWatcherApplication(
-      body.directorId,
+      actor.actorId,
       requiredParam(c, 'applicationId'),
     )
     return noContent(c)
   }
 
   reject = async (c: Context<{ Variables: AppVariables }>) => {
-    const body = watcherDecisionSchema.parse(await c.req.json())
+    const actor = c.get('actor')
+    watcherDecisionSchema.parse(await c.req.json())
     await this.factCheckingService.rejectWatcherApplication(
-      body.directorId,
+      actor.actorId,
       requiredParam(c, 'applicationId'),
     )
     return noContent(c)

@@ -15,9 +15,10 @@ export class JournalistManagementController {
   ) {}
 
   create = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
     const body = createJournalistSchema.parse(await c.req.json())
     const journalistId = await this.actorManagementService.createJournalist(
-      body.directorId,
+      actor.actorId,
       body.name,
       body.email,
     )
@@ -25,9 +26,10 @@ export class JournalistManagementController {
   }
 
   ban = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
     const body = journalistActionSchema.parse(await c.req.json())
     await this.actorManagementService.banJournalist(
-      body.directorId,
+      actor.actorId,
       requiredParam(c, 'journalistId'),
       body.reason ?? 'OTHER',
       body.details,
@@ -36,9 +38,10 @@ export class JournalistManagementController {
   }
 
   disable = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
     const body = journalistActionSchema.parse(await c.req.json())
     await this.actorManagementService.disableJournalist(
-      body.directorId,
+      actor.actorId,
       requiredParam(c, 'journalistId'),
       body.reason ?? 'OTHER',
       body.details,
@@ -47,9 +50,10 @@ export class JournalistManagementController {
   }
 
   activate = async (c: Context<{ Variables: AppVariables }>) => {
-    const body = activateJournalistSchema.parse(await c.req.json())
+    const actor = c.get('actor')
+    activateJournalistSchema.parse(await c.req.json())
     await this.actorManagementService.activateJournalist(
-      body.directorId,
+      actor.actorId,
       requiredParam(c, 'journalistId'),
     )
     return noContent(c)

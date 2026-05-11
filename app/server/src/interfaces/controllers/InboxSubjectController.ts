@@ -45,23 +45,22 @@ export class InboxSubjectController {
   }
 
   createDirectorSubject = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
     const body = createDirectorInboxSubjectSchema.parse(await c.req.json())
     const inboxSubjectId =
-      await this.factCheckingService.createDirectorInboxSubject(
-        body.directorId,
-        {
-          theme: body.theme,
-          description: body.description,
-          media: body.media,
-        },
-      )
+      await this.factCheckingService.createDirectorInboxSubject(actor.actorId, {
+        theme: body.theme,
+        description: body.description,
+        media: body.media,
+      })
     return created(c, { id: inboxSubjectId }, 'Sujet de veille cree')
   }
 
   pick = async (c: Context<{ Variables: AppVariables }>) => {
-    const body = pickInboxSubjectSchema.parse(await c.req.json())
+    const actor = c.get('actor')
+    pickInboxSubjectSchema.parse(await c.req.json())
     const investigation = await this.factCheckingService.pickInboxSubject(
-      body.journalistId,
+      actor.actorId,
       requiredParam(c, 'inboxSubjectId'),
     )
     return created(
@@ -72,9 +71,10 @@ export class InboxSubjectController {
   }
 
   delete = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
     const body = deleteInboxSubjectSchema.parse(await c.req.json())
     await this.factCheckingService.deleteInboxSubjectByDirector(
-      body.directorId,
+      actor.actorId,
       requiredParam(c, 'inboxSubjectId'),
       body.reason,
     )
