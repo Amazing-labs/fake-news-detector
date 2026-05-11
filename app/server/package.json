@@ -2,6 +2,7 @@
   "name": "server",
   "scripts": {
     "dev": "bun run --hot src/index.ts",
+    "prebuild": "bun run generate",
     "build": "bun build src/index.ts --outdir=dist",
     "generate": "bunx prisma generate --config src/infrastructure/config/prisma.config.ts",
     "prisma:validate": "bunx prisma validate --config src/infrastructure/config/prisma.config.ts",
@@ -17,6 +18,7 @@
   },
   "dependencies": {
     "@hono/zod-openapi": "^1.2.2",
+    "@prisma/client": "^7.6.0",
     "@prisma/engines": "^7.7.0",
     "@types/node": "^25.6.0",
     "dotenv": "^17.4.2",
@@ -24,7 +26,6 @@
     "zod": "^4.3.6"
   },
   "devDependencies": {
-    "@prisma/client": "^7.6.0",
     "@types/bun": "latest",
     "prisma": "^7.6.0",
     "vitest": "^4.1.5",
