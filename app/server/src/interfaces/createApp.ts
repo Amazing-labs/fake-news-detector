@@ -8,9 +8,16 @@ import { createPublicationRoutes } from './routes/publicationRoutes'
 import { createReportRoutes } from './routes/reportRoutes'
 import { createWatcherApplicationRoutes } from './routes/watcherApplicationRoutes'
 import { toErrorResponse } from './http/responses'
+import { setPrismaConnectionString } from '../infrastructure/config/database'
 
 export function createApp(dependencies: AppDependencies) {
   const app = new Hono()
+
+  app.use('*', async (c, next) => {
+    const env = c.env as { DATABASE_URL?: string } | undefined
+    setPrismaConnectionString(env?.DATABASE_URL ?? process.env.DATABASE_URL)
+    await next()
+  })
 
   app.route(
     '/api/reports',

@@ -3,7 +3,7 @@
   "scripts": {
     "dev": "bun run --hot src/index.ts",
     "prebuild": "bun run generate",
-    "build": "bun build src/index.ts --outdir=dist",
+    "build": "bun build src/index.ts --target=node --outdir=dist",
     "generate": "bunx prisma generate --config src/infrastructure/config/prisma.config.ts",
     "prisma:validate": "bunx prisma validate --config src/infrastructure/config/prisma.config.ts",
     "migrate": "bunx prisma migrate dev --config src/infrastructure/config/prisma.config.ts",
@@ -18,11 +18,13 @@
   },
   "dependencies": {
     "@hono/zod-openapi": "^1.2.2",
+    "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.6.0",
     "@prisma/engines": "^7.7.0",
     "@types/node": "^25.6.0",
     "dotenv": "^17.4.2",
     "hono": "^4.12.5",
+    "pg": "^8.16.3",
     "zod": "^4.3.6"
   },
   "devDependencies": {
