@@ -1,26 +1,21 @@
 import { z } from 'zod'
 import {
   authoritySourceInputSchema,
-  idSchema,
   mediaCategorySchema,
   mediaTypeSchema,
   sourceTypeSchema,
   verdictSchema,
 } from './common'
 
-export const journalistActionSchema = z.object({
-  journalistId: idSchema,
-})
+export const journalistActionSchema = z.object({})
 
 export const updateMediaSchema = z.object({
-  journalistId: idSchema,
   category: mediaCategorySchema,
   reliability: verdictSchema,
   justification: z.string().min(1),
 })
 
 export const proofMediaSchema = z.object({
-  journalistId: idSchema,
   url: z.url(),
   type: mediaTypeSchema,
   order: z.number().int().min(0).optional(),
@@ -29,7 +24,6 @@ export const proofMediaSchema = z.object({
 })
 
 export const approveInvestigationSchema = z.object({
-  directorId: idSchema,
   verifiedLinks: z
     .array(
       z.object({
@@ -51,17 +45,14 @@ export const approveInvestigationSchema = z.object({
 })
 
 export const directorReasonSchema = z.object({
-  directorId: idSchema,
   reason: z.string().min(1),
 })
 
 export const archiveSchema = z.object({
-  directorId: idSchema,
   comment: z.string().min(1).optional(),
 })
 
 export const submitWatcherEvidenceSchema = z.object({
-  citizenId: idSchema,
   title: z.string().min(1),
   content: z.string().min(1),
   media: z

@@ -10,21 +10,20 @@ export function createAuthMiddleware(
   securityService: SecurityService,
 ): MiddlewareHandler<{ Variables: AppVariables }> {
   return async (c, next) => {
-    const token = c.req.header('Authorization')
-
-    if (!token) {
+    const auth = await securityService.authenticate(c.req.raw.headers)
+    if (!auth.isValid || !auth.actorId || !auth.role) {
       return c.json({ success: false, error: 'Unauthorized' }, 401)
     }
 
-    const auth = await securityService.authenticate(token)
-    if (!auth.isValid || !auth.actorId || !auth.role) {
-      return c.json({ success: false, error: 'Unauthorized' }, 401)
+    if (auth.status && auth.status !== 'ACTIVE') {
+      return c.json({ success: false, error: 'Forbidden' }, 403)
     }
 
     c.set('actor', {
       actorId: auth.actorId,
       actorRole: auth.role,
     })
+    c.set('authSession', auth)
 
     await next()
   }

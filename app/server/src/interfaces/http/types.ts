@@ -7,4 +7,5 @@ export interface AuthenticatedActor {
 
 export interface AppVariables {
   actor: AuthenticatedActor
+  authSession: unknown
 }

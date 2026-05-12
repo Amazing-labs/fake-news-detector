@@ -74,8 +74,11 @@ function buildApp() {
   }
 
   const securityService = new SecurityService({
-    verify: vi.fn(async (token: string) => {
-      const rawToken = token.replace(/^Bearer\s+/i, '')
+    authenticate: vi.fn(async (headers: Headers) => {
+      const rawToken = (headers.get('Authorization') ?? '').replace(
+        /^Bearer\s+/i,
+        '',
+      )
       const [actorId, role] = rawToken.split(':', 2)
       return actorId && role
         ? { isValid: true, actorId, role: role as any }
@@ -114,7 +117,6 @@ describe('createApp', () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        citizenId: 'c1',
         theme: 'theme',
       }),
     })
@@ -132,7 +134,6 @@ describe('createApp', () => {
         Authorization: 'Bearer citizen-1:CITIZEN',
       },
       body: JSON.stringify({
-        citizenId: 'citizen-1',
         theme: 'health',
         title: 'Title',
         content: 'Body',
@@ -145,10 +146,10 @@ describe('createApp', () => {
     expect(reportController.createReport).toHaveBeenCalledOnce()
   })
 
-  test('rejects report submission when body citizenId does not match authenticated actor', async () => {
+  test('binds report submission to the authenticated actor', async () => {
     const submitReport = vi.fn()
     const securityService = new SecurityService({
-      verify: vi.fn(async () => ({
+      authenticate: vi.fn(async () => ({
         isValid: true,
         actorId: 'citizen-1',
         role: 'CITIZEN' as const,
@@ -207,21 +208,25 @@ describe('createApp', () => {
         Authorization: 'Bearer citizen-1:CITIZEN',
       },
       body: JSON.stringify({
-        citizenId: 'citizen-2',
         theme: 'health',
         title: 'Title',
         content: 'Body',
       }),
     })
 
-    expect(response.status).toBe(400)
-    expect(submitReport).not.toHaveBeenCalled()
+    expect(response.status).toBe(201)
+    expect(submitReport).toHaveBeenCalledWith({
+      citizenId: 'citizen-1',
+      theme: 'health',
+      title: 'Title',
+      content: 'Body',
+    })
   })
 
   test('returns 400 when request JSON is malformed', async () => {
     const submitReport = vi.fn()
     const securityService = new SecurityService({
-      verify: vi.fn(async () => ({
+      authenticate: vi.fn(async () => ({
         isValid: true,
         actorId: 'citizen-1',
         role: 'CITIZEN' as const,
@@ -301,7 +306,7 @@ describe('createApp', () => {
     const findByStatus = vi.fn()
     const findAll = vi.fn()
     const securityService = new SecurityService({
-      verify: vi.fn(async () => ({
+      authenticate: vi.fn(async () => ({
         isValid: true,
         actorId: 'citizen-1',
         role: 'CITIZEN' as const,
@@ -372,7 +377,7 @@ describe('createApp', () => {
       ),
     }
     const securityService = new SecurityService({
-      verify: vi.fn(async () => ({
+      authenticate: vi.fn(async () => ({
         isValid: true,
         actorId: 'director-1',
         role: 'EDITORIAL_DIRECTOR' as const,
@@ -428,7 +433,6 @@ describe('createApp', () => {
         Authorization: 'Bearer director-1:EDITORIAL_DIRECTOR',
       },
       body: JSON.stringify({
-        directorId: 'director-1',
         title: 'Correction',
         content: 'Updated context',
       }),
@@ -454,7 +458,7 @@ describe('createApp', () => {
       submitWatcherEvidence: vi.fn(),
     }
     const securityService = new SecurityService({
-      verify: vi.fn(async () => ({
+      authenticate: vi.fn(async () => ({
         isValid: true,
         actorId: 'director-1',
         role: 'EDITORIAL_DIRECTOR' as const,
@@ -501,9 +505,7 @@ describe('createApp', () => {
         'Content-Type': 'application/json',
         Authorization: 'Bearer director-1:EDITORIAL_DIRECTOR',
       },
-      body: JSON.stringify({
-        directorId: 'director-1',
-      }),
+      body: JSON.stringify({}),
     })
 
     expect(response.status).toBe(201)
@@ -513,7 +515,7 @@ describe('createApp', () => {
   test('rejects invalid numeric mediaId before reaching the investigation service', async () => {
     const updateInvestigationSourceMediaItem = vi.fn()
     const securityService = new SecurityService({
-      verify: vi.fn(async () => ({
+      authenticate: vi.fn(async () => ({
         isValid: true,
         actorId: 'journalist-1',
         role: 'JOURNALIST' as const,
@@ -566,7 +568,6 @@ describe('createApp', () => {
           Authorization: 'Bearer journalist-1:JOURNALIST',
         },
         body: JSON.stringify({
-          journalistId: 'journalist-1',
           category: 'FABRICATED',
           reliability: 'TRUE',
           justification: 'Checked source',

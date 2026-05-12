@@ -1,8 +1,7 @@
 import { z } from 'zod'
-import { idSchema, mediaInputSchema } from './common'
+import { mediaInputSchema } from './common'
 
 export const submitReportSchema = z.object({
-  citizenId: idSchema,
   theme: z.string().min(1),
   title: z
     .string()

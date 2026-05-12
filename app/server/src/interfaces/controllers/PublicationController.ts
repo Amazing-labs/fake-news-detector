@@ -23,9 +23,10 @@ export class PublicationController {
   }
 
   publishCorrection = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
     const body = correctionSchema.parse(await c.req.json())
     const correctionId = await this.factCheckingService.publishCorrection(
-      body.directorId,
+      actor.actorId,
       requiredParam(c, 'publicationId'),
       {
         title: body.title,

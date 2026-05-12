@@ -46,18 +46,20 @@ export class InvestigationController {
   }
 
   submitForReview = async (c: Context<{ Variables: AppVariables }>) => {
-    const { journalistId } = journalistActionSchema.parse(await c.req.json())
+    const actor = c.get('actor')
+    journalistActionSchema.parse(await c.req.json())
     await this.factCheckingService.submitInvestigationForReview(
-      journalistId,
+      actor.actorId,
       requiredParam(c, 'investigationId'),
     )
     return noContent(c)
   }
 
   updateSourceMedia = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
     const body = updateMediaSchema.parse(await c.req.json())
     await this.factCheckingService.updateInvestigationSourceMediaItem(
-      body.journalistId,
+      actor.actorId,
       requiredParam(c, 'investigationId'),
       requiredNumericParam(c, 'mediaId'),
       {
@@ -72,9 +74,10 @@ export class InvestigationController {
   updateWatcherEvidenceMedia = async (
     c: Context<{ Variables: AppVariables }>,
   ) => {
+    const actor = c.get('actor')
     const body = updateMediaSchema.parse(await c.req.json())
     await this.factCheckingService.updateWatcherEvidenceMediaItem(
-      body.journalistId,
+      actor.actorId,
       requiredParam(c, 'investigationId'),
       requiredParam(c, 'evidenceId'),
       requiredNumericParam(c, 'mediaId'),
@@ -88,9 +91,10 @@ export class InvestigationController {
   }
 
   addProofMedia = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
     const body = proofMediaSchema.parse(await c.req.json())
     await this.factCheckingService.addJournalistProofMedia(
-      body.journalistId,
+      actor.actorId,
       requiredParam(c, 'investigationId'),
       {
         url: body.url,
@@ -104,9 +108,10 @@ export class InvestigationController {
   }
 
   approve = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
     const body = approveInvestigationSchema.parse(await c.req.json())
     const publicationId = await this.factCheckingService.approveInvestigation(
-      body.directorId,
+      actor.actorId,
       requiredParam(c, 'investigationId'),
       {
         verifiedLinks: body.verifiedLinks,
@@ -117,9 +122,10 @@ export class InvestigationController {
   }
 
   reject = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
     const body = directorReasonSchema.parse(await c.req.json())
     await this.factCheckingService.rejectInvestigation(
-      body.directorId,
+      actor.actorId,
       requiredParam(c, 'investigationId'),
       body.reason,
     )
@@ -127,9 +133,10 @@ export class InvestigationController {
   }
 
   archive = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
     const body = archiveSchema.parse(await c.req.json())
     await this.factCheckingService.archiveUnverifiableInvestigation(
-      body.directorId,
+      actor.actorId,
       requiredParam(c, 'investigationId'),
       body.comment,
     )
@@ -137,9 +144,10 @@ export class InvestigationController {
   }
 
   cancel = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
     const body = directorReasonSchema.parse(await c.req.json())
     await this.factCheckingService.cancelInvestigation(
-      body.directorId,
+      actor.actorId,
       requiredParam(c, 'investigationId'),
       body.reason,
     )
@@ -147,9 +155,10 @@ export class InvestigationController {
   }
 
   submitWatcherEvidence = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
     const body = submitWatcherEvidenceSchema.parse(await c.req.json())
     const evidenceId = await this.factCheckingService.submitWatcherEvidence({
-      citizenId: body.citizenId,
+      citizenId: actor.actorId,
       investigationId: requiredParam(c, 'investigationId'),
       title: body.title,
       content: body.content,

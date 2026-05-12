@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
 import type { AppDependencies } from './createAppDependencies'
 import { createDirectorRoutes } from './routes/directorRoutes'
 import { createInboxSubjectRoutes } from './routes/inboxSubjectRoutes'
@@ -9,6 +10,7 @@ import { createReportRoutes } from './routes/reportRoutes'
 import { createWatcherApplicationRoutes } from './routes/watcherApplicationRoutes'
 import { toErrorResponse } from './http/responses'
 import { setPrismaConnectionString } from '../infrastructure/config/database'
+import { auth } from './auth/betterAuth'
 
 export function createApp(dependencies: AppDependencies) {
   const app = new Hono()
@@ -18,6 +20,18 @@ export function createApp(dependencies: AppDependencies) {
     setPrismaConnectionString(env?.DATABASE_URL ?? process.env.DATABASE_URL)
     await next()
   })
+
+  app.use(
+    '/api/auth/*',
+    cors({
+      origin: (origin) => origin ?? 'http://localhost:5173',
+      allowHeaders: ['Content-Type', 'Authorization'],
+      allowMethods: ['GET', 'POST', 'OPTIONS'],
+      credentials: true,
+    }),
+  )
+
+  app.on(['GET', 'POST'], '/api/auth/*', (c) => auth.handler(c.req.raw))
 
   app.route(
     '/api/reports',
