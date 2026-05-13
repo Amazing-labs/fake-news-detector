@@ -2,6 +2,7 @@ import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { customSession } from 'better-auth/plugins'
 import { timingSafeEqual } from 'node:crypto'
+import { verifyPassword as verifyLegacyPassword } from '../../../node_modules/better-auth/dist/crypto/password.mjs'
 import { prisma } from '../../infrastructure/config/database'
 import {
   provisionCitizenActorForAuthUser,
@@ -93,12 +94,18 @@ async function verifyWorkerPassword({
     !saltBase64 ||
     !expectedBase64
   ) {
+    return verifyLegacyPassword({ hash, password })
+  }
+
+  const numIterations = Number(iterations)
+
+  if (!Number.isInteger(numIterations) || numIterations <= 0) {
     return false
   }
 
   const salt = decodeBase64(saltBase64)
   const expected = decodeBase64(expectedBase64)
-  const derivedKey = await derivePbkdf2Key(password, salt, Number(iterations))
+  const derivedKey = await derivePbkdf2Key(password, salt, numIterations)
 
   if (expected.length !== derivedKey.length) {
     return false
