@@ -35,7 +35,8 @@ export class ActorManagementService {
 
     await this.getActiveDirector(directorId)
 
-    const existing = await this.journalistRepository.findByEmail(normalizedEmail)
+    const existing =
+      await this.journalistRepository.findByEmail(normalizedEmail)
     if (existing) {
       throw new BusinessRuleError('A journalist with this email already exists')
     }

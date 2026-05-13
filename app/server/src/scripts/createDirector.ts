@@ -1,7 +1,10 @@
 import 'dotenv/config'
 
 import { createAuthLink } from '../interfaces/auth/authLinking'
-import { prisma, setPrismaConnectionString } from '../infrastructure/config/database'
+import {
+  prisma,
+  setPrismaConnectionString,
+} from '../infrastructure/config/database'
 
 type CliArgs = {
   name: string

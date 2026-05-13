@@ -1,15 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { apiRequest, toApiErrorMessage } from '../../shared/api/http'
-import {
-  Button,
-  Input,
-  Notice,
-  SectionCard,
-} from '../../shared/ui/primitives'
-import {
-  MediaFields,
-} from '../../shared/ui/media-fields'
+import { Button, Input, Notice, SectionCard } from '../../shared/ui/primitives'
+import { MediaFields } from '../../shared/ui/media-fields'
 import {
   type MediaDraft,
   normalizeMediaDrafts,

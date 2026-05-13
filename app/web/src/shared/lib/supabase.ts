@@ -36,10 +36,12 @@ export async function uploadFileToSupabase(file: File) {
   const filename = `${crypto.randomUUID()}${extension ? `.${extension}` : ''}`
   const path = `uploads/${filename}`
 
-  const { error } = await client.storage.from(storageBucket).upload(path, file, {
-    upsert: false,
-    cacheControl: '3600',
-  })
+  const { error } = await client.storage
+    .from(storageBucket)
+    .upload(path, file, {
+      upsert: false,
+      cacheControl: '3600',
+    })
 
   if (error) {
     throw new Error(error.message)

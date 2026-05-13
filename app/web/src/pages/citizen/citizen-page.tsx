@@ -27,7 +27,8 @@ export function CitizenPage() {
 
   const watcherApplicationsQuery = useQuery({
     queryKey: ['citizen-watcher-applications'],
-    queryFn: () => apiRequest<WatcherApplicationList>('/api/watcher-applications'),
+    queryFn: () =>
+      apiRequest<WatcherApplicationList>('/api/watcher-applications'),
     enabled,
   })
 

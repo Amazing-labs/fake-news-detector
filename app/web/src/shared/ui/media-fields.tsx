@@ -1,5 +1,8 @@
 import { useRef, useState } from 'react'
-import { uploadFileToSupabase, isSupabaseUploadConfigured } from '../lib/supabase'
+import {
+  uploadFileToSupabase,
+  isSupabaseUploadConfigured,
+} from '../lib/supabase'
 import { Button, Input, Notice, Select, SectionCard } from './primitives'
 import {
   createEmptyMediaDraft,
@@ -42,7 +45,9 @@ export function MediaFields(props: {
         `${uploaded.length} media${uploaded.length > 1 ? 's ajoutes' : ' ajoute'}.`,
       )
     } catch (error) {
-      setUploadError(error instanceof Error ? error.message : 'Upload impossible.')
+      setUploadError(
+        error instanceof Error ? error.message : 'Upload impossible.',
+      )
     } finally {
       setIsUploading(false)
       if (fileInputRef.current) {
@@ -56,7 +61,7 @@ export function MediaFields(props: {
       title={props.title ?? 'Medias'}
       description={
         props.description ??
-        "Ajoute un ou plusieurs médias via leur URL pour tester le backend."
+        'Ajoute un ou plusieurs médias via leur URL pour tester le backend.'
       }
     >
       <div className="grid gap-3">
@@ -139,10 +144,13 @@ export function MediaFields(props: {
           </Button>
           {!isSupabaseUploadConfigured() ? (
             <Notice tone="info">
-              Configure Supabase côté frontend pour activer l’upload de fichiers.
+              Configure Supabase côté frontend pour activer l’upload de
+              fichiers.
             </Notice>
           ) : null}
-          {uploadMessage ? <Notice tone="success">{uploadMessage}</Notice> : null}
+          {uploadMessage ? (
+            <Notice tone="success">{uploadMessage}</Notice>
+          ) : null}
           {uploadError ? <Notice tone="error">{uploadError}</Notice> : null}
         </div>
       </div>

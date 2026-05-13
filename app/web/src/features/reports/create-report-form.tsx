@@ -8,9 +8,7 @@ import {
   SectionCard,
   TextArea,
 } from '../../shared/ui/primitives'
-import {
-  MediaFields,
-} from '../../shared/ui/media-fields'
+import { MediaFields } from '../../shared/ui/media-fields'
 import {
   normalizeMediaDrafts,
   type MediaDraft,

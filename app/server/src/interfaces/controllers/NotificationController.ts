@@ -24,7 +24,8 @@ export class NotificationController {
   markAsRead = async (c: Context<{ Variables: AppVariables }>) => {
     const actor = c.get('actor')
     const notificationId = requiredParam(c, 'notificationId')
-    const notification = await this.notificationRepository.findById(notificationId)
+    const notification =
+      await this.notificationRepository.findById(notificationId)
 
     if (!notification || notification.actorId !== actor.actorId) {
       throw new NotFoundError('Notification', notificationId)

@@ -130,9 +130,7 @@ export function JournalistPage() {
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-medium text-slate-950">
-                        {item.theme}
-                      </p>
+                      <p className="font-medium text-slate-950">{item.theme}</p>
                       <p className="text-sm text-slate-600">
                         Origin {item.origin}
                       </p>
