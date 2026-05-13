@@ -5,6 +5,7 @@ import { createDirectorRoutes } from './routes/directorRoutes'
 import { createInboxSubjectRoutes } from './routes/inboxSubjectRoutes'
 import { createInvestigationRoutes } from './routes/investigationRoutes'
 import { createJournalistRoutes } from './routes/journalistRoutes'
+import { createNotificationRoutes } from './routes/notificationRoutes'
 import { createPublicationRoutes } from './routes/publicationRoutes'
 import { createReportRoutes } from './routes/reportRoutes'
 import { createWatcherApplicationRoutes } from './routes/watcherApplicationRoutes'
@@ -72,6 +73,13 @@ export function createApp(dependencies: AppDependencies) {
     '/api/journalists',
     createJournalistRoutes(
       dependencies.journalistManagementController,
+      dependencies.securityService,
+    ),
+  )
+  app.route(
+    '/api/notifications',
+    createNotificationRoutes(
+      dependencies.notificationController,
       dependencies.securityService,
     ),
   )

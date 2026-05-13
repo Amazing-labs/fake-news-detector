@@ -30,5 +30,6 @@ export interface AppSession {
     actorId?: string | null
     actorRole?: string | null
     actorStatus?: string | null
+    citizenType?: string | null
   }
 }

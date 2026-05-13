@@ -9,24 +9,72 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as WatcherApplicationsRouteImport } from './routes/watcher-applications'
+import { Route as ReportsRouteImport } from './routes/reports'
+import { Route as PublicationsRouteImport } from './routes/publications'
 import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as HomeRouteImport } from './routes/home'
-import { Route as AboutRouteImport } from './routes/about'
+import { Route as NotificationsRouteImport } from './routes/notifications'
+import { Route as JournalistsRouteImport } from './routes/journalists'
+import { Route as JournalistRouteImport } from './routes/journalist'
+import { Route as InvestigationsRouteImport } from './routes/investigations'
+import { Route as InboxSubjectsRouteImport } from './routes/inbox-subjects'
+import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as CitizenRouteImport } from './routes/citizen'
 import { Route as IndexRouteImport } from './routes/index'
 
+const WatcherApplicationsRoute = WatcherApplicationsRouteImport.update({
+  id: '/watcher-applications',
+  path: '/watcher-applications',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReportsRoute = ReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PublicationsRoute = PublicationsRouteImport.update({
+  id: '/publications',
+  path: '/publications',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
   getParentRoute: () => rootRouteImport,
 } as any)
-const HomeRoute = HomeRouteImport.update({
-  id: '/home',
-  path: '/home',
+const NotificationsRoute = NotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+const JournalistsRoute = JournalistsRouteImport.update({
+  id: '/journalists',
+  path: '/journalists',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JournalistRoute = JournalistRouteImport.update({
+  id: '/journalist',
+  path: '/journalist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvestigationsRoute = InvestigationsRouteImport.update({
+  id: '/investigations',
+  path: '/investigations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InboxSubjectsRoute = InboxSubjectsRouteImport.update({
+  id: '/inbox-subjects',
+  path: '/inbox-subjects',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DashboardRoute = DashboardRouteImport.update({
+  id: '/dashboard',
+  path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CitizenRoute = CitizenRouteImport.update({
+  id: '/citizen',
+  path: '/citizen',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -37,40 +85,130 @@ const IndexRoute = IndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/home': typeof HomeRoute
+  '/citizen': typeof CitizenRoute
+  '/dashboard': typeof DashboardRoute
+  '/inbox-subjects': typeof InboxSubjectsRoute
+  '/investigations': typeof InvestigationsRoute
+  '/journalist': typeof JournalistRoute
+  '/journalists': typeof JournalistsRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/publications': typeof PublicationsRoute
+  '/reports': typeof ReportsRoute
+  '/watcher-applications': typeof WatcherApplicationsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/home': typeof HomeRoute
+  '/citizen': typeof CitizenRoute
+  '/dashboard': typeof DashboardRoute
+  '/inbox-subjects': typeof InboxSubjectsRoute
+  '/investigations': typeof InvestigationsRoute
+  '/journalist': typeof JournalistRoute
+  '/journalists': typeof JournalistsRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/publications': typeof PublicationsRoute
+  '/reports': typeof ReportsRoute
+  '/watcher-applications': typeof WatcherApplicationsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/home': typeof HomeRoute
+  '/citizen': typeof CitizenRoute
+  '/dashboard': typeof DashboardRoute
+  '/inbox-subjects': typeof InboxSubjectsRoute
+  '/investigations': typeof InvestigationsRoute
+  '/journalist': typeof JournalistRoute
+  '/journalists': typeof JournalistsRoute
+  '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
+  '/publications': typeof PublicationsRoute
+  '/reports': typeof ReportsRoute
+  '/watcher-applications': typeof WatcherApplicationsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/about' | '/home' | '/profile'
+  fullPaths:
+    | '/'
+    | '/citizen'
+    | '/dashboard'
+    | '/inbox-subjects'
+    | '/investigations'
+    | '/journalist'
+    | '/journalists'
+    | '/notifications'
+    | '/profile'
+    | '/publications'
+    | '/reports'
+    | '/watcher-applications'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/about' | '/home' | '/profile'
-  id: '__root__' | '/' | '/about' | '/home' | '/profile'
+  to:
+    | '/'
+    | '/citizen'
+    | '/dashboard'
+    | '/inbox-subjects'
+    | '/investigations'
+    | '/journalist'
+    | '/journalists'
+    | '/notifications'
+    | '/profile'
+    | '/publications'
+    | '/reports'
+    | '/watcher-applications'
+  id:
+    | '__root__'
+    | '/'
+    | '/citizen'
+    | '/dashboard'
+    | '/inbox-subjects'
+    | '/investigations'
+    | '/journalist'
+    | '/journalists'
+    | '/notifications'
+    | '/profile'
+    | '/publications'
+    | '/reports'
+    | '/watcher-applications'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
-  HomeRoute: typeof HomeRoute
+  CitizenRoute: typeof CitizenRoute
+  DashboardRoute: typeof DashboardRoute
+  InboxSubjectsRoute: typeof InboxSubjectsRoute
+  InvestigationsRoute: typeof InvestigationsRoute
+  JournalistRoute: typeof JournalistRoute
+  JournalistsRoute: typeof JournalistsRoute
+  NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
+  PublicationsRoute: typeof PublicationsRoute
+  ReportsRoute: typeof ReportsRoute
+  WatcherApplicationsRoute: typeof WatcherApplicationsRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/watcher-applications': {
+      id: '/watcher-applications'
+      path: '/watcher-applications'
+      fullPath: '/watcher-applications'
+      preLoaderRoute: typeof WatcherApplicationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reports': {
+      id: '/reports'
+      path: '/reports'
+      fullPath: '/reports'
+      preLoaderRoute: typeof ReportsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/publications': {
+      id: '/publications'
+      path: '/publications'
+      fullPath: '/publications'
+      preLoaderRoute: typeof PublicationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/profile': {
       id: '/profile'
       path: '/profile'
@@ -78,18 +216,53 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/home': {
-      id: '/home'
-      path: '/home'
-      fullPath: '/home'
-      preLoaderRoute: typeof HomeRouteImport
+    '/notifications': {
+      id: '/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof NotificationsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
+    '/journalists': {
+      id: '/journalists'
+      path: '/journalists'
+      fullPath: '/journalists'
+      preLoaderRoute: typeof JournalistsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/journalist': {
+      id: '/journalist'
+      path: '/journalist'
+      fullPath: '/journalist'
+      preLoaderRoute: typeof JournalistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/investigations': {
+      id: '/investigations'
+      path: '/investigations'
+      fullPath: '/investigations'
+      preLoaderRoute: typeof InvestigationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inbox-subjects': {
+      id: '/inbox-subjects'
+      path: '/inbox-subjects'
+      fullPath: '/inbox-subjects'
+      preLoaderRoute: typeof InboxSubjectsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dashboard': {
+      id: '/dashboard'
+      path: '/dashboard'
+      fullPath: '/dashboard'
+      preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/citizen': {
+      id: '/citizen'
+      path: '/citizen'
+      fullPath: '/citizen'
+      preLoaderRoute: typeof CitizenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -104,9 +277,17 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
-  HomeRoute: HomeRoute,
+  CitizenRoute: CitizenRoute,
+  DashboardRoute: DashboardRoute,
+  InboxSubjectsRoute: InboxSubjectsRoute,
+  InvestigationsRoute: InvestigationsRoute,
+  JournalistRoute: JournalistRoute,
+  JournalistsRoute: JournalistsRoute,
+  NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
+  PublicationsRoute: PublicationsRoute,
+  ReportsRoute: ReportsRoute,
+  WatcherApplicationsRoute: WatcherApplicationsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

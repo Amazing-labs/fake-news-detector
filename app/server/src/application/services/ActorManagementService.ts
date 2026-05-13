@@ -31,15 +31,20 @@ export class ActorManagementService {
   ): Promise<string> {
     if (!name.trim()) throw new ValidationError('Journalist name is required')
     if (!email.trim()) throw new ValidationError('Journalist email is required')
+    const normalizedEmail = email.trim().toLowerCase()
 
     await this.getActiveDirector(directorId)
 
-    const existing = await this.journalistRepository.findByEmail(email)
+    const existing =
+      await this.journalistRepository.findByEmail(normalizedEmail)
     if (existing) {
       throw new BusinessRuleError('A journalist with this email already exists')
     }
 
-    const journalist = JournalistFactory.createFromRegistration(name, email)
+    const journalist = JournalistFactory.createFromRegistration(
+      name.trim(),
+      normalizedEmail,
+    )
     await this.journalistRepository.save(journalist)
     return journalist.id
   }

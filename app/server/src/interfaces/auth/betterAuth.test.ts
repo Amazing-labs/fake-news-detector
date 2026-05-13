@@ -1,5 +1,9 @@
 import { describe, expect, test } from 'vitest'
-import { canAttachActorToSession } from './betterAuth'
+import {
+  canAttachActorToSession,
+  canAttachLinkedActorToSession,
+  canClaimPreprovisionedActorWithoutVerification,
+} from './authLinking'
 
 describe('canAttachActorToSession', () => {
   test('allows citizen actor attachment without verified email', () => {
@@ -7,6 +11,7 @@ describe('canAttachActorToSession', () => {
       canAttachActorToSession(
         {
           id: 'citizen-1',
+          name: 'Citizen',
           role: 'CITIZEN',
           status: 'ACTIVE',
         },
@@ -20,6 +25,7 @@ describe('canAttachActorToSession', () => {
       canAttachActorToSession(
         {
           id: 'journalist-1',
+          name: 'Journalist',
           role: 'JOURNALIST',
           status: 'ACTIVE',
         },
@@ -33,11 +39,45 @@ describe('canAttachActorToSession', () => {
       canAttachActorToSession(
         {
           id: 'director-1',
+          name: 'Director',
           role: 'EDITORIAL_DIRECTOR',
           status: 'ACTIVE',
         },
         true,
       ),
+    ).toBe(true)
+  })
+
+  test('allows explicitly linked elevated actor attachment without verified email', () => {
+    expect(
+      canAttachLinkedActorToSession({
+        id: 'director-1',
+        name: 'Director',
+        role: 'EDITORIAL_DIRECTOR',
+        status: 'ACTIVE',
+      }),
+    ).toBe(true)
+  })
+
+  test('allows preprovisioned director claim without verified email', () => {
+    expect(
+      canClaimPreprovisionedActorWithoutVerification({
+        id: 'director-1',
+        name: 'Director',
+        role: 'EDITORIAL_DIRECTOR',
+        status: 'ACTIVE',
+      }),
+    ).toBe(true)
+  })
+
+  test('allows preprovisioned journalist claim without verified email', () => {
+    expect(
+      canClaimPreprovisionedActorWithoutVerification({
+        id: 'journalist-1',
+        name: 'Journalist',
+        role: 'JOURNALIST',
+        status: 'ACTIVE',
+      }),
     ).toBe(true)
   })
 })
