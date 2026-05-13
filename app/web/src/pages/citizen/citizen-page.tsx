@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import type { CitizenWorkspaceSummary } from '../../entities/citizen/model'
 import type { PublicationList } from '../../entities/publication/model'
 import type { ReportList } from '../../entities/report/model'
-import type { WatcherApplicationList } from '../../entities/watcher-application/model'
 import { hasRole, useAppSession } from '../../entities/session/model'
 import { apiRequest } from '../../shared/api/http'
 import {
@@ -25,13 +24,6 @@ export function CitizenPage() {
     enabled: !!session?.user.actorId && enabled,
   })
 
-  const watcherApplicationsQuery = useQuery({
-    queryKey: ['citizen-watcher-applications'],
-    queryFn: () =>
-      apiRequest<WatcherApplicationList>('/api/watcher-applications'),
-    enabled,
-  })
-
   const publicationsQuery = useQuery({
     queryKey: ['citizen-publications'],
     queryFn: () => apiRequest<PublicationList>('/api/publications'),
@@ -40,7 +32,7 @@ export function CitizenPage() {
 
   const summary: CitizenWorkspaceSummary = {
     reportCount: reportsQuery.data?.total ?? 0,
-    watcherApplicationCount: watcherApplicationsQuery.data?.total ?? 0,
+    watcherApplicationCount: session?.user.citizenType === 'WATCHER' ? 1 : 0,
     publicationCount: publicationsQuery.data?.total ?? 0,
   }
 
@@ -78,7 +70,9 @@ export function CitizenPage() {
             {summary.watcherApplicationCount}
           </p>
           <p className="text-sm text-slate-600">
-            Les decisions du directeur sont visibles dans la page Vigie.
+            {session?.user.citizenType === 'WATCHER'
+              ? 'Votre profil vigie est actif.'
+              : 'Le suivi détaillé de candidature viendra avec un endpoint citoyen dédié.'}
           </p>
         </SectionCard>
 
