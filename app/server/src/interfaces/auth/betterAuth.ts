@@ -65,11 +65,7 @@ async function derivePbkdf2Key(
 
 async function hashWorkerPassword(password: string): Promise<string> {
   const salt = crypto.getRandomValues(new Uint8Array(PBKDF2_SALT_BYTES))
-  const derivedKey = await derivePbkdf2Key(
-    password,
-    salt,
-    PBKDF2_ITERATIONS,
-  )
+  const derivedKey = await derivePbkdf2Key(password, salt, PBKDF2_ITERATIONS)
 
   return [
     PBKDF2_PREFIX,
@@ -102,11 +98,7 @@ async function verifyWorkerPassword({
 
   const salt = decodeBase64(saltBase64)
   const expected = decodeBase64(expectedBase64)
-  const derivedKey = await derivePbkdf2Key(
-    password,
-    salt,
-    Number(iterations),
-  )
+  const derivedKey = await derivePbkdf2Key(password, salt, Number(iterations))
 
   if (expected.length !== derivedKey.length) {
     return false
