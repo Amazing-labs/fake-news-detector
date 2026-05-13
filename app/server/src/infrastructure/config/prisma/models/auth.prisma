@@ -8,6 +8,7 @@ model User {
   updatedAt     DateTime  @updatedAt
   sessions      Session[]
   accounts      Account[]
+  authLink      AuthLink?
 
   @@map("user")
 }
@@ -57,4 +58,17 @@ model Verification {
 
   @@index([identifier])
   @@map("verification")
+}
+
+model AuthLink {
+  id       String   @id @default(uuid())
+  userId   String   @unique
+  actorId  String   @unique
+  linkedAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  actor Actor @relation(fields: [actorId], references: [id], onDelete: Cascade)
+
+  @@index([actorId])
+  @@map("auth_links")
 }

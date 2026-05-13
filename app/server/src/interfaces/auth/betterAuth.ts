@@ -2,6 +2,10 @@ import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { customSession } from 'better-auth/plugins'
 import { prisma } from '../../infrastructure/config/database'
+import {
+  provisionCitizenActorForAuthUser,
+  resolveSessionActorForAuthUser,
+} from './authLinking'
 
 const DEFAULT_SECRET = 'development-better-auth-secret-please-change-me'
 const DEFAULT_BASE_URL = 'http://localhost:3000/api/auth'
@@ -20,27 +24,6 @@ function resolveBetterAuthSecret(): string {
   }
 
   return secret
-}
-
-type ActorAccessCandidate = {
-  id: string
-  role: 'CITIZEN' | 'JOURNALIST' | 'EDITORIAL_DIRECTOR'
-  status: 'ACTIVE' | 'DISABLED' | 'BANNED'
-}
-
-export function canAttachActorToSession(
-  actor: ActorAccessCandidate | null,
-  emailVerified: boolean,
-): boolean {
-  if (!actor) {
-    return false
-  }
-
-  if (actor.role === 'CITIZEN') {
-    return true
-  }
-
-  return emailVerified
 }
 
 function readTrustedOrigins(): string[] {
@@ -74,45 +57,23 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (user) => {
-          const existingActor = await prisma.actor.findUnique({
-            where: { email: user.email },
-            select: { id: true },
-          })
-
-          if (!existingActor) {
-            await prisma.actor.create({
-              data: {
-                name: user.name,
-                email: user.email,
-                role: 'CITIZEN',
-                status: 'ACTIVE',
-              },
-            })
-          }
+          await provisionCitizenActorForAuthUser(user)
         },
       },
     },
   },
   plugins: [
     customSession(async ({ user, session }) => {
-      const actor = await prisma.actor.findUnique({
-        where: { email: user.email },
-        select: {
-          id: true,
-          role: true,
-          status: true,
-        },
-      })
-      const attachedActor = canAttachActorToSession(actor, user.emailVerified)
-        ? actor
-        : null
+      const attachedActor = await resolveSessionActorForAuthUser(user)
 
       return {
         user: {
           ...user,
+          name: attachedActor?.name || user.name,
           actorId: attachedActor?.id ?? null,
           actorRole: attachedActor?.role ?? null,
           actorStatus: attachedActor?.status ?? null,
+          citizenType: attachedActor?.citizenType ?? null,
         },
         session,
       }

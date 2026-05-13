@@ -22,6 +22,7 @@ import { DirectorController } from './controllers/DirectorController'
 import { InboxSubjectController } from './controllers/InboxSubjectController'
 import { InvestigationController } from './controllers/InvestigationController'
 import { JournalistManagementController } from './controllers/JournalistManagementController'
+import { NotificationController } from './controllers/NotificationController'
 import { PublicationController } from './controllers/PublicationController'
 import { ReportController } from './controllers/ReportController'
 import { WatcherApplicationController } from './controllers/WatcherApplicationController'
@@ -35,6 +36,7 @@ export interface AppDependencies {
   watcherApplicationController: WatcherApplicationController
   journalistManagementController: JournalistManagementController
   directorController: DirectorController
+  notificationController: NotificationController
 }
 
 export function createAppDependencies(): AppDependencies {
@@ -113,5 +115,6 @@ export function createAppDependencies(): AppDependencies {
       publicationRepository,
       notificationRepository,
     ),
+    notificationController: new NotificationController(notificationRepository),
   }
 }

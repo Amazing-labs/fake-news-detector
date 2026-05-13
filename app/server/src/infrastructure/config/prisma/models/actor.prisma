@@ -40,6 +40,7 @@ model Actor {
   correction    Correction[]    @relation("DirectorCorrections")
   VerifiedMedia VerifiedMedia[]
   VerifiedLink  VerifiedLink[]
+  authLink      AuthLink?
 
   @@map("actors")
 }

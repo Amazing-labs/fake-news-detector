@@ -7,6 +7,7 @@
     "generate": "bunx prisma generate --config src/infrastructure/config/prisma.config.ts",
     "auth:generate": "bunx @better-auth/cli@latest generate --config src/interfaces/auth/betterAuth.ts --yes",
     "auth:secret": "bunx @better-auth/cli@latest secret",
+    "create:director": "bun run src/scripts/createDirector.ts",
     "prisma:validate": "bunx prisma validate --config src/infrastructure/config/prisma.config.ts",
     "migrate": "bunx prisma migrate dev --config src/infrastructure/config/prisma.config.ts",
     "deploy": "bunx prisma migrate deploy --config src/infrastructure/config/prisma.config.ts",

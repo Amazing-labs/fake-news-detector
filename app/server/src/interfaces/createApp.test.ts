@@ -73,6 +73,14 @@ function buildApp() {
     ),
   }
 
+  const notificationController = {
+    list: vi.fn(async (c: any) =>
+      c.json({ success: true, data: { items: [], total: 0 } }),
+    ),
+    markAsRead: vi.fn(),
+    markAllAsRead: vi.fn(),
+  }
+
   const securityService = new SecurityService({
     authenticate: vi.fn(async (headers: Headers) => {
       const rawToken = (headers.get('Authorization') ?? '').replace(
@@ -95,6 +103,7 @@ function buildApp() {
     watcherApplicationController: watcherApplicationController as any,
     journalistManagementController: journalistManagementController as any,
     directorController: directorController as any,
+    notificationController: notificationController as any,
   })
 
   return { app, reportController }
@@ -199,6 +208,11 @@ describe('createApp', () => {
       directorController: {
         getDashboard: vi.fn(),
       } as any,
+      notificationController: {
+        list: vi.fn(),
+        markAsRead: vi.fn(),
+        markAllAsRead: vi.fn(),
+      } as any,
     })
 
     const response = await app.request('/api/reports', {
@@ -275,6 +289,11 @@ describe('createApp', () => {
       } as any,
       directorController: {
         getDashboard: vi.fn(),
+      } as any,
+      notificationController: {
+        list: vi.fn(),
+        markAsRead: vi.fn(),
+        markAllAsRead: vi.fn(),
       } as any,
     })
 
@@ -354,6 +373,11 @@ describe('createApp', () => {
       directorController: {
         getDashboard: vi.fn(),
       } as any,
+      notificationController: {
+        list: vi.fn(),
+        markAsRead: vi.fn(),
+        markAllAsRead: vi.fn(),
+      } as any,
     })
 
     const response = await app.request('/api/inbox-subjects?status=INVALID', {
@@ -423,6 +447,11 @@ describe('createApp', () => {
       } as any,
       directorController: {
         getDashboard: vi.fn(),
+      } as any,
+      notificationController: {
+        list: vi.fn(),
+        markAsRead: vi.fn(),
+        markAllAsRead: vi.fn(),
       } as any,
     })
 
@@ -497,6 +526,11 @@ describe('createApp', () => {
       directorController: {
         getDashboard: vi.fn(),
       } as any,
+      notificationController: {
+        list: vi.fn(),
+        markAsRead: vi.fn(),
+        markAllAsRead: vi.fn(),
+      } as any,
     })
 
     const response = await app.request('/api/investigations/inv-1/approve', {
@@ -556,6 +590,11 @@ describe('createApp', () => {
       } as any,
       directorController: {
         getDashboard: vi.fn(),
+      } as any,
+      notificationController: {
+        list: vi.fn(),
+        markAsRead: vi.fn(),
+        markAllAsRead: vi.fn(),
       } as any,
     })
 
