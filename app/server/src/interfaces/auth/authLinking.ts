@@ -20,6 +20,41 @@ type AuthLinkLookupRow = {
   userId: string
 }
 
+function logAuthLinkDebug(
+  message: string,
+  details?: Record<string, unknown>,
+): void {
+  console.log(
+    '[AuthLinkDebug]',
+    message,
+    details ? JSON.stringify(details) : '',
+  )
+}
+
+function logAuthLinkError(
+  message: string,
+  error: unknown,
+  details?: Record<string, unknown>,
+): void {
+  const normalizedError =
+    error instanceof Error
+      ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+        }
+      : { value: String(error) }
+
+  console.error(
+    '[AuthLinkDebug]',
+    message,
+    JSON.stringify({
+      ...details,
+      error: normalizedError,
+    }),
+  )
+}
+
 export function canAttachActorToSession(
   actor: ActorAccessCandidate | null,
   emailVerified: boolean,
@@ -54,92 +89,162 @@ export function canClaimPreprovisionedActorWithoutVerification(
 export async function provisionCitizenActorForAuthUser(
   user: AuthUserCandidate,
 ): Promise<void> {
-  const normalizedEmail = user.email.trim().toLowerCase()
+  try {
+    const normalizedEmail = user.email.trim().toLowerCase()
 
-  const existingActor = await prisma.actor.findUnique({
-    where: { email: normalizedEmail },
-    select: {
-      id: true,
-      name: true,
-      role: true,
-    },
-  })
+    logAuthLinkDebug('provisionCitizenActorForAuthUser:start', {
+      userId: user.id,
+      email: normalizedEmail,
+    })
 
-  if (!existingActor) {
-    const actor = await prisma.actor.create({
-      data: {
-        name: user.name,
-        email: normalizedEmail,
-        role: 'CITIZEN',
-        status: 'ACTIVE',
+    const existingActor = await prisma.actor.findUnique({
+      where: { email: normalizedEmail },
+      select: {
+        id: true,
+        name: true,
+        role: true,
       },
     })
-    await createAuthLink(user.id, actor.id)
-    return
-  }
 
-  const actorLink = await findAuthLinkByActorId(existingActor.id)
+    if (!existingActor) {
+      const actor = await prisma.actor.create({
+        data: {
+          name: user.name,
+          email: normalizedEmail,
+          role: 'CITIZEN',
+          status: 'ACTIVE',
+        },
+      })
+      logAuthLinkDebug('provisionCitizenActorForAuthUser:actor-created', {
+        userId: user.id,
+        actorId: actor.id,
+      })
+      await createAuthLink(user.id, actor.id)
+      logAuthLinkDebug('provisionCitizenActorForAuthUser:linked-new-actor', {
+        userId: user.id,
+        actorId: actor.id,
+      })
+      return
+    }
 
-  if (existingActor.role === 'CITIZEN' && !actorLink) {
-    await createAuthLink(user.id, existingActor.id)
+    const actorLink = await findAuthLinkByActorId(existingActor.id)
+
+    if (existingActor.role === 'CITIZEN' && !actorLink) {
+      await createAuthLink(user.id, existingActor.id)
+      logAuthLinkDebug(
+        'provisionCitizenActorForAuthUser:linked-existing-citizen',
+        {
+          userId: user.id,
+          actorId: existingActor.id,
+        },
+      )
+    }
+  } catch (error) {
+    logAuthLinkError('provisionCitizenActorForAuthUser:failed', error, {
+      userId: user.id,
+      email: user.email,
+    })
+    throw error
   }
 }
 
 export async function resolveSessionActorForAuthUser(
   user: AuthUserCandidate,
 ): Promise<ActorAccessCandidate | null> {
-  const normalizedEmail = user.email.trim().toLowerCase()
+  try {
+    const normalizedEmail = user.email.trim().toLowerCase()
 
-  const existingLink = await prisma.$queryRaw<ActorAccessCandidate[]>`
-    SELECT a."id", a."name", a."role", a."status", a."citizenType"
-    FROM "auth_links" l
-    INNER JOIN "actors" a ON a."id" = l."actorId"
-    WHERE l."userId" = ${user.id}
-    LIMIT 1
-  `
+    logAuthLinkDebug('resolveSessionActorForAuthUser:start', {
+      userId: user.id,
+      email: normalizedEmail,
+      emailVerified: user.emailVerified,
+    })
 
-  if (existingLink[0]) {
-    return canAttachLinkedActorToSession(existingLink[0])
-      ? existingLink[0]
-      : null
-  }
+    const existingLink = await prisma.$queryRaw<ActorAccessCandidate[]>`
+      SELECT a."id", a."name", a."role", a."status", a."citizenType"
+      FROM "auth_links" l
+      INNER JOIN "actors" a ON a."id" = l."actorId"
+      WHERE l."userId" = ${user.id}
+      LIMIT 1
+    `
 
-  const actor = await prisma.actor.findUnique({
-    where: { email: normalizedEmail },
-    select: {
-      id: true,
-      name: true,
-      role: true,
-      status: true,
-      citizenType: true,
-    },
-  })
+    if (existingLink[0]) {
+      logAuthLinkDebug('resolveSessionActorForAuthUser:existing-link-found', {
+        userId: user.id,
+        actorId: existingLink[0].id,
+        actorRole: existingLink[0].role,
+      })
+      return canAttachLinkedActorToSession(existingLink[0])
+        ? existingLink[0]
+        : null
+    }
 
-  if (!actor) {
-    return null
-  }
+    const actor = await prisma.actor.findUnique({
+      where: { email: normalizedEmail },
+      select: {
+        id: true,
+        name: true,
+        role: true,
+        status: true,
+        citizenType: true,
+      },
+    })
 
-  const actorLink = await findAuthLinkByActorId(actor.id)
+    if (!actor) {
+      logAuthLinkDebug('resolveSessionActorForAuthUser:no-actor-found', {
+        userId: user.id,
+        email: normalizedEmail,
+      })
+      return null
+    }
 
-  if (actorLink && actorLink.userId !== user.id) {
-    return null
-  }
+    const actorLink = await findAuthLinkByActorId(actor.id)
 
-  if (
-    !canAttachActorToSession(actor, user.emailVerified) &&
-    !canClaimPreprovisionedActorWithoutVerification(actor)
-  ) {
-    return null
-  }
+    if (actorLink && actorLink.userId !== user.id) {
+      logAuthLinkDebug(
+        'resolveSessionActorForAuthUser:actor-owned-by-other-user',
+        {
+          userId: user.id,
+          actorId: actor.id,
+          linkedUserId: actorLink.userId,
+        },
+      )
+      return null
+    }
 
-  await createAuthLink(user.id, actor.id)
+    if (
+      !canAttachActorToSession(actor, user.emailVerified) &&
+      !canClaimPreprovisionedActorWithoutVerification(actor)
+    ) {
+      logAuthLinkDebug('resolveSessionActorForAuthUser:actor-not-attachable', {
+        userId: user.id,
+        actorId: actor.id,
+        actorRole: actor.role,
+        emailVerified: user.emailVerified,
+      })
+      return null
+    }
 
-  return {
-    id: actor.id,
-    name: actor.name,
-    role: actor.role,
-    status: actor.status,
-    citizenType: actor.citizenType,
+    await createAuthLink(user.id, actor.id)
+    logAuthLinkDebug('resolveSessionActorForAuthUser:auth-link-created', {
+      userId: user.id,
+      actorId: actor.id,
+      actorRole: actor.role,
+    })
+
+    return {
+      id: actor.id,
+      name: actor.name,
+      role: actor.role,
+      status: actor.status,
+      citizenType: actor.citizenType,
+    }
+  } catch (error) {
+    logAuthLinkError('resolveSessionActorForAuthUser:failed', error, {
+      userId: user.id,
+      email: user.email,
+    })
+    throw error
   }
 }
 
@@ -147,10 +252,28 @@ export async function createAuthLink(
   userId: string,
   actorId: string,
 ): Promise<void> {
-  await prisma.$executeRaw`
-    INSERT INTO "auth_links" ("id", "userId", "actorId", "linkedAt")
-    VALUES (${randomUUID()}, ${userId}, ${actorId}, NOW())
-  `
+  try {
+    logAuthLinkDebug('createAuthLink:start', {
+      userId,
+      actorId,
+    })
+
+    await prisma.$executeRaw`
+      INSERT INTO "auth_links" ("id", "userId", "actorId", "linkedAt")
+      VALUES (${randomUUID()}, ${userId}, ${actorId}, NOW())
+    `
+
+    logAuthLinkDebug('createAuthLink:success', {
+      userId,
+      actorId,
+    })
+  } catch (error) {
+    logAuthLinkError('createAuthLink:failed', error, {
+      userId,
+      actorId,
+    })
+    throw error
+  }
 }
 
 async function findAuthLinkByActorId(
