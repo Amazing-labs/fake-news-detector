@@ -173,7 +173,7 @@ function resolveBetterAuthSecret(): string {
 function readTrustedOrigins(): string[] {
   const configured = process.env.BETTER_AUTH_TRUSTED_ORIGINS
   if (!configured) {
-    return DEFAULT_TRUSTED_ORIGINS.map(normalizeOrigin)
+    return [...DEFAULT_TRUSTED_ORIGINS]
   }
 
   return configured.split(',').map(normalizeOrigin).filter(Boolean)
