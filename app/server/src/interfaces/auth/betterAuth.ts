@@ -26,6 +26,10 @@ const LEGACY_SCRYPT_PARAMS = {
   dkLen: 64,
 }
 
+function normalizeOrigin(origin: string): string {
+  return origin.trim().replace(/\/+$/, '')
+}
+
 function encodeBase64(buffer: ArrayBuffer | Uint8Array): string {
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer)
   return Buffer.from(bytes).toString('base64')
@@ -169,12 +173,12 @@ function resolveBetterAuthSecret(): string {
 function readTrustedOrigins(): string[] {
   const configured = process.env.BETTER_AUTH_TRUSTED_ORIGINS
   if (!configured) {
-    return DEFAULT_TRUSTED_ORIGINS
+    return DEFAULT_TRUSTED_ORIGINS.map(normalizeOrigin)
   }
 
   return configured
     .split(',')
-    .map((origin) => origin.trim())
+    .map(normalizeOrigin)
     .filter(Boolean)
 }
 
