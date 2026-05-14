@@ -2,6 +2,12 @@
   "name": "fake-news-detector",
   "main": "app/server/src/index.ts",
   "keep_vars": true,
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "invocation_logs": true,
+    },
+  },
   "compatibility_date": "2025-04-01",
   "compatibility_flags": [
     "nodejs_compat",
