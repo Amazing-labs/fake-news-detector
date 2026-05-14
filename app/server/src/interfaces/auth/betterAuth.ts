@@ -176,10 +176,7 @@ function readTrustedOrigins(): string[] {
     return DEFAULT_TRUSTED_ORIGINS.map(normalizeOrigin)
   }
 
-  return configured
-    .split(',')
-    .map(normalizeOrigin)
-    .filter(Boolean)
+  return configured.split(',').map(normalizeOrigin).filter(Boolean)
 }
 
 export const auth = betterAuth({
