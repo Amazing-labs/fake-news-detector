@@ -86,9 +86,9 @@ function isLegacyScryptHash(hash: string): boolean {
   const [saltHex, keyHex] = hash.split(':')
   return Boolean(
     saltHex &&
-      keyHex &&
-      saltHex.length === PBKDF2_SALT_BYTES * 2 &&
-      keyHex.length === LEGACY_SCRYPT_PARAMS.dkLen * 2,
+    keyHex &&
+    saltHex.length === PBKDF2_SALT_BYTES * 2 &&
+    keyHex.length === LEGACY_SCRYPT_PARAMS.dkLen * 2,
   )
 }
 
@@ -109,8 +109,7 @@ function verifyLegacyScryptPassword({
     N: LEGACY_SCRYPT_PARAMS.N,
     r: LEGACY_SCRYPT_PARAMS.r,
     p: LEGACY_SCRYPT_PARAMS.p,
-    maxmem:
-      128 * LEGACY_SCRYPT_PARAMS.N * LEGACY_SCRYPT_PARAMS.r * 2,
+    maxmem: 128 * LEGACY_SCRYPT_PARAMS.N * LEGACY_SCRYPT_PARAMS.r * 2,
   })
 
   return timingSafeEqual(targetKey, Buffer.from(keyHex, 'hex'))
