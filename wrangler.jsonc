@@ -3,8 +3,8 @@
   "main": "app/server/src/index.ts",
   "keep_vars": true,
   "observability": {
+    "enabled": true,
     "logs": {
-      "enabled": true,
       "invocation_logs": true,
     },
   },
