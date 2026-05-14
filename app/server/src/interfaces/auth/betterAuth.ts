@@ -1,8 +1,7 @@
 import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { customSession } from 'better-auth/plugins'
-import { timingSafeEqual } from 'node:crypto'
-import { verifyPassword as verifyLegacyPassword } from '../../../node_modules/better-auth/dist/crypto/password.mjs'
+import { scryptSync, timingSafeEqual } from 'node:crypto'
 import { prisma } from '../../infrastructure/config/database'
 import {
   provisionCitizenActorForAuthUser,
@@ -20,6 +19,12 @@ const PBKDF2_DIGEST = 'SHA-256'
 const PBKDF2_ITERATIONS = 120_000
 const PBKDF2_SALT_BYTES = 16
 const PBKDF2_KEY_BYTES = 32
+const LEGACY_SCRYPT_PARAMS = {
+  N: 16_384,
+  r: 16,
+  p: 1,
+  dkLen: 64,
+}
 
 function encodeBase64(buffer: ArrayBuffer | Uint8Array): string {
   const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer)
@@ -77,6 +82,40 @@ async function hashWorkerPassword(password: string): Promise<string> {
   ].join('$')
 }
 
+function isLegacyScryptHash(hash: string): boolean {
+  const [saltHex, keyHex] = hash.split(':')
+  return Boolean(
+    saltHex &&
+      keyHex &&
+      saltHex.length === PBKDF2_SALT_BYTES * 2 &&
+      keyHex.length === LEGACY_SCRYPT_PARAMS.dkLen * 2,
+  )
+}
+
+function verifyLegacyScryptPassword({
+  hash,
+  password,
+}: {
+  hash: string
+  password: string
+}): boolean {
+  const [saltHex, keyHex] = hash.split(':')
+
+  if (!saltHex || !keyHex) {
+    return false
+  }
+
+  const targetKey = scryptSync(password.normalize('NFKC'), saltHex, 64, {
+    N: LEGACY_SCRYPT_PARAMS.N,
+    r: LEGACY_SCRYPT_PARAMS.r,
+    p: LEGACY_SCRYPT_PARAMS.p,
+    maxmem:
+      128 * LEGACY_SCRYPT_PARAMS.N * LEGACY_SCRYPT_PARAMS.r * 2,
+  })
+
+  return timingSafeEqual(targetKey, Buffer.from(keyHex, 'hex'))
+}
+
 async function verifyWorkerPassword({
   hash,
   password,
@@ -94,7 +133,9 @@ async function verifyWorkerPassword({
     !saltBase64 ||
     !expectedBase64
   ) {
-    return verifyLegacyPassword({ hash, password })
+    return isLegacyScryptHash(hash)
+      ? verifyLegacyScryptPassword({ hash, password })
+      : false
   }
 
   const numIterations = Number(iterations)
