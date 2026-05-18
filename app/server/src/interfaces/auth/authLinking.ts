@@ -24,11 +24,7 @@ function logAuthLinkDebug(
   message: string,
   details?: Record<string, unknown>,
 ): void {
-  console.log(
-    '[AuthLinkDebug]',
-    message,
-    details ? JSON.stringify(details) : '',
-  )
+  console.log('[AuthLinkDebug]', message, details ?? '')
 }
 
 function logAuthLinkError(
@@ -45,14 +41,10 @@ function logAuthLinkError(
         }
       : { value: String(error) }
 
-  console.error(
-    '[AuthLinkDebug]',
-    message,
-    JSON.stringify({
-      ...details,
-      error: normalizedError,
-    }),
-  )
+  console.error('[AuthLinkError]', message, {
+    ...details,
+    error: normalizedError,
+  })
 }
 
 export function canAttachActorToSession(
@@ -94,7 +86,6 @@ export async function provisionCitizenActorForAuthUser(
 
     logAuthLinkDebug('provisionCitizenActorForAuthUser:start', {
       userId: user.id,
-      email: normalizedEmail,
     })
 
     const existingActor = await prisma.actor.findUnique({
@@ -142,7 +133,6 @@ export async function provisionCitizenActorForAuthUser(
   } catch (error) {
     logAuthLinkError('provisionCitizenActorForAuthUser:failed', error, {
       userId: user.id,
-      email: user.email,
     })
     throw error
   }
@@ -156,7 +146,6 @@ export async function resolveSessionActorForAuthUser(
 
     logAuthLinkDebug('resolveSessionActorForAuthUser:start', {
       userId: user.id,
-      email: normalizedEmail,
       emailVerified: user.emailVerified,
     })
 
@@ -193,7 +182,6 @@ export async function resolveSessionActorForAuthUser(
     if (!actor) {
       logAuthLinkDebug('resolveSessionActorForAuthUser:no-actor-found', {
         userId: user.id,
-        email: normalizedEmail,
       })
       return null
     }
@@ -242,7 +230,6 @@ export async function resolveSessionActorForAuthUser(
   } catch (error) {
     logAuthLinkError('resolveSessionActorForAuthUser:failed', error, {
       userId: user.id,
-      email: user.email,
     })
     throw error
   }

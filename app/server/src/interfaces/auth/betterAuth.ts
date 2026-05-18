@@ -30,11 +30,7 @@ function logBetterAuthDebug(
   message: string,
   details?: Record<string, unknown>,
 ): void {
-  console.log(
-    '[BetterAuthDebug]',
-    message,
-    details ? JSON.stringify(details) : '',
-  )
+  console.log('[BetterAuthDebug]', message, details ?? '')
 }
 
 function logBetterAuthError(
@@ -51,14 +47,10 @@ function logBetterAuthError(
         }
       : { value: String(error) }
 
-  console.error(
-    '[BetterAuthDebug]',
-    message,
-    JSON.stringify({
-      ...details,
-      error: normalizedError,
-    }),
-  )
+  console.error('[BetterAuthError]', message, {
+    ...details,
+    error: normalizedError,
+  })
 }
 
 function normalizeOrigin(origin: string): string {
@@ -110,9 +102,7 @@ async function derivePbkdf2Key(
 
 async function hashWorkerPassword(password: string): Promise<string> {
   try {
-    logBetterAuthDebug('hashWorkerPassword:start', {
-      passwordLength: password.length,
-    })
+    logBetterAuthDebug('hashWorkerPassword:start')
 
     const salt = crypto.getRandomValues(new Uint8Array(PBKDF2_SALT_BYTES))
     const derivedKey = await derivePbkdf2Key(password, salt, PBKDF2_ITERATIONS)
@@ -293,52 +283,31 @@ export const auth = betterAuth({
         after: async (user) => {
           logBetterAuthDebug('databaseHooks.user.create.after:start', {
             userId: user.id,
-            email: user.email,
           })
 
-          try {
-            await provisionCitizenActorForAuthUser(user)
-            logBetterAuthDebug('databaseHooks.user.create.after:success', {
-              userId: user.id,
-              email: user.email,
-            })
-          } catch (error) {
-            logBetterAuthError(
-              'databaseHooks.user.create.after:failed',
-              error,
-              {
-                userId: user.id,
-                email: user.email,
-              },
-            )
-            throw error
-          }
+          await provisionCitizenActorForAuthUser(user)
+
+          logBetterAuthDebug('databaseHooks.user.create.after:success', {
+            userId: user.id,
+          })
         },
       },
     },
   },
   plugins: [
     customSession(async ({ user, session }) => {
-      try {
-        const attachedActor = await resolveSessionActorForAuthUser(user)
+      const attachedActor = await resolveSessionActorForAuthUser(user)
 
-        return {
-          user: {
-            ...user,
-            name: attachedActor?.name || user.name,
-            actorId: attachedActor?.id ?? null,
-            actorRole: attachedActor?.role ?? null,
-            actorStatus: attachedActor?.status ?? null,
-            citizenType: attachedActor?.citizenType ?? null,
-          },
-          session,
-        }
-      } catch (error) {
-        logBetterAuthError('customSession:failed', error, {
-          userId: user.id,
-          email: user.email,
-        })
-        throw error
+      return {
+        user: {
+          ...user,
+          name: attachedActor?.name || user.name,
+          actorId: attachedActor?.id ?? null,
+          actorRole: attachedActor?.role ?? null,
+          actorStatus: attachedActor?.status ?? null,
+          citizenType: attachedActor?.citizenType ?? null,
+        },
+        session,
       }
     }),
   ],
