@@ -26,6 +26,33 @@ const LEGACY_SCRYPT_PARAMS = {
   dkLen: 64,
 }
 
+function logBetterAuthDebug(
+  message: string,
+  details?: Record<string, unknown>,
+): void {
+  console.log('[BetterAuthDebug]', message, details ?? '')
+}
+
+function logBetterAuthError(
+  message: string,
+  error: unknown,
+  details?: Record<string, unknown>,
+): void {
+  const normalizedError =
+    error instanceof Error
+      ? {
+          name: error.name,
+          message: error.message,
+          stack: error.stack,
+        }
+      : { value: String(error) }
+
+  console.error('[BetterAuthError]', message, {
+    ...details,
+    error: normalizedError,
+  })
+}
+
 function normalizeOrigin(origin: string): string {
   return origin.trim().replace(/\/+$/, '')
 }
@@ -74,16 +101,28 @@ async function derivePbkdf2Key(
 }
 
 async function hashWorkerPassword(password: string): Promise<string> {
-  const salt = crypto.getRandomValues(new Uint8Array(PBKDF2_SALT_BYTES))
-  const derivedKey = await derivePbkdf2Key(password, salt, PBKDF2_ITERATIONS)
+  try {
+    logBetterAuthDebug('hashWorkerPassword:start')
 
-  return [
-    PBKDF2_PREFIX,
-    PBKDF2_DIGEST.toLowerCase(),
-    String(PBKDF2_ITERATIONS),
-    encodeBase64(salt),
-    encodeBase64(derivedKey),
-  ].join('$')
+    const salt = crypto.getRandomValues(new Uint8Array(PBKDF2_SALT_BYTES))
+    const derivedKey = await derivePbkdf2Key(password, salt, PBKDF2_ITERATIONS)
+    const hash = [
+      PBKDF2_PREFIX,
+      PBKDF2_DIGEST.toLowerCase(),
+      String(PBKDF2_ITERATIONS),
+      encodeBase64(salt),
+      encodeBase64(derivedKey),
+    ].join('$')
+
+    logBetterAuthDebug('hashWorkerPassword:success', {
+      hashPrefix: PBKDF2_PREFIX,
+    })
+
+    return hash
+  } catch (error) {
+    logBetterAuthError('hashWorkerPassword:failed', error)
+    throw error
+  }
 }
 
 function isLegacyScryptHash(hash: string): boolean {
@@ -103,20 +142,34 @@ function verifyLegacyScryptPassword({
   hash: string
   password: string
 }): boolean {
-  const [saltHex, keyHex] = hash.split(':')
+  try {
+    logBetterAuthDebug('verifyLegacyScryptPassword:start')
 
-  if (!saltHex || !keyHex) {
-    return false
+    const [saltHex, keyHex] = hash.split(':')
+
+    if (!saltHex || !keyHex) {
+      logBetterAuthDebug('verifyLegacyScryptPassword:invalid-format')
+      return false
+    }
+
+    const targetKey = scryptSync(password.normalize('NFKC'), saltHex, 64, {
+      N: LEGACY_SCRYPT_PARAMS.N,
+      r: LEGACY_SCRYPT_PARAMS.r,
+      p: LEGACY_SCRYPT_PARAMS.p,
+      maxmem: 128 * LEGACY_SCRYPT_PARAMS.N * LEGACY_SCRYPT_PARAMS.r * 2,
+    })
+
+    const isValid = timingSafeEqual(targetKey, Buffer.from(keyHex, 'hex'))
+
+    logBetterAuthDebug('verifyLegacyScryptPassword:success', {
+      isValid,
+    })
+
+    return isValid
+  } catch (error) {
+    logBetterAuthError('verifyLegacyScryptPassword:failed', error)
+    throw error
   }
-
-  const targetKey = scryptSync(password.normalize('NFKC'), saltHex, 64, {
-    N: LEGACY_SCRYPT_PARAMS.N,
-    r: LEGACY_SCRYPT_PARAMS.r,
-    p: LEGACY_SCRYPT_PARAMS.p,
-    maxmem: 128 * LEGACY_SCRYPT_PARAMS.N * LEGACY_SCRYPT_PARAMS.r * 2,
-  })
-
-  return timingSafeEqual(targetKey, Buffer.from(keyHex, 'hex'))
 }
 
 async function verifyWorkerPassword({
@@ -126,36 +179,62 @@ async function verifyWorkerPassword({
   hash: string
   password: string
 }): Promise<boolean> {
-  const [algorithm, digest, iterations, saltBase64, expectedBase64] =
-    hash.split('$')
+  try {
+    logBetterAuthDebug('verifyWorkerPassword:start', {
+      hashFormat: hash.startsWith(`${PBKDF2_PREFIX}$`) ? 'pbkdf2' : 'legacy',
+    })
 
-  if (
-    algorithm !== PBKDF2_PREFIX ||
-    digest !== PBKDF2_DIGEST.toLowerCase() ||
-    !iterations ||
-    !saltBase64 ||
-    !expectedBase64
-  ) {
-    return isLegacyScryptHash(hash)
-      ? verifyLegacyScryptPassword({ hash, password })
-      : false
+    const [algorithm, digest, iterations, saltBase64, expectedBase64] =
+      hash.split('$')
+
+    if (
+      algorithm !== PBKDF2_PREFIX ||
+      digest !== PBKDF2_DIGEST.toLowerCase() ||
+      !iterations ||
+      !saltBase64 ||
+      !expectedBase64
+    ) {
+      return isLegacyScryptHash(hash)
+        ? verifyLegacyScryptPassword({ hash, password })
+        : false
+    }
+
+    const numIterations = Number(iterations)
+
+    if (!Number.isInteger(numIterations) || numIterations <= 0) {
+      logBetterAuthDebug('verifyWorkerPassword:invalid-iterations', {
+        iterations,
+      })
+      return false
+    }
+
+    const salt = decodeBase64(saltBase64)
+    const expected = decodeBase64(expectedBase64)
+    const derivedKey = await derivePbkdf2Key(password, salt, numIterations)
+
+    if (expected.length !== derivedKey.length) {
+      logBetterAuthDebug('verifyWorkerPassword:length-mismatch', {
+        expectedLength: expected.length,
+        derivedLength: derivedKey.length,
+      })
+      return false
+    }
+
+    const isValid = timingSafeEqual(
+      Buffer.from(expected),
+      Buffer.from(derivedKey),
+    )
+
+    logBetterAuthDebug('verifyWorkerPassword:success', {
+      isValid,
+      hashFormat: 'pbkdf2',
+    })
+
+    return isValid
+  } catch (error) {
+    logBetterAuthError('verifyWorkerPassword:failed', error)
+    throw error
   }
-
-  const numIterations = Number(iterations)
-
-  if (!Number.isInteger(numIterations) || numIterations <= 0) {
-    return false
-  }
-
-  const salt = decodeBase64(saltBase64)
-  const expected = decodeBase64(expectedBase64)
-  const derivedKey = await derivePbkdf2Key(password, salt, numIterations)
-
-  if (expected.length !== derivedKey.length) {
-    return false
-  }
-
-  return timingSafeEqual(Buffer.from(expected), Buffer.from(derivedKey))
 }
 
 function resolveBetterAuthSecret(): string {
@@ -202,7 +281,15 @@ export const auth = betterAuth({
     user: {
       create: {
         after: async (user) => {
+          logBetterAuthDebug('databaseHooks.user.create.after:start', {
+            userId: user.id,
+          })
+
           await provisionCitizenActorForAuthUser(user)
+
+          logBetterAuthDebug('databaseHooks.user.create.after:success', {
+            userId: user.id,
+          })
         },
       },
     },
