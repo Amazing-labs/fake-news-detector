@@ -45,8 +45,8 @@ export function NotificationsPage() {
 
   return (
     <PageLayout
-      title="Boîte de notifications"
-      description="Vue simple pour lire les notifications métier liées à la session courante."
+      title="Boite de notifications"
+      description="Vue simple pour lire les notifications metier liees a la session courante."
       actions={
         <Button
           variant="secondary"
@@ -63,18 +63,24 @@ export function NotificationsPage() {
             {query.data.items.map((item) => (
               <div
                 key={item.id}
-                className="rounded-md border border-slate-200 p-3"
+                className="rounded-[1.15rem] border border-[#eee9e2] bg-[#fbfaf8] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
               >
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <div>
-                    <p className="font-medium text-slate-950">{item.theme}</p>
-                    <p className="text-sm text-slate-600">{item.type}</p>
+                    <p className="font-black tracking-[-0.015em] text-[#171514]">
+                      {item.theme}
+                    </p>
+                    <p className="text-sm leading-6 text-[#706a63]">
+                      {item.type}
+                    </p>
                   </div>
                   <StatusBadge value={item.isRead ? 'LU' : 'NON_LU'} />
                 </div>
-                <p className="mt-2 text-sm text-slate-700">{item.message}</p>
-                <p className="mt-2 text-xs text-slate-500">
-                  Créée le {formatDateTime(item.createdAt)}
+                <p className="mt-2 text-sm leading-6 text-[#706a63]">
+                  {item.message}
+                </p>
+                <p className="mt-3 text-xs font-bold text-[#918a83]">
+                  Creee le {formatDateTime(item.createdAt)}
                 </p>
                 {!item.isRead ? (
                   <div className="mt-3">

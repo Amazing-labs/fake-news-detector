@@ -1,15 +1,24 @@
-import { startTransition, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { authClient } from '../../lib/auth-client'
 import { Button, Input, Notice, SectionCard } from '../../shared/ui/primitives'
 
-export function AuthForm(props: { onSuccess?: () => void }) {
-  const [mode, setMode] = useState<'sign-in' | 'sign-up'>('sign-in')
+export function AuthForm(props: {
+  initialMode?: 'sign-in' | 'sign-up'
+  onSuccess?: () => void | Promise<void>
+}) {
+  const [mode, setMode] = useState<'sign-in' | 'sign-up'>(
+    props.initialMode ?? 'sign-in',
+  )
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+
+  useEffect(() => {
+    setMode(props.initialMode ?? 'sign-in')
+  }, [props.initialMode])
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -45,9 +54,7 @@ export function AuthForm(props: { onSuccess?: () => void }) {
         setSuccess('Connexion reussie.')
       }
 
-      startTransition(() => {
-        props.onSuccess?.()
-      })
+      await props.onSuccess?.()
       setPassword('')
     } finally {
       setPending(false)

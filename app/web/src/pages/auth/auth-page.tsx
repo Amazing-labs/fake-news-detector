@@ -1,78 +1,88 @@
-import { Link } from '@tanstack/react-router'
-import { AuthForm } from '../../features/auth/auth-form'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import { useAppSession } from '../../entities/session/model'
-import {
-  DataList,
-  EmptyState,
-  PageLayout,
-  SectionCard,
-} from '../../shared/ui/primitives'
+import { AuthForm } from '../../features/auth/auth-form'
+import { EmptyState } from '../../shared/ui/primitives'
 
-export function AuthPage() {
+const authHighlights = [
+  'Session securisee par cookie HTTP',
+  'Espace adapte au role metier',
+  'Navigation reduite aux pages utiles',
+]
+
+export function AuthPage(props: { initialMode?: 'sign-in' | 'sign-up' }) {
   const { session, isPending, refetch } = useAppSession()
+  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!isPending && session) {
+      void navigate({ to: '/profile', replace: true })
+    }
+  }, [isPending, navigate, session])
+
+  async function handleAuthSuccess() {
+    await refetch()
+    await navigate({ to: '/profile' })
+  }
 
   return (
-    <PageLayout
-      title="Front office de test"
-      description="Base frontend end-to-end pour exercer le backend Hono et les workflows metier."
-    >
-      {isPending ? (
-        <EmptyState
-          title="Session en cours de chargement"
-          description="Le frontend attend le retour de Better Auth avant d'afficher une interface de connexion ou de travail."
-        />
-      ) : session ? (
-        <SectionCard
-          title="Session active"
-          description="La connexion est prete. L'utilisateur garde la meme UI d'authentification mais voit ensuite les ecrans autorises par son role metier."
+    <div className="min-h-screen bg-[#f5f2ee] text-[#171514]">
+      <header className="mx-auto flex max-w-[960px] items-center justify-between px-4 py-4">
+        <span className="text-sm font-black text-[#85807a]">
+          Acces securise
+        </span>
+        <Link
+          to="/"
+          className="rounded-full border border-[#e4ded5] bg-white px-4 py-2 text-sm font-black text-[#171514] hover:bg-[#faf8f5]"
         >
-          <DataList
-            items={[
-              { label: 'Nom', value: session.user.name },
-              { label: 'Email', value: session.user.email },
-              { label: 'ID acteur', value: session.user.actorId ?? 'N/A' },
-              { label: 'Role', value: session.user.actorRole ?? 'N/A' },
-              { label: 'Statut', value: session.user.actorStatus ?? 'N/A' },
-            ]}
-          />
-          <div className="flex flex-wrap gap-3 text-sm">
-            <Link className="underline" to="/reports">
-              Aller aux signalements
-            </Link>
-            <Link className="underline" to="/citizen">
-              Espace citoyen
-            </Link>
-            <Link className="underline" to="/journalist">
-              Espace journaliste
-            </Link>
-            <Link className="underline" to="/investigations">
-              Aller aux enquetes
-            </Link>
-            <Link className="underline" to="/profile">
-              Voir la session
-            </Link>
-          </div>
-        </SectionCard>
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-[420px_1fr]">
-          <AuthForm
-            onSuccess={() => {
-              void refetch()
-            }}
-          />
+          Retour
+        </Link>
+      </header>
 
-          <SectionCard
-            title="Connexion unique"
-            description="Tout le monde passe par la meme interface de connexion ou d'inscription. Ce sont ensuite la session et le role metier lie via AuthLink qui determinent les ecrans accessibles."
-          >
-            <p className="text-sm text-slate-700">
-              Un citoyen cree son compte directement. Un journaliste ou un
-              directeur doit d'abord etre provisionne cote metier, puis son
-              compte Better Auth est relie a cet acteur.
-            </p>
-          </SectionCard>
-        </div>
-      )}
-    </PageLayout>
+      <main className="mx-auto grid max-w-[960px] gap-8 px-4 py-8 lg:grid-cols-[1fr_420px] lg:items-start">
+        <section className="max-w-2xl">
+          <p className="text-sm font-black text-[#85807a]">
+            Fake News Detector / <span className="text-[#1d78c1]">auth</span>
+          </p>
+          <h1 className="mt-4 text-5xl leading-[0.98] font-extrabold tracking-[-0.06em] text-[#171514] md:text-6xl">
+            Espace <span className="font-editorial">verification.</span>
+          </h1>
+          <p className="mt-5 max-w-xl text-lg leading-8 text-[#706a63]">
+            Une seule connexion, puis l'application affiche uniquement les
+            ecrans utiles a ton role.
+          </p>
+
+          <div className="mt-7 overflow-hidden rounded-[1.35rem] border border-[#ece7df] bg-white shadow-[0_18px_70px_rgba(33,28,23,0.06)]">
+            {authHighlights.map((item) => (
+              <div
+                key={item}
+                className="border-b border-[#eee9e2] px-5 py-4 text-sm font-bold text-[#706a63] last:border-b-0"
+              >
+                {item}
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section>
+          {isPending ? (
+            <EmptyState
+              title="Session en cours"
+              description="Le frontend attend le retour de Better Auth avant d'afficher l'interface de connexion."
+            />
+          ) : session ? (
+            <EmptyState
+              title="Session active"
+              description="Tu es deja connecte. Redirection vers ton espace de travail."
+            />
+          ) : (
+            <AuthForm
+              initialMode={props.initialMode}
+              onSuccess={handleAuthSuccess}
+            />
+          )}
+        </section>
+      </main>
+    </div>
   )
 }

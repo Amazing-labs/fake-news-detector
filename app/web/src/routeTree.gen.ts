@@ -20,7 +20,14 @@ import { Route as InvestigationsRouteImport } from './routes/investigations'
 import { Route as InboxSubjectsRouteImport } from './routes/inbox-subjects'
 import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CitizenRouteImport } from './routes/citizen'
+import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as InvestigationsPublishedRouteImport } from './routes/investigations.published'
+import { Route as InvestigationsPendingReviewRouteImport } from './routes/investigations.pending-review'
+import { Route as InvestigationsInvestigationIdRouteImport } from './routes/investigations.$investigationId'
+import { Route as InboxSubjectsReportsRouteImport } from './routes/inbox-subjects.reports'
+import { Route as InboxSubjectsGlobalRouteImport } from './routes/inbox-subjects.global'
+import { Route as InboxSubjectsCreateRouteImport } from './routes/inbox-subjects.create'
 
 const WatcherApplicationsRoute = WatcherApplicationsRouteImport.update({
   id: '/watcher-applications',
@@ -77,18 +84,56 @@ const CitizenRoute = CitizenRouteImport.update({
   path: '/citizen',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InvestigationsPublishedRoute = InvestigationsPublishedRouteImport.update({
+  id: '/published',
+  path: '/published',
+  getParentRoute: () => InvestigationsRoute,
+} as any)
+const InvestigationsPendingReviewRoute =
+  InvestigationsPendingReviewRouteImport.update({
+    id: '/pending-review',
+    path: '/pending-review',
+    getParentRoute: () => InvestigationsRoute,
+  } as any)
+const InvestigationsInvestigationIdRoute =
+  InvestigationsInvestigationIdRouteImport.update({
+    id: '/$investigationId',
+    path: '/$investigationId',
+    getParentRoute: () => InvestigationsRoute,
+  } as any)
+const InboxSubjectsReportsRoute = InboxSubjectsReportsRouteImport.update({
+  id: '/reports',
+  path: '/reports',
+  getParentRoute: () => InboxSubjectsRoute,
+} as any)
+const InboxSubjectsGlobalRoute = InboxSubjectsGlobalRouteImport.update({
+  id: '/global',
+  path: '/global',
+  getParentRoute: () => InboxSubjectsRoute,
+} as any)
+const InboxSubjectsCreateRoute = InboxSubjectsCreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => InboxSubjectsRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/citizen': typeof CitizenRoute
   '/dashboard': typeof DashboardRoute
-  '/inbox-subjects': typeof InboxSubjectsRoute
-  '/investigations': typeof InvestigationsRoute
+  '/inbox-subjects': typeof InboxSubjectsRouteWithChildren
+  '/investigations': typeof InvestigationsRouteWithChildren
   '/journalist': typeof JournalistRoute
   '/journalists': typeof JournalistsRoute
   '/notifications': typeof NotificationsRoute
@@ -96,13 +141,20 @@ export interface FileRoutesByFullPath {
   '/publications': typeof PublicationsRoute
   '/reports': typeof ReportsRoute
   '/watcher-applications': typeof WatcherApplicationsRoute
+  '/inbox-subjects/create': typeof InboxSubjectsCreateRoute
+  '/inbox-subjects/global': typeof InboxSubjectsGlobalRoute
+  '/inbox-subjects/reports': typeof InboxSubjectsReportsRoute
+  '/investigations/$investigationId': typeof InvestigationsInvestigationIdRoute
+  '/investigations/pending-review': typeof InvestigationsPendingReviewRoute
+  '/investigations/published': typeof InvestigationsPublishedRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/citizen': typeof CitizenRoute
   '/dashboard': typeof DashboardRoute
-  '/inbox-subjects': typeof InboxSubjectsRoute
-  '/investigations': typeof InvestigationsRoute
+  '/inbox-subjects': typeof InboxSubjectsRouteWithChildren
+  '/investigations': typeof InvestigationsRouteWithChildren
   '/journalist': typeof JournalistRoute
   '/journalists': typeof JournalistsRoute
   '/notifications': typeof NotificationsRoute
@@ -110,14 +162,21 @@ export interface FileRoutesByTo {
   '/publications': typeof PublicationsRoute
   '/reports': typeof ReportsRoute
   '/watcher-applications': typeof WatcherApplicationsRoute
+  '/inbox-subjects/create': typeof InboxSubjectsCreateRoute
+  '/inbox-subjects/global': typeof InboxSubjectsGlobalRoute
+  '/inbox-subjects/reports': typeof InboxSubjectsReportsRoute
+  '/investigations/$investigationId': typeof InvestigationsInvestigationIdRoute
+  '/investigations/pending-review': typeof InvestigationsPendingReviewRoute
+  '/investigations/published': typeof InvestigationsPublishedRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/citizen': typeof CitizenRoute
   '/dashboard': typeof DashboardRoute
-  '/inbox-subjects': typeof InboxSubjectsRoute
-  '/investigations': typeof InvestigationsRoute
+  '/inbox-subjects': typeof InboxSubjectsRouteWithChildren
+  '/investigations': typeof InvestigationsRouteWithChildren
   '/journalist': typeof JournalistRoute
   '/journalists': typeof JournalistsRoute
   '/notifications': typeof NotificationsRoute
@@ -125,11 +184,18 @@ export interface FileRoutesById {
   '/publications': typeof PublicationsRoute
   '/reports': typeof ReportsRoute
   '/watcher-applications': typeof WatcherApplicationsRoute
+  '/inbox-subjects/create': typeof InboxSubjectsCreateRoute
+  '/inbox-subjects/global': typeof InboxSubjectsGlobalRoute
+  '/inbox-subjects/reports': typeof InboxSubjectsReportsRoute
+  '/investigations/$investigationId': typeof InvestigationsInvestigationIdRoute
+  '/investigations/pending-review': typeof InvestigationsPendingReviewRoute
+  '/investigations/published': typeof InvestigationsPublishedRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/citizen'
     | '/dashboard'
     | '/inbox-subjects'
@@ -141,9 +207,16 @@ export interface FileRouteTypes {
     | '/publications'
     | '/reports'
     | '/watcher-applications'
+    | '/inbox-subjects/create'
+    | '/inbox-subjects/global'
+    | '/inbox-subjects/reports'
+    | '/investigations/$investigationId'
+    | '/investigations/pending-review'
+    | '/investigations/published'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
     | '/citizen'
     | '/dashboard'
     | '/inbox-subjects'
@@ -155,9 +228,16 @@ export interface FileRouteTypes {
     | '/publications'
     | '/reports'
     | '/watcher-applications'
+    | '/inbox-subjects/create'
+    | '/inbox-subjects/global'
+    | '/inbox-subjects/reports'
+    | '/investigations/$investigationId'
+    | '/investigations/pending-review'
+    | '/investigations/published'
   id:
     | '__root__'
     | '/'
+    | '/auth'
     | '/citizen'
     | '/dashboard'
     | '/inbox-subjects'
@@ -169,14 +249,21 @@ export interface FileRouteTypes {
     | '/publications'
     | '/reports'
     | '/watcher-applications'
+    | '/inbox-subjects/create'
+    | '/inbox-subjects/global'
+    | '/inbox-subjects/reports'
+    | '/investigations/$investigationId'
+    | '/investigations/pending-review'
+    | '/investigations/published'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthRoute: typeof AuthRoute
   CitizenRoute: typeof CitizenRoute
   DashboardRoute: typeof DashboardRoute
-  InboxSubjectsRoute: typeof InboxSubjectsRoute
-  InvestigationsRoute: typeof InvestigationsRoute
+  InboxSubjectsRoute: typeof InboxSubjectsRouteWithChildren
+  InvestigationsRoute: typeof InvestigationsRouteWithChildren
   JournalistRoute: typeof JournalistRoute
   JournalistsRoute: typeof JournalistsRoute
   NotificationsRoute: typeof NotificationsRoute
@@ -265,6 +352,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CitizenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -272,15 +366,90 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/investigations/published': {
+      id: '/investigations/published'
+      path: '/published'
+      fullPath: '/investigations/published'
+      preLoaderRoute: typeof InvestigationsPublishedRouteImport
+      parentRoute: typeof InvestigationsRoute
+    }
+    '/investigations/pending-review': {
+      id: '/investigations/pending-review'
+      path: '/pending-review'
+      fullPath: '/investigations/pending-review'
+      preLoaderRoute: typeof InvestigationsPendingReviewRouteImport
+      parentRoute: typeof InvestigationsRoute
+    }
+    '/investigations/$investigationId': {
+      id: '/investigations/$investigationId'
+      path: '/$investigationId'
+      fullPath: '/investigations/$investigationId'
+      preLoaderRoute: typeof InvestigationsInvestigationIdRouteImport
+      parentRoute: typeof InvestigationsRoute
+    }
+    '/inbox-subjects/reports': {
+      id: '/inbox-subjects/reports'
+      path: '/reports'
+      fullPath: '/inbox-subjects/reports'
+      preLoaderRoute: typeof InboxSubjectsReportsRouteImport
+      parentRoute: typeof InboxSubjectsRoute
+    }
+    '/inbox-subjects/global': {
+      id: '/inbox-subjects/global'
+      path: '/global'
+      fullPath: '/inbox-subjects/global'
+      preLoaderRoute: typeof InboxSubjectsGlobalRouteImport
+      parentRoute: typeof InboxSubjectsRoute
+    }
+    '/inbox-subjects/create': {
+      id: '/inbox-subjects/create'
+      path: '/create'
+      fullPath: '/inbox-subjects/create'
+      preLoaderRoute: typeof InboxSubjectsCreateRouteImport
+      parentRoute: typeof InboxSubjectsRoute
+    }
   }
 }
 
+interface InboxSubjectsRouteChildren {
+  InboxSubjectsCreateRoute: typeof InboxSubjectsCreateRoute
+  InboxSubjectsGlobalRoute: typeof InboxSubjectsGlobalRoute
+  InboxSubjectsReportsRoute: typeof InboxSubjectsReportsRoute
+}
+
+const InboxSubjectsRouteChildren: InboxSubjectsRouteChildren = {
+  InboxSubjectsCreateRoute: InboxSubjectsCreateRoute,
+  InboxSubjectsGlobalRoute: InboxSubjectsGlobalRoute,
+  InboxSubjectsReportsRoute: InboxSubjectsReportsRoute,
+}
+
+const InboxSubjectsRouteWithChildren = InboxSubjectsRoute._addFileChildren(
+  InboxSubjectsRouteChildren,
+)
+
+interface InvestigationsRouteChildren {
+  InvestigationsInvestigationIdRoute: typeof InvestigationsInvestigationIdRoute
+  InvestigationsPendingReviewRoute: typeof InvestigationsPendingReviewRoute
+  InvestigationsPublishedRoute: typeof InvestigationsPublishedRoute
+}
+
+const InvestigationsRouteChildren: InvestigationsRouteChildren = {
+  InvestigationsInvestigationIdRoute: InvestigationsInvestigationIdRoute,
+  InvestigationsPendingReviewRoute: InvestigationsPendingReviewRoute,
+  InvestigationsPublishedRoute: InvestigationsPublishedRoute,
+}
+
+const InvestigationsRouteWithChildren = InvestigationsRoute._addFileChildren(
+  InvestigationsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthRoute: AuthRoute,
   CitizenRoute: CitizenRoute,
   DashboardRoute: DashboardRoute,
-  InboxSubjectsRoute: InboxSubjectsRoute,
-  InvestigationsRoute: InvestigationsRoute,
+  InboxSubjectsRoute: InboxSubjectsRouteWithChildren,
+  InvestigationsRoute: InvestigationsRouteWithChildren,
   JournalistRoute: JournalistRoute,
   JournalistsRoute: JournalistsRoute,
   NotificationsRoute: NotificationsRoute,

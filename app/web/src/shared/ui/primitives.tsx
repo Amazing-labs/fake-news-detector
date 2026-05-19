@@ -8,20 +8,29 @@ export function PageLayout(props: {
   children: ReactNode
 }) {
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-3 border-b border-slate-200 pb-4 md:flex-row md:items-end md:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-semibold text-slate-950">
-            {props.title}
-          </h1>
-          {props.description ? (
-            <p className="max-w-3xl text-sm text-slate-600">
-              {props.description}
+    <div className="space-y-7">
+      <header className="relative overflow-hidden rounded-[1.8rem] border border-[#ebe5dc] bg-white/88 px-5 py-6 shadow-[0_22px_75px_rgba(35,29,23,0.07)] backdrop-blur md:px-7 md:py-7">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#171514]/20 to-transparent" />
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-3xl">
+            <p className="text-xs font-black tracking-[0.14em] text-[#9a9288] uppercase">
+              Verification desk
             </p>
+            <h1 className="mt-3 text-4xl leading-[0.95] font-extrabold tracking-[-0.045em] text-balance text-[#171514] md:text-5xl">
+              {props.title}
+              <span className="font-editorial">.</span>
+            </h1>
+            {props.description ? (
+              <p className="mt-4 max-w-2xl text-base leading-7 text-pretty text-[#6f6860]">
+                {props.description}
+              </p>
+            ) : null}
+          </div>
+          {props.actions ? (
+            <div className="shrink-0">{props.actions}</div>
           ) : null}
         </div>
-        {props.actions ? <div>{props.actions}</div> : null}
-      </div>
+      </header>
       {props.children}
     </div>
   )
@@ -33,14 +42,18 @@ export function SectionCard(props: {
   children: ReactNode
 }) {
   return (
-    <section className="space-y-4 rounded-lg border border-slate-200 bg-white p-4">
-      <div className="space-y-1">
-        <h2 className="text-base font-medium text-slate-950">{props.title}</h2>
+    <section className="overflow-hidden rounded-[1.55rem] border border-[#ebe5dc] bg-white/92 shadow-[0_18px_65px_rgba(35,29,23,0.055)] backdrop-blur">
+      <div className="border-b border-[#f0ebe4] px-5 py-4">
+        <h2 className="text-base font-black tracking-[-0.02em] text-[#171514]">
+          {props.title}
+        </h2>
         {props.description ? (
-          <p className="text-sm text-slate-600">{props.description}</p>
+          <p className="mt-1 max-w-2xl text-sm leading-5 text-[#7b7671]">
+            {props.description}
+          </p>
         ) : null}
       </div>
-      {props.children}
+      <div className="space-y-4 p-5">{props.children}</div>
     </section>
   )
 }
@@ -53,12 +66,12 @@ export function DataList(props: {
       {props.items.map((item) => (
         <div
           key={item.label}
-          className="rounded-md border border-slate-200 bg-slate-50 p-3"
+          className="rounded-[1.2rem] border border-[#eee9e2] bg-[#fbfaf8] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
         >
-          <dt className="text-xs tracking-wide text-slate-500 uppercase">
+          <dt className="text-xs font-bold tracking-wide text-[#8c8680] uppercase">
             {item.label}
           </dt>
-          <dd className="mt-1 text-sm break-all text-slate-900">
+          <dd className="mt-2 text-xl leading-tight font-black break-words text-[#171514]">
             {item.value}
           </dd>
         </div>
@@ -74,13 +87,15 @@ export function EmptyState(props: {
   linkLabel?: string
 }) {
   return (
-    <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
-      <p className="font-medium text-slate-900">{props.title}</p>
-      <p className="mt-2">{props.description}</p>
+    <div className="rounded-[1.55rem] border border-dashed border-[#e7e2dc] bg-white/70 px-6 py-10 text-center shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+      <p className="text-base font-black text-[#171514]">{props.title}</p>
+      <p className="mx-auto mt-2 max-w-xl text-sm leading-6 text-[#7b7671]">
+        {props.description}
+      </p>
       {props.linkTo && props.linkLabel ? (
         <Link
           to={props.linkTo}
-          className="mt-4 inline-flex text-sm font-medium text-slate-900 underline"
+          className="mt-5 inline-flex rounded-full border border-[#e7e2dc] bg-white px-4 py-2 text-sm font-bold text-[#171514] transition hover:bg-[#f7f4ef]"
         >
           {props.linkLabel}
         </Link>
@@ -90,9 +105,49 @@ export function EmptyState(props: {
 }
 
 export function StatusBadge(props: { value: string | null | undefined }) {
+  const value = props.value ?? 'N/A'
+  const lower = value.toLowerCase()
+  const labels: Record<string, string> = {
+    ACTIVE: 'Actif',
+    APPROVED: 'Approuve',
+    PENDING: 'En attente',
+    PENDING_REVIEW: 'En revue',
+    PUBLISHED: 'Publie',
+    REJECTED: 'Refuse',
+    SUSPENDED: 'Suspendu',
+    VALIDATED: 'Valide',
+    LU: 'Lu',
+    NON_LU: 'Non lu',
+    CORRECTION: 'Correction',
+  }
+  const label =
+    labels[value] ??
+    value
+      .toLowerCase()
+      .split('_')
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ')
+  const tone =
+    lower.includes('reject') ||
+    lower.includes('cancel') ||
+    lower.includes('error')
+      ? 'border-[#ffd9d7] bg-[#fff0ef] text-[#b13a35]'
+      : lower.includes('publish') ||
+          lower.includes('active') ||
+          lower.includes('approved') ||
+          lower.includes('valid')
+        ? 'border-[#d6ead8] bg-[#eff8ef] text-[#247044]'
+        : lower.includes('pending') ||
+            lower.includes('review') ||
+            lower.includes('wait')
+          ? 'border-[#f3dfad] bg-[#fff6d8] text-[#8a610c]'
+          : 'border-[#cce3f6] bg-[#edf7ff] text-[#1d78c1]'
+
   return (
-    <span className="inline-flex rounded-md border border-slate-300 bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">
-      {props.value ?? 'N/A'}
+    <span
+      className={`inline-flex rounded-full border px-2.5 py-1 text-[11px] font-black tracking-[0.08em] uppercase ${tone}`}
+    >
+      {label}
     </span>
   )
 }
@@ -106,15 +161,15 @@ export function Button(
 
   const tone =
     variant === 'primary'
-      ? 'bg-slate-900 text-white hover:bg-slate-800'
+      ? 'border border-[#171514] bg-[#171514] text-white shadow-[0_12px_30px_rgba(23,21,20,0.12)] hover:bg-[#2d2926]'
       : variant === 'danger'
-        ? 'bg-red-600 text-white hover:bg-red-500'
-        : 'bg-white text-slate-900 border border-slate-300 hover:bg-slate-50'
+        ? 'border border-[#d84a46] bg-[#d84a46] text-white hover:bg-[#c9343b]'
+        : 'border border-[#e7e2dc] bg-white text-[#171514] shadow-[0_10px_28px_rgba(35,29,23,0.06)] hover:bg-[#f7f4ef]'
 
   return (
     <button
       type={type}
-      className={`inline-flex items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${tone} ${className ?? ''}`}
+      className={`inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-black transition duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${tone} ${className ?? ''}`}
       {...rest}
     />
   )
@@ -127,10 +182,10 @@ export function Input(
 ) {
   const { label, className, ...rest } = props
   return (
-    <label className="grid gap-1 text-sm">
-      <span className="text-slate-700">{label}</span>
+    <label className="grid gap-1.5 text-sm">
+      <span className="font-bold text-[#171514]">{label}</span>
       <input
-        className={`rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 ${className ?? ''}`}
+        className={`rounded-2xl border border-[#e7e2dc] bg-white/95 px-3 py-2.5 text-[#171514] transition outline-none placeholder:text-[#a49d95] focus:border-[#171514] focus:ring-3 focus:ring-[#171514]/10 ${className ?? ''}`}
         {...rest}
       />
     </label>
@@ -144,10 +199,10 @@ export function TextArea(
 ) {
   const { label, className, ...rest } = props
   return (
-    <label className="grid gap-1 text-sm">
-      <span className="text-slate-700">{label}</span>
+    <label className="grid gap-1.5 text-sm">
+      <span className="font-bold text-[#171514]">{label}</span>
       <textarea
-        className={`min-h-24 rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 ${className ?? ''}`}
+        className={`min-h-32 rounded-2xl border border-[#e7e2dc] bg-white/95 px-3 py-2.5 text-[#171514] transition outline-none placeholder:text-[#a49d95] focus:border-[#171514] focus:ring-3 focus:ring-[#171514]/10 ${className ?? ''}`}
         {...rest}
       />
     </label>
@@ -162,10 +217,10 @@ export function Select(
 ) {
   const { label, className, children, ...rest } = props
   return (
-    <label className="grid gap-1 text-sm">
-      <span className="text-slate-700">{label}</span>
+    <label className="grid gap-1.5 text-sm">
+      <span className="font-bold text-[#171514]">{label}</span>
       <select
-        className={`rounded-md border border-slate-300 bg-white px-3 py-2 text-slate-950 ${className ?? ''}`}
+        className={`rounded-2xl border border-[#e7e2dc] bg-white/95 px-3 py-2.5 text-[#171514] transition outline-none focus:border-[#171514] focus:ring-3 focus:ring-[#171514]/10 ${className ?? ''}`}
         {...rest}
       >
         {children}
@@ -180,13 +235,13 @@ export function Notice(props: {
 }) {
   const tone =
     props.tone === 'error'
-      ? 'border-red-200 bg-red-50 text-red-700'
+      ? 'border-[#ffd9d7] bg-[#fff0ef] text-[#b13a35]'
       : props.tone === 'success'
-        ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-        : 'border-slate-200 bg-slate-50 text-slate-700'
+        ? 'border-[#d6ead8] bg-[#eff8ef] text-[#247044]'
+        : 'border-[#cce3f6] bg-[#edf7ff] text-[#1d78c1]'
 
   return (
-    <div className={`rounded-md border px-3 py-2 text-sm ${tone}`}>
+    <div className={`rounded-2xl border px-3 py-2 text-sm font-bold ${tone}`}>
       {props.children}
     </div>
   )

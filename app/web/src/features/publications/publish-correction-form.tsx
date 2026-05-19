@@ -45,7 +45,7 @@ export function PublishCorrectionForm() {
         }}
       >
         <Input
-          label="ID publication"
+          label="Reference publication"
           value={publicationId}
           onChange={(event) => setPublicationId(event.target.value)}
         />

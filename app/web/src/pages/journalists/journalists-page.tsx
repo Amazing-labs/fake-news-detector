@@ -58,16 +58,16 @@ export function JournalistsPage() {
       title="Journalistes"
       description="Socle frontend minimal pour creer, desactiver, bannir et reactiver un journaliste."
     >
-      <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.45fr)]">
         <CreateJournalistForm />
 
         <SectionCard
           title="Actions de statut"
-          description="Les endpoints backend operent par identifiant journaliste."
+          description="Renseigne la reference interne du journaliste a administrer."
         >
           <div className="grid gap-3">
             <Input
-              label="ID journaliste"
+              label="Reference journaliste"
               value={journalistId}
               onChange={(event) => setJournalistId(event.target.value)}
             />

@@ -25,6 +25,11 @@ export class InvestigationController {
     const scope = c.req.query('scope')
     const journalistId = c.req.query('journalistId')
 
+    if (scope === 'in-progress') {
+      const items = await this.investigationRepository.findInProgress()
+      return ok(c, presentInvestigationList(items))
+    }
+
     if (scope === 'pending-review') {
       const items = await this.investigationRepository.findPendingReviews()
       return ok(c, presentInvestigationList(items))

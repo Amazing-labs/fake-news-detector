@@ -40,7 +40,7 @@ export function CreateDirectorInboxSubjectForm() {
 
   return (
     <SectionCard
-      title="Créer un sujet directeur"
+      title="Creer un sujet directeur"
       description="Flux manuel d'ouverture d'un sujet hors signalement."
     >
       <form
@@ -61,11 +61,11 @@ export function CreateDirectorInboxSubjectForm() {
           onChange={(event) => setDescription(event.target.value)}
         />
         <MediaFields
-          title="Médias du sujet"
-          description="Ajoute les médias d'origine quand le sujet est ouvert directement par le directeur."
+          title="Medias du sujet"
+          description="Ajoute les medias d'origine quand le sujet est ouvert directement par le directeur."
           items={media}
           onChange={setMedia}
-          addLabel="Ajouter un média au sujet"
+          addLabel="Ajouter un media au sujet"
         />
         {mutation.isError ? (
           <Notice tone="error">{toApiErrorMessage(mutation.error)}</Notice>

@@ -1,49 +1,64 @@
+import { Link } from '@tanstack/react-router'
 import { useAppSession } from '../../entities/session/model'
-import { formatDateTime } from '../../shared/lib/format'
-import {
-  DataList,
-  EmptyState,
-  PageLayout,
-  SectionCard,
-} from '../../shared/ui/primitives'
+import { getNavigationForSession } from '../../shared/session/role-access'
+import { EmptyState } from '../../shared/ui/primitives'
 
 export function ProfilePage() {
   const { session, isPending } = useAppSession()
 
+  if (isPending) {
+    return (
+      <EmptyState
+        title="Chargement"
+        description="Le frontend attend la session Better Auth."
+      />
+    )
+  }
+
+  if (!session) {
+    return (
+      <EmptyState
+        title="Aucune session"
+        description="Connecte-toi pour retrouver ton espace de travail."
+      />
+    )
+  }
+
+  const quickLinks = getNavigationForSession(session).filter(
+    (item) => item.to !== '/profile',
+  )
+
   return (
-    <PageLayout
-      title="Profil / Session"
-      description="Vue technique de session pour debugger le branchage Better Auth vers l'acteur metier."
-    >
-      {isPending ? (
-        <EmptyState
-          title="Chargement"
-          description="Le frontend attend la session Better Auth."
-        />
-      ) : !session ? (
-        <EmptyState
-          title="Aucune session"
-          description="Connecte-toi pour visualiser les claims Better Auth et l'acteur lie."
-        />
-      ) : (
-        <SectionCard title="Session courante">
-          <DataList
-            items={[
-              { label: 'Nom', value: session.user.name },
-              { label: 'Email', value: session.user.email },
-              { label: 'ID utilisateur', value: session.user.id },
-              { label: 'ID acteur', value: session.user.actorId ?? 'N/A' },
-              { label: 'Role', value: session.user.actorRole ?? 'N/A' },
-              { label: 'Statut', value: session.user.actorStatus ?? 'N/A' },
-              { label: 'ID session', value: session.session.id },
-              {
-                label: 'Expire le',
-                value: formatDateTime(session.session.expiresAt),
-              },
-            ]}
-          />
-        </SectionCard>
-      )}
-    </PageLayout>
+    <section className="rounded-[1.8rem] border border-[#ece7df] bg-white/78 p-5 shadow-[0_18px_60px_rgba(33,28,23,0.045)] backdrop-blur">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-black tracking-[0.14em] text-[#918a83] uppercase">
+            Acces rapides
+          </p>
+          <h2 className="mt-1 text-xl font-black tracking-[-0.035em] text-[#171514]">
+            Pages utiles pour ton role
+            <span className="font-editorial">.</span>
+          </h2>
+        </div>
+        <p className="text-sm text-[#706a63]">
+          {quickLinks.length} espaces disponibles
+        </p>
+      </div>
+
+      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {quickLinks.map((item) => (
+          <Link
+            key={item.to}
+            to={item.to}
+            className="rounded-[1.2rem] border border-[#eee9e2] bg-[#fbfaf8] p-4 transition duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_16px_42px_rgba(33,28,23,0.08)]"
+          >
+            <p className="text-sm font-black text-[#171514]">{item.label}</p>
+            <p className="mt-2 text-xs leading-5 text-[#706a63]">
+              Ouvrir cet espace de travail.
+            </p>
+          </Link>
+        ))}
+      </div>
+    </section>
   )
 }

@@ -47,7 +47,7 @@ export function WatcherApplicationsPage() {
       title="Vigie"
       description="Flux citoyen de candidature et flux directeur de decision."
     >
-      <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.45fr)]">
         {canApply ? (
           <WatcherApplicationForm />
         ) : (
@@ -63,24 +63,26 @@ export function WatcherApplicationsPage() {
           {canReview ? (
             query.data?.items.length ? (
               <div className="grid gap-3">
-                {query.data.items.map((item) => (
+                {query.data.items.map((item, index) => (
                   <div
                     key={item.id}
-                    className="rounded-md border border-slate-200 p-3"
+                    className="rounded-[1.15rem] border border-[#eee9e2] bg-[#fbfaf8] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
                   >
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <div>
-                        <p className="font-medium text-slate-950">{item.id}</p>
-                        <p className="text-sm text-slate-600">
-                          Acteur {item.actorId}
+                        <p className="font-black tracking-[-0.015em] text-[#171514]">
+                          Candidature vigie #{index + 1}
+                        </p>
+                        <p className="text-sm leading-6 text-[#706a63]">
+                          Profil citoyen en attente de decision
                         </p>
                       </div>
                       <StatusBadge value={item.status} />
                     </div>
-                    <p className="mt-2 text-sm text-slate-700">
+                    <p className="mt-2 text-sm leading-6 text-[#706a63]">
                       {item.motivation}
                     </p>
-                    <p className="mt-2 text-xs text-slate-500">
+                    <p className="mt-3 text-xs font-bold text-[#918a83]">
                       Cree le {formatDateTime(item.createdAt)}
                     </p>
                     <div className="mt-3 flex gap-2">

@@ -1,12 +1,17 @@
 import { createAuthClient } from 'better-auth/react'
 
 function resolveAuthBaseUrl(): string {
+  const configured = import.meta.env.VITE_AUTH_BASE_URL
   const origin =
     typeof window !== 'undefined'
       ? window.location.origin
       : 'http://localhost:5173'
-  const authPath = import.meta.env.VITE_AUTH_BASE_URL || '/api/auth'
-  return new URL(authPath, origin).toString()
+
+  if (configured) {
+    return new URL(configured, origin).toString()
+  }
+
+  return new URL('/api/auth', origin).toString()
 }
 
 export const authClient = createAuthClient({

@@ -1,240 +1,197 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { Link } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
 import type { InvestigationList } from '../../entities/investigation/model'
 import { hasRole, useAppSession } from '../../entities/session/model'
 import { ApproveInvestigationForm } from '../../features/investigations/approve-investigation-form'
-import { SubmitWatcherEvidenceForm } from '../../features/investigations/submit-watcher-evidence-form'
 import { apiRequest } from '../../shared/api/http'
 import { formatDateTime, formatLabel } from '../../shared/lib/format'
 import {
-  Button,
   EmptyState,
-  Input,
-  PageLayout,
   SectionCard,
-  Select,
   StatusBadge,
 } from '../../shared/ui/primitives'
 
-type InvestigationScope = 'pending-review' | 'published' | 'journalist'
+export type InvestigationScope = 'pending-review' | 'published'
 
-export function InvestigationsPage() {
+export function InvestigationScopePage(props: {
+  scope: InvestigationScope
+  emptyTitle: string
+}) {
   const { session } = useAppSession()
-  const queryClient = useQueryClient()
-  const [scope, setScope] = useState<InvestigationScope>('pending-review')
-  const canReview = hasRole(session, ['JOURNALIST'])
-  const canApprove = hasRole(session, ['EDITORIAL_DIRECTOR'])
-  const canSubmitWatcherEvidence =
-    session?.user.actorRole === 'CITIZEN' &&
-    session.user.citizenType === 'WATCHER'
+  const apiScope =
+    props.scope === 'pending-review' ? 'in-progress' : props.scope
 
   const query = useQuery({
-    queryKey: ['investigations', scope, session?.user.actorId ?? null],
-    queryFn: () => {
-      if (scope === 'journalist' && session?.user.actorId) {
-        return apiRequest<InvestigationList>(
-          `/api/investigations?journalistId=${session.user.actorId}`,
-        )
-      }
-
-      return apiRequest<InvestigationList>(`/api/investigations?scope=${scope}`)
-    },
+    queryKey: ['investigations', apiScope],
+    queryFn: () =>
+      apiRequest<InvestigationList>(`/api/investigations?scope=${apiScope}`),
     enabled: !!session,
   })
 
-  const reviewMutation = useMutation({
-    mutationFn: (id: string) =>
-      apiRequest<null>(`/api/investigations/${id}/review`, {
-        method: 'POST',
-        body: JSON.stringify({}),
-      }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['investigations'] })
-    },
+  return (
+    <div className="grid gap-6">
+      <SectionCard title="Liste des enquetes">
+        {query.data?.items.length ? (
+          <div className="grid gap-3">
+            {query.data.items.map((item, index) => (
+              <InvestigationRow key={item.id} index={index} item={item} />
+            ))}
+          </div>
+        ) : (
+          <EmptyState
+            title={props.emptyTitle}
+            description="Aucun dossier n'est remonte pour cette vue."
+          />
+        )}
+      </SectionCard>
+    </div>
+  )
+}
+
+export function InvestigationDetailPage(props: { investigationId: string }) {
+  const { session } = useAppSession()
+  const canApprove = hasRole(session, ['EDITORIAL_DIRECTOR'])
+
+  const inProgressQuery = useQuery({
+    queryKey: ['investigations', 'in-progress'],
+    queryFn: () =>
+      apiRequest<InvestigationList>('/api/investigations?scope=in-progress'),
+    enabled: !!session,
   })
 
-  const reasonMutation = useMutation({
-    mutationFn: ({
-      id,
-      action,
-      reason,
-    }: {
-      id: string
-      action: 'reject' | 'cancel'
-      reason: string
-    }) =>
-      apiRequest<null>(`/api/investigations/${id}/${action}`, {
-        method: 'POST',
-        body: JSON.stringify({ reason }),
-      }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['investigations'] })
-    },
+  const pendingReviewQuery = useQuery({
+    queryKey: ['investigations', 'pending-review'],
+    queryFn: () =>
+      apiRequest<InvestigationList>('/api/investigations?scope=pending-review'),
+    enabled: !!session,
   })
 
-  const archiveMutation = useMutation({
-    mutationFn: ({ id, comment }: { id: string; comment: string }) =>
-      apiRequest<null>(`/api/investigations/${id}/archive`, {
-        method: 'POST',
-        body: JSON.stringify({ comment }),
-      }),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: ['investigations'] })
-    },
+  const publishedQuery = useQuery({
+    queryKey: ['investigations', 'published'],
+    queryFn: () =>
+      apiRequest<InvestigationList>('/api/investigations?scope=published'),
+    enabled: !!session,
   })
+
+  const items = [
+    ...(inProgressQuery.data?.items ?? []),
+    ...(pendingReviewQuery.data?.items ?? []),
+    ...(publishedQuery.data?.items ?? []),
+  ]
+  const investigation = items.find((item) => item.id === props.investigationId)
+
+  if (!investigation) {
+    return (
+      <EmptyState
+        title="Enquete introuvable"
+        description="Cette enquete n'est pas presente dans les vues accessibles."
+        linkTo="/investigations/pending-review"
+        linkLabel="Retour aux enquetes"
+      />
+    )
+  }
 
   return (
-    <PageLayout
-      title="Enquetes"
-      description="Vue centrale journaliste/directeur, avec les actions minimales pour soumettre, approuver et corriger le cycle metier."
-      actions={
-        <Select
-          label="Vue"
-          value={scope}
-          onChange={(event) =>
-            setScope(event.target.value as InvestigationScope)
-          }
-        >
-          <option value="pending-review">En attente</option>
-          <option value="published">Publiees</option>
-          <option value="journalist">Par journaliste</option>
-        </Select>
-      }
-    >
-      <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
-        <div className="grid gap-6">
-          {canSubmitWatcherEvidence ? (
-            <SubmitWatcherEvidenceForm />
-          ) : session?.user.actorRole === 'CITIZEN' ? (
-            <SectionCard title="Soumission de preuves vigie">
-              <EmptyState
-                title="Reserve aux vigies"
-                description="Un citoyen lambda ne peut pas soumettre de preuves. Il doit d'abord etre approuve comme vigie."
-              />
-            </SectionCard>
-          ) : null}
-          {canApprove ? <ApproveInvestigationForm /> : null}
+    <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+      <article className="rounded-[1.65rem] border border-[#ece7df] bg-white p-5 shadow-[0_14px_38px_rgba(33,28,23,0.055)]">
+        <div className="flex items-center justify-between gap-4 border-b border-[#eee9e2] pb-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#fff5d6] to-[#ffe8ef] text-sm font-black text-[#171514] ring-1 ring-[#e8e2da]">
+              EQ
+            </div>
+            <div className="min-w-0">
+              <h1 className="truncate font-black tracking-[-0.02em] text-[#171514]">
+                Dossier de verification
+              </h1>
+              <p className="text-sm text-[#7b7671]">
+                Sujet qualifie avec journaliste assigne
+              </p>
+            </div>
+          </div>
+          <StatusBadge value={investigation.status} />
         </div>
 
-        <SectionCard title="Liste des enquetes">
-          {query.data?.items.length ? (
-            <div className="grid gap-3">
-              {query.data.items.map((item) => (
-                <InvestigationRow
-                  key={item.id}
-                  item={item}
-                  canReview={canReview}
-                  canApprove={canApprove}
-                  onSubmitForReview={() => reviewMutation.mutate(item.id)}
-                  onReject={(reason) =>
-                    reasonMutation.mutate({
-                      id: item.id,
-                      action: 'reject',
-                      reason,
-                    })
-                  }
-                  onCancel={(reason) =>
-                    reasonMutation.mutate({
-                      id: item.id,
-                      action: 'cancel',
-                      reason,
-                    })
-                  }
-                  onArchive={(comment) =>
-                    archiveMutation.mutate({
-                      id: item.id,
-                      comment,
-                    })
-                  }
-                />
-              ))}
-            </div>
-          ) : (
-            <EmptyState
-              title="Aucune enquete"
-              description="Aucune ligne n'est remontee pour la vue selectionnee."
-            />
-          )}
-        </SectionCard>
-      </div>
-    </PageLayout>
+        <div className="mt-5 grid gap-3 text-sm leading-6 text-[#706a63] sm:grid-cols-2">
+          <p className="rounded-2xl bg-[#faf8f5] px-3 py-2">
+            <span className="block text-xs font-black text-[#918a83] uppercase">
+              Verdict
+            </span>
+            {formatLabel(investigation.draftVerdict)}
+          </p>
+          <p className="rounded-2xl bg-[#faf8f5] px-3 py-2">
+            <span className="block text-xs font-black text-[#918a83] uppercase">
+              Categorie media
+            </span>
+            {formatLabel(investigation.mediaCategory)}
+          </p>
+          <p className="rounded-2xl bg-[#faf8f5] px-3 py-2">
+            <span className="block text-xs font-black text-[#918a83] uppercase">
+              Tentatives
+            </span>
+            {investigation.attemptCount}
+          </p>
+          <p className="rounded-2xl bg-[#faf8f5] px-3 py-2">
+            <span className="block text-xs font-black text-[#918a83] uppercase">
+              Mise a jour
+            </span>
+            {formatDateTime(investigation.updatedAt)}
+          </p>
+        </div>
+
+        <div className="mt-5 rounded-2xl border border-[#eee9e2] bg-[#fbfaf8] p-4 text-sm leading-6 text-[#706a63]">
+          <p className="font-black text-[#171514]">Notes d'enquete</p>
+          <p className="mt-2">
+            {investigation.investigationNotes ??
+              'Aucune note detaillee disponible.'}
+          </p>
+        </div>
+      </article>
+
+      {canApprove ? (
+        <ApproveInvestigationForm investigationId={props.investigationId} />
+      ) : (
+        <EmptyState
+          title="Actions reservees"
+          description="Les actions de publication, refus et archive sont reservees au directeur de publication."
+        />
+      )}
+    </div>
   )
 }
 
 function InvestigationRow(props: {
+  index: number
   item: InvestigationList['items'][number]
-  canReview: boolean
-  canApprove: boolean
-  onSubmitForReview: () => void
-  onReject: (reason: string) => void
-  onCancel: (reason: string) => void
-  onArchive: (comment: string) => void
 }) {
-  const [reason, setReason] = useState('')
-  const [comment, setComment] = useState('')
-
   return (
-    <div className="rounded-md border border-slate-200 p-3">
+    <Link
+      to="/investigations/$investigationId"
+      params={{ investigationId: props.item.id }}
+      className="block rounded-[1.15rem] border border-[#eee9e2] bg-[#fbfaf8] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)] transition hover:-translate-y-0.5 hover:border-[#171514]/20 hover:bg-white hover:shadow-[0_16px_42px_rgba(33,28,23,0.08)]"
+    >
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="font-medium text-slate-950">{props.item.id}</p>
-          <p className="text-sm text-slate-600">
-            Inbox {props.item.inboxSubjectId} | Journaliste{' '}
-            {props.item.journalistId}
+          <p className="font-black tracking-[-0.015em] text-[#171514]">
+            Dossier de verification #{props.index + 1}
+          </p>
+          <p className="text-sm leading-6 text-[#706a63]">
+            Sujet qualifie avec journaliste assigne
           </p>
         </div>
         <StatusBadge value={props.item.status} />
       </div>
 
-      <div className="mt-2 text-sm text-slate-700">
+      <div className="mt-2 text-sm leading-6 text-[#706a63]">
         <p>Verdict: {formatLabel(props.item.draftVerdict)}</p>
         <p>Categorie media: {formatLabel(props.item.mediaCategory)}</p>
         <p>Tentatives: {props.item.attemptCount}</p>
         <p>MAJ: {formatDateTime(props.item.updatedAt)}</p>
       </div>
 
-      <div className="mt-3 grid gap-3 md:grid-cols-[1fr_auto] md:items-end">
-        <Input
-          label="Raison / Commentaire"
-          value={props.canApprove ? comment : reason}
-          onChange={(event) => {
-            if (props.canApprove) {
-              setComment(event.target.value)
-            } else {
-              setReason(event.target.value)
-            }
-          }}
-        />
-        <div className="flex flex-wrap gap-2">
-          {props.canReview ? (
-            <Button onClick={props.onSubmitForReview}>
-              Soumettre pour revue
-            </Button>
-          ) : null}
-          {props.canApprove ? (
-            <>
-              <Button
-                variant="danger"
-                onClick={() => props.onReject(reason || 'Rejet manuel')}
-              >
-                Rejeter
-              </Button>
-              <Button
-                variant="danger"
-                onClick={() => props.onCancel(reason || 'Annulation manuelle')}
-              >
-                Annuler
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => props.onArchive(comment)}
-              >
-                Archiver
-              </Button>
-            </>
-          ) : null}
-        </div>
+      <div className="mt-4 flex items-center justify-between gap-4 border-t border-[#eee9e2] pt-4 text-sm font-black text-[#77716b]">
+        <span>Ouvrir le dossier</span>
+        <span>Details</span>
       </div>
-    </div>
+    </Link>
   )
 }

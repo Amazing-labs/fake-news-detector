@@ -1,6 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { apiRequest, toApiErrorMessage } from '../../shared/api/http'
+import { MediaFields } from '../../shared/ui/media-fields'
+import {
+  createEmptyMediaDraft,
+  normalizeMediaDrafts,
+  type MediaDraft,
+} from '../../shared/ui/media-fields.model'
 import {
   Button,
   Input,
@@ -8,12 +14,6 @@ import {
   SectionCard,
   TextArea,
 } from '../../shared/ui/primitives'
-import { MediaFields } from '../../shared/ui/media-fields'
-import {
-  createEmptyMediaDraft,
-  normalizeMediaDrafts,
-  type MediaDraft,
-} from '../../shared/ui/media-fields.model'
 
 export function SubmitWatcherEvidenceForm() {
   const queryClient = useQueryClient()
@@ -47,7 +47,7 @@ export function SubmitWatcherEvidenceForm() {
   return (
     <SectionCard
       title="Soumettre une preuve vigie"
-      description="Formulaire citoyen minimal pour tester l'endpoint de preuve."
+      description="Formulaire citoyen pour enrichir une enquete ouverte."
     >
       <form
         className="grid gap-3"
@@ -57,7 +57,7 @@ export function SubmitWatcherEvidenceForm() {
         }}
       >
         <Input
-          label="ID enquête"
+          label="Reference enquete"
           value={investigationId}
           onChange={(event) => setInvestigationId(event.target.value)}
         />
@@ -72,11 +72,11 @@ export function SubmitWatcherEvidenceForm() {
           onChange={(event) => setContent(event.target.value)}
         />
         <MediaFields
-          title="Médias de la preuve"
-          description="Au moins un média est attendu pour qu'une preuve de vigie soit valide."
+          title="Medias de la preuve"
+          description="Ajoute les liens, images ou documents qui renforcent la verification."
           items={media}
           onChange={setMedia}
-          addLabel="Ajouter un média à la preuve"
+          addLabel="Ajouter un media"
         />
         {mutation.isError ? (
           <Notice tone="error">{toApiErrorMessage(mutation.error)}</Notice>

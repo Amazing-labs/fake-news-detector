@@ -46,7 +46,7 @@ export function CreateReportForm() {
   return (
     <SectionCard
       title="Creer un signalement"
-      description="Point d’entrée citoyen. Le backend ouvre ensuite automatiquement un sujet inbox."
+      description="Point d'entree citoyen. Le backend ouvre ensuite automatiquement un sujet inbox."
     >
       <form
         className="grid gap-3"
@@ -72,11 +72,11 @@ export function CreateReportForm() {
           onChange={(event) => setContent(event.target.value)}
         />
         <MediaFields
-          title="Médias du signalement"
-          description="Ajoute des médias via URL pour tester la création du signalement avec pièces jointes."
+          title="Medias du signalement"
+          description="Ajoute des medias via URL pour tester la creation du signalement avec pieces jointes."
           items={media}
           onChange={setMedia}
-          addLabel="Ajouter un média au signalement"
+          addLabel="Ajouter un media au signalement"
         />
 
         {mutation.isError ? (

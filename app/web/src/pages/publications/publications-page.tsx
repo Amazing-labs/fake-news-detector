@@ -26,7 +26,7 @@ export function PublicationsPage() {
       title="Publications"
       description="Liste publique interne des publications et point d'entree de correction directeur."
     >
-      <div className="grid gap-6 xl:grid-cols-[360px_1fr]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,0.95fr)_minmax(0,1.45fr)]">
         {canCorrect ? (
           <PublishCorrectionForm />
         ) : (
@@ -41,16 +41,20 @@ export function PublicationsPage() {
         <SectionCard title="Flux de publications">
           {query.data?.items.length ? (
             <div className="grid gap-3">
-              {query.data.items.map((item) => (
+              {query.data.items.map((item, index) => (
                 <div
                   key={item.id}
-                  className="rounded-md border border-slate-200 p-3"
+                  className="rounded-[1.15rem] border border-[#eee9e2] bg-[#fbfaf8] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <p className="font-medium text-slate-950">{item.id}</p>
-                      <p className="text-sm text-slate-600">
-                        Enquete {item.investigationId}
+                      <p className="font-black tracking-[-0.015em] text-[#171514]">
+                        Publication #{index + 1}
+                      </p>
+                      <p className="text-sm leading-6 text-[#706a63]">
+                        {item.isCorrection
+                          ? 'Correction editoriale'
+                          : 'Verdict publie'}
                       </p>
                     </div>
                     <StatusBadge
@@ -59,11 +63,11 @@ export function PublicationsPage() {
                       }
                     />
                   </div>
-                  <p className="mt-2 text-sm text-slate-700">
+                  <p className="mt-2 text-sm leading-6 text-[#706a63]">
                     {item.verifiedLinks.length} lien(s) verifies |{' '}
                     {item.verifiedMedia.length} media verifies
                   </p>
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="mt-3 text-xs font-bold text-[#918a83]">
                     Publie le {formatDateTime(item.publishedAt)}
                   </p>
                 </div>

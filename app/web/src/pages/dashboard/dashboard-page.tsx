@@ -42,7 +42,7 @@ export function DashboardPage() {
       title="Dashboard directeur"
       description="Vue synthetique minimale des enquetes en attente et de l'activite de publication."
     >
-      <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.5fr)]">
         <SectionCard title="Indicateurs">
           <DataList
             items={[
@@ -65,22 +65,23 @@ export function DashboardPage() {
         <SectionCard title="Enquetes en attente">
           {dashboard?.pendingReviews.length ? (
             <div className="grid gap-3">
-              {dashboard.pendingReviews.map((item) => (
+              {dashboard.pendingReviews.map((item, index) => (
                 <div
                   key={item.id}
-                  className="rounded-md border border-slate-200 p-3"
+                  className="rounded-[1.15rem] border border-[#eee9e2] bg-[#fbfaf8] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <p className="font-medium text-slate-950">{item.id}</p>
-                      <p className="text-sm text-slate-600">
-                        Inbox {item.inboxSubjectId} | Journaliste{' '}
-                        {item.journalistId}
+                      <p className="font-black tracking-[-0.015em] text-[#171514]">
+                        Enquete en revue #{index + 1}
+                      </p>
+                      <p className="text-sm leading-6 text-[#706a63]">
+                        Sujet priorise avec journaliste assigne
                       </p>
                     </div>
                     <StatusBadge value={item.status} />
                   </div>
-                  <p className="mt-2 text-sm text-slate-600">
+                  <p className="mt-2 text-sm leading-6 text-[#706a63]">
                     Derniere mise a jour: {formatDateTime(item.updatedAt)}
                   </p>
                 </div>

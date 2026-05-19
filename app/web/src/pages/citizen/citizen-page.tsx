@@ -57,30 +57,30 @@ export function CitizenPage() {
     >
       <div className="grid gap-6 lg:grid-cols-3">
         <SectionCard title="Mes signalements">
-          <p className="text-3xl font-semibold text-slate-950">
+          <p className="text-4xl font-black tracking-[-0.05em] text-[#171514]">
             {summary.reportCount}
           </p>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm leading-6 text-[#706a63]">
             Le detail complet reste disponible dans la page Signalements.
           </p>
         </SectionCard>
 
         <SectionCard title="Candidatures vigie">
-          <p className="text-3xl font-semibold text-slate-950">
+          <p className="text-4xl font-black tracking-[-0.05em] text-[#171514]">
             {summary.watcherApplicationCount}
           </p>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm leading-6 text-[#706a63]">
             {session?.user.citizenType === 'WATCHER'
               ? 'Votre profil vigie est actif.'
-              : 'Le suivi détaillé de candidature viendra avec un endpoint citoyen dédié.'}
+              : 'Le suivi detaille de candidature viendra avec un endpoint citoyen dedie.'}
           </p>
         </SectionCard>
 
         <SectionCard title="Publications">
-          <p className="text-3xl font-semibold text-slate-950">
+          <p className="text-4xl font-black tracking-[-0.05em] text-[#171514]">
             {summary.publicationCount}
           </p>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm leading-6 text-[#706a63]">
             Les corrections et publications sont consultables dans Publications.
           </p>
         </SectionCard>
@@ -93,14 +93,14 @@ export function CitizenPage() {
               {reportsQuery.data.items.slice(0, 5).map((report) => (
                 <div
                   key={report.id}
-                  className="rounded-md border border-slate-200 p-3"
+                  className="rounded-[1.15rem] border border-[#eee9e2] bg-[#fbfaf8] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-medium text-slate-950">
+                      <p className="font-black tracking-[-0.015em] text-[#171514]">
                         {report.theme}
                       </p>
-                      <p className="text-sm text-slate-600">
+                      <p className="text-sm leading-6 text-[#706a63]">
                         {report.title || 'Sans titre'}
                       </p>
                     </div>
@@ -120,30 +120,34 @@ export function CitizenPage() {
         <SectionCard title="Dernieres publications">
           {publicationsQuery.data?.items.length ? (
             <div className="grid gap-3">
-              {publicationsQuery.data.items.slice(0, 5).map((publication) => (
-                <div
-                  key={publication.id}
-                  className="rounded-md border border-slate-200 p-3"
-                >
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="font-medium text-slate-950">
-                        {publication.id}
-                      </p>
-                      <p className="text-sm text-slate-600">
-                        Enquete {publication.investigationId}
-                      </p>
+              {publicationsQuery.data.items
+                .slice(0, 5)
+                .map((publication, index) => (
+                  <div
+                    key={publication.id}
+                    className="rounded-[1.15rem] border border-[#eee9e2] bg-[#fbfaf8] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <p className="font-black tracking-[-0.015em] text-[#171514]">
+                          Publication recente #{index + 1}
+                        </p>
+                        <p className="text-sm leading-6 text-[#706a63]">
+                          {publication.isCorrection
+                            ? 'Correction editoriale'
+                            : 'Verdict publie'}
+                        </p>
+                      </div>
+                      <StatusBadge
+                        value={
+                          publication.isCorrection
+                            ? 'CORRECTION'
+                            : publication.finalVerdict
+                        }
+                      />
                     </div>
-                    <StatusBadge
-                      value={
-                        publication.isCorrection
-                          ? 'CORRECTION'
-                          : publication.finalVerdict
-                      }
-                    />
                   </div>
-                </div>
-              ))}
+                ))}
             </div>
           ) : (
             <EmptyState

@@ -1,20 +1,21 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { apiRequest, toApiErrorMessage } from '../../shared/api/http'
-import { Button, Input, Notice, SectionCard } from '../../shared/ui/primitives'
-import { MediaFields } from '../../shared/ui/media-fields'
-import {
-  type MediaDraft,
-  normalizeMediaDrafts,
-} from '../../shared/ui/media-fields.model'
+import { Button, Input, Notice, TextArea } from '../../shared/ui/primitives'
 
-export function ApproveInvestigationForm() {
+type CommentAction = 'reject' | 'archive'
+
+export function ApproveInvestigationForm(props: { investigationId?: string }) {
   const queryClient = useQueryClient()
-  const [investigationId, setInvestigationId] = useState('')
+  const [draftInvestigationId, setDraftInvestigationId] = useState('')
   const [verifiedLink, setVerifiedLink] = useState('')
-  const [verifiedMedia, setVerifiedMedia] = useState<MediaDraft[]>([])
+  const [commentAction, setCommentAction] = useState<CommentAction | null>(null)
+  const [comment, setComment] = useState('')
+  const [formError, setFormError] = useState('')
+  const investigationId = props.investigationId ?? draftInvestigationId
+  const fixedInvestigation = !!props.investigationId
 
-  const mutation = useMutation({
+  const publishMutation = useMutation({
     mutationFn: () =>
       apiRequest<{ publicationId: string }>(
         `/api/investigations/${investigationId}/approve`,
@@ -22,58 +23,253 @@ export function ApproveInvestigationForm() {
           method: 'POST',
           body: JSON.stringify({
             verifiedLinks: verifiedLink ? [{ url: verifiedLink }] : [],
-            verifiedMedia: normalizeMediaDrafts(verifiedMedia),
+            verifiedMedia: [],
           }),
         },
       ),
     onSuccess: () => {
-      setInvestigationId('')
+      if (!fixedInvestigation) {
+        setDraftInvestigationId('')
+      }
       setVerifiedLink('')
-      setVerifiedMedia([])
+      setFormError('')
       void queryClient.invalidateQueries({ queryKey: ['investigations'] })
       void queryClient.invalidateQueries({ queryKey: ['publications'] })
     },
   })
 
+  const rejectMutation = useMutation({
+    mutationFn: (reason: string) =>
+      apiRequest<null>(`/api/investigations/${investigationId}/reject`, {
+        method: 'POST',
+        body: JSON.stringify({ reason }),
+      }),
+    onSuccess: () => {
+      closeCommentModal()
+      if (!fixedInvestigation) {
+        setDraftInvestigationId('')
+      }
+      void queryClient.invalidateQueries({ queryKey: ['investigations'] })
+    },
+  })
+
+  const archiveMutation = useMutation({
+    mutationFn: (archiveComment: string) =>
+      apiRequest<null>(`/api/investigations/${investigationId}/archive`, {
+        method: 'POST',
+        body: JSON.stringify({ comment: archiveComment }),
+      }),
+    onSuccess: () => {
+      closeCommentModal()
+      if (!fixedInvestigation) {
+        setDraftInvestigationId('')
+      }
+      void queryClient.invalidateQueries({ queryKey: ['investigations'] })
+    },
+  })
+
+  const activeCommentMutation =
+    commentAction === 'reject' ? rejectMutation : archiveMutation
+  const isPending =
+    publishMutation.isPending ||
+    rejectMutation.isPending ||
+    archiveMutation.isPending
+
+  function closeCommentModal() {
+    setCommentAction(null)
+    setComment('')
+    setFormError('')
+  }
+
+  function openCommentModal(action: CommentAction) {
+    if (!investigationId.trim()) {
+      setFormError("La reference d'enquete est obligatoire.")
+      return
+    }
+
+    setFormError('')
+    setComment('')
+    setCommentAction(action)
+  }
+
+  function submitCommentAction() {
+    const cleanComment = comment.trim()
+
+    if (!cleanComment) {
+      setFormError('Commentaire obligatoire.')
+      return
+    }
+
+    if (commentAction === 'reject') {
+      rejectMutation.mutate(cleanComment)
+      return
+    }
+
+    archiveMutation.mutate(cleanComment)
+  }
+
   return (
-    <SectionCard
-      title="Approuver une enquete"
-      description="Formulaire directeur minimal pour tester la publication."
-    >
+    <>
       <form
-        className="grid gap-3"
+        className="mx-auto w-full max-w-[540px] rounded-[1.65rem] border border-[#ece7df] bg-white p-5 shadow-[0_14px_38px_rgba(33,28,23,0.055)]"
         onSubmit={(event) => {
           event.preventDefault()
-          mutation.mutate()
+          setFormError('')
+          publishMutation.mutate()
         }}
       >
-        <Input
-          label="ID enquete"
-          value={investigationId}
-          onChange={(event) => setInvestigationId(event.target.value)}
-        />
-        <Input
-          label="Lien verifie (optionnel)"
-          value={verifiedLink}
-          onChange={(event) => setVerifiedLink(event.target.value)}
-        />
-        <MediaFields
-          title="Médias vérifiés"
-          description="Le directeur peut uploader un média, obtenir son URL publique Supabase, puis l’envoyer au backend."
-          items={verifiedMedia}
-          onChange={setVerifiedMedia}
-          addLabel="Ajouter un média vérifié"
-        />
-        {mutation.isError ? (
-          <Notice tone="error">{toApiErrorMessage(mutation.error)}</Notice>
+        <div className="flex items-center justify-between gap-4 border-b border-[#eee9e2] pb-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#fff5d6] to-[#ffe8ef] text-sm font-black text-[#171514] ring-1 ring-[#e8e2da]">
+              ED
+            </div>
+            <div className="min-w-0">
+              <h2 className="truncate font-black tracking-[-0.02em] text-[#171514]">
+                Validation editoriale
+              </h2>
+              <p className="text-sm text-[#7b7671]">Enquete en revue</p>
+            </div>
+          </div>
+          <span className="rounded-full bg-[#f7f4ef] px-3 py-1 text-xs font-black text-[#706a63]">
+            Directeur
+          </span>
+        </div>
+
+        <div className="mt-5 grid gap-4">
+          {fixedInvestigation ? (
+            <div className="rounded-2xl border border-[#e7e2dc] bg-[#faf8f5] px-3 py-2.5 text-sm">
+              <span className="block font-bold text-[#171514]">
+                Reference enquete
+              </span>
+              <span className="mt-1 block truncate font-black text-[#706a63]">
+                {investigationId}
+              </span>
+            </div>
+          ) : (
+            <Input
+              label="Reference enquete"
+              value={draftInvestigationId}
+              required
+              onChange={(event) => setDraftInvestigationId(event.target.value)}
+            />
+          )}
+          <Input
+            label="Lien verifie (optionnel)"
+            value={verifiedLink}
+            onChange={(event) => setVerifiedLink(event.target.value)}
+          />
+        </div>
+
+        <div className="mt-5 flex items-center justify-between gap-4 border-t border-[#eee9e2] pt-4 text-sm font-black text-[#77716b]">
+          <span>Decision editoriale</span>
+          <span>Commentaire requis sauf publication</span>
+        </div>
+
+        {formError ? <Notice tone="error">{formError}</Notice> : null}
+        {publishMutation.isError ? (
+          <Notice tone="error">
+            {toApiErrorMessage(publishMutation.error)}
+          </Notice>
         ) : null}
-        {mutation.isSuccess ? (
-          <Notice tone="success">Enquete approuvee.</Notice>
+        {rejectMutation.isError ? (
+          <Notice tone="error">
+            {toApiErrorMessage(rejectMutation.error)}
+          </Notice>
         ) : null}
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Publication...' : 'Approuver'}
-        </Button>
+        {archiveMutation.isError ? (
+          <Notice tone="error">
+            {toApiErrorMessage(archiveMutation.error)}
+          </Notice>
+        ) : null}
+        {publishMutation.isSuccess ? (
+          <Notice tone="success">Enquete publiee.</Notice>
+        ) : null}
+
+        <div className="mt-4 grid gap-2 sm:grid-cols-3">
+          <Button type="submit" disabled={isPending}>
+            {publishMutation.isPending ? 'Publication...' : 'Publier'}
+          </Button>
+          <Button
+            type="button"
+            variant="danger"
+            disabled={isPending}
+            onClick={() => openCommentModal('reject')}
+          >
+            Refuser
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={isPending}
+            onClick={() => openCommentModal('archive')}
+          >
+            Archiver
+          </Button>
+        </div>
       </form>
-    </SectionCard>
+
+      {commentAction ? (
+        <div className="fixed inset-0 z-50 grid place-items-center bg-[#171514]/35 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-[1.55rem] border border-[#ece7df] bg-white p-5 shadow-[0_24px_80px_rgba(23,21,20,0.24)]">
+            <div className="flex items-start justify-between gap-4 border-b border-[#eee9e2] pb-4">
+              <div>
+                <h2 className="text-lg font-black tracking-[-0.02em] text-[#171514]">
+                  {commentAction === 'reject'
+                    ? "Refuser l'enquete"
+                    : "Archiver l'enquete"}
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-[#706a63]">
+                  Le commentaire est obligatoire pour garder une trace
+                  editoriale claire.
+                </p>
+              </div>
+              <button
+                type="button"
+                className="rounded-full px-3 py-1 text-lg font-black text-[#706a63] hover:bg-[#f7f4ef] hover:text-[#171514]"
+                onClick={closeCommentModal}
+                aria-label="Fermer"
+              >
+                x
+              </button>
+            </div>
+            <div className="mt-4 grid gap-4">
+              <TextArea
+                label="Commentaire obligatoire"
+                value={comment}
+                onChange={(event) => setComment(event.target.value)}
+              />
+              {formError ? <Notice tone="error">{formError}</Notice> : null}
+              {activeCommentMutation.isError ? (
+                <Notice tone="error">
+                  {toApiErrorMessage(activeCommentMutation.error)}
+                </Notice>
+              ) : null}
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={closeCommentModal}
+                  disabled={activeCommentMutation.isPending}
+                >
+                  Annuler
+                </Button>
+                <Button
+                  type="button"
+                  variant={commentAction === 'reject' ? 'danger' : 'primary'}
+                  onClick={submitCommentAction}
+                  disabled={activeCommentMutation.isPending}
+                >
+                  {activeCommentMutation.isPending
+                    ? 'Envoi...'
+                    : commentAction === 'reject'
+                      ? 'Confirmer le refus'
+                      : "Confirmer l'archive"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   )
 }

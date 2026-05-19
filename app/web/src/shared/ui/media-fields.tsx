@@ -61,7 +61,7 @@ export function MediaFields(props: {
       title={props.title ?? 'Medias'}
       description={
         props.description ??
-        'Ajoute un ou plusieurs médias via leur URL pour tester le backend.'
+        'Ajoute un ou plusieurs medias via leur URL pour tester le backend.'
       }
     >
       <div className="grid gap-3">
@@ -69,10 +69,10 @@ export function MediaFields(props: {
           props.items.map((item, index) => (
             <div
               key={`${index}-${item.type}`}
-              className="grid gap-3 rounded-md border border-slate-200 p-3"
+              className="grid gap-3 rounded-[1.15rem] border border-[#eee9e2] bg-[#fbfaf8] p-4"
             >
               <Input
-                label={`URL média ${index + 1}`}
+                label={`URL media ${index + 1}`}
                 value={item.url}
                 onChange={(event) => {
                   const next = [...props.items]
@@ -105,14 +105,14 @@ export function MediaFields(props: {
                     props.onChange(props.items.filter((_, i) => i !== index))
                   }}
                 >
-                  Retirer ce média
+                  Retirer ce media
                 </Button>
               </div>
             </div>
           ))
         ) : (
-          <p className="text-sm text-slate-600">
-            Aucun média ajouté pour l'instant.
+          <p className="text-sm text-[#706a63]">
+            Aucun media ajoute pour l'instant.
           </p>
         )}
         <div>
@@ -122,7 +122,7 @@ export function MediaFields(props: {
               props.onChange([...props.items, createEmptyMediaDraft()])
             }
           >
-            {props.addLabel ?? 'Ajouter un média'}
+            {props.addLabel ?? 'Ajouter un media'}
           </Button>
         </div>
         <div className="grid gap-2">
@@ -144,7 +144,7 @@ export function MediaFields(props: {
           </Button>
           {!isSupabaseUploadConfigured() ? (
             <Notice tone="info">
-              Configure Supabase côté frontend pour activer l’upload de
+              Configure Supabase cote frontend pour activer l'upload de
               fichiers.
             </Notice>
           ) : null}

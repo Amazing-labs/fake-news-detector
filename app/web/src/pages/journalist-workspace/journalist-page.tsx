@@ -64,28 +64,28 @@ export function JournalistPage() {
     >
       <div className="grid gap-6 lg:grid-cols-3">
         <SectionCard title="Inbox disponible">
-          <p className="text-3xl font-semibold text-slate-950">
+          <p className="text-4xl font-black tracking-[-0.05em] text-[#171514]">
             {summary.inboxSubjectCount}
           </p>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm leading-6 text-[#706a63]">
             Les sujets sont detailles dans la page Inbox.
           </p>
         </SectionCard>
 
         <SectionCard title="Mes enquetes">
-          <p className="text-3xl font-semibold text-slate-950">
+          <p className="text-4xl font-black tracking-[-0.05em] text-[#171514]">
             {summary.investigationCount}
           </p>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm leading-6 text-[#706a63]">
             Le travail detaille se fait dans la page Enquetes.
           </p>
         </SectionCard>
 
         <SectionCard title="Enquetes en attente">
-          <p className="text-3xl font-semibold text-slate-950">
+          <p className="text-4xl font-black tracking-[-0.05em] text-[#171514]">
             {summary.pendingReviewCount}
           </p>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm leading-6 text-[#706a63]">
             Permet de voir ce qui attend une decision editoriale.
           </p>
         </SectionCard>
@@ -95,16 +95,18 @@ export function JournalistPage() {
         <SectionCard title="Mes enquetes recentes">
           {investigationsQuery.data?.items.length ? (
             <div className="grid gap-3">
-              {investigationsQuery.data.items.slice(0, 5).map((item) => (
+              {investigationsQuery.data.items.slice(0, 5).map((item, index) => (
                 <div
                   key={item.id}
-                  className="rounded-md border border-slate-200 p-3"
+                  className="rounded-[1.15rem] border border-[#eee9e2] bg-[#fbfaf8] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-medium text-slate-950">{item.id}</p>
-                      <p className="text-sm text-slate-600">
-                        Inbox {item.inboxSubjectId}
+                      <p className="font-black tracking-[-0.015em] text-[#171514]">
+                        Enquete recente #{index + 1}
+                      </p>
+                      <p className="text-sm leading-6 text-[#706a63]">
+                        Sujet pris en charge
                       </p>
                     </div>
                     <StatusBadge value={item.status} />
@@ -126,12 +128,14 @@ export function JournalistPage() {
               {inboxQuery.data.items.slice(0, 5).map((item) => (
                 <div
                   key={item.id}
-                  className="rounded-md border border-slate-200 p-3"
+                  className="rounded-[1.15rem] border border-[#eee9e2] bg-[#fbfaf8] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
                 >
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="font-medium text-slate-950">{item.theme}</p>
-                      <p className="text-sm text-slate-600">
+                      <p className="font-black tracking-[-0.015em] text-[#171514]">
+                        {item.theme}
+                      </p>
+                      <p className="text-sm leading-6 text-[#706a63]">
                         Origin {item.origin}
                       </p>
                     </div>

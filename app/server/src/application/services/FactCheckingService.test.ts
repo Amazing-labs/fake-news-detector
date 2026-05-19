@@ -33,6 +33,7 @@ function buildService(deps: any = {}) {
     findByReportId: vi.fn(),
     findByInboxSubjectId: vi.fn(),
     findByJournalistId: vi.fn(),
+    findInProgress: vi.fn(),
     findPendingReviews: vi.fn(),
     findPublished: vi.fn(),
     update: vi.fn(),

@@ -12,7 +12,9 @@ const DEFAULT_SECRET = 'development-better-auth-secret-please-change-me'
 const DEFAULT_BASE_URL = 'http://localhost:3000/api/auth'
 const DEFAULT_TRUSTED_ORIGINS = [
   'http://localhost:3000',
+  'http://127.0.0.1:3000',
   'http://localhost:5173',
+  'http://127.0.0.1:5173',
 ]
 const PBKDF2_PREFIX = 'pbkdf2'
 const PBKDF2_DIGEST = 'SHA-256'
@@ -265,7 +267,12 @@ function readTrustedOrigins(): string[] {
     return [...DEFAULT_TRUSTED_ORIGINS]
   }
 
-  return configured.split(',').map(normalizeOrigin).filter(Boolean)
+  return [
+    ...new Set([
+      ...DEFAULT_TRUSTED_ORIGINS,
+      ...configured.split(',').map(normalizeOrigin).filter(Boolean),
+    ]),
+  ]
 }
 
 export const auth = betterAuth({

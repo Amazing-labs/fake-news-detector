@@ -1,17 +1,23 @@
-import type { AppSession } from '../../lib/auth-client'
 import type { UserRole } from '../../entities/session/model'
+import type { AppSession } from '../../lib/auth-client'
 
 export type NavigationItem = {
   to: string
   label: string
   roles?: UserRole[]
+  publicOnly?: boolean
 }
 
 const navigation: NavigationItem[] = [
   { to: '/', label: 'Accueil' },
+  { to: '/auth', label: 'Connexion', publicOnly: true },
   { to: '/citizen', label: 'Citoyen', roles: ['CITIZEN'] },
   { to: '/journalist', label: 'Journaliste', roles: ['JOURNALIST'] },
-  { to: '/dashboard', label: 'Dashboard', roles: ['EDITORIAL_DIRECTOR'] },
+  {
+    to: '/dashboard',
+    label: 'Tableau de bord',
+    roles: ['EDITORIAL_DIRECTOR'],
+  },
   {
     to: '/reports',
     label: 'Signalements',
@@ -19,17 +25,17 @@ const navigation: NavigationItem[] = [
   },
   {
     to: '/watcher-applications',
-    label: 'Vigie',
+    label: 'Vigies',
     roles: ['CITIZEN', 'EDITORIAL_DIRECTOR'],
   },
   {
     to: '/inbox-subjects',
-    label: 'Inbox',
+    label: 'Sujets',
     roles: ['JOURNALIST', 'EDITORIAL_DIRECTOR'],
   },
   {
     to: '/investigations',
-    label: 'Enquêtes',
+    label: 'Enquetes',
     roles: ['CITIZEN', 'JOURNALIST', 'EDITORIAL_DIRECTOR'],
   },
   {
@@ -54,10 +60,16 @@ const navigation: NavigationItem[] = [
   },
 ]
 
-export function getNavigationForSession(session: AppSession | null) {
+export function getNavigationForSession(
+  session: AppSession | null | undefined,
+) {
   const role = session?.user.actorRole as UserRole | undefined
 
   return navigation.filter((item) => {
+    if (item.publicOnly) {
+      return !session
+    }
+
     if (!item.roles) {
       return true
     }

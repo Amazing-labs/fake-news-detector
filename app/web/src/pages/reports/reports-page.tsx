@@ -28,9 +28,9 @@ export function ReportsPage() {
   return (
     <PageLayout
       title="Signalements"
-      description="Page citoyenne principale. Elle permet de soumettre un report et de relire les reports deja persistés."
+      description="Page citoyenne principale. Elle permet de soumettre un report et de relire les reports deja persistes."
     >
-      <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.45fr)]">
         <CreateReportForm />
 
         <SectionCard title="Mes signalements">
@@ -39,23 +39,23 @@ export function ReportsPage() {
               {query.data.items.map((report) => (
                 <div
                   key={report.id}
-                  className="rounded-md border border-slate-200 p-3"
+                  className="rounded-[1.15rem] border border-[#eee9e2] bg-[#fbfaf8] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div>
-                      <p className="font-medium text-slate-950">
+                      <p className="font-black tracking-[-0.015em] text-[#171514]">
                         {report.theme}
                       </p>
-                      <p className="text-sm text-slate-600">
+                      <p className="text-sm leading-6 text-[#706a63]">
                         {report.title || 'Sans titre'}
                       </p>
                     </div>
                     <StatusBadge value={report.status} />
                   </div>
-                  <p className="mt-2 text-sm text-slate-700">
+                  <p className="mt-2 text-sm leading-6 text-[#706a63]">
                     {report.content || 'Aucun contenu'}
                   </p>
-                  <p className="mt-2 text-xs text-slate-500">
+                  <p className="mt-3 text-xs font-bold text-[#918a83]">
                     Cree le {formatDateTime(report.createdAt)}
                   </p>
                 </div>
