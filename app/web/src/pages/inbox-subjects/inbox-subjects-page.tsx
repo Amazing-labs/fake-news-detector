@@ -64,7 +64,6 @@ export function InboxSubjectCreatePage() {
     <PageLayout
       title="Creation directeur"
       description="Ouvrir un sujet directement depuis la redaction."
-      actions={<BackToInbox />}
     >
       {canManage ? (
         <CreateDirectorInboxSubjectForm />
@@ -107,7 +106,6 @@ export function InboxSubjectGlobalPage() {
     <PageLayout
       title="Inbox globale"
       description="Les sujets disponibles pour qualification et prise en charge."
-      actions={<BackToInbox />}
     >
       <SectionCard title="Sujets ouverts">
         {listQuery.data?.items.length ? (
@@ -171,7 +169,6 @@ export function InboxSubjectReportsPage() {
     <PageLayout
       title="Inbox signalements"
       description="Signalements ouverts qui peuvent alimenter la file de sujets."
-      actions={<BackToInbox />}
     >
       <SectionCard title="Signalements ouverts">
         {reportInboxQuery.data?.items.length ? (
@@ -198,16 +195,5 @@ export function InboxSubjectReportsPage() {
         )}
       </SectionCard>
     </PageLayout>
-  )
-}
-
-function BackToInbox() {
-  return (
-    <Link
-      to="/inbox-subjects"
-      className="inline-flex rounded-full border border-[#e7e2dc] bg-white px-4 py-2 text-sm font-black text-[#171514] transition hover:bg-[#f7f4ef]"
-    >
-      Retour inbox
-    </Link>
   )
 }
