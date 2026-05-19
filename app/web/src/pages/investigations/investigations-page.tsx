@@ -7,6 +7,7 @@ import { apiRequest } from '../../shared/api/http'
 import { formatDateTime, formatLabel } from '../../shared/lib/format'
 import {
   EmptyState,
+  PlatformBreadcrumb,
   SectionCard,
   StatusBadge,
 } from '../../shared/ui/primitives'
@@ -30,6 +31,7 @@ export function InvestigationScopePage(props: {
 
   return (
     <div className="grid gap-6">
+      <PlatformBreadcrumb section="investigations" />
       <SectionCard title="Liste des enquetes">
         {query.data?.items.length ? (
           <div className="grid gap-3">
@@ -93,6 +95,9 @@ export function InvestigationDetailPage(props: { investigationId: string }) {
 
   return (
     <div className="grid gap-6 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
+      <div className="xl:col-span-2">
+        <PlatformBreadcrumb section="investigations" />
+      </div>
       <article className="rounded-[1.65rem] border border-[#ece7df] bg-white p-5 shadow-[0_14px_38px_rgba(33,28,23,0.055)]">
         <div className="flex items-center justify-between gap-4 border-b border-[#eee9e2] pb-4">
           <div className="flex min-w-0 items-center gap-3">

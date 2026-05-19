@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { useAppSession } from '../../entities/session/model'
 import { getNavigationForSession } from '../../shared/session/role-access'
-import { EmptyState } from '../../shared/ui/primitives'
+import { EmptyState, PlatformBreadcrumb } from '../../shared/ui/primitives'
 
 export function ProfilePage() {
   const { session, isPending } = useAppSession()
@@ -32,9 +32,7 @@ export function ProfilePage() {
     <section className="rounded-[1.8rem] border border-[#ece7df] bg-white/78 p-5 shadow-[0_18px_60px_rgba(33,28,23,0.045)] backdrop-blur">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="text-xs font-black tracking-[0.14em] text-[#918a83] uppercase">
-            Acces rapides
-          </p>
+          <PlatformBreadcrumb section="profile" />
           <h2 className="mt-1 text-xl font-black tracking-[-0.035em] text-[#171514]">
             Pages utiles pour ton role
             <span className="font-editorial">.</span>

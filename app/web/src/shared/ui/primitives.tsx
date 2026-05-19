@@ -13,9 +13,7 @@ export function PageLayout(props: {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#171514]/20 to-transparent" />
         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="max-w-3xl">
-            <p className="text-xs font-black tracking-[0.14em] text-[#9a9288] uppercase">
-              Verification desk
-            </p>
+            <PlatformBreadcrumb section={props.title} />
             <h1 className="mt-3 text-4xl leading-[0.95] font-extrabold tracking-[-0.045em] text-balance text-[#171514] md:text-5xl">
               {props.title}
               <span className="font-editorial">.</span>
@@ -33,6 +31,15 @@ export function PageLayout(props: {
       </header>
       {props.children}
     </div>
+  )
+}
+
+export function PlatformBreadcrumb(props: { section: string }) {
+  return (
+    <p className="text-sm font-black text-[#85807a]">
+      Fake News Detector /{' '}
+      <span className="text-[#1d78c1]">{props.section}</span>
+    </p>
   )
 }
 
