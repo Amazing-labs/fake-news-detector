@@ -30,33 +30,27 @@ export function ProfilePage() {
 
   return (
     <section className="rounded-[1.8rem] border border-[#ece7df] bg-white/78 p-5 shadow-[0_18px_60px_rgba(33,28,23,0.045)] backdrop-blur">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+      <div>
         <div>
           <PlatformBreadcrumb section="profile" />
           <h2 className="mt-1 text-xl font-black tracking-[-0.035em] text-[#171514]">
-            Pages utiles pour ton role
+            Espaces de travail
             <span className="font-editorial">.</span>
           </h2>
         </div>
-        <p className="text-sm text-[#706a63]">
-          {quickLinks.length} espaces disponibles
-        </p>
       </div>
 
-      <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <nav className="mt-5 flex flex-wrap gap-x-5 gap-y-2 border-t border-[#eee9e2] pt-4">
         {quickLinks.map((item) => (
           <Link
             key={item.to}
             to={item.to}
-            className="rounded-[1.2rem] border border-[#eee9e2] bg-[#fbfaf8] p-4 transition duration-200 hover:-translate-y-0.5 hover:bg-white hover:shadow-[0_16px_42px_rgba(33,28,23,0.08)]"
+            className="text-sm font-black text-[#706a63] underline-offset-4 transition hover:text-[#171514] hover:underline"
           >
-            <p className="text-sm font-black text-[#171514]">{item.label}</p>
-            <p className="mt-2 text-xs leading-5 text-[#706a63]">
-              Ouvrir cet espace de travail.
-            </p>
+            {item.label}
           </Link>
         ))}
-      </div>
+      </nav>
     </section>
   )
 }
