@@ -29,6 +29,11 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .eslintcache
 .cache
 *.tsbuildinfo
+app/web/.tanstack/
+
+# local Codex skills/tooling
+.agents/
+skills-lock.json
 
 # IntelliJ based IDEs
 .idea
