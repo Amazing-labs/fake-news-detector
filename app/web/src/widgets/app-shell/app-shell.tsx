@@ -24,23 +24,6 @@ type NavSubRoute = {
 }
 
 const navSubRoutes: Record<string, NavSubRoute[]> = {
-  '/inbox-subjects': [
-    {
-      to: '/inbox-subjects/global',
-      label: 'Global',
-      roles: ['JOURNALIST', 'EDITORIAL_DIRECTOR'],
-    },
-    {
-      to: '/inbox-subjects/create',
-      label: 'Creation',
-      roles: ['EDITORIAL_DIRECTOR'],
-    },
-    {
-      to: '/inbox-subjects/reports',
-      label: 'Signalements',
-      roles: ['JOURNALIST', 'EDITORIAL_DIRECTOR'],
-    },
-  ],
   '/publications': [
     {
       to: '/publications/list',

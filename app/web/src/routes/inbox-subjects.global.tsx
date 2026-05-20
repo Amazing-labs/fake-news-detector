@@ -1,10 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { InboxSubjectGlobalPage } from '../pages/inbox-subjects/inbox-subjects-page'
+import { Navigate, createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/inbox-subjects/global')({
   component: InboxSubjectGlobalRoute,
 })
 
 function InboxSubjectGlobalRoute() {
-  return <InboxSubjectGlobalPage />
+  return <Navigate to="/inbox-subjects" />
 }
