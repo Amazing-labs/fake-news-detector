@@ -31,15 +31,6 @@ const navSubRoutes: Record<string, NavSubRoute[]> = {
       roles: ['CITIZEN', 'JOURNALIST', 'EDITORIAL_DIRECTOR'],
     },
   ],
-  '/journalists': [
-    { to: '/journalists/list', label: 'Liste', roles: ['EDITORIAL_DIRECTOR'] },
-    {
-      to: '/journalists/create',
-      label: 'Creation',
-      roles: ['EDITORIAL_DIRECTOR'],
-      variant: 'action',
-    },
-  ],
 }
 
 function isActivePath(pathname: string, to: string) {

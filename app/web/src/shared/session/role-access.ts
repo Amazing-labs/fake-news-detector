@@ -44,7 +44,7 @@ const navigation: NavigationItem[] = [
     roles: ['CITIZEN', 'JOURNALIST', 'EDITORIAL_DIRECTOR'],
   },
   {
-    to: '/journalists',
+    to: '/journalists/list',
     label: 'Journalistes',
     roles: ['EDITORIAL_DIRECTOR'],
   },

@@ -16,19 +16,6 @@ import {
   StatusBadge,
 } from '../../shared/ui/primitives'
 
-const journalistSections = [
-  {
-    to: '/journalists/list',
-    title: 'Liste',
-    description: 'Voir les journalistes provisionnes.',
-  },
-  {
-    to: '/journalists/create',
-    title: 'Creation',
-    description: 'Ajouter un journaliste au desk.',
-  },
-] as const
-
 const journalistStatusReasons = [
   { value: 'SPAM', label: 'Spam' },
   { value: 'ABUSE', label: 'Abus' },
@@ -37,37 +24,6 @@ const journalistStatusReasons = [
   { value: 'USER_REQUEST', label: 'Demande utilisateur' },
   { value: 'OTHER', label: 'Autre' },
 ] as const
-
-export function JournalistsPage() {
-  const { session } = useAppSession()
-  const canManage = hasRole(session, ['EDITORIAL_DIRECTOR'])
-
-  if (session !== undefined && !canManage) {
-    return <Navigate to="/profile" />
-  }
-
-  return (
-    <PageLayout
-      title="Journalistes"
-      description="Choisis une vue. La liste reste separee des actions d'administration."
-    >
-      <div className="grid gap-3 md:grid-cols-2">
-        {journalistSections.map((section) => (
-          <Link
-            key={section.to}
-            to={section.to}
-            className="rounded-[1.35rem] border border-[#eee9e2] bg-white/84 p-5 shadow-[0_16px_45px_rgba(33,28,23,0.055)] transition duration-200 hover:-translate-y-0.5 hover:bg-white"
-          >
-            <p className="text-sm font-black text-[#171514]">{section.title}</p>
-            <p className="mt-2 text-sm leading-6 text-[#706a63]">
-              {section.description}
-            </p>
-          </Link>
-        ))}
-      </div>
-    </PageLayout>
-  )
-}
 
 export function JournalistsListPage() {
   const { session } = useAppSession()
@@ -87,6 +43,16 @@ export function JournalistsListPage() {
     <PageLayout
       title="Journalistes"
       description="Liste des journalistes provisionnes dans le desk."
+      actions={
+        canManage ? (
+          <Link
+            to="/journalists/create"
+            className="inline-flex items-center justify-center rounded-full bg-[#171514] px-4 py-2.5 text-sm font-black text-white shadow-[0_14px_30px_rgba(23,21,20,0.14)] transition hover:-translate-y-0.5"
+          >
+            Creation
+          </Link>
+        ) : null
+      }
     >
       {canManage && (
         <SectionCard title="Journalistes">

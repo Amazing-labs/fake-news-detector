@@ -1,5 +1,9 @@
-import { Outlet, createFileRoute, useRouterState } from '@tanstack/react-router'
-import { JournalistsPage } from '../pages/journalists/journalists-page'
+import {
+  Navigate,
+  Outlet,
+  createFileRoute,
+  useRouterState,
+} from '@tanstack/react-router'
 
 export const Route = createFileRoute('/journalists')({
   component: JournalistsRoute,
@@ -11,7 +15,7 @@ function JournalistsRoute() {
   })
 
   if (pathname === '/journalists') {
-    return <JournalistsPage />
+    return <Navigate to="/journalists/list" />
   }
 
   return <Outlet />
