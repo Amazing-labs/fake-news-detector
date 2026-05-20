@@ -20,6 +20,7 @@ type NavSubRoute = {
   to: string
   label: string
   roles?: UserRole[]
+  variant?: 'link' | 'action'
 }
 
 const navSubRoutes: Record<string, NavSubRoute[]> = {
@@ -70,6 +71,7 @@ const navSubRoutes: Record<string, NavSubRoute[]> = {
       to: '/journalists/create',
       label: 'Creation',
       roles: ['EDITORIAL_DIRECTOR'],
+      variant: 'action',
     },
   ],
 }
@@ -151,7 +153,11 @@ export function AppShell(props: {
                           <Link
                             key={subRoute.to}
                             to={subRoute.to}
-                            className="rounded-xl px-3 py-2 text-sm font-bold text-[#706a63] hover:bg-[#f7f4ef] hover:text-[#171514]"
+                            className={
+                              subRoute.variant === 'action'
+                                ? 'mt-1 rounded-full bg-[#171514] px-3 py-2 text-center text-sm font-black text-white shadow-[0_12px_30px_rgba(23,21,20,0.12)] hover:bg-[#2d2926]'
+                                : 'rounded-xl px-3 py-2 text-sm font-bold text-[#706a63] hover:bg-[#f7f4ef] hover:text-[#171514]'
+                            }
                           >
                             {subRoute.label}
                           </Link>
@@ -201,7 +207,11 @@ export function AppShell(props: {
                           <Link
                             key={subRoute.to}
                             to={subRoute.to}
-                            className="block rounded-2xl px-3 py-2 text-sm font-black text-[#706a63] hover:bg-[#f7f4ef] hover:text-[#171514]"
+                            className={
+                              subRoute.variant === 'action'
+                                ? 'mt-1 block rounded-full bg-[#171514] px-3 py-2 text-center text-sm font-black text-white shadow-[0_12px_30px_rgba(23,21,20,0.12)] hover:bg-[#2d2926]'
+                                : 'block rounded-2xl px-3 py-2 text-sm font-black text-[#706a63] hover:bg-[#f7f4ef] hover:text-[#171514]'
+                            }
                           >
                             {subRoute.label}
                           </Link>
