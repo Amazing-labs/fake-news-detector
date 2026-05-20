@@ -39,7 +39,7 @@ const navigation: NavigationItem[] = [
     roles: ['CITIZEN', 'JOURNALIST', 'EDITORIAL_DIRECTOR'],
   },
   {
-    to: '/publications',
+    to: '/publications/list',
     label: 'Publications',
     roles: ['CITIZEN', 'JOURNALIST', 'EDITORIAL_DIRECTOR'],
   },

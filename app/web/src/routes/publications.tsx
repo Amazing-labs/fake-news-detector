@@ -1,5 +1,9 @@
-import { Outlet, createFileRoute, useRouterState } from '@tanstack/react-router'
-import { PublicationsPage } from '../pages/publications/publications-page'
+import {
+  Navigate,
+  Outlet,
+  createFileRoute,
+  useRouterState,
+} from '@tanstack/react-router'
 
 export const Route = createFileRoute('/publications')({
   component: PublicationsRoute,
@@ -11,7 +15,7 @@ function PublicationsRoute() {
   })
 
   if (pathname === '/publications') {
-    return <PublicationsPage />
+    return <Navigate to="/publications/list" />
   }
 
   return <Outlet />

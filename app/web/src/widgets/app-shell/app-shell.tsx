@@ -23,15 +23,7 @@ type NavSubRoute = {
   variant?: 'link' | 'action'
 }
 
-const navSubRoutes: Record<string, NavSubRoute[]> = {
-  '/publications': [
-    {
-      to: '/publications/list',
-      label: 'Liste',
-      roles: ['CITIZEN', 'JOURNALIST', 'EDITORIAL_DIRECTOR'],
-    },
-  ],
-}
+const navSubRoutes: Record<string, NavSubRoute[]> = {}
 
 function isActivePath(pathname: string, to: string) {
   return pathname === to || (to !== '/' && pathname.startsWith(to))
