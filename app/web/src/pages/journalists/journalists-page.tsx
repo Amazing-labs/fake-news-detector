@@ -194,6 +194,10 @@ function JournalistStatusActions(props: { initialJournalistId?: string }) {
   const selectedJournalist = journalistsQuery.data?.items.find(
     (item) => item.id === currentJournalistId,
   )
+  const status = selectedJournalist?.status
+  const canActivate = status === 'DISABLED' || status === 'BANNED'
+  const canDisable = status === 'ACTIVE'
+  const canBan = status === 'ACTIVE' || status === 'DISABLED'
 
   const actionMutation = useMutation({
     mutationFn: (action: 'ban' | 'disable' | 'activate') =>
@@ -254,18 +258,27 @@ function JournalistStatusActions(props: { initialJournalistId?: string }) {
           onChange={(event) => setDetails(event.target.value)}
         />
         <div className="flex flex-wrap gap-2">
-          <Button onClick={() => actionMutation.mutate('activate')}>
-            Activer
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => actionMutation.mutate('disable')}
-          >
-            Desactiver
-          </Button>
-          <Button variant="danger" onClick={() => actionMutation.mutate('ban')}>
-            Bannir
-          </Button>
+          {canActivate ? (
+            <Button onClick={() => actionMutation.mutate('activate')}>
+              Activer
+            </Button>
+          ) : null}
+          {canDisable ? (
+            <Button
+              variant="secondary"
+              onClick={() => actionMutation.mutate('disable')}
+            >
+              Desactiver
+            </Button>
+          ) : null}
+          {canBan ? (
+            <Button
+              variant="danger"
+              onClick={() => actionMutation.mutate('ban')}
+            >
+              Bannir
+            </Button>
+          ) : null}
         </div>
       </div>
     </SectionCard>
