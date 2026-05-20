@@ -22,6 +22,8 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CitizenRouteImport } from './routes/citizen'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as PublicationsListRouteImport } from './routes/publications.list'
+import { Route as PublicationsCorrectionsRouteImport } from './routes/publications.corrections'
 import { Route as InvestigationsPublishedRouteImport } from './routes/investigations.published'
 import { Route as InvestigationsPendingReviewRouteImport } from './routes/investigations.pending-review'
 import { Route as InvestigationsInvestigationIdRouteImport } from './routes/investigations.$investigationId'
@@ -94,6 +96,16 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PublicationsListRoute = PublicationsListRouteImport.update({
+  id: '/list',
+  path: '/list',
+  getParentRoute: () => PublicationsRoute,
+} as any)
+const PublicationsCorrectionsRoute = PublicationsCorrectionsRouteImport.update({
+  id: '/corrections',
+  path: '/corrections',
+  getParentRoute: () => PublicationsRoute,
+} as any)
 const InvestigationsPublishedRoute = InvestigationsPublishedRouteImport.update({
   id: '/published',
   path: '/published',
@@ -138,7 +150,7 @@ export interface FileRoutesByFullPath {
   '/journalists': typeof JournalistsRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
-  '/publications': typeof PublicationsRoute
+  '/publications': typeof PublicationsRouteWithChildren
   '/reports': typeof ReportsRoute
   '/watcher-applications': typeof WatcherApplicationsRoute
   '/inbox-subjects/create': typeof InboxSubjectsCreateRoute
@@ -147,6 +159,8 @@ export interface FileRoutesByFullPath {
   '/investigations/$investigationId': typeof InvestigationsInvestigationIdRoute
   '/investigations/pending-review': typeof InvestigationsPendingReviewRoute
   '/investigations/published': typeof InvestigationsPublishedRoute
+  '/publications/corrections': typeof PublicationsCorrectionsRoute
+  '/publications/list': typeof PublicationsListRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -159,7 +173,7 @@ export interface FileRoutesByTo {
   '/journalists': typeof JournalistsRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
-  '/publications': typeof PublicationsRoute
+  '/publications': typeof PublicationsRouteWithChildren
   '/reports': typeof ReportsRoute
   '/watcher-applications': typeof WatcherApplicationsRoute
   '/inbox-subjects/create': typeof InboxSubjectsCreateRoute
@@ -168,6 +182,8 @@ export interface FileRoutesByTo {
   '/investigations/$investigationId': typeof InvestigationsInvestigationIdRoute
   '/investigations/pending-review': typeof InvestigationsPendingReviewRoute
   '/investigations/published': typeof InvestigationsPublishedRoute
+  '/publications/corrections': typeof PublicationsCorrectionsRoute
+  '/publications/list': typeof PublicationsListRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -181,7 +197,7 @@ export interface FileRoutesById {
   '/journalists': typeof JournalistsRoute
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
-  '/publications': typeof PublicationsRoute
+  '/publications': typeof PublicationsRouteWithChildren
   '/reports': typeof ReportsRoute
   '/watcher-applications': typeof WatcherApplicationsRoute
   '/inbox-subjects/create': typeof InboxSubjectsCreateRoute
@@ -190,6 +206,8 @@ export interface FileRoutesById {
   '/investigations/$investigationId': typeof InvestigationsInvestigationIdRoute
   '/investigations/pending-review': typeof InvestigationsPendingReviewRoute
   '/investigations/published': typeof InvestigationsPublishedRoute
+  '/publications/corrections': typeof PublicationsCorrectionsRoute
+  '/publications/list': typeof PublicationsListRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -213,6 +231,8 @@ export interface FileRouteTypes {
     | '/investigations/$investigationId'
     | '/investigations/pending-review'
     | '/investigations/published'
+    | '/publications/corrections'
+    | '/publications/list'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -234,6 +254,8 @@ export interface FileRouteTypes {
     | '/investigations/$investigationId'
     | '/investigations/pending-review'
     | '/investigations/published'
+    | '/publications/corrections'
+    | '/publications/list'
   id:
     | '__root__'
     | '/'
@@ -255,6 +277,8 @@ export interface FileRouteTypes {
     | '/investigations/$investigationId'
     | '/investigations/pending-review'
     | '/investigations/published'
+    | '/publications/corrections'
+    | '/publications/list'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -268,7 +292,7 @@ export interface RootRouteChildren {
   JournalistsRoute: typeof JournalistsRoute
   NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
-  PublicationsRoute: typeof PublicationsRoute
+  PublicationsRoute: typeof PublicationsRouteWithChildren
   ReportsRoute: typeof ReportsRoute
   WatcherApplicationsRoute: typeof WatcherApplicationsRoute
 }
@@ -366,6 +390,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/publications/list': {
+      id: '/publications/list'
+      path: '/list'
+      fullPath: '/publications/list'
+      preLoaderRoute: typeof PublicationsListRouteImport
+      parentRoute: typeof PublicationsRoute
+    }
+    '/publications/corrections': {
+      id: '/publications/corrections'
+      path: '/corrections'
+      fullPath: '/publications/corrections'
+      preLoaderRoute: typeof PublicationsCorrectionsRouteImport
+      parentRoute: typeof PublicationsRoute
+    }
     '/investigations/published': {
       id: '/investigations/published'
       path: '/published'
@@ -443,6 +481,20 @@ const InvestigationsRouteWithChildren = InvestigationsRoute._addFileChildren(
   InvestigationsRouteChildren,
 )
 
+interface PublicationsRouteChildren {
+  PublicationsCorrectionsRoute: typeof PublicationsCorrectionsRoute
+  PublicationsListRoute: typeof PublicationsListRoute
+}
+
+const PublicationsRouteChildren: PublicationsRouteChildren = {
+  PublicationsCorrectionsRoute: PublicationsCorrectionsRoute,
+  PublicationsListRoute: PublicationsListRoute,
+}
+
+const PublicationsRouteWithChildren = PublicationsRoute._addFileChildren(
+  PublicationsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
@@ -454,7 +506,7 @@ const rootRouteChildren: RootRouteChildren = {
   JournalistsRoute: JournalistsRoute,
   NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
-  PublicationsRoute: PublicationsRoute,
+  PublicationsRoute: PublicationsRouteWithChildren,
   ReportsRoute: ReportsRoute,
   WatcherApplicationsRoute: WatcherApplicationsRoute,
 }

@@ -9,23 +9,28 @@ import {
   TextArea,
 } from '../../shared/ui/primitives'
 
-export function PublishCorrectionForm() {
+export function PublishCorrectionForm(props: {
+  initialPublicationId?: string
+}) {
   const queryClient = useQueryClient()
   const [publicationId, setPublicationId] = useState('')
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const currentPublicationId = props.initialPublicationId ?? publicationId
 
   const mutation = useMutation({
     mutationFn: () =>
       apiRequest<{ correctionId: string }>(
-        `/api/publications/${publicationId}/corrections`,
+        `/api/publications/${currentPublicationId}/corrections`,
         {
           method: 'POST',
           body: JSON.stringify({ title, content }),
         },
       ),
     onSuccess: () => {
-      setPublicationId('')
+      if (!props.initialPublicationId) {
+        setPublicationId('')
+      }
       setTitle('')
       setContent('')
       void queryClient.invalidateQueries({ queryKey: ['publications'] })
@@ -46,7 +51,8 @@ export function PublishCorrectionForm() {
       >
         <Input
           label="Reference publication"
-          value={publicationId}
+          value={currentPublicationId}
+          readOnly={!!props.initialPublicationId}
           onChange={(event) => setPublicationId(event.target.value)}
         />
         <Input
