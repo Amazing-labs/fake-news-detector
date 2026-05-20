@@ -60,24 +60,35 @@ export function InvestigationsPage() {
       title="Enquetes"
       description="Une seule liste, filtree selon l'etat editorial du dossier."
       actions={
-        <div className="flex rounded-full border border-[#e7e2dc] bg-[#faf8f5] p-1">
-          {visibleFilters.map((item) => {
-            const active = item.value === activeFilter
-            return (
-              <button
-                key={item.value}
-                type="button"
-                className={`rounded-full px-4 py-2 text-sm font-black transition ${
-                  active
-                    ? 'bg-[#171514] text-white shadow-[0_10px_24px_rgba(23,21,20,0.16)]'
-                    : 'text-[#706a63] hover:bg-white hover:text-[#171514]'
-                }`}
-                onClick={() => setFilter(item.value)}
-              >
-                {item.label}
-              </button>
-            )
-          })}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="flex rounded-full border border-[#e7e2dc] bg-[#faf8f5] p-1">
+            {visibleFilters.map((item) => {
+              const active = item.value === activeFilter
+              return (
+                <button
+                  key={item.value}
+                  type="button"
+                  className={`rounded-full px-4 py-2 text-sm font-black transition ${
+                    active
+                      ? 'bg-[#171514] text-white shadow-[0_10px_24px_rgba(23,21,20,0.16)]'
+                      : 'text-[#706a63] hover:bg-white hover:text-[#171514]'
+                  }`}
+                  onClick={() => setFilter(item.value)}
+                >
+                  {item.label}
+                </button>
+              )
+            })}
+          </div>
+          {canReview ? (
+            <Link
+              to="/publications/corrections"
+              search={{ publicationId: undefined }}
+              className="inline-flex items-center justify-center rounded-full bg-[#171514] px-4 py-2.5 text-sm font-black text-white shadow-[0_14px_30px_rgba(23,21,20,0.14)] transition hover:-translate-y-0.5"
+            >
+              Creer un correctif
+            </Link>
+          ) : null}
         </div>
       }
     >
