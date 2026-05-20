@@ -41,18 +41,6 @@ const navSubRoutes: Record<string, NavSubRoute[]> = {
       roles: ['JOURNALIST', 'EDITORIAL_DIRECTOR'],
     },
   ],
-  '/investigations': [
-    {
-      to: '/investigations/pending-review',
-      label: 'En attente',
-      roles: ['EDITORIAL_DIRECTOR'],
-    },
-    {
-      to: '/investigations/published',
-      label: 'Publiees',
-      roles: ['CITIZEN', 'JOURNALIST', 'EDITORIAL_DIRECTOR'],
-    },
-  ],
   '/publications': [
     {
       to: '/publications/list',
@@ -61,8 +49,9 @@ const navSubRoutes: Record<string, NavSubRoute[]> = {
     },
     {
       to: '/publications/corrections',
-      label: 'Correctifs',
+      label: 'Creer un correctif',
       roles: ['EDITORIAL_DIRECTOR'],
+      variant: 'action',
     },
   ],
   '/journalists': [

@@ -1,15 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { InvestigationScopePage } from '../pages/investigations/investigations-page'
+import { Navigate, createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/investigations/pending-review')({
   component: PendingReviewInvestigationsRoute,
 })
 
 function PendingReviewInvestigationsRoute() {
-  return (
-    <InvestigationScopePage
-      scope="pending-review"
-      emptyTitle="Aucune enquete en cours"
-    />
-  )
+  return <Navigate to="/investigations" />
 }

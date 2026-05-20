@@ -1,15 +1,9 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { InvestigationScopePage } from '../pages/investigations/investigations-page'
+import { Navigate, createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/investigations/published')({
   component: PublishedInvestigationsRoute,
 })
 
 function PublishedInvestigationsRoute() {
-  return (
-    <InvestigationScopePage
-      scope="published"
-      emptyTitle="Aucune enquete publiee"
-    />
-  )
+  return <Navigate to="/investigations" />
 }
