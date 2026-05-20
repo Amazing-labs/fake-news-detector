@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import { Link, Navigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import type { InvestigationList } from '../../entities/investigation/model'
 import { hasRole, useAppSession } from '../../entities/session/model'
@@ -19,6 +19,7 @@ export function InvestigationScopePage(props: {
   emptyTitle: string
 }) {
   const { session } = useAppSession()
+  const canReview = hasRole(session, ['EDITORIAL_DIRECTOR'])
   const apiScope =
     props.scope === 'pending-review' ? 'in-progress' : props.scope
 
@@ -26,8 +27,12 @@ export function InvestigationScopePage(props: {
     queryKey: ['investigations', apiScope],
     queryFn: () =>
       apiRequest<InvestigationList>(`/api/investigations?scope=${apiScope}`),
-    enabled: !!session,
+    enabled: !!session && (props.scope !== 'pending-review' || canReview),
   })
+
+  if (session !== undefined && props.scope === 'pending-review' && !canReview) {
+    return <Navigate to="/investigations/published" />
+  }
 
   return (
     <div className="grid gap-6">

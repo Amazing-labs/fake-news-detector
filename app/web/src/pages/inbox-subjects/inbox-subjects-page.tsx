@@ -1,8 +1,12 @@
-import { Link } from '@tanstack/react-router'
+import { Link, Navigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { InboxSubjectList } from '../../entities/inbox-subject/model'
 import type { ReportList } from '../../entities/report/model'
-import { hasRole, useAppSession } from '../../entities/session/model'
+import {
+  hasRole,
+  useAppSession,
+  type UserRole,
+} from '../../entities/session/model'
 import { CreateDirectorInboxSubjectForm } from '../../features/inbox-subjects/create-director-inbox-subject-form'
 import { apiRequest } from '../../shared/api/http'
 import { formatDateTime } from '../../shared/lib/format'
@@ -19,27 +23,40 @@ const inboxSections = [
     to: '/inbox-subjects/create',
     title: 'Creation directeur',
     description: 'Ouvrir un sujet manuellement hors signalement.',
+    roles: ['EDITORIAL_DIRECTOR'],
   },
   {
     to: '/inbox-subjects/global',
     title: 'Inbox globale',
     description: 'Traiter les sujets exposes par le desk.',
+    roles: ['JOURNALIST', 'EDITORIAL_DIRECTOR'],
   },
   {
     to: '/inbox-subjects/reports',
     title: 'Inbox signalements',
     description: 'Relire les signalements ouverts avant qualification.',
+    roles: ['JOURNALIST', 'EDITORIAL_DIRECTOR'],
   },
-] as const
+] as const satisfies readonly {
+  to: string
+  title: string
+  description: string
+  roles: readonly UserRole[]
+}[]
 
 export function InboxSubjectsPage() {
+  const { session } = useAppSession()
+  const visibleSections = inboxSections.filter((section) =>
+    hasRole(session, section.roles),
+  )
+
   return (
     <PageLayout
       title="Inbox sujets"
       description="Choisis une file de travail. Chaque section vit maintenant dans sa propre sous-page."
     >
       <div className="grid gap-3 md:grid-cols-3">
-        {inboxSections.map((section) => (
+        {visibleSections.map((section) => (
           <Link
             key={section.to}
             to={section.to}
@@ -60,21 +77,16 @@ export function InboxSubjectCreatePage() {
   const { session } = useAppSession()
   const canManage = hasRole(session, ['EDITORIAL_DIRECTOR'])
 
+  if (session !== undefined && !canManage) {
+    return <Navigate to="/inbox-subjects/global" />
+  }
+
   return (
     <PageLayout
       title="Creation directeur"
       description="Ouvrir un sujet directement depuis la redaction."
     >
-      {canManage ? (
-        <CreateDirectorInboxSubjectForm />
-      ) : (
-        <SectionCard title="Creation directeur">
-          <EmptyState
-            title="Acces reserve"
-            description="La creation manuelle d'un sujet est reservee au directeur."
-          />
-        </SectionCard>
-      )}
+      {canManage && <CreateDirectorInboxSubjectForm />}
     </PageLayout>
   )
 }

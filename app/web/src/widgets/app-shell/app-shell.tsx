@@ -1,6 +1,10 @@
 import { Link, useRouterState } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
-import { formatActorStatus, formatUserRole } from '../../entities/session/model'
+import {
+  formatActorStatus,
+  formatUserRole,
+  type UserRole,
+} from '../../entities/session/model'
 import { authClient, type AppSession } from '../../lib/auth-client'
 import { getNavigationForSession } from '../../shared/session/role-access'
 import { Button } from '../../shared/ui/primitives'
@@ -15,26 +19,63 @@ const boardStats = [
 type NavSubRoute = {
   to: string
   label: string
+  roles?: UserRole[]
 }
 
 const navSubRoutes: Record<string, NavSubRoute[]> = {
   '/inbox-subjects': [
-    { to: '/inbox-subjects/global', label: 'Global' },
-    { to: '/inbox-subjects/create', label: 'Creation' },
-    { to: '/inbox-subjects/reports', label: 'Signalements' },
+    {
+      to: '/inbox-subjects/global',
+      label: 'Global',
+      roles: ['JOURNALIST', 'EDITORIAL_DIRECTOR'],
+    },
+    {
+      to: '/inbox-subjects/create',
+      label: 'Creation',
+      roles: ['EDITORIAL_DIRECTOR'],
+    },
+    {
+      to: '/inbox-subjects/reports',
+      label: 'Signalements',
+      roles: ['JOURNALIST', 'EDITORIAL_DIRECTOR'],
+    },
   ],
   '/investigations': [
-    { to: '/investigations/pending-review', label: 'En attente' },
-    { to: '/investigations/published', label: 'Publiees' },
+    {
+      to: '/investigations/pending-review',
+      label: 'En attente',
+      roles: ['EDITORIAL_DIRECTOR'],
+    },
+    {
+      to: '/investigations/published',
+      label: 'Publiees',
+      roles: ['CITIZEN', 'JOURNALIST', 'EDITORIAL_DIRECTOR'],
+    },
   ],
   '/publications': [
-    { to: '/publications/list', label: 'Liste' },
-    { to: '/publications/corrections', label: 'Correctifs' },
+    {
+      to: '/publications/list',
+      label: 'Liste',
+      roles: ['CITIZEN', 'JOURNALIST', 'EDITORIAL_DIRECTOR'],
+    },
+    {
+      to: '/publications/corrections',
+      label: 'Correctifs',
+      roles: ['EDITORIAL_DIRECTOR'],
+    },
   ],
   '/journalists': [
-    { to: '/journalists/list', label: 'Liste' },
-    { to: '/journalists/create', label: 'Creation' },
-    { to: '/journalists/status', label: 'Statut' },
+    { to: '/journalists/list', label: 'Liste', roles: ['EDITORIAL_DIRECTOR'] },
+    {
+      to: '/journalists/create',
+      label: 'Creation',
+      roles: ['EDITORIAL_DIRECTOR'],
+    },
+    {
+      to: '/journalists/status',
+      label: 'Statut',
+      roles: ['EDITORIAL_DIRECTOR'],
+    },
   ],
 }
 
@@ -42,8 +83,13 @@ function isActivePath(pathname: string, to: string) {
   return pathname === to || (to !== '/' && pathname.startsWith(to))
 }
 
-function getSubRoutes(to: string) {
-  return navSubRoutes[to] ?? []
+function getSubRoutes(to: string, session: AppSession | null | undefined) {
+  const role = session?.user.actorRole as UserRole | undefined
+
+  return (navSubRoutes[to] ?? []).filter((item) => {
+    if (!item.roles) return true
+    return !!role && item.roles.includes(role)
+  })
 }
 
 export function AppShell(props: {
@@ -80,7 +126,7 @@ export function AppShell(props: {
             <nav className="absolute right-0 left-0 z-40 mt-2 grid gap-1 rounded-[1.35rem] border border-[#ebe5dc] bg-white/96 p-2 shadow-[0_24px_70px_rgba(33,28,23,0.16)] backdrop-blur">
               {navigation.map((item) => {
                 const active = isActivePath(pathname, item.to)
-                const subRoutes = getSubRoutes(item.to)
+                const subRoutes = getSubRoutes(item.to, props.session)
                 const hasSubRoutes = subRoutes.length > 0
                 return (
                   <div key={item.to}>
@@ -126,7 +172,7 @@ export function AppShell(props: {
           <nav className="hidden w-fit max-w-full rounded-full border border-white/70 bg-white/45 p-1 shadow-[0_18px_55px_rgba(33,28,23,0.14),inset_0_1px_0_rgba(255,255,255,0.8)] backdrop-blur-2xl md:flex md:items-center md:gap-1">
             {navigation.map((item) => {
               const active = isActivePath(pathname, item.to)
-              const subRoutes = getSubRoutes(item.to)
+              const subRoutes = getSubRoutes(item.to, props.session)
               const hasSubRoutes = subRoutes.length > 0
               return (
                 <div key={item.to} className="group relative">

@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import { Link, Navigate } from '@tanstack/react-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import type { JournalistList } from '../../entities/journalist/model'
@@ -43,6 +43,13 @@ const reasons = [
 ]
 
 export function JournalistsPage() {
+  const { session } = useAppSession()
+  const canManage = hasRole(session, ['EDITORIAL_DIRECTOR'])
+
+  if (session !== undefined && !canManage) {
+    return <Navigate to="/profile" />
+  }
+
   return (
     <PageLayout
       title="Journalistes"
@@ -76,12 +83,16 @@ export function JournalistsListPage() {
     enabled: canManage,
   })
 
+  if (session !== undefined && !canManage) {
+    return <Navigate to="/profile" />
+  }
+
   return (
     <PageLayout
       title="Journalistes"
       description="Liste des journalistes provisionnes dans le desk."
     >
-      {canManage ? (
+      {canManage && (
         <SectionCard title="Journalistes">
           {query.data?.items.length ? (
             <div className="grid gap-3">
@@ -125,8 +136,6 @@ export function JournalistsListPage() {
             />
           )}
         </SectionCard>
-      ) : (
-        <JournalistAccessDenied />
       )}
     </PageLayout>
   )
@@ -136,12 +145,16 @@ export function JournalistCreatePage() {
   const { session } = useAppSession()
   const canManage = hasRole(session, ['EDITORIAL_DIRECTOR'])
 
+  if (session !== undefined && !canManage) {
+    return <Navigate to="/profile" />
+  }
+
   return (
     <PageLayout
       title="Creation journaliste"
       description="Provisionner un acteur journaliste."
     >
-      {canManage ? <CreateJournalistForm /> : <JournalistAccessDenied />}
+      {canManage && <CreateJournalistForm />}
     </PageLayout>
   )
 }
@@ -150,15 +163,17 @@ export function JournalistStatusPage(props: { journalistId?: string }) {
   const { session } = useAppSession()
   const canManage = hasRole(session, ['EDITORIAL_DIRECTOR'])
 
+  if (session !== undefined && !canManage) {
+    return <Navigate to="/profile" />
+  }
+
   return (
     <PageLayout
       title="Statut journaliste"
       description="Activer, desactiver ou bannir un journaliste."
     >
-      {canManage ? (
+      {canManage && (
         <JournalistStatusActions initialJournalistId={props.journalistId} />
-      ) : (
-        <JournalistAccessDenied />
       )}
     </PageLayout>
   )
@@ -226,14 +241,5 @@ function JournalistStatusActions(props: { initialJournalistId?: string }) {
         </div>
       </div>
     </SectionCard>
-  )
-}
-
-function JournalistAccessDenied() {
-  return (
-    <EmptyState
-      title="Acces reserve au directeur"
-      description="Seul le directeur peut provisionner ou changer le statut des journalistes."
-    />
   )
 }

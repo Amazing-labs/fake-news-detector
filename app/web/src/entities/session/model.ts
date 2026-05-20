@@ -35,7 +35,7 @@ export function useAppSession() {
 
 export function hasRole(
   session: AppSession | null | undefined,
-  roles: UserRole[],
+  roles: readonly UserRole[],
 ) {
   const role = session?.user.actorRole as UserRole | undefined
   return !!role && roles.includes(role)

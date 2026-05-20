@@ -1,7 +1,11 @@
-import { Link } from '@tanstack/react-router'
+import { Link, Navigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import type { PublicationList } from '../../entities/publication/model'
-import { hasRole, useAppSession } from '../../entities/session/model'
+import {
+  hasRole,
+  useAppSession,
+  type UserRole,
+} from '../../entities/session/model'
 import { PublishCorrectionForm } from '../../features/publications/publish-correction-form'
 import { apiRequest } from '../../shared/api/http'
 import { formatDateTime } from '../../shared/lib/format'
@@ -17,22 +21,34 @@ const publicationSections = [
     to: '/publications/list',
     title: 'Liste',
     description: 'Voir les publications sorties du desk.',
+    roles: ['CITIZEN', 'JOURNALIST', 'EDITORIAL_DIRECTOR'],
   },
   {
     to: '/publications/corrections',
     title: 'Correctifs',
     description: 'Publier une correction sur une publication existante.',
+    roles: ['EDITORIAL_DIRECTOR'],
   },
-] as const
+] as const satisfies readonly {
+  to: string
+  title: string
+  description: string
+  roles: readonly UserRole[]
+}[]
 
 export function PublicationsPage() {
+  const { session } = useAppSession()
+  const visibleSections = publicationSections.filter((section) =>
+    hasRole(session, section.roles),
+  )
+
   return (
     <PageLayout
       title="Publications"
       description="Choisis une vue. La liste reste separee des actions editoriales."
     >
       <div className="grid gap-3 md:grid-cols-2">
-        {publicationSections.map((section) => (
+        {visibleSections.map((section) => (
           <Link
             key={section.to}
             to={section.to}
@@ -123,20 +139,17 @@ export function PublicationCorrectionsPage(props: { publicationId?: string }) {
   const { session } = useAppSession()
   const canCorrect = hasRole(session, ['EDITORIAL_DIRECTOR'])
 
+  if (session !== undefined && !canCorrect) {
+    return <Navigate to="/publications/list" />
+  }
+
   return (
     <PageLayout
       title="Correctifs"
       description="Action editoriale sur une publication deja sortie."
     >
-      {canCorrect ? (
+      {canCorrect && (
         <PublishCorrectionForm initialPublicationId={props.publicationId} />
-      ) : (
-        <SectionCard title="Correction">
-          <EmptyState
-            title="Acces reserve au directeur"
-            description="La publication d'une correction ne concerne que la direction editoriale."
-          />
-        </SectionCard>
       )}
     </PageLayout>
   )
