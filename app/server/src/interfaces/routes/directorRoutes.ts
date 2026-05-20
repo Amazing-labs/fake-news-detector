@@ -22,5 +22,11 @@ export function createDirectorRoutes(
     directorController.getDashboard,
   )
 
+  routes.get(
+    '/citizens',
+    createPermissionMiddleware(securityService, 'journalist.manage'),
+    directorController.listCitizens,
+  )
+
   return routes
 }

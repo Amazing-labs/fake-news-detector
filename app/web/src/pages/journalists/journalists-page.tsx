@@ -1,6 +1,7 @@
 import { Link, Navigate } from '@tanstack/react-router'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
+import type { CitizenList } from '../../entities/citizen/model'
 import type { JournalistList } from '../../entities/journalist/model'
 import { hasRole, useAppSession } from '../../entities/session/model'
 import { CreateJournalistForm } from '../../features/journalists/create-journalist-form'
@@ -25,13 +26,45 @@ const journalistStatusReasons = [
   { value: 'OTHER', label: 'Autre' },
 ] as const
 
+type UserDirectoryFilter = 'journalists' | 'citizens'
+
+const userDirectoryFilters = [
+  {
+    value: 'journalists',
+    label: 'Journalistes',
+    title: 'Journalistes',
+    emptyTitle: 'Aucun journaliste',
+    emptyDescription: "Aucun journaliste n'est encore provisionne.",
+  },
+  {
+    value: 'citizens',
+    label: 'Citoyens',
+    title: 'Citoyens',
+    emptyTitle: 'Aucun citoyen',
+    emptyDescription: "Aucun citoyen n'est encore inscrit.",
+  },
+] as const satisfies readonly {
+  value: UserDirectoryFilter
+  label: string
+  title: string
+  emptyTitle: string
+  emptyDescription: string
+}[]
+
 export function JournalistsListPage() {
   const { session } = useAppSession()
   const canManage = hasRole(session, ['EDITORIAL_DIRECTOR'])
+  const [filter, setFilter] = useState<UserDirectoryFilter>('journalists')
 
-  const query = useQuery({
+  const journalistsQuery = useQuery({
     queryKey: ['journalists'],
     queryFn: () => apiRequest<JournalistList>('/api/journalists'),
+    enabled: canManage,
+  })
+
+  const citizensQuery = useQuery({
+    queryKey: ['director', 'citizens'],
+    queryFn: () => apiRequest<CitizenList>('/api/director/citizens'),
     enabled: canManage,
   })
 
@@ -39,26 +72,53 @@ export function JournalistsListPage() {
     return <Navigate to="/profile" />
   }
 
+  const activeFilterMeta =
+    userDirectoryFilters.find((item) => item.value === filter) ??
+    userDirectoryFilters[0]
+
   return (
     <PageLayout
-      title="Journalistes"
-      description="Liste des journalistes provisionnes dans le desk."
+      title="Utilisateurs"
+      description="Gestion des comptes citoyens et journalistes du desk."
       actions={
         canManage ? (
-          <Link
-            to="/journalists/create"
-            className="inline-flex items-center justify-center rounded-full bg-[#171514] px-4 py-2.5 text-sm font-black text-white shadow-[0_14px_30px_rgba(23,21,20,0.14)] transition hover:-translate-y-0.5"
-          >
-            Creation
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="flex rounded-full border border-[#e7e2dc] bg-[#faf8f5] p-1">
+              {userDirectoryFilters.map((item) => {
+                const active = item.value === filter
+                return (
+                  <button
+                    key={item.value}
+                    type="button"
+                    className={`rounded-full px-4 py-2 text-sm font-black transition ${
+                      active
+                        ? 'bg-[#171514] text-white shadow-[0_10px_24px_rgba(23,21,20,0.16)]'
+                        : 'text-[#706a63] hover:bg-white hover:text-[#171514]'
+                    }`}
+                    onClick={() => setFilter(item.value)}
+                  >
+                    {item.label}
+                  </button>
+                )
+              })}
+            </div>
+            {filter === 'journalists' ? (
+              <Link
+                to="/journalists/create"
+                className="inline-flex items-center justify-center rounded-full bg-[#171514] px-4 py-2.5 text-sm font-black text-white shadow-[0_14px_30px_rgba(23,21,20,0.14)] transition hover:-translate-y-0.5"
+              >
+                Creation
+              </Link>
+            ) : null}
+          </div>
         ) : null
       }
     >
       {canManage && (
-        <SectionCard title="Journalistes">
-          {query.data?.items.length ? (
+        <SectionCard title={activeFilterMeta.title}>
+          {filter === 'journalists' && journalistsQuery.data?.items.length ? (
             <div className="grid gap-3">
-              {query.data.items.map((item) => (
+              {journalistsQuery.data.items.map((item) => (
                 <article
                   key={item.id}
                   className="rounded-[1.15rem] border border-[#eee9e2] bg-[#fbfaf8] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
@@ -91,12 +151,52 @@ export function JournalistsListPage() {
                 </article>
               ))}
             </div>
-          ) : (
+          ) : null}
+
+          {filter === 'citizens' && citizensQuery.data?.items.length ? (
+            <div className="grid gap-3">
+              {citizensQuery.data.items.map((item) => (
+                <article
+                  key={item.id}
+                  className="rounded-[1.15rem] border border-[#eee9e2] bg-[#fbfaf8] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.65)]"
+                >
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="font-black tracking-[-0.015em] text-[#171514]">
+                        {item.name}
+                      </p>
+                      <p className="text-sm leading-6 text-[#706a63]">
+                        {item.email}
+                      </p>
+                    </div>
+                    <StatusBadge value={item.status} />
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-[#eee9e2] pt-3">
+                    <p className="text-xs font-bold text-[#918a83]">
+                      {item.citizenType === 'WATCHER' ? 'Vigie' : 'Citoyen'} |{' '}
+                      {item.openReportsCount} signalement(s) ouvert(s) | score{' '}
+                      {item.engagementScore} | MAJ{' '}
+                      {formatDateTime(item.updatedAt)}
+                    </p>
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : null}
+
+          {filter === 'journalists' && !journalistsQuery.data?.items.length ? (
             <EmptyState
-              title="Aucun journaliste"
-              description="Aucun journaliste n'est encore provisionne."
+              title={activeFilterMeta.emptyTitle}
+              description={activeFilterMeta.emptyDescription}
             />
-          )}
+          ) : null}
+
+          {filter === 'citizens' && !citizensQuery.data?.items.length ? (
+            <EmptyState
+              title={activeFilterMeta.emptyTitle}
+              description={activeFilterMeta.emptyDescription}
+            />
+          ) : null}
         </SectionCard>
       )}
     </PageLayout>

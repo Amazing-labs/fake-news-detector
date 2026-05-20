@@ -1,5 +1,6 @@
 import type { Context } from 'hono'
 import type {
+  ICitizenRepository,
   IInvestigationRepository,
   INotificationRepository,
   IPublicationRepository,
@@ -13,6 +14,7 @@ export class DirectorController {
     private readonly investigationRepository: IInvestigationRepository,
     private readonly publicationRepository: IPublicationRepository,
     private readonly notificationRepository: INotificationRepository,
+    private readonly citizenRepository: ICitizenRepository,
   ) {}
 
   getDashboard = async (c: Context<{ Variables: AppVariables }>) => {
@@ -31,5 +33,26 @@ export class DirectorController {
         totalNotifications,
       }),
     )
+  }
+
+  listCitizens = async (c: Context<{ Variables: AppVariables }>) => {
+    const citizens = await this.citizenRepository.findAll()
+
+    return ok(c, {
+      items: citizens.map((citizen) => ({
+        id: citizen.id,
+        name: citizen.name,
+        email: citizen.email,
+        status: citizen.status,
+        citizenType: citizen.citizenType,
+        engagementScore: citizen.engagementScore,
+        openReportsCount: citizen.openReportsCount,
+        statusReason: citizen.statusReason,
+        statusReasonDetails: citizen.statusReasonDetails,
+        createdAt: citizen.createdAt.toISOString(),
+        updatedAt: citizen.updatedAt.toISOString(),
+      })),
+      total: citizens.length,
+    })
   }
 }

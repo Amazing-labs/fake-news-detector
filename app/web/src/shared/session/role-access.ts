@@ -45,7 +45,7 @@ const navigation: NavigationItem[] = [
   },
   {
     to: '/journalists/list',
-    label: 'Journalistes',
+    label: 'Utilisateurs',
     roles: ['EDITORIAL_DIRECTOR'],
   },
   {

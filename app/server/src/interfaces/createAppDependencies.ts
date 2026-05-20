@@ -115,6 +115,7 @@ export function createAppDependencies(): AppDependencies {
       investigationRepository,
       publicationRepository,
       notificationRepository,
+      citizenRepository,
     ),
     notificationController: new NotificationController(notificationRepository),
   }
