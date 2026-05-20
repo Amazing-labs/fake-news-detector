@@ -14,7 +14,7 @@ import {
   StatusBadge,
 } from '../../shared/ui/primitives'
 
-export type InvestigationScope = 'pending-review' | 'published'
+export type InvestigationScope = 'pending-review' | 'published' | 'canceled'
 
 const investigationFilters = [
   {
@@ -26,6 +26,11 @@ const investigationFilters = [
     value: 'published',
     label: 'Publiees',
     emptyTitle: 'Aucune enquete publiee',
+  },
+  {
+    value: 'canceled',
+    label: 'Annulees',
+    emptyTitle: 'Aucune enquete annulee',
   },
 ] as const satisfies readonly {
   value: InvestigationScope
@@ -39,7 +44,7 @@ export function InvestigationsPage() {
   const [filter, setFilter] = useState<InvestigationScope>('pending-review')
   const activeFilter = canReview ? filter : 'published'
   const apiScope =
-    activeFilter === 'pending-review' ? 'in-progress' : 'published'
+    activeFilter === 'pending-review' ? 'in-progress' : activeFilter
   const activeFilterMeta =
     investigationFilters.find((item) => item.value === activeFilter) ??
     investigationFilters[0]
@@ -135,10 +140,18 @@ export function InvestigationDetailPage(props: { investigationId: string }) {
     enabled: !!session,
   })
 
+  const canceledQuery = useQuery({
+    queryKey: ['investigations', 'canceled'],
+    queryFn: () =>
+      apiRequest<InvestigationList>('/api/investigations?scope=canceled'),
+    enabled: !!session,
+  })
+
   const items = [
     ...(inProgressQuery.data?.items ?? []),
     ...(pendingReviewQuery.data?.items ?? []),
     ...(publishedQuery.data?.items ?? []),
+    ...(canceledQuery.data?.items ?? []),
   ]
   const investigation = items.find((item) => item.id === props.investigationId)
 

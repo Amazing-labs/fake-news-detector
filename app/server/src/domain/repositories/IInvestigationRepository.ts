@@ -11,6 +11,7 @@ export interface IInvestigationRepository {
   findInProgress(): Promise<Investigation[]>
   findPendingReviews(): Promise<Investigation[]>
   findPublished(): Promise<Investigation[]>
+  findCanceled(): Promise<Investigation[]>
   update(investigation: Investigation): Promise<void>
   addEvidence(investigationId: string, evidence: Evidence): Promise<void>
 }

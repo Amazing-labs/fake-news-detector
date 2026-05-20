@@ -78,6 +78,13 @@ export class PrismaInvestigationRepository implements IInvestigationRepository {
     return rows.map((row) => this.toDomain(row))
   }
 
+  async findCanceled(): Promise<Investigation[]> {
+    const rows = await prisma.investigation.findMany({
+      where: { status: 'CANCELED' },
+    })
+    return rows.map((row) => this.toDomain(row))
+  }
+
   async update(investigation: Investigation): Promise<void> {
     await prisma.investigation.update({
       where: { id: investigation.id },

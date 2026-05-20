@@ -40,6 +40,11 @@ export class InvestigationController {
       return ok(c, presentInvestigationList(items))
     }
 
+    if (scope === 'canceled') {
+      const items = await this.investigationRepository.findCanceled()
+      return ok(c, presentInvestigationList(items))
+    }
+
     if (journalistId) {
       const items =
         await this.investigationRepository.findByJournalistId(journalistId)
