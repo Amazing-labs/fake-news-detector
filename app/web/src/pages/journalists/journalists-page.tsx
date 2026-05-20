@@ -179,10 +179,19 @@ export function JournalistStatusPage(props: { journalistId?: string }) {
 }
 
 function JournalistStatusActions(props: { initialJournalistId?: string }) {
-  const [journalistId, setJournalistId] = useState('')
   const [reason, setReason] = useState('OTHER')
   const [details, setDetails] = useState('')
-  const currentJournalistId = props.initialJournalistId ?? journalistId
+  const currentJournalistId = props.initialJournalistId ?? ''
+
+  const journalistsQuery = useQuery({
+    queryKey: ['journalists'],
+    queryFn: () => apiRequest<JournalistList>('/api/journalists'),
+    enabled: !!currentJournalistId,
+  })
+
+  const selectedJournalist = journalistsQuery.data?.items.find(
+    (item) => item.id === currentJournalistId,
+  )
 
   const actionMutation = useMutation({
     mutationFn: (action: 'ban' | 'disable' | 'activate') =>
@@ -199,15 +208,28 @@ function JournalistStatusActions(props: { initialJournalistId?: string }) {
   return (
     <SectionCard
       title="Actions de statut"
-      description="Renseigne la reference interne du journaliste a administrer."
+      description="Choisis une action pour le journaliste selectionne depuis la liste."
     >
       <div className="grid gap-3">
-        <Input
-          label="Reference journaliste"
-          value={currentJournalistId}
-          readOnly={!!props.initialJournalistId}
-          onChange={(event) => setJournalistId(event.target.value)}
-        />
+        <div className="rounded-[1.15rem] border border-[#eee9e2] bg-[#fbfaf8] p-4">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="text-xs font-black tracking-[0.08em] text-[#918a83] uppercase">
+                Journaliste
+              </p>
+              <p className="mt-1 font-black tracking-[-0.015em] text-[#171514]">
+                {selectedJournalist?.name ?? 'Journaliste selectionne'}
+              </p>
+              <p className="mt-1 text-sm leading-6 text-[#706a63]">
+                {selectedJournalist?.email ??
+                  'Les informations du profil sont en cours de chargement.'}
+              </p>
+            </div>
+            {selectedJournalist ? (
+              <StatusBadge value={selectedJournalist.status} />
+            ) : null}
+          </div>
+        </div>
         <Input
           label="Raison"
           value={reason}
