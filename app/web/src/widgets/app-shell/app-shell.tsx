@@ -71,11 +71,6 @@ const navSubRoutes: Record<string, NavSubRoute[]> = {
       label: 'Creation',
       roles: ['EDITORIAL_DIRECTOR'],
     },
-    {
-      to: '/journalists/status',
-      label: 'Statut',
-      roles: ['EDITORIAL_DIRECTOR'],
-    },
   ],
 }
 

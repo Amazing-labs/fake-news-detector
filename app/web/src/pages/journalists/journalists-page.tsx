@@ -26,11 +26,6 @@ const journalistSections = [
     title: 'Creation',
     description: 'Ajouter un journaliste au desk.',
   },
-  {
-    to: '/journalists/status',
-    title: 'Statut',
-    description: 'Activer, desactiver ou bannir un journaliste.',
-  },
 ] as const
 
 const reasons = [
@@ -55,7 +50,7 @@ export function JournalistsPage() {
       title="Journalistes"
       description="Choisis une vue. La liste reste separee des actions d'administration."
     >
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-2">
         {journalistSections.map((section) => (
           <Link
             key={section.to}
@@ -165,6 +160,10 @@ export function JournalistStatusPage(props: { journalistId?: string }) {
 
   if (session !== undefined && !canManage) {
     return <Navigate to="/profile" />
+  }
+
+  if (session !== undefined && canManage && !props.journalistId) {
+    return <Navigate to="/journalists/list" />
   }
 
   return (
