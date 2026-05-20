@@ -16,6 +16,11 @@ export function createJournalistRoutes(
 
   routes.use('*', auth)
 
+  routes.get(
+    '/',
+    createPermissionMiddleware(securityService, 'journalist.manage'),
+    journalistManagementController.list,
+  )
   routes.post(
     '/',
     createPermissionMiddleware(securityService, 'journalist.manage'),

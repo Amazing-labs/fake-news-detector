@@ -31,6 +31,11 @@ const navSubRoutes: Record<string, NavSubRoute[]> = {
     { to: '/publications/list', label: 'Liste' },
     { to: '/publications/corrections', label: 'Correctifs' },
   ],
+  '/journalists': [
+    { to: '/journalists/list', label: 'Liste' },
+    { to: '/journalists/create', label: 'Creation' },
+    { to: '/journalists/status', label: 'Statut' },
+  ],
 }
 
 function isActivePath(pathname: string, to: string) {

@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { Outlet, createFileRoute, useRouterState } from '@tanstack/react-router'
 import { JournalistsPage } from '../pages/journalists/journalists-page'
 
 export const Route = createFileRoute('/journalists')({
@@ -6,5 +6,13 @@ export const Route = createFileRoute('/journalists')({
 })
 
 function JournalistsRoute() {
-  return <JournalistsPage />
+  const pathname = useRouterState({
+    select: (state) => state.location.pathname,
+  })
+
+  if (pathname === '/journalists') {
+    return <JournalistsPage />
+  }
+
+  return <Outlet />
 }

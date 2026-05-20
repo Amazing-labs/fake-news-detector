@@ -109,6 +109,7 @@ export function createAppDependencies(): AppDependencies {
     ),
     journalistManagementController: new JournalistManagementController(
       actorManagementService,
+      journalistRepository,
     ),
     directorController: new DirectorController(
       investigationRepository,
