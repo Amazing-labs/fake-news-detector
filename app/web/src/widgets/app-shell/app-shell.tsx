@@ -107,7 +107,7 @@ export function AppShell(props: {
   }
 
   return (
-    <div className="min-h-screen bg-[#f5f2ee] text-[#171514]">
+    <div className="font-ui min-h-screen bg-[#f5f2ee] text-[#171514]">
       <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(255,255,255,0.9),transparent_24%),radial-gradient(circle_at_80%_0%,rgba(244,214,151,0.18),transparent_28%)]" />
       <header className="sticky top-0 z-30 border-b border-[#e8e2da]/80 bg-[#f5f2ee]/88 backdrop-blur-xl">
         <div className="mx-auto max-w-[1180px] px-4 py-3 md:flex md:justify-center md:px-5">
