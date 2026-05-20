@@ -12,6 +12,7 @@ import {
   Input,
   PageLayout,
   SectionCard,
+  Select,
   StatusBadge,
 } from '../../shared/ui/primitives'
 
@@ -28,14 +29,14 @@ const journalistSections = [
   },
 ] as const
 
-const reasons = [
-  'SPAM',
-  'ABUSE',
-  'FRAUD',
-  'INACTIVITY',
-  'USER_REQUEST',
-  'OTHER',
-]
+const journalistStatusReasons = [
+  { value: 'SPAM', label: 'Spam' },
+  { value: 'ABUSE', label: 'Abus' },
+  { value: 'FRAUD', label: 'Fraude' },
+  { value: 'INACTIVITY', label: 'Inactivite' },
+  { value: 'USER_REQUEST', label: 'Demande utilisateur' },
+  { value: 'OTHER', label: 'Autre' },
+] as const
 
 export function JournalistsPage() {
   const { session } = useAppSession()
@@ -179,7 +180,8 @@ export function JournalistStatusPage(props: { journalistId?: string }) {
 }
 
 function JournalistStatusActions(props: { initialJournalistId?: string }) {
-  const [reason, setReason] = useState('OTHER')
+  const [reason, setReason] =
+    useState<(typeof journalistStatusReasons)[number]['value']>('OTHER')
   const [details, setDetails] = useState('')
   const currentJournalistId = props.initialJournalistId ?? ''
 
@@ -230,17 +232,22 @@ function JournalistStatusActions(props: { initialJournalistId?: string }) {
             ) : null}
           </div>
         </div>
-        <Input
+        <Select
           label="Raison"
           value={reason}
-          onChange={(event) => setReason(event.target.value)}
-          list="journalist-reasons"
-        />
-        <datalist id="journalist-reasons">
-          {reasons.map((item) => (
-            <option key={item} value={item} />
+          onChange={(event) =>
+            setReason(
+              event.target
+                .value as (typeof journalistStatusReasons)[number]['value'],
+            )
+          }
+        >
+          {journalistStatusReasons.map((item) => (
+            <option key={item.value} value={item.value}>
+              {item.label}
+            </option>
           ))}
-        </datalist>
+        </Select>
         <Input
           label="Details"
           value={details}
