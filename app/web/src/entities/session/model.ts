@@ -1,4 +1,4 @@
-import { authClient, type AppSession } from '../../lib/auth-client'
+import type { AppSession } from '../../lib/auth-client'
 
 export type UserRole = 'CITIZEN' | 'JOURNALIST' | 'EDITORIAL_DIRECTOR'
 
@@ -24,12 +24,11 @@ const citizenTypeLabels: Record<string, string> = {
 }
 
 export function useAppSession() {
-  const query = authClient.useSession()
-
   return {
-    ...query,
-    session:
-      query.data === undefined ? undefined : (query.data as AppSession | null),
+    data: null,
+    error: null,
+    isPending: false,
+    session: null as AppSession | null,
   }
 }
 
