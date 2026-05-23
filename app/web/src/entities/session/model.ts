@@ -68,12 +68,10 @@ function FrontendBypassSessionProvider(props: {
     },
   }
 
-  return (
-    createElement(AppSessionContext.Provider, {
-      value,
-      children: props.children,
-    })
-  )
+  return createElement(AppSessionContext.Provider, {
+    value,
+    children: props.children,
+  })
 }
 
 function BetterAuthSessionProvider(props: { children: ReactNode }) {
@@ -93,12 +91,10 @@ function BetterAuthSessionProvider(props: { children: ReactNode }) {
     },
   }
 
-  return (
-    createElement(AppSessionContext.Provider, {
-      value,
-      children: props.children,
-    })
-  )
+  return createElement(AppSessionContext.Provider, {
+    value,
+    children: props.children,
+  })
 }
 
 export function AppSessionProvider(props: { children: ReactNode }) {
@@ -120,9 +116,7 @@ export function useAppSession() {
   const context = useContext(AppSessionContext)
 
   if (!context) {
-    throw new Error(
-      'useAppSession must be used within an AppSessionProvider.',
-    )
+    throw new Error('useAppSession must be used within an AppSessionProvider.')
   }
 
   return context
