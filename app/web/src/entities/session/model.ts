@@ -1,6 +1,8 @@
 import type { AppSession } from '../../lib/auth-client'
+import { authClient } from '../../lib/auth-client'
 
 export type UserRole = 'CITIZEN' | 'JOURNALIST' | 'EDITORIAL_DIRECTOR'
+export type CitizenType = 'REGULAR' | 'WATCHER'
 
 const roleLabels: Record<UserRole, string> = {
   CITIZEN: 'Citoyen',
@@ -24,11 +26,11 @@ const citizenTypeLabels: Record<string, string> = {
 }
 
 export function useAppSession() {
+  const session = authClient.useSession()
+
   return {
-    data: null,
-    error: null,
-    isPending: false,
-    session: null as AppSession | null,
+    ...session,
+    session: (session.data ?? null) as AppSession | null,
   }
 }
 
