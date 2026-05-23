@@ -59,7 +59,7 @@ export function AppShell(props: {
                     : 'Aucune session'}
               </p>
               <p className="text-xs text-slate-600">
-                Role: {props.session?.user.actorRole ?? 'Invite'} | Statut:{' '}
+                Role: {props.session?.user.actorRole ?? 'Invité'} | Statut:{' '}
                 {props.session?.user.actorStatus ?? 'N/A'} | Source:{' '}
                 {props.session?.meta?.authSource === 'frontend-bypass'
                   ? 'Bypass frontend'

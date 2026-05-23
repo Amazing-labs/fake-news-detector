@@ -67,11 +67,11 @@ export function AuthForm(props: { onSuccess?: () => void }) {
 
     const session = activateFrontendBypassAccount(accountId)
     if (!session) {
-      setError('Le bypass frontend est desactive pour cet environnement.')
+      setError('Le bypass frontend est désactivé pour cet environnement.')
       return
     }
 
-    setSuccess(`Session frontend activee pour ${session.user.name}.`)
+    setSuccess(`Session frontend activée pour ${session.user.name}.`)
     startTransition(() => {
       props.onSuccess?.()
     })
@@ -142,8 +142,8 @@ export function AuthForm(props: { onSuccess?: () => void }) {
               Comptes de bypass frontend
             </p>
             <p className="text-sm text-slate-600">
-              Ces sessions locales evitent Better Auth et ne servent qu&apos;a
-              prototyper le frontend par role.
+              Ces sessions locales évitent Better Auth et ne servent qu&apos;à
+              prototyper le frontend par rôle.
             </p>
           </div>
           <div className="grid gap-2">
