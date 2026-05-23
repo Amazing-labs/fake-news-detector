@@ -1,6 +1,7 @@
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { Moon, Search, ShieldCheck, Sun } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useLayoutEffect, useRef } from 'react'
 import { useAppSession } from '../../entities/session/model'
 import { authClient } from '../../lib/auth-client'
 import { cn } from '../../shared/lib/utils'
@@ -23,6 +24,8 @@ import {
 import { useTheme } from './theme'
 import type { Actor, PageKind } from './types'
 
+let tabletNavScrollLeft = 0
+
 export function AppLayout(props: {
   actor?: Actor
   page: PageKind
@@ -30,6 +33,7 @@ export function AppLayout(props: {
 }) {
   const location = useLocation()
   const navigate = useNavigate()
+  const tabletNavRef = useRef<HTMLDivElement>(null)
   const { isDark, setIsDark } = useTheme()
   const { session } = useAppSession()
   const actor =
@@ -54,6 +58,14 @@ export function AppLayout(props: {
         location.pathname.startsWith(sectionPath ? `/${sectionPath}` : to))
     )
   }
+
+  useLayoutEffect(() => {
+    const nav = tabletNavRef.current
+
+    if (nav) {
+      nav.scrollLeft = tabletNavScrollLeft
+    }
+  }, [location.pathname, visibleNavItems])
 
   return (
     <div className="bg-background text-foreground min-h-screen">
@@ -158,7 +170,13 @@ export function AppLayout(props: {
             </Button>
           </div>
           <nav className="border-t lg:hidden">
-            <div className="scrollbar-thin flex gap-2 overflow-x-auto px-4 py-2 sm:px-6">
+            <div
+              ref={tabletNavRef}
+              className="scrollbar-thin flex gap-2 overflow-x-auto px-4 py-2 sm:px-6"
+              onScroll={(event) => {
+                tabletNavScrollLeft = event.currentTarget.scrollLeft
+              }}
+            >
               {visibleNavItems.map((item) => {
                 const Icon = item.icon
                 const active = isActivePath(item.to)
@@ -167,6 +185,10 @@ export function AppLayout(props: {
                   <Link
                     key={item.label}
                     to={item.to}
+                    onClick={() => {
+                      tabletNavScrollLeft =
+                        tabletNavRef.current?.scrollLeft ?? tabletNavScrollLeft
+                    }}
                     className={cn(
                       'flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-sm transition-colors',
                       active
