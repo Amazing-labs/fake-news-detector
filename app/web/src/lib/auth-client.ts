@@ -17,6 +17,9 @@ export const authClient = createAuthClient({
 })
 
 export interface AppSession {
+  meta?: {
+    authSource?: 'better-auth' | 'frontend-bypass'
+  }
   session: {
     id: string
     userId: string

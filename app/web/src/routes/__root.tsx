@@ -8,11 +8,11 @@ export const Route = createRootRoute({
 })
 
 function RootLayout() {
-  const { session, isPending } = useAppSession()
+  const { session, isPending, signOut } = useAppSession()
 
   return (
     <>
-      <AppShell session={session} isPending={isPending}>
+      <AppShell session={session} isPending={isPending} onSignOut={signOut}>
         <Outlet />
       </AppShell>
       <TanStackRouterDevtools />
