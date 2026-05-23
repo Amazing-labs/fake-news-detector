@@ -124,10 +124,7 @@ export function getFrontendBypassAccountById(
 }
 
 export function readFrontendBypassSession(): AppSession | null {
-  if (
-    !FRONTEND_AUTH_BYPASS_ENABLED ||
-    typeof window === 'undefined'
-  ) {
+  if (!FRONTEND_AUTH_BYPASS_ENABLED || typeof window === 'undefined') {
     return null
   }
 
@@ -147,10 +144,7 @@ export function readFrontendBypassSession(): AppSession | null {
 export function activateFrontendBypassAccount(
   accountId: FrontendBypassAccountId,
 ): AppSession | null {
-  if (
-    !FRONTEND_AUTH_BYPASS_ENABLED ||
-    typeof window === 'undefined'
-  ) {
+  if (!FRONTEND_AUTH_BYPASS_ENABLED || typeof window === 'undefined') {
     return null
   }
 
