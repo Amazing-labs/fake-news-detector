@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { AuthForm } from '../../features/auth/auth-form'
 import { useAppSession } from '../../entities/session/model'
+import { isFrontendAuthBypassEnabled } from '../../shared/session/frontend-auth-bypass'
 import {
   DataList,
   EmptyState,
@@ -10,6 +11,7 @@ import {
 
 export function AuthPage() {
   const { session, isPending, refetch } = useAppSession()
+  const frontendBypassEnabled = isFrontendAuthBypassEnabled()
 
   return (
     <PageLayout
@@ -70,6 +72,13 @@ export function AuthPage() {
               directeur doit d'abord etre provisionne cote metier, puis son
               compte Better Auth est relie a cet acteur.
             </p>
+            {frontendBypassEnabled ? (
+              <p className="text-sm text-slate-700">
+                Des comptes de bypass frontend sont aussi disponibles dans ce
+                formulaire pour maquetter les interfaces sans passer par le
+                serveur.
+              </p>
+            ) : null}
           </SectionCard>
         </div>
       )}

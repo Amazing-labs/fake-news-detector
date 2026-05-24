@@ -1,12 +1,13 @@
 import { Link, useRouterState } from '@tanstack/react-router'
 import type { ReactNode } from 'react'
-import { authClient, type AppSession } from '../../lib/auth-client'
+import type { AppSession } from '../../lib/auth-client'
 import { getNavigationForSession } from '../../shared/session/role-access'
 import { Button } from '../../shared/ui/primitives'
 
 export function AppShell(props: {
   session: AppSession | null
   isPending: boolean
+  onSignOut: () => Promise<void>
   children: ReactNode
 }) {
   const pathname = useRouterState({
@@ -59,14 +60,17 @@ export function AppShell(props: {
               </p>
               <p className="text-xs text-slate-600">
                 Role: {props.session?.user.actorRole ?? 'Invité'} | Statut:{' '}
-                {props.session?.user.actorStatus ?? 'N/A'}
+                {props.session?.user.actorStatus ?? 'N/A'} | Source:{' '}
+                {props.session?.meta?.authSource === 'frontend-bypass'
+                  ? 'Bypass frontend'
+                  : 'Better Auth'}
               </p>
             </div>
             {props.session ? (
               <Button
                 variant="secondary"
                 onClick={() => {
-                  void authClient.signOut()
+                  void props.onSignOut()
                 }}
               >
                 Deconnexion

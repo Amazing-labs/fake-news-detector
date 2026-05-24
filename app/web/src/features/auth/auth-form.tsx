@@ -1,5 +1,11 @@
 import { startTransition, useState } from 'react'
 import { authClient } from '../../lib/auth-client'
+import {
+  activateFrontendBypassAccount,
+  FRONTEND_BYPASS_ACCOUNTS,
+  type FrontendBypassAccountId,
+  isFrontendAuthBypassEnabled,
+} from '../../shared/session/frontend-auth-bypass'
 import { Button, Input, Notice, SectionCard } from '../../shared/ui/primitives'
 
 export function AuthForm(props: { onSuccess?: () => void }) {
@@ -10,6 +16,7 @@ export function AuthForm(props: { onSuccess?: () => void }) {
   const [pending, setPending] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const frontendBypassEnabled = isFrontendAuthBypassEnabled()
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -52,6 +59,22 @@ export function AuthForm(props: { onSuccess?: () => void }) {
     } finally {
       setPending(false)
     }
+  }
+
+  function handleFrontendBypassLogin(accountId: FrontendBypassAccountId) {
+    setError(null)
+    setSuccess(null)
+
+    const session = activateFrontendBypassAccount(accountId)
+    if (!session) {
+      setError('Le bypass frontend est désactivé pour cet environnement.')
+      return
+    }
+
+    setSuccess(`Session frontend activée pour ${session.user.name}.`)
+    startTransition(() => {
+      props.onSuccess?.()
+    })
   }
 
   return (
@@ -111,6 +134,35 @@ export function AuthForm(props: { onSuccess?: () => void }) {
               : 'Se connecter'}
         </Button>
       </form>
+
+      {frontendBypassEnabled ? (
+        <div className="grid gap-3 border-t border-slate-200 pt-4">
+          <div className="space-y-1">
+            <p className="text-sm font-medium text-slate-950">
+              Comptes de bypass frontend
+            </p>
+            <p className="text-sm text-slate-600">
+              Ces sessions locales évitent Better Auth et ne servent qu&apos;à
+              prototyper le frontend par rôle.
+            </p>
+          </div>
+          <div className="grid gap-2">
+            {FRONTEND_BYPASS_ACCOUNTS.map((account) => (
+              <button
+                key={account.id}
+                type="button"
+                className="rounded-md border border-slate-300 bg-slate-50 px-3 py-3 text-left text-sm hover:bg-slate-100"
+                onClick={() => {
+                  handleFrontendBypassLogin(account.id)
+                }}
+              >
+                <p className="font-medium text-slate-950">{account.label}</p>
+                <p className="mt-1 text-slate-600">{account.description}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </SectionCard>
   )
 }
