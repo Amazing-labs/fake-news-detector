@@ -24,6 +24,7 @@ import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as PublicationsListRouteImport } from './routes/publications.list'
 import { Route as PublicationsCorrectionsRouteImport } from './routes/publications.corrections'
+import { Route as PublicationsPublicationIdRouteImport } from './routes/publications.$publicationId'
 import { Route as JournalistsStatusRouteImport } from './routes/journalists.status'
 import { Route as JournalistsListRouteImport } from './routes/journalists.list'
 import { Route as JournalistsCreateRouteImport } from './routes/journalists.create'
@@ -109,6 +110,12 @@ const PublicationsCorrectionsRoute = PublicationsCorrectionsRouteImport.update({
   path: '/corrections',
   getParentRoute: () => PublicationsRoute,
 } as any)
+const PublicationsPublicationIdRoute =
+  PublicationsPublicationIdRouteImport.update({
+    id: '/$publicationId',
+    path: '/$publicationId',
+    getParentRoute: () => PublicationsRoute,
+  } as any)
 const JournalistsStatusRoute = JournalistsStatusRouteImport.update({
   id: '/status',
   path: '/status',
@@ -180,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/journalists/create': typeof JournalistsCreateRoute
   '/journalists/list': typeof JournalistsListRoute
   '/journalists/status': typeof JournalistsStatusRoute
+  '/publications/$publicationId': typeof PublicationsPublicationIdRoute
   '/publications/corrections': typeof PublicationsCorrectionsRoute
   '/publications/list': typeof PublicationsListRoute
 }
@@ -206,6 +214,7 @@ export interface FileRoutesByTo {
   '/journalists/create': typeof JournalistsCreateRoute
   '/journalists/list': typeof JournalistsListRoute
   '/journalists/status': typeof JournalistsStatusRoute
+  '/publications/$publicationId': typeof PublicationsPublicationIdRoute
   '/publications/corrections': typeof PublicationsCorrectionsRoute
   '/publications/list': typeof PublicationsListRoute
 }
@@ -233,6 +242,7 @@ export interface FileRoutesById {
   '/journalists/create': typeof JournalistsCreateRoute
   '/journalists/list': typeof JournalistsListRoute
   '/journalists/status': typeof JournalistsStatusRoute
+  '/publications/$publicationId': typeof PublicationsPublicationIdRoute
   '/publications/corrections': typeof PublicationsCorrectionsRoute
   '/publications/list': typeof PublicationsListRoute
 }
@@ -261,6 +271,7 @@ export interface FileRouteTypes {
     | '/journalists/create'
     | '/journalists/list'
     | '/journalists/status'
+    | '/publications/$publicationId'
     | '/publications/corrections'
     | '/publications/list'
   fileRoutesByTo: FileRoutesByTo
@@ -287,6 +298,7 @@ export interface FileRouteTypes {
     | '/journalists/create'
     | '/journalists/list'
     | '/journalists/status'
+    | '/publications/$publicationId'
     | '/publications/corrections'
     | '/publications/list'
   id:
@@ -313,6 +325,7 @@ export interface FileRouteTypes {
     | '/journalists/create'
     | '/journalists/list'
     | '/journalists/status'
+    | '/publications/$publicationId'
     | '/publications/corrections'
     | '/publications/list'
   fileRoutesById: FileRoutesById
@@ -440,6 +453,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PublicationsCorrectionsRouteImport
       parentRoute: typeof PublicationsRoute
     }
+    '/publications/$publicationId': {
+      id: '/publications/$publicationId'
+      path: '/$publicationId'
+      fullPath: '/publications/$publicationId'
+      preLoaderRoute: typeof PublicationsPublicationIdRouteImport
+      parentRoute: typeof PublicationsRoute
+    }
     '/journalists/status': {
       id: '/journalists/status'
       path: '/status'
@@ -555,11 +575,13 @@ const JournalistsRouteWithChildren = JournalistsRoute._addFileChildren(
 )
 
 interface PublicationsRouteChildren {
+  PublicationsPublicationIdRoute: typeof PublicationsPublicationIdRoute
   PublicationsCorrectionsRoute: typeof PublicationsCorrectionsRoute
   PublicationsListRoute: typeof PublicationsListRoute
 }
 
 const PublicationsRouteChildren: PublicationsRouteChildren = {
+  PublicationsPublicationIdRoute: PublicationsPublicationIdRoute,
   PublicationsCorrectionsRoute: PublicationsCorrectionsRoute,
   PublicationsListRoute: PublicationsListRoute,
 }
