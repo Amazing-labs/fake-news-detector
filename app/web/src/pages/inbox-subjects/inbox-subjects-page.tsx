@@ -1,27 +1,17 @@
 import {
-  VeriFactClaimsPage,
-  VeriFactGenericPage,
+  InboxCreateWorkspacePage,
+  InboxWorkspacePage,
+  ReportsWorkspacePage,
 } from '../verifact-design/verifact-design-page'
 
 export function InboxSubjectsPage() {
-  return <VeriFactClaimsPage />
+  return <InboxWorkspacePage />
 }
 
 export function InboxSubjectsCreatePage() {
-  return (
-    <VeriFactGenericPage
-      title="New Claim"
-      description="Static creation workspace from the VeriFact design"
-    />
-  )
+  return <InboxCreateWorkspacePage />
 }
 
 export function InboxSubjectsReportsPage() {
-  return (
-    <VeriFactGenericPage
-      title="Reports"
-      description="Static report qualification workspace from the VeriFact design"
-      kind="claims"
-    />
-  )
+  return <ReportsWorkspacePage />
 }

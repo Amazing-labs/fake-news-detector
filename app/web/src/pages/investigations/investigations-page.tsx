@@ -1,29 +1,18 @@
 import {
-  VeriFactGenericPage,
-  VeriFactPendingPage,
+  InvestigationDetailWorkspacePage,
+  InvestigationsWorkspacePage,
 } from '../verifact-design/verifact-design-page'
 
 export function InvestigationsPage() {
-  return <VeriFactPendingPage />
+  return <InvestigationsWorkspacePage />
 }
 
 export function PublishedInvestigationsPage() {
-  return (
-    <VeriFactGenericPage
-      title="Verified"
-      description="Static published investigations list from the absorbed frontend design"
-      kind="claims"
-    />
-  )
+  return <InvestigationsWorkspacePage defaultTab="published" />
 }
 
-export function InvestigationDetailPage(_props: { investigationId: string }) {
-  void _props
+export function InvestigationDetailPage(props: { investigationId: string }) {
   return (
-    <VeriFactGenericPage
-      title="Claim Detail"
-      description="Static investigation detail preview from the VeriFact design"
-      kind="claims"
-    />
+    <InvestigationDetailWorkspacePage investigationId={props.investigationId} />
   )
 }

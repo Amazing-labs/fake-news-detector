@@ -1,17 +1,17 @@
 import {
-  CorrectionsPage,
-  VeriFactDirectorDashboardPage,
+  PublicationCorrectionsWorkspacePage,
+  PublicationsWorkspacePage,
 } from '../verifact-design/verifact-design-page'
 
 export function PublicationsPage() {
-  return <VeriFactDirectorDashboardPage />
+  return <PublicationsWorkspacePage />
 }
 
 export function PublicationsListPage() {
-  return <VeriFactDirectorDashboardPage />
+  return <PublicationsWorkspacePage />
 }
 
 export function PublicationCorrectionsPage(_props: { publicationId?: string }) {
   void _props
-  return <CorrectionsPage />
+  return <PublicationCorrectionsWorkspacePage />
 }

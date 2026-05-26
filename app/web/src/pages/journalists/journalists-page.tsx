@@ -1,23 +1,17 @@
 import {
-  VeriFactGenericPage,
-  VeriFactJournalistDashboardPage,
-  VeriFactProfilePage,
+  PeopleManagementPage,
+  UserCreateWorkspacePage,
+  UserStatusWorkspacePage,
 } from '../verifact-design/verifact-design-page'
 
 export function JournalistsListPage() {
-  return (
-    <VeriFactGenericPage
-      title="Experts"
-      description="Static experts and journalists directory from the VeriFact design"
-    />
-  )
+  return <PeopleManagementPage />
 }
 
 export function JournalistCreatePage() {
-  return <VeriFactJournalistDashboardPage />
+  return <UserCreateWorkspacePage />
 }
 
-export function JournalistStatusPage(_props: { journalistId?: string }) {
-  void _props
-  return <VeriFactProfilePage />
+export function JournalistStatusPage(props: { journalistId?: string }) {
+  return <UserStatusWorkspacePage userLabel={props.journalistId} />
 }

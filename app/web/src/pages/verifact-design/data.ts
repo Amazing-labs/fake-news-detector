@@ -3,7 +3,6 @@ import {
   BookOpenCheck,
   FilePlus2,
   FileSearch,
-  Home,
   Inbox,
   LayoutDashboard,
   Newspaper,
@@ -23,7 +22,6 @@ export const actorLabels: Record<Actor, string> = {
 }
 
 export const navItems: NavItem[] = [
-  { label: 'Accueil', to: '/', icon: Home },
   { label: 'Tableau de bord', to: '/dashboard', icon: LayoutDashboard },
   { label: 'Sujets', to: '/inbox-subjects/global', icon: Inbox, badge: '24' },
   { label: 'Signalements', to: '/reports', icon: FileSearch, badge: '8' },
@@ -36,9 +34,8 @@ export const navItems: NavItem[] = [
 ]
 
 export const navByActor: Record<Actor, string[]> = {
-  guest: ['Accueil'],
+  guest: ['Tableau de bord'],
   citizen: [
-    'Accueil',
     'Tableau de bord',
     'Signalements',
     'Vigies',
@@ -47,7 +44,6 @@ export const navByActor: Record<Actor, string[]> = {
     'Profil',
   ],
   watcher: [
-    'Accueil',
     'Tableau de bord',
     'Sujets',
     'Signalements',
@@ -57,7 +53,6 @@ export const navByActor: Record<Actor, string[]> = {
     'Profil',
   ],
   journalist: [
-    'Accueil',
     'Tableau de bord',
     'Sujets',
     'Enquêtes',
@@ -66,7 +61,6 @@ export const navByActor: Record<Actor, string[]> = {
     'Profil',
   ],
   director: [
-    'Accueil',
     'Tableau de bord',
     'Vigies',
     'Sujets',
@@ -76,13 +70,7 @@ export const navByActor: Record<Actor, string[]> = {
     'Notifications',
     'Profil',
   ],
-  admin: [
-    'Accueil',
-    'Tableau de bord',
-    'Utilisateurs',
-    'Notifications',
-    'Profil',
-  ],
+  admin: ['Tableau de bord', 'Utilisateurs', 'Notifications', 'Profil'],
 }
 
 export const roleCards: RoleCard[] = [
