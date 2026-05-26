@@ -21,7 +21,7 @@ import {
   Users,
   XCircle,
 } from 'lucide-react'
-import type { ComponentType } from 'react'
+import { useState, type ComponentType, type ReactNode } from 'react'
 import { cn } from '../../shared/lib/utils'
 import { Badge } from '../../shared/ui/shadcn/badge'
 import { Button } from '../../shared/ui/shadcn/button'
@@ -33,6 +33,16 @@ import {
   CardHeader,
   CardTitle,
 } from '../../shared/ui/shadcn/card'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../../shared/ui/shadcn/dialog'
 import { Input } from '../../shared/ui/shadcn/input'
 import { Label } from '../../shared/ui/shadcn/label'
 import {
@@ -207,6 +217,48 @@ function slugifyLabel(label: string) {
     .replace(/^-|-$/g, '')
 }
 
+const domainLabelByValue: Record<string, string> = {
+  ACTIVE: 'Actif',
+  ALERT: 'Alerte',
+  APPROVED: 'Approuve',
+  ARCHIVED: 'Archive',
+  ARCHIVED_PUBLICATION: 'Publication archivee',
+  AUTHORITY_STATEMENT: 'Declaration officielle',
+  CITIZEN_REPORT: 'Signalement citoyen',
+  CONTEXT_COLLAPSE: 'Contexte detourne',
+  CORRECTION: 'Correctif',
+  DIRECTOR_INITIATED: 'Cree par la direction',
+  DIRECT_EVIDENCE: 'Preuve directe',
+  DISABLED: 'Desactive',
+  FABRICATED: 'Fabrique',
+  FALSE: 'Faux',
+  IMAGE: 'Image',
+  IMPOSTOR: 'Usurpation',
+  IN_PROGRESS: 'En enquete',
+  JOURNALIST_PROOF: 'Preuve journaliste',
+  MANIPULATED: 'Manipule',
+  MEDIA_CROSSCHECK: 'Recoupement media',
+  MISLEADING: 'Trompeur',
+  NEEDS_REVISION: 'A corriger',
+  OFFICIAL_DECREE: 'Decision officielle',
+  OPEN: 'Ouvert',
+  OTHER: 'Autre',
+  PENDING: 'En attente',
+  PENDING_REVIEW: 'Revue direction',
+  PUBLICATION: 'Publication',
+  PUBLISHED: 'Publie',
+  REJECTED: 'Rejete',
+  SATIRE: 'Satire',
+  TEXT: 'Texte',
+  TRUE: 'Vrai',
+  UNVERIFIABLE: 'Non verifiable',
+  VIDEO: 'Video',
+}
+
+function domainLabel(value: string) {
+  return domainLabelByValue[value] ?? value
+}
+
 function StatusBadge({
   status,
   className,
@@ -214,24 +266,10 @@ function StatusBadge({
   status: string
   className?: string
 }) {
-  const labelByStatus: Record<string, string> = {
-    ACTIVE: 'Actif',
-    APPROVED: 'Approuve',
-    ARCHIVED: 'Archive',
-    DISABLED: 'Desactive',
-    IN_PROGRESS: 'En enquete',
-    NEEDS_REVISION: 'A corriger',
-    OPEN: 'Ouvert',
-    PENDING: 'En attente',
-    PENDING_REVIEW: 'Revue direction',
-    PUBLISHED: 'Publie',
-    REJECTED: 'Rejete',
-  }
-
   if (status === 'PUBLISHED' || status === 'APPROVED' || status === 'ACTIVE') {
     return (
       <Badge className={cn('h-6 rounded-full px-2.5', className)}>
-        {labelByStatus[status]}
+        {domainLabel(status)}
       </Badge>
     )
   }
@@ -246,7 +284,7 @@ function StatusBadge({
         variant="secondary"
         className={cn('h-6 rounded-full px-2.5', className)}
       >
-        {labelByStatus[status]}
+        {domainLabel(status)}
       </Badge>
     )
   }
@@ -257,7 +295,7 @@ function StatusBadge({
         variant="destructive"
         className={cn('h-6 rounded-full px-2.5', className)}
       >
-        {labelByStatus[status]}
+        {domainLabel(status)}
       </Badge>
     )
   }
@@ -267,8 +305,140 @@ function StatusBadge({
       variant="outline"
       className={cn('h-6 rounded-full px-2.5', className)}
     >
-      {labelByStatus[status] ?? status}
+      {domainLabel(status)}
     </Badge>
+  )
+}
+
+function ArbitrationReasonDialog({
+  action,
+  children,
+  tone = 'default',
+}: {
+  action: string
+  children: ReactNode
+  tone?: 'default' | 'destructive'
+}) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{action}</DialogTitle>
+          <DialogDescription>
+            Indique la raison editoriale avant de poursuivre cette action.
+          </DialogDescription>
+        </DialogHeader>
+        <Label className="grid gap-2">
+          Raison
+          <Textarea
+            required
+            placeholder="Explique la raison de cette decision..."
+          />
+        </Label>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Annuler</Button>
+          </DialogClose>
+          <Button variant={tone === 'destructive' ? 'destructive' : 'default'}>
+            Confirmer
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function PublishInvestigationDialog({ children }: { children: ReactNode }) {
+  const [withEvidence, setWithEvidence] = useState(false)
+
+  return (
+    <Dialog
+      onOpenChange={(open) => {
+        if (!open) setWithEvidence(false)
+      }}
+    >
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Publier le dossier</DialogTitle>
+          <DialogDescription>
+            Voulez-vous ajouter des preuves supplementaires pour renforcer la
+            publication future ?
+          </DialogDescription>
+        </DialogHeader>
+
+        {withEvidence ? (
+          <div className="grid gap-4">
+            <div className="rounded-lg border p-4">
+              <p className="font-medium">Lien verifie</p>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Ces liens seront rattaches a la publication creee par
+                l'approbation.
+              </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <Label className="grid gap-2 sm:col-span-2">
+                  URL
+                  <Input placeholder="https://source-officielle.example" />
+                </Label>
+                <Label className="grid gap-2">
+                  Source d'autorite
+                  <Input placeholder="Nom de la source" />
+                </Label>
+                <Label className="grid gap-2">
+                  Type de source
+                  <Input placeholder="Declaration officielle" />
+                </Label>
+              </div>
+            </div>
+
+            <div className="rounded-lg border p-4">
+              <p className="font-medium">Media verifie</p>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Le backend attend une URL, un type de media et, si utile, une
+                source d'autorite.
+              </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <Label className="grid gap-2 sm:col-span-2">
+                  URL du media
+                  <Input placeholder="https://source-officielle.example/preuve.jpg" />
+                </Label>
+                <Label className="grid gap-2">
+                  Type de media
+                  <Input placeholder="Image, video, document..." />
+                </Label>
+                <Label className="grid gap-2">
+                  Source rattachee
+                  <Input placeholder="Archive officielle" />
+                </Label>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Annuler</Button>
+          </DialogClose>
+          {withEvidence ? (
+            <Button>
+              <BadgeCheck />
+              Publier avec preuves
+            </Button>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => setWithEvidence(true)}>
+                Oui, ajouter des preuves
+              </Button>
+              <Button>
+                <BadgeCheck />
+                Non, publier
+              </Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -379,7 +549,7 @@ export function DirectorHomePage() {
               {investigations.map((item) => (
                 <TableRow key={item.title}>
                   <TableCell className="font-medium">{item.title}</TableCell>
-                  <TableCell>{item.verdict}</TableCell>
+                  <TableCell>{domainLabel(item.verdict)}</TableCell>
                   <TableCell>
                     <StatusBadge status={item.status} />
                   </TableCell>
@@ -542,7 +712,7 @@ export function WatcherWorkspacePage() {
               <div key={item.title} className="rounded-lg border p-4">
                 <div className="flex items-center justify-between gap-3">
                   <p className="font-medium">{item.title}</p>
-                  <Badge variant="outline">{item.category}</Badge>
+                  <Badge variant="outline">{domainLabel(item.category)}</Badge>
                 </div>
                 <p className="text-muted-foreground mt-2 text-sm">
                   Ajouter media, contexte terrain et justification.
@@ -955,18 +1125,84 @@ export function InvestigationDetailWorkspacePage({
               </div>
             </CardHeader>
             <CardContent className="grid gap-4">
+              <div className="bg-muted/40 grid gap-3 rounded-lg border p-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="font-medium">Arbitrage direction</p>
+                    <p className="text-muted-foreground text-sm">
+                      Publier, renvoyer en correction, archiver ou annuler ce
+                      dossier.
+                    </p>
+                  </div>
+                  <PublishInvestigationDialog>
+                    <Button size="sm">
+                      <BadgeCheck />
+                      Publier
+                    </Button>
+                  </PublishInvestigationDialog>
+                </div>
+                <div
+                  className={cn(
+                    'grid gap-2',
+                    dossier.verdict === 'MISLEADING'
+                      ? 'sm:grid-cols-4'
+                      : 'sm:grid-cols-3',
+                  )}
+                >
+                  <ArbitrationReasonDialog action="Demander une correction">
+                    <Button variant="outline" size="sm">
+                      <PenLine />
+                      Correction
+                    </Button>
+                  </ArbitrationReasonDialog>
+                  {dossier.verdict === 'MISLEADING' ? (
+                    <ArbitrationReasonDialog action="Archiver le dossier">
+                      <Button variant="outline" size="sm">
+                        <Archive />
+                        Archiver
+                      </Button>
+                    </ArbitrationReasonDialog>
+                  ) : null}
+                  <ArbitrationReasonDialog
+                    action="Annuler le dossier"
+                    tone="destructive"
+                  >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive"
+                    >
+                      <Ban />
+                      Annuler
+                    </Button>
+                  </ArbitrationReasonDialog>
+                  <ArbitrationReasonDialog
+                    action="Rejeter le dossier"
+                    tone="destructive"
+                  >
+                    <Button variant="destructive" size="sm">
+                      <XCircle />
+                      Rejeter
+                    </Button>
+                  </ArbitrationReasonDialog>
+                </div>
+              </div>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
                 <div className="rounded-lg border p-3">
                   <p className="text-muted-foreground text-xs font-medium uppercase">
                     Verdict brouillon
                   </p>
-                  <p className="mt-1 font-medium">{dossier.verdict}</p>
+                  <p className="mt-1 font-medium">
+                    {domainLabel(dossier.verdict)}
+                  </p>
                 </div>
                 <div className="rounded-lg border p-3">
                   <p className="text-muted-foreground text-xs font-medium uppercase">
                     Categorie
                   </p>
-                  <p className="mt-1 font-medium">{dossier.category}</p>
+                  <p className="mt-1 font-medium">
+                    {domainLabel(dossier.category)}
+                  </p>
                 </div>
                 <div className="rounded-lg border p-3">
                   <p className="text-muted-foreground text-xs font-medium uppercase">
@@ -1006,12 +1242,16 @@ export function InvestigationDetailWorkspacePage({
                     <div>
                       <p className="font-medium">{media.title}</p>
                       <p className="text-muted-foreground text-sm">
-                        {media.origin} / {media.type}
+                        {domainLabel(media.origin)} / {domainLabel(media.type)}
                       </p>
                     </div>
                     <div className="flex flex-wrap gap-2">
-                      <Badge variant="secondary">{media.reliability}</Badge>
-                      <Badge variant="outline">{media.category}</Badge>
+                      <Badge variant="secondary">
+                        {domainLabel(media.reliability)}
+                      </Badge>
+                      <Badge variant="outline">
+                        {domainLabel(media.category)}
+                      </Badge>
                     </div>
                   </div>
                   <p className="text-muted-foreground mt-3 text-sm">
@@ -1039,7 +1279,9 @@ export function InvestigationDetailWorkspacePage({
                         {evidence.watcher} / {evidence.media}
                       </p>
                     </div>
-                    <Badge variant="secondary">{evidence.reliability}</Badge>
+                    <Badge variant="secondary">
+                      {domainLabel(evidence.reliability)}
+                    </Badge>
                   </div>
                   <p className="text-muted-foreground mt-3 text-sm">
                     {evidence.note}
@@ -1065,7 +1307,7 @@ export function InvestigationDetailWorkspacePage({
                     <div>
                       <p className="font-medium">{source.name}</p>
                       <p className="text-muted-foreground text-xs">
-                        {source.type}
+                        {domainLabel(source.type)}
                       </p>
                     </div>
                     <ShieldCheck className="text-primary size-4" />
@@ -1092,37 +1334,6 @@ export function InvestigationDetailWorkspacePage({
                   <span className="text-sm">{item}</span>
                 </div>
               ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Decision</CardTitle>
-              <CardDescription>
-                Le rejet demande un commentaire obligatoire dans le workflow.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3">
-              <Button>
-                <BadgeCheck />
-                Publier
-              </Button>
-              <Button variant="outline">
-                <PenLine />
-                Demander correction
-              </Button>
-              <Button variant="outline">
-                <Archive />
-                Archiver
-              </Button>
-              <Button variant="outline" className="text-destructive">
-                <Ban />
-                Annuler
-              </Button>
-              <Button variant="destructive">
-                <XCircle />
-                Rejeter
-              </Button>
             </CardContent>
           </Card>
         </div>
@@ -1164,7 +1375,7 @@ export function PublicationsWorkspacePage() {
                 <div className="min-w-0">
                   <p className="font-medium">{item.title}</p>
                   <p className="text-muted-foreground mt-2 text-sm">
-                    Verdict: {item.verdict} / {item.evidence}
+                    Verdict: {domainLabel(item.verdict)} / {item.evidence}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 sm:justify-end">
@@ -1173,7 +1384,7 @@ export function PublicationsWorkspacePage() {
                       item.type === 'Correctif' ? 'secondary' : 'outline'
                     }
                   >
-                    {item.type}
+                    {domainLabel(item.type)}
                   </Badge>
                   <Button
                     variant="ghost"
@@ -1223,7 +1434,7 @@ export function PublicationDetailWorkspacePage({
                   publication.type === 'Correctif' ? 'secondary' : 'outline'
                 }
               >
-                {publication.type}
+                {domainLabel(publication.type)}
               </Badge>
             </CardAction>
           </CardHeader>
@@ -1233,7 +1444,9 @@ export function PublicationDetailWorkspacePage({
                 <p className="text-muted-foreground text-xs font-medium uppercase">
                   Verdict
                 </p>
-                <p className="mt-1 font-medium">{publication.verdict}</p>
+                <p className="mt-1 font-medium">
+                  {domainLabel(publication.verdict)}
+                </p>
               </div>
               <div>
                 <p className="text-muted-foreground text-xs font-medium uppercase">
@@ -1550,7 +1763,7 @@ export function NotificationsWorkspacePage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-semibold">{item.title}</p>
-                    <Badge variant="secondary">{item.type}</Badge>
+                    <Badge variant="secondary">{domainLabel(item.type)}</Badge>
                   </div>
                   <p className="text-muted-foreground mt-1 text-sm">
                     {item.body}
