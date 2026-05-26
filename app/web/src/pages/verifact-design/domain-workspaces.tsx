@@ -6,6 +6,7 @@ import {
   Ban,
   CheckCircle2,
   ClipboardCheck,
+  ExternalLink,
   FilePlus2,
   FileSearch,
   Gavel,
@@ -20,7 +21,7 @@ import {
   Users,
   XCircle,
 } from 'lucide-react'
-import type { ComponentType } from 'react'
+import { useState, type ComponentType, type ReactNode } from 'react'
 import { cn } from '../../shared/lib/utils'
 import { Badge } from '../../shared/ui/shadcn/badge'
 import { Button } from '../../shared/ui/shadcn/button'
@@ -32,6 +33,16 @@ import {
   CardHeader,
   CardTitle,
 } from '../../shared/ui/shadcn/card'
+import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '../../shared/ui/shadcn/dialog'
 import { Input } from '../../shared/ui/shadcn/input'
 import { Label } from '../../shared/ui/shadcn/label'
 import {
@@ -197,6 +208,57 @@ const watcherApplications = [
   },
 ]
 
+function slugifyLabel(label: string) {
+  return label
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
+}
+
+const domainLabelByValue: Record<string, string> = {
+  ACTIVE: 'Actif',
+  ALERT: 'Alerte',
+  APPROVED: 'Approuve',
+  ARCHIVED: 'Archive',
+  ARCHIVED_PUBLICATION: 'Publication archivee',
+  AUTHORITY_STATEMENT: 'Declaration officielle',
+  CITIZEN_REPORT: 'Signalement citoyen',
+  CONTEXT_COLLAPSE: 'Contexte detourne',
+  CORRECTION: 'Correctif',
+  DIRECTOR_INITIATED: 'Cree par la direction',
+  DIRECT_EVIDENCE: 'Preuve directe',
+  DISABLED: 'Desactive',
+  FABRICATED: 'Fabrique',
+  FALSE: 'Faux',
+  IMAGE: 'Image',
+  IMPOSTOR: 'Usurpation',
+  IN_PROGRESS: 'En enquete',
+  JOURNALIST_PROOF: 'Preuve journaliste',
+  MANIPULATED: 'Manipule',
+  MEDIA_CROSSCHECK: 'Recoupement media',
+  MISLEADING: 'Trompeur',
+  NEEDS_REVISION: 'A corriger',
+  OFFICIAL_DECREE: 'Decision officielle',
+  OPEN: 'Ouvert',
+  OTHER: 'Autre',
+  PENDING: 'En attente',
+  PENDING_REVIEW: 'Revue direction',
+  PUBLICATION: 'Publication',
+  PUBLISHED: 'Publie',
+  REJECTED: 'Rejete',
+  SATIRE: 'Satire',
+  TEXT: 'Texte',
+  TRUE: 'Vrai',
+  UNVERIFIABLE: 'Non verifiable',
+  VIDEO: 'Video',
+}
+
+function domainLabel(value: string) {
+  return domainLabelByValue[value] ?? value
+}
+
 function StatusBadge({
   status,
   className,
@@ -204,24 +266,10 @@ function StatusBadge({
   status: string
   className?: string
 }) {
-  const labelByStatus: Record<string, string> = {
-    ACTIVE: 'Actif',
-    APPROVED: 'Approuve',
-    ARCHIVED: 'Archive',
-    DISABLED: 'Desactive',
-    IN_PROGRESS: 'En enquete',
-    NEEDS_REVISION: 'A corriger',
-    OPEN: 'Ouvert',
-    PENDING: 'En attente',
-    PENDING_REVIEW: 'Revue direction',
-    PUBLISHED: 'Publie',
-    REJECTED: 'Rejete',
-  }
-
   if (status === 'PUBLISHED' || status === 'APPROVED' || status === 'ACTIVE') {
     return (
       <Badge className={cn('h-6 rounded-full px-2.5', className)}>
-        {labelByStatus[status]}
+        {domainLabel(status)}
       </Badge>
     )
   }
@@ -236,7 +284,7 @@ function StatusBadge({
         variant="secondary"
         className={cn('h-6 rounded-full px-2.5', className)}
       >
-        {labelByStatus[status]}
+        {domainLabel(status)}
       </Badge>
     )
   }
@@ -247,7 +295,7 @@ function StatusBadge({
         variant="destructive"
         className={cn('h-6 rounded-full px-2.5', className)}
       >
-        {labelByStatus[status]}
+        {domainLabel(status)}
       </Badge>
     )
   }
@@ -257,8 +305,140 @@ function StatusBadge({
       variant="outline"
       className={cn('h-6 rounded-full px-2.5', className)}
     >
-      {labelByStatus[status] ?? status}
+      {domainLabel(status)}
     </Badge>
+  )
+}
+
+function ArbitrationReasonDialog({
+  action,
+  children,
+  tone = 'default',
+}: {
+  action: string
+  children: ReactNode
+  tone?: 'default' | 'destructive'
+}) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{action}</DialogTitle>
+          <DialogDescription>
+            Indique la raison editoriale avant de poursuivre cette action.
+          </DialogDescription>
+        </DialogHeader>
+        <Label className="grid gap-2">
+          Raison
+          <Textarea
+            required
+            placeholder="Explique la raison de cette decision..."
+          />
+        </Label>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Annuler</Button>
+          </DialogClose>
+          <Button variant={tone === 'destructive' ? 'destructive' : 'default'}>
+            Confirmer
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+function PublishInvestigationDialog({ children }: { children: ReactNode }) {
+  const [withEvidence, setWithEvidence] = useState(false)
+
+  return (
+    <Dialog
+      onOpenChange={(open) => {
+        if (!open) setWithEvidence(false)
+      }}
+    >
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Publier le dossier</DialogTitle>
+          <DialogDescription>
+            Voulez-vous ajouter des preuves supplementaires pour renforcer la
+            publication future ?
+          </DialogDescription>
+        </DialogHeader>
+
+        {withEvidence ? (
+          <div className="grid gap-4">
+            <div className="rounded-lg border p-4">
+              <p className="font-medium">Lien verifie</p>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Ces liens seront rattaches a la publication creee par
+                l'approbation.
+              </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <Label className="grid gap-2 sm:col-span-2">
+                  URL
+                  <Input placeholder="https://source-officielle.example" />
+                </Label>
+                <Label className="grid gap-2">
+                  Source d'autorite
+                  <Input placeholder="Nom de la source" />
+                </Label>
+                <Label className="grid gap-2">
+                  Type de source
+                  <Input placeholder="Declaration officielle" />
+                </Label>
+              </div>
+            </div>
+
+            <div className="rounded-lg border p-4">
+              <p className="font-medium">Media verifie</p>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Le backend attend une URL, un type de media et, si utile, une
+                source d'autorite.
+              </p>
+              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                <Label className="grid gap-2 sm:col-span-2">
+                  URL du media
+                  <Input placeholder="https://source-officielle.example/preuve.jpg" />
+                </Label>
+                <Label className="grid gap-2">
+                  Type de media
+                  <Input placeholder="Image, video, document..." />
+                </Label>
+                <Label className="grid gap-2">
+                  Source rattachee
+                  <Input placeholder="Archive officielle" />
+                </Label>
+              </div>
+            </div>
+          </div>
+        ) : null}
+
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Annuler</Button>
+          </DialogClose>
+          {withEvidence ? (
+            <Button>
+              <BadgeCheck />
+              Publier avec preuves
+            </Button>
+          ) : (
+            <>
+              <Button variant="outline" onClick={() => setWithEvidence(true)}>
+                Oui, ajouter des preuves
+              </Button>
+              <Button>
+                <BadgeCheck />
+                Non, publier
+              </Button>
+            </>
+          )}
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 
@@ -369,7 +549,7 @@ export function DirectorHomePage() {
               {investigations.map((item) => (
                 <TableRow key={item.title}>
                   <TableCell className="font-medium">{item.title}</TableCell>
-                  <TableCell>{item.verdict}</TableCell>
+                  <TableCell>{domainLabel(item.verdict)}</TableCell>
                   <TableCell>
                     <StatusBadge status={item.status} />
                   </TableCell>
@@ -532,7 +712,7 @@ export function WatcherWorkspacePage() {
               <div key={item.title} className="rounded-lg border p-4">
                 <div className="flex items-center justify-between gap-3">
                   <p className="font-medium">{item.title}</p>
-                  <Badge variant="outline">{item.category}</Badge>
+                  <Badge variant="outline">{domainLabel(item.category)}</Badge>
                 </div>
                 <p className="text-muted-foreground mt-2 text-sm">
                   Ajouter media, contexte terrain et justification.
@@ -708,33 +888,36 @@ function InboxList(props: {
       </CardHeader>
       <CardContent className="grid gap-3">
         {rows.map((item) => {
-          const investigationId = item.theme
-            .toLowerCase()
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/[^a-z0-9]+/g, '-')
-            .replace(/^-|-$/g, '')
+          const investigationId = slugifyLabel(item.theme)
 
           return (
             <div
               key={item.theme}
-              className="hover:bg-muted/30 focus-within:ring-ring relative grid gap-3 rounded-lg border p-4 transition-colors focus-within:ring-2 md:grid-cols-[1fr_auto]"
+              className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
             >
-              <Link
-                to="/investigations/$investigationId"
-                params={{ investigationId }}
-                aria-label={`Ouvrir le detail de ${item.theme}`}
-                className="absolute inset-0 rounded-lg outline-none"
-              />
-              <div className="pointer-events-none">
+              <div>
                 <p className="font-medium">{item.theme}</p>
                 <p className="text-muted-foreground text-sm">
                   {item.origin} / {item.owner}
                 </p>
                 <p className="mt-3 text-sm">{item.description}</p>
               </div>
-              <div className="relative z-10 flex flex-wrap items-center gap-2 self-start justify-self-start md:justify-self-end">
+              <div className="flex flex-wrap items-center gap-2 self-start justify-self-start md:justify-self-end">
                 <StatusBadge status={item.status} />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-foreground hover:bg-muted size-8 rounded-full transition-colors"
+                  asChild
+                >
+                  <Link
+                    to="/investigations/$investigationId"
+                    params={{ investigationId }}
+                    aria-label={`Voir le detail de ${item.theme}`}
+                  >
+                    <ExternalLink />
+                  </Link>
+                </Button>
                 {props.actor === 'director' ? (
                   <Button
                     size="sm"
@@ -852,64 +1035,308 @@ export function InvestigationDetailWorkspacePage({
 }: {
   investigationId?: string
 }) {
+  const dossier = {
+    id: investigationId ?? 'selection courante',
+    title: 'Video de checkpoint sortie de contexte',
+    subject: 'Verifier le lieu, la date et l unite presente dans la sequence.',
+    journalist: 'Maimouna Traore',
+    status: 'PENDING_REVIEW',
+    category: 'CONTEXT_COLLAPSE',
+    verdict: 'MISLEADING',
+    attempts: 1,
+    updatedAt: '16 mai 2026, 18:40',
+    notes:
+      'La sequence est authentique mais ancienne. Elle est republiee comme si elle documentait la situation actuelle.',
+  }
+
+  const sourceMedia = [
+    {
+      title: 'Video initiale recue depuis le signalement citoyen',
+      type: 'VIDEO',
+      origin: 'CITIZEN_REPORT',
+      reliability: 'MISLEADING',
+      category: 'CONTEXT_COLLAPSE',
+      justification:
+        'Les uniformes et le decor correspondent a une patrouille archivee, pas a l evenement actuel.',
+    },
+    {
+      title: 'Capture publiee par la direction',
+      type: 'IMAGE',
+      origin: 'DIRECTOR_INITIATED',
+      reliability: 'UNVERIFIABLE',
+      category: 'OTHER',
+      justification:
+        'La capture seule ne permet pas d etablir la date ni le lieu.',
+    },
+  ]
+
+  const authoritySources = [
+    {
+      name: 'Archive video originale',
+      type: 'MEDIA_CROSSCHECK',
+      detail: 'Publication source retrouvee, datee du 12 fevrier 2022.',
+    },
+    {
+      name: 'Communique local',
+      type: 'AUTHORITY_STATEMENT',
+      detail:
+        'La prefecture confirme qu aucun incident similaire n est en cours.',
+    },
+  ]
+
+  const watcherEvidence = [
+    {
+      title: 'Comparaison du decor',
+      watcher: 'Awa Diarra',
+      media: '2 images',
+      reliability: 'TRUE',
+      note: 'Le panneau visible dans la video correspond a l ancien checkpoint.',
+    },
+    {
+      title: 'Recherche de publication anterieure',
+      watcher: 'Malik Sissoko',
+      media: '1 lien',
+      reliability: 'TRUE',
+      note: 'Le meme extrait circule deja dans une archive de 2022.',
+    },
+  ]
+
+  const timeline = [
+    'Sujet cree depuis un signalement citoyen',
+    'Journaliste assigne et medias classes',
+    'Sources d autorite rattachees',
+    'Dossier soumis a revue direction',
+  ]
+
   return (
     <AppLayout actor="director" page="investigations">
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Validation editoriale</CardTitle>
-            <CardDescription>
-              Dossier: {investigationId ?? 'selection courante'}
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            {[
-              'Verdict brouillon renseigne',
-              'Sources autorite rattachees',
-              'Medias classes et justifies',
-              'Preuves vigies relues',
-            ].map((item) => (
-              <div
-                key={item}
-                className="flex items-center gap-3 rounded-lg border p-3"
-              >
-                <CheckCircle2 className="text-primary size-4" />
-                <span className="text-sm font-medium">{item}</span>
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="grid gap-6">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <CardTitle>{dossier.title}</CardTitle>
+                  <CardDescription className="mt-2 max-w-2xl">
+                    {dossier.subject}
+                  </CardDescription>
+                </div>
+                <StatusBadge status={dossier.status} />
               </div>
-            ))}
-          </CardContent>
-        </Card>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              <div className="bg-muted/40 grid gap-3 rounded-lg border p-3">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <p className="font-medium">Arbitrage direction</p>
+                    <p className="text-muted-foreground text-sm">
+                      Publier, renvoyer en correction, archiver ou annuler ce
+                      dossier.
+                    </p>
+                  </div>
+                  <PublishInvestigationDialog>
+                    <Button size="sm">
+                      <BadgeCheck />
+                      Publier
+                    </Button>
+                  </PublishInvestigationDialog>
+                </div>
+                <div
+                  className={cn(
+                    'grid gap-2',
+                    dossier.verdict === 'MISLEADING'
+                      ? 'sm:grid-cols-4'
+                      : 'sm:grid-cols-3',
+                  )}
+                >
+                  <ArbitrationReasonDialog action="Demander une correction">
+                    <Button variant="outline" size="sm">
+                      <PenLine />
+                      Correction
+                    </Button>
+                  </ArbitrationReasonDialog>
+                  {dossier.verdict === 'MISLEADING' ? (
+                    <ArbitrationReasonDialog action="Archiver le dossier">
+                      <Button variant="outline" size="sm">
+                        <Archive />
+                        Archiver
+                      </Button>
+                    </ArbitrationReasonDialog>
+                  ) : null}
+                  <ArbitrationReasonDialog
+                    action="Annuler le dossier"
+                    tone="destructive"
+                  >
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="text-destructive"
+                    >
+                      <Ban />
+                      Annuler
+                    </Button>
+                  </ArbitrationReasonDialog>
+                  <ArbitrationReasonDialog
+                    action="Rejeter le dossier"
+                    tone="destructive"
+                  >
+                    <Button variant="destructive" size="sm">
+                      <XCircle />
+                      Rejeter
+                    </Button>
+                  </ArbitrationReasonDialog>
+                </div>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-lg border p-3">
+                  <p className="text-muted-foreground text-xs font-medium uppercase">
+                    Verdict brouillon
+                  </p>
+                  <p className="mt-1 font-medium">
+                    {domainLabel(dossier.verdict)}
+                  </p>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <p className="text-muted-foreground text-xs font-medium uppercase">
+                    Categorie
+                  </p>
+                  <p className="mt-1 font-medium">
+                    {domainLabel(dossier.category)}
+                  </p>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <p className="text-muted-foreground text-xs font-medium uppercase">
+                    Journaliste
+                  </p>
+                  <p className="mt-1 font-medium">{dossier.journalist}</p>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <p className="text-muted-foreground text-xs font-medium uppercase">
+                    Revision
+                  </p>
+                  <p className="mt-1 font-medium">
+                    Tentative {dossier.attempts}
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="font-medium">Notes d enquete</p>
+                <p className="text-muted-foreground mt-2 text-sm">
+                  {dossier.notes}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Decision</CardTitle>
-            <CardDescription>
-              Le rejet demande un commentaire obligatoire dans le workflow.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            <Button>
-              <BadgeCheck />
-              Publier
-            </Button>
-            <Button variant="outline">
-              <PenLine />
-              Demander correction
-            </Button>
-            <Button variant="outline">
-              <Archive />
-              Archiver
-            </Button>
-            <Button variant="outline" className="text-destructive">
-              <Ban />
-              Annuler
-            </Button>
-            <Button variant="destructive">
-              <XCircle />
-              Rejeter
-            </Button>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Medias analyses</CardTitle>
+              <CardDescription>
+                Medias issus du signalement, de la direction ou du journaliste.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              {sourceMedia.map((media) => (
+                <div key={media.title} className="rounded-lg border p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="font-medium">{media.title}</p>
+                      <p className="text-muted-foreground text-sm">
+                        {domainLabel(media.origin)} / {domainLabel(media.type)}
+                      </p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge variant="secondary">
+                        {domainLabel(media.reliability)}
+                      </Badge>
+                      <Badge variant="outline">
+                        {domainLabel(media.category)}
+                      </Badge>
+                    </div>
+                  </div>
+                  <p className="text-muted-foreground mt-3 text-sm">
+                    {media.justification}
+                  </p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Contributions vigies</CardTitle>
+              <CardDescription>
+                Preuves envoyees par les vigies et relues avant arbitrage.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              {watcherEvidence.map((evidence) => (
+                <div key={evidence.title} className="rounded-lg border p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="font-medium">{evidence.title}</p>
+                      <p className="text-muted-foreground text-sm">
+                        {evidence.watcher} / {evidence.media}
+                      </p>
+                    </div>
+                    <Badge variant="secondary">
+                      {domainLabel(evidence.reliability)}
+                    </Badge>
+                  </div>
+                  <p className="text-muted-foreground mt-3 text-sm">
+                    {evidence.note}
+                  </p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid content-start gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Sources d autorite</CardTitle>
+              <CardDescription>
+                Sources rattachees aux preuves journalistiques.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              {authoritySources.map((source) => (
+                <div key={source.name} className="rounded-lg border p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium">{source.name}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {domainLabel(source.type)}
+                      </p>
+                    </div>
+                    <ShieldCheck className="text-primary size-4" />
+                  </div>
+                  <p className="text-muted-foreground mt-2 text-sm">
+                    {source.detail}
+                  </p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Progression</CardTitle>
+              <CardDescription>
+                Derniere mise a jour: {dossier.updatedAt}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              {timeline.map((item) => (
+                <div key={item} className="flex items-center gap-3">
+                  <CheckCircle2 className="text-primary size-4" />
+                  <span className="text-sm">{item}</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </AppLayout>
   )
@@ -937,23 +1364,129 @@ export function PublicationsWorkspacePage() {
           </CardAction>
         </CardHeader>
         <CardContent className="grid gap-3">
-          {publications.map((item) => (
-            <div key={item.title} className="rounded-lg border p-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <p className="font-medium">{item.title}</p>
-                <Badge
-                  variant={item.type === 'Correctif' ? 'secondary' : 'outline'}
-                >
-                  {item.type}
-                </Badge>
+          {publications.map((item) => {
+            const publicationId = slugifyLabel(item.title)
+
+            return (
+              <div
+                key={item.title}
+                className="grid gap-3 rounded-lg border p-4 sm:grid-cols-[1fr_auto] sm:items-start"
+              >
+                <div className="min-w-0">
+                  <p className="font-medium">{item.title}</p>
+                  <p className="text-muted-foreground mt-2 text-sm">
+                    Verdict: {domainLabel(item.verdict)} / {item.evidence}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2 sm:justify-end">
+                  <Badge
+                    variant={
+                      item.type === 'Correctif' ? 'secondary' : 'outline'
+                    }
+                  >
+                    {domainLabel(item.type)}
+                  </Badge>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-foreground hover:bg-muted size-8 rounded-full transition-colors"
+                    asChild
+                  >
+                    <Link
+                      to="/publications/$publicationId"
+                      params={{ publicationId }}
+                      aria-label={`Voir le detail de ${item.title}`}
+                    >
+                      <ExternalLink />
+                    </Link>
+                  </Button>
+                </div>
               </div>
-              <p className="text-muted-foreground mt-2 text-sm">
-                Verdict: {item.verdict} / {item.evidence}
-              </p>
-            </div>
-          ))}
+            )
+          })}
         </CardContent>
       </Card>
+    </AppLayout>
+  )
+}
+
+export function PublicationDetailWorkspacePage({
+  publicationId,
+}: {
+  publicationId?: string
+}) {
+  const publication =
+    publications.find((item) => slugifyLabel(item.title) === publicationId) ??
+    publications[0]
+
+  return (
+    <AppLayout actor="director" page="publications">
+      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+        <Card>
+          <CardHeader>
+            <CardTitle>{publication.title}</CardTitle>
+            <CardDescription>
+              Verdict final, preuves conservees et type de publication.
+            </CardDescription>
+            <CardAction>
+              <Badge
+                variant={
+                  publication.type === 'Correctif' ? 'secondary' : 'outline'
+                }
+              >
+                {domainLabel(publication.type)}
+              </Badge>
+            </CardAction>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2">
+              <div>
+                <p className="text-muted-foreground text-xs font-medium uppercase">
+                  Verdict
+                </p>
+                <p className="mt-1 font-medium">
+                  {domainLabel(publication.verdict)}
+                </p>
+              </div>
+              <div>
+                <p className="text-muted-foreground text-xs font-medium uppercase">
+                  Preuves
+                </p>
+                <p className="mt-1 font-medium">{publication.evidence}</p>
+              </div>
+            </div>
+            <div className="rounded-lg border p-4">
+              <p className="font-medium">Trace editoriale</p>
+              <p className="text-muted-foreground mt-2 text-sm">
+                La publication garde le verdict, les sources utilisees et les
+                corrections rattachees pour rester consultable par la redaction.
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Actions</CardTitle>
+            <CardDescription>
+              Corriger la publication sans modifier le verdict original.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3">
+            <Button asChild>
+              <Link
+                to="/publications/corrections"
+                search={{ publicationId: publicationId ?? undefined }}
+              >
+                <RotateCcw />
+                Creer un correctif
+              </Link>
+            </Button>
+            <Button variant="outline" asChild>
+              <Link to="/publications/list">Retour aux publications</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </AppLayout>
   )
 }
@@ -1230,7 +1763,7 @@ export function NotificationsWorkspacePage() {
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-semibold">{item.title}</p>
-                    <Badge variant="secondary">{item.type}</Badge>
+                    <Badge variant="secondary">{domainLabel(item.type)}</Badge>
                   </div>
                   <p className="text-muted-foreground mt-1 text-sm">
                     {item.body}

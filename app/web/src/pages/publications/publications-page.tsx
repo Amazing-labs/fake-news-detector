@@ -1,5 +1,6 @@
 import {
   PublicationCorrectionsWorkspacePage,
+  PublicationDetailWorkspacePage,
   PublicationsWorkspacePage,
 } from '../verifact-design/verifact-design-page'
 
@@ -14,4 +15,8 @@ export function PublicationsListPage() {
 export function PublicationCorrectionsPage(_props: { publicationId?: string }) {
   void _props
   return <PublicationCorrectionsWorkspacePage />
+}
+
+export function PublicationDetailPage(props: { publicationId: string }) {
+  return <PublicationDetailWorkspacePage publicationId={props.publicationId} />
 }
