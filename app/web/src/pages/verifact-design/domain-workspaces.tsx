@@ -21,7 +21,13 @@ import {
   Users,
   XCircle,
 } from 'lucide-react'
-import { useState, type ComponentType, type ReactNode } from 'react'
+import {
+  useRef,
+  useState,
+  type ComponentType,
+  type DragEvent,
+  type ReactNode,
+} from 'react'
 import { cn } from '../../shared/lib/utils'
 import { Badge } from '../../shared/ui/shadcn/badge'
 import { Button } from '../../shared/ui/shadcn/button'
@@ -468,6 +474,91 @@ function StatCard(props: {
   )
 }
 
+function MediaDropzone() {
+  const inputRef = useRef<HTMLInputElement>(null)
+  const [isDragging, setIsDragging] = useState(false)
+  const [files, setFiles] = useState<File[]>([])
+
+  const addFiles = (fileList: FileList | null) => {
+    if (!fileList?.length) return
+    setFiles((currentFiles) => [...currentFiles, ...Array.from(fileList)])
+    if (inputRef.current) inputRef.current.value = ''
+  }
+
+  const handleDrop = (event: DragEvent<HTMLLabelElement>) => {
+    event.preventDefault()
+    setIsDragging(false)
+    addFiles(event.dataTransfer.files)
+  }
+
+  return (
+    <div className="grid gap-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium">Medias</p>
+          <p className="text-muted-foreground text-sm">
+            Images, videos, audio, PDF ou documents utiles au desk.
+          </p>
+        </div>
+        {files.length ? (
+          <Badge variant="secondary" className="shrink-0 rounded-full">
+            {files.length} fichier{files.length > 1 ? 's' : ''}
+          </Badge>
+        ) : null}
+      </div>
+
+      <Label
+        htmlFor="director-subject-media"
+        onDragEnter={(event) => {
+          event.preventDefault()
+          setIsDragging(true)
+        }}
+        onDragOver={(event) => {
+          event.preventDefault()
+          setIsDragging(true)
+        }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={handleDrop}
+        className={cn(
+          'border-border bg-background/40 hover:bg-muted/40 flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 py-7 text-center transition-colors',
+          isDragging && 'border-primary bg-primary/10',
+        )}
+      >
+        <FilePlus2 className="text-muted-foreground size-6" />
+        <span className="mt-3 text-sm font-medium">Glisse les medias ici</span>
+        <span className="text-muted-foreground mt-1 text-sm">
+          ou clique pour les selectionner
+        </span>
+        <Input
+          ref={inputRef}
+          id="director-subject-media"
+          type="file"
+          multiple
+          accept="image/*,video/*,audio/*,application/pdf,text/plain"
+          className="sr-only"
+          onChange={(event) => addFiles(event.target.files)}
+        />
+      </Label>
+
+      {files.length ? (
+        <div className="grid gap-2">
+          {files.map((file, index) => (
+            <div
+              key={`${file.name}-${file.size}-${index}`}
+              className="bg-muted/30 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm"
+            >
+              <span className="truncate">{file.name}</span>
+              <span className="text-muted-foreground shrink-0">
+                {Math.max(1, Math.round(file.size / 1024))} Ko
+              </span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  )
+}
+
 export function RoleAwareDashboardPage() {
   const { actor } = useResolvedActor('guest')
 
@@ -522,15 +613,6 @@ export function DirectorHomePage() {
               <Link to="/watcher-applications">
                 <UserCheck />
                 Candidatures
-              </Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <Link
-                to="/publications/corrections"
-                search={{ publicationId: undefined }}
-              >
-                <RotateCcw />
-                Correctif
               </Link>
             </Button>
           </CardAction>
@@ -836,7 +918,7 @@ export function InboxCreateWorkspacePage() {
   return (
     <AppLayout actor="director" page="subjects">
       {actor === 'director' ? (
-        <div className="grid gap-6 xl:grid-cols-[0.85fr_1.15fr]">
+        <div className="grid gap-6">
           <Card>
             <CardHeader>
               <CardTitle>Nouveau sujet direction</CardTitle>
@@ -853,10 +935,10 @@ export function InboxCreateWorkspacePage() {
                 Contexte
                 <Textarea placeholder="Pourquoi le desk doit ouvrir ce sujet" />
               </Label>
+              <MediaDropzone />
               <Button className="w-fit">Creer le sujet</Button>
             </CardContent>
           </Card>
-          <InboxList filter="DIRECTOR_INITIATED" actor={actor} />
         </div>
       ) : (
         <InboxList filter="all" actor={actor} />
@@ -919,14 +1001,41 @@ function InboxList(props: {
                   </Link>
                 </Button>
                 {props.actor === 'director' ? (
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="text-muted-foreground hover:text-destructive h-7 px-2"
-                  >
-                    <Trash2 />
-                    Supprimer
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-muted-foreground hover:text-destructive h-7 px-2"
+                      >
+                        <Trash2 />
+                        Supprimer
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Supprimer le sujet</DialogTitle>
+                        <DialogDescription>
+                          Voulez-vous vraiment supprimer ce sujet ?
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="rounded-lg border p-4">
+                        <p className="font-medium">{item.theme}</p>
+                        <p className="text-muted-foreground mt-1 text-sm">
+                          {item.description}
+                        </p>
+                      </div>
+                      <DialogFooter>
+                        <DialogClose asChild>
+                          <Button variant="outline">Annuler</Button>
+                        </DialogClose>
+                        <Button variant="destructive">
+                          <Trash2 />
+                          Supprimer
+                        </Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 ) : null}
                 {props.actor === 'journalist' && item.status === 'OPEN' ? (
                   <Button size="sm" variant="outline">
@@ -1351,17 +1460,6 @@ export function PublicationsWorkspacePage() {
           <CardDescription>
             Chaque publication conserve son verdict final et ses preuves.
           </CardDescription>
-          <CardAction>
-            <Button asChild>
-              <Link
-                to="/publications/corrections"
-                search={{ publicationId: undefined }}
-              >
-                <RotateCcw />
-                Creer un correctif
-              </Link>
-            </Button>
-          </CardAction>
         </CardHeader>
         <CardContent className="grid gap-3">
           {publications.map((item) => {
@@ -1386,6 +1484,15 @@ export function PublicationsWorkspacePage() {
                   >
                     {domainLabel(item.type)}
                   </Badge>
+                  <Button size="sm" variant="outline" asChild>
+                    <Link
+                      to="/publications/corrections"
+                      search={{ publicationId }}
+                    >
+                      <RotateCcw />
+                      Correctif
+                    </Link>
+                  </Button>
                   <Button
                     variant="ghost"
                     size="icon"
@@ -1491,26 +1598,52 @@ export function PublicationDetailWorkspacePage({
   )
 }
 
-export function PublicationCorrectionsWorkspacePage() {
+export function PublicationCorrectionsWorkspacePage({
+  publicationId,
+}: {
+  publicationId?: string
+}) {
+  const publication = publications.find(
+    (item) => slugifyLabel(item.title) === publicationId,
+  )
+
   return (
     <AppLayout actor="director" page="publications">
       <Card>
         <CardHeader>
           <CardTitle>Creer un correctif</CardTitle>
           <CardDescription>
-            Le correctif est rattache a une notification et une publication.
+            {publication
+              ? 'Le correctif sera rattache directement a cette publication.'
+              : 'Selectionne une publication depuis la liste pour creer un correctif.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          <Label className="grid gap-2">
-            Publication
-            <Input placeholder="Selectionner une publication" />
-          </Label>
+          {publication ? (
+            <div className="rounded-lg border p-4">
+              <p className="text-muted-foreground text-xs font-medium uppercase">
+                Publication cible
+              </p>
+              <p className="mt-1 font-medium">{publication.title}</p>
+              <p className="text-muted-foreground mt-2 text-sm">
+                Verdict: {domainLabel(publication.verdict)} /{' '}
+                {publication.evidence}
+              </p>
+            </div>
+          ) : (
+            <div className="rounded-lg border border-dashed p-4">
+              <p className="font-medium">Aucune publication selectionnee</p>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Retourne a la liste et utilise le bouton Correctif de la
+                publication concernee.
+              </p>
+            </div>
+          )}
           <Label className="grid gap-2">
             Correction
             <Textarea placeholder="Formuler le correctif a publier" />
           </Label>
-          <Button className="w-fit">
+          <Button className="w-fit" disabled={!publication}>
             <RotateCcw />
             Preparer le correctif
           </Button>
