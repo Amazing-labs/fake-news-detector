@@ -1,5 +1,7 @@
 import { VeriFactAuthPage } from './auth-dashboard'
 import {
+  CitizenDashboardPage,
+  CitizenReportCreateWorkspacePage,
   CitizenWorkspacePage,
   DirectorHomePage,
   GuestHomePage,
@@ -24,6 +26,8 @@ import { NotFoundPage } from './not-found-page'
 import { ProfileDashboard } from './profile-dashboard'
 
 export {
+  CitizenDashboardPage,
+  CitizenReportCreateWorkspacePage,
   CitizenWorkspacePage,
   DirectorHomePage,
   GuestHomePage,
@@ -51,7 +55,7 @@ export function VeriFactDashboardPage() {
 }
 
 export function VeriFactCitizenDashboardPage() {
-  return <CitizenWorkspacePage />
+  return <CitizenDashboardPage />
 }
 
 export function VeriFactWatcherDashboardPage() {

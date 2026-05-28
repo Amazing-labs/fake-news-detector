@@ -6,13 +6,17 @@ import {
   Ban,
   CheckCircle2,
   ClipboardCheck,
+  Download,
   ExternalLink,
   FilePlus2,
   FileSearch,
+  FileText,
   Gavel,
   Inbox,
+  Link2,
   Newspaper,
   PenLine,
+  Play,
   RotateCcw,
   ShieldCheck,
   Trash2,
@@ -162,18 +166,109 @@ const publications = [
     verdict: 'MISLEADING',
     type: 'Publication',
     evidence: '3 liens verifies',
+    summary:
+      "La sequence est authentique, mais elle ne documente pas l'evenement recent mentionne dans les publications virales. Le journaliste a retrouve la publication originale et recoupe la date avec des archives et des sources de contexte.",
+    verifiedLinks: [
+      {
+        label: 'Publication originale archivee',
+        url: 'https://example.org/archive/checkpoint-2022',
+        description: 'Archive de la sequence publiee en 2022.',
+      },
+      {
+        label: 'Contexte date par la redaction',
+        url: 'https://example.org/fact-check/checkpoint-context',
+        description: 'Chronologie utilisee pour verifier la date.',
+      },
+      {
+        label: 'Source locale recoupee',
+        url: 'https://example.org/source/checkpoint-location',
+        description: 'Element de contexte sur le lieu de la sequence.',
+      },
+    ],
+    finalDocuments: [
+      {
+        name: 'Note de verification finale.pdf',
+        type: 'PDF',
+        size: '248 Ko',
+        url: '#note-verification-finale',
+      },
+      {
+        name: 'Journal des sources.csv',
+        type: 'CSV',
+        size: '18 Ko',
+        url: '#journal-sources',
+      },
+    ],
+    verifiedMedia: [
+      {
+        name: 'Capture publication originale',
+        type: 'Image',
+        url: '#capture-publication-originale',
+        imageUrl:
+          'https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1200&q=80',
+        alt: 'Journal et notes de verification',
+      },
+      {
+        name: 'Extrait video compare',
+        type: 'Video',
+        url: '#extrait-video-compare',
+        posterUrl:
+          'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
+        videoUrl:
+          'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+      },
+    ],
   },
   {
     title: 'Correction sur le prix du mil',
     verdict: 'TRUE',
     type: 'Correctif',
     evidence: '1 source officielle',
+    summary:
+      'Le correctif confirme les chiffres officiels et remplace une estimation partagee sans source primaire.',
+    verifiedLinks: [
+      {
+        label: 'Releve officiel du marche',
+        url: 'https://example.org/source/prix-du-mil',
+        description: 'Source officielle utilisee pour corriger la publication.',
+      },
+    ],
+    finalDocuments: [
+      {
+        name: 'Correctif publie.pdf',
+        type: 'PDF',
+        size: '112 Ko',
+        url: '#correctif-publie',
+      },
+    ],
+    verifiedMedia: [
+      {
+        name: 'Photo du releve officiel',
+        type: 'Image',
+        url: '#photo-releve-officiel',
+        imageUrl:
+          'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1200&q=80',
+        alt: 'Documents administratifs verifies',
+      },
+    ],
   },
   {
     title: 'Archive: origine de la penurie non verifiable',
     verdict: 'UNVERIFIABLE',
     type: 'Archive',
     evidence: 'Dossier insuffisant',
+    summary:
+      "Les elements disponibles ne permettent pas d'attribuer l'origine de la penurie a une source fiable.",
+    verifiedLinks: [],
+    finalDocuments: [
+      {
+        name: 'Decision archivage.pdf',
+        type: 'PDF',
+        size: '96 Ko',
+        url: '#decision-archivage',
+      },
+    ],
+    verifiedMedia: [],
   },
 ]
 
@@ -474,7 +569,13 @@ function StatCard(props: {
   )
 }
 
-function MediaDropzone() {
+function MediaDropzone({
+  inputId = 'media-upload',
+  description = 'Images, videos, audio, PDF ou documents utiles au desk.',
+}: {
+  inputId?: string
+  description?: string
+}) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
   const [files, setFiles] = useState<File[]>([])
@@ -496,9 +597,7 @@ function MediaDropzone() {
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-sm font-medium">Medias</p>
-          <p className="text-muted-foreground text-sm">
-            Images, videos, audio, PDF ou documents utiles au desk.
-          </p>
+          <p className="text-muted-foreground text-sm">{description}</p>
         </div>
         {files.length ? (
           <Badge variant="secondary" className="shrink-0 rounded-full">
@@ -508,7 +607,7 @@ function MediaDropzone() {
       </div>
 
       <Label
-        htmlFor="director-subject-media"
+        htmlFor={inputId}
         onDragEnter={(event) => {
           event.preventDefault()
           setIsDragging(true)
@@ -531,7 +630,7 @@ function MediaDropzone() {
         </span>
         <Input
           ref={inputRef}
-          id="director-subject-media"
+          id={inputId}
           type="file"
           multiple
           accept="image/*,video/*,audio/*,application/pdf,text/plain"
@@ -565,7 +664,7 @@ export function RoleAwareDashboardPage() {
   if (actor === 'director') return <DirectorHomePage />
   if (actor === 'journalist') return <JournalistWorkspacePage />
   if (actor === 'watcher') return <WatcherWorkspacePage />
-  if (actor === 'citizen') return <CitizenWorkspacePage />
+  if (actor === 'citizen') return <CitizenDashboardPage />
 
   return <GuestHomePage />
 }
@@ -730,47 +829,159 @@ export function JournalistWorkspacePage() {
 export function CitizenWorkspacePage() {
   return (
     <AppLayout actor="citizen" page="reports">
-      <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+      <div className="grid gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Nouveau signalement</CardTitle>
+            <CardTitle>Mes signalements</CardTitle>
             <CardDescription>
-              Les signalements ouverts sont limites pour garder une file
-              lisible.
+              Suivre les rumeurs transmises au desk et leur etat editorial.
             </CardDescription>
+            <CardAction>
+              <Button asChild size="sm">
+                <Link to="/reports/create">
+                  <FilePlus2 />
+                  Nouveau signalement
+                </Link>
+              </Button>
+            </CardAction>
           </CardHeader>
-          <CardContent className="grid gap-4">
-            <Label className="grid gap-2">
-              Theme
-              <Input placeholder="Ex. sante, securite, economie" />
-            </Label>
-            <Label className="grid gap-2">
-              Rumeur a verifier
-              <Textarea placeholder="Decris la rumeur et le contexte connu" />
-            </Label>
-            <Button className="w-fit">Envoyer le signalement</Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Suivi</CardTitle>
-            <CardDescription>
-              Un signalement peut rester ouvert, etre archive ou devenir sujet.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {reports.slice(0, 2).map((item) => (
-              <div key={item.title} className="rounded-lg border p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-medium">{item.title}</p>
-                  <StatusBadge status={item.status} />
+          <CardContent className="grid gap-3">
+            {reports.slice(0, 3).map((item) => (
+              <div
+                key={item.title}
+                className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
+              >
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium">{item.title}</p>
+                    <StatusBadge status={item.status} />
+                  </div>
+                  <p className="text-muted-foreground mt-2 text-sm">
+                    {item.content}
+                  </p>
                 </div>
-                <p className="text-muted-foreground mt-2 text-sm">
-                  {item.content}
-                </p>
+                <Button size="sm" variant="outline" className="self-start">
+                  Voir le suivi
+                </Button>
               </div>
             ))}
+          </CardContent>
+        </Card>
+      </div>
+    </AppLayout>
+  )
+}
+
+export function CitizenReportCreateWorkspacePage() {
+  return (
+    <AppLayout actor="citizen" page="reports">
+      <Card>
+        <CardHeader>
+          <CardTitle>Nouveau signalement</CardTitle>
+          <CardDescription>
+            Decris la rumeur, ajoute les messages ou medias recus, puis envoie
+            le tout au desk.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <Label className="grid gap-2">
+            Theme
+            <Input placeholder="Ex. sante, securite, economie" />
+          </Label>
+          <Label className="grid gap-2">
+            Rumeur a verifier
+            <Textarea placeholder="Decris la rumeur et le contexte connu" />
+          </Label>
+          <Label className="grid gap-2">
+            Message recu
+            <Textarea placeholder="Colle ici le message, la publication ou le texte recu" />
+          </Label>
+          <MediaDropzone
+            inputId="citizen-report-media"
+            description="Images, captures d'ecran, videos, notes audio ou documents recus avec la rumeur."
+          />
+          <div className="flex flex-wrap gap-2">
+            <Button>Envoyer le signalement</Button>
+            <Button variant="outline" asChild>
+              <Link to="/reports">Retour aux signalements</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </AppLayout>
+  )
+}
+
+export function CitizenDashboardPage() {
+  return (
+    <AppLayout actor="citizen" page="dashboard">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <StatCard
+          title="Signalements actifs"
+          value="2"
+          hint="en suivi"
+          icon={FileSearch}
+        />
+        <StatCard
+          title="En attente de retour"
+          value="1"
+          hint="a clarifier"
+          icon={AlertTriangle}
+        />
+        <StatCard
+          title="Retours recus"
+          value="4"
+          hint="depuis la redaction"
+          icon={CheckCircle2}
+        />
+        <StatCard
+          title="Corrections utiles"
+          value="3"
+          hint="publiees"
+          icon={RotateCcw}
+        />
+      </div>
+
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <CardTitle>Retours publics</CardTitle>
+            <CardDescription>
+              Les publications et correctifs lies aux signalements verifies.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3">
+            {publications.slice(0, 3).map((item) => {
+              const publicationId = slugifyLabel(item.title)
+
+              return (
+                <div
+                  key={item.title}
+                  className="flex items-start justify-between gap-3 rounded-lg border p-4"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{item.title}</p>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                      Verdict: {domainLabel(item.verdict)}
+                    </p>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-foreground size-8 shrink-0 rounded-full"
+                    asChild
+                    aria-label={`Voir ${item.title}`}
+                  >
+                    <Link
+                      to="/publications/$publicationId"
+                      params={{ publicationId }}
+                    >
+                      <ExternalLink className="size-4" />
+                    </Link>
+                  </Button>
+                </div>
+              )
+            })}
           </CardContent>
         </Card>
       </div>
@@ -829,6 +1040,10 @@ export function WatcherWorkspacePage() {
 }
 
 export function ReportsWorkspacePage() {
+  const { actor } = useResolvedActor('director')
+
+  if (actor === 'citizen') return <CitizenWorkspacePage />
+
   return (
     <AppLayout actor="director" page="reports">
       <Card>
@@ -935,7 +1150,10 @@ export function InboxCreateWorkspacePage() {
                 Contexte
                 <Textarea placeholder="Pourquoi le desk doit ouvrir ce sujet" />
               </Label>
-              <MediaDropzone />
+              <MediaDropzone
+                inputId="director-subject-media"
+                description="Images, videos, audio, PDF ou documents utiles au desk."
+              />
               <Button className="w-fit">Creer le sujet</Button>
             </CardContent>
           </Card>
@@ -1525,15 +1743,24 @@ export function PublicationDetailWorkspacePage({
   const publication =
     publications.find((item) => slugifyLabel(item.title) === publicationId) ??
     publications[0]
+  const { actor } = useResolvedActor('director')
+  const canManagePublication = actor === 'director' || actor === 'admin'
 
   return (
-    <AppLayout actor="director" page="publications">
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+    <AppLayout actor={actor} page="publications">
+      <div
+        className={cn(
+          'grid gap-6',
+          canManagePublication && 'lg:grid-cols-[1fr_320px]',
+        )}
+      >
         <Card>
           <CardHeader>
             <CardTitle>{publication.title}</CardTitle>
             <CardDescription>
-              Verdict final, preuves conservees et type de publication.
+              {actor === 'citizen'
+                ? 'Synthese publique du verdict et des preuves disponibles.'
+                : 'Verdict final, preuves conservees et type de publication.'}
             </CardDescription>
             <CardAction>
               <Badge
@@ -1563,36 +1790,231 @@ export function PublicationDetailWorkspacePage({
               </div>
             </div>
             <div className="rounded-lg border p-4">
-              <p className="font-medium">Trace editoriale</p>
+              <p className="font-medium">
+                {actor === 'citizen'
+                  ? "Resume de l'enquete"
+                  : 'Trace editoriale'}
+              </p>
               <p className="text-muted-foreground mt-2 text-sm">
-                La publication garde le verdict, les sources utilisees et les
-                corrections rattachees pour rester consultable par la redaction.
+                {actor === 'citizen'
+                  ? publication.summary
+                  : 'La publication garde le verdict, les sources utilisees et les corrections rattachees pour rester consultable par la redaction.'}
               </p>
             </div>
+            {actor === 'citizen' ? (
+              <>
+                <div className="rounded-lg border p-4">
+                  <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="font-medium">Liens verifies</p>
+                      <p className="text-muted-foreground mt-1 text-sm">
+                        Ouvre les sources et compare-les avec le resume avant de
+                        partager la publication.
+                      </p>
+                    </div>
+                    <Badge variant="outline" className="w-fit">
+                      {publication.verifiedLinks.length} lien
+                      {publication.verifiedLinks.length > 1 ? 's' : ''}
+                    </Badge>
+                  </div>
+                  <div className="mt-4 grid gap-3">
+                    {publication.verifiedLinks.length ? (
+                      publication.verifiedLinks.map((source) => (
+                        <a
+                          key={source.label}
+                          href={source.url}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="hover:bg-muted/40 flex items-start gap-3 rounded-lg border p-3 transition-colors"
+                        >
+                          <Link2 className="text-muted-foreground mt-0.5 size-4 shrink-0" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block font-medium">
+                              {source.label}
+                            </span>
+                            <span className="text-muted-foreground mt-1 block text-sm">
+                              {source.description}
+                            </span>
+                          </span>
+                          <ExternalLink className="text-muted-foreground size-4 shrink-0" />
+                        </a>
+                      ))
+                    ) : (
+                      <p className="text-muted-foreground rounded-lg border border-dashed p-3 text-sm">
+                        Aucun lien public n'a ete attache a cette publication.
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="rounded-lg border p-4">
+                    <p className="font-medium">Documents finaux</p>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                      Pieces conservees avec la publication finale.
+                    </p>
+                    <div className="mt-4 grid gap-3">
+                      {publication.finalDocuments.map((document) => (
+                        <a
+                          key={document.name}
+                          href={document.url}
+                          download
+                          className="hover:bg-muted/40 flex items-center gap-3 rounded-lg border p-3 transition-colors"
+                        >
+                          <FileText className="text-muted-foreground size-4 shrink-0" />
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate font-medium">
+                              {document.name}
+                            </span>
+                            <span className="text-muted-foreground text-sm">
+                              {document.type} / {document.size}
+                            </span>
+                          </span>
+                          <Download className="text-muted-foreground size-4 shrink-0" />
+                        </a>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border p-4">
+                    <p className="font-medium">Medias verifies</p>
+                    <p className="text-muted-foreground mt-1 text-sm">
+                      Medias retenus ou compares pendant la verification.
+                    </p>
+                    <div className="mt-4 grid gap-3">
+                      {publication.verifiedMedia.length ? (
+                        publication.verifiedMedia.map((media) => {
+                          if (media.type === 'Image') {
+                            return (
+                              <figure
+                                key={media.name}
+                                className="bg-card overflow-hidden rounded-lg border"
+                              >
+                                <img
+                                  src={media.imageUrl}
+                                  alt={media.alt ?? media.name}
+                                  className="aspect-video w-full object-cover"
+                                  loading="lazy"
+                                />
+                                <figcaption className="flex items-center justify-between gap-3 p-3">
+                                  <span>
+                                    <span className="block font-medium">
+                                      {media.name}
+                                    </span>
+                                    <span className="text-muted-foreground text-sm">
+                                      Image de reference Unsplash
+                                    </span>
+                                  </span>
+                                  <a
+                                    href={media.url}
+                                    className="text-muted-foreground hover:text-foreground shrink-0"
+                                    aria-label={`Ouvrir ${media.name}`}
+                                  >
+                                    <ExternalLink className="size-4" />
+                                  </a>
+                                </figcaption>
+                              </figure>
+                            )
+                          }
+
+                          if (media.type === 'Video') {
+                            return (
+                              <div
+                                key={media.name}
+                                className="bg-card overflow-hidden rounded-lg border"
+                              >
+                                <video
+                                  controls
+                                  preload="metadata"
+                                  poster={media.posterUrl}
+                                  className="aspect-video w-full bg-black object-cover"
+                                >
+                                  <source
+                                    src={media.videoUrl}
+                                    type="video/mp4"
+                                  />
+                                  Ton navigateur ne peut pas lire cette video.
+                                </video>
+                                <div className="flex items-center justify-between gap-3 p-3">
+                                  <span>
+                                    <span className="block font-medium">
+                                      {media.name}
+                                    </span>
+                                    <span className="text-muted-foreground text-sm">
+                                      Extrait compare pendant la verification
+                                    </span>
+                                  </span>
+                                  <Play className="text-muted-foreground size-4 shrink-0" />
+                                </div>
+                              </div>
+                            )
+                          }
+
+                          return (
+                            <a
+                              key={media.name}
+                              href={media.url}
+                              className="hover:bg-muted/40 flex items-center gap-3 rounded-lg border p-3 transition-colors"
+                            >
+                              <FileSearch className="text-muted-foreground size-4 shrink-0" />
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate font-medium">
+                                  {media.name}
+                                </span>
+                                <span className="text-muted-foreground text-sm">
+                                  {media.type}
+                                </span>
+                              </span>
+                              <ExternalLink className="text-muted-foreground size-4 shrink-0" />
+                            </a>
+                          )
+                        })
+                      ) : (
+                        <p className="text-muted-foreground rounded-lg border border-dashed p-3 text-sm">
+                          Aucun media final n'a ete joint a cette publication.
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </>
+            ) : null}
+            {actor === 'citizen' ? (
+              <div className="rounded-lg border p-4">
+                <p className="font-medium">Pour aller plus loin</p>
+                <p className="text-muted-foreground mt-2 text-sm">
+                  Si une information semble incomplete, tu peux creer un nouveau
+                  signalement depuis la page Signalements. La redaction
+                  l'examinera comme une nouvelle alerte.
+                </p>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>Actions</CardTitle>
-            <CardDescription>
-              Corriger la publication sans modifier le verdict original.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            <Button asChild>
-              <Link
-                to="/publications/corrections"
-                search={{ publicationId: publicationId ?? undefined }}
-              >
-                <RotateCcw />
-                Creer un correctif
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to="/publications/list">Retour aux publications</Link>
-            </Button>
-          </CardContent>
-        </Card>
+        {canManagePublication ? (
+          <Card>
+            <CardHeader>
+              <CardTitle>Actions</CardTitle>
+              <CardDescription>
+                Corriger la publication sans modifier le verdict original.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              <Button asChild>
+                <Link
+                  to="/publications/corrections"
+                  search={{ publicationId: publicationId ?? undefined }}
+                >
+                  <RotateCcw />
+                  Creer un correctif
+                </Link>
+              </Button>
+              <Button variant="outline" asChild>
+                <Link to="/publications/list">Retour aux publications</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : null}
       </div>
     </AppLayout>
   )

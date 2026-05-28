@@ -22,6 +22,7 @@ import { Route as DashboardRouteImport } from './routes/dashboard'
 import { Route as CitizenRouteImport } from './routes/citizen'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ReportsCreateRouteImport } from './routes/reports.create'
 import { Route as PublicationsListRouteImport } from './routes/publications.list'
 import { Route as PublicationsCorrectionsRouteImport } from './routes/publications.corrections'
 import { Route as PublicationsPublicationIdRouteImport } from './routes/publications.$publicationId'
@@ -100,6 +101,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReportsCreateRoute = ReportsCreateRouteImport.update({
+  id: '/create',
+  path: '/create',
+  getParentRoute: () => ReportsRoute,
+} as any)
 const PublicationsListRoute = PublicationsListRouteImport.update({
   id: '/list',
   path: '/list',
@@ -176,7 +182,7 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/publications': typeof PublicationsRouteWithChildren
-  '/reports': typeof ReportsRoute
+  '/reports': typeof ReportsRouteWithChildren
   '/watcher-applications': typeof WatcherApplicationsRoute
   '/inbox-subjects/create': typeof InboxSubjectsCreateRoute
   '/inbox-subjects/global': typeof InboxSubjectsGlobalRoute
@@ -190,6 +196,7 @@ export interface FileRoutesByFullPath {
   '/publications/$publicationId': typeof PublicationsPublicationIdRoute
   '/publications/corrections': typeof PublicationsCorrectionsRoute
   '/publications/list': typeof PublicationsListRoute
+  '/reports/create': typeof ReportsCreateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -203,7 +210,7 @@ export interface FileRoutesByTo {
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/publications': typeof PublicationsRouteWithChildren
-  '/reports': typeof ReportsRoute
+  '/reports': typeof ReportsRouteWithChildren
   '/watcher-applications': typeof WatcherApplicationsRoute
   '/inbox-subjects/create': typeof InboxSubjectsCreateRoute
   '/inbox-subjects/global': typeof InboxSubjectsGlobalRoute
@@ -217,6 +224,7 @@ export interface FileRoutesByTo {
   '/publications/$publicationId': typeof PublicationsPublicationIdRoute
   '/publications/corrections': typeof PublicationsCorrectionsRoute
   '/publications/list': typeof PublicationsListRoute
+  '/reports/create': typeof ReportsCreateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -231,7 +239,7 @@ export interface FileRoutesById {
   '/notifications': typeof NotificationsRoute
   '/profile': typeof ProfileRoute
   '/publications': typeof PublicationsRouteWithChildren
-  '/reports': typeof ReportsRoute
+  '/reports': typeof ReportsRouteWithChildren
   '/watcher-applications': typeof WatcherApplicationsRoute
   '/inbox-subjects/create': typeof InboxSubjectsCreateRoute
   '/inbox-subjects/global': typeof InboxSubjectsGlobalRoute
@@ -245,6 +253,7 @@ export interface FileRoutesById {
   '/publications/$publicationId': typeof PublicationsPublicationIdRoute
   '/publications/corrections': typeof PublicationsCorrectionsRoute
   '/publications/list': typeof PublicationsListRoute
+  '/reports/create': typeof ReportsCreateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -274,6 +283,7 @@ export interface FileRouteTypes {
     | '/publications/$publicationId'
     | '/publications/corrections'
     | '/publications/list'
+    | '/reports/create'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -301,6 +311,7 @@ export interface FileRouteTypes {
     | '/publications/$publicationId'
     | '/publications/corrections'
     | '/publications/list'
+    | '/reports/create'
   id:
     | '__root__'
     | '/'
@@ -328,6 +339,7 @@ export interface FileRouteTypes {
     | '/publications/$publicationId'
     | '/publications/corrections'
     | '/publications/list'
+    | '/reports/create'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -342,7 +354,7 @@ export interface RootRouteChildren {
   NotificationsRoute: typeof NotificationsRoute
   ProfileRoute: typeof ProfileRoute
   PublicationsRoute: typeof PublicationsRouteWithChildren
-  ReportsRoute: typeof ReportsRoute
+  ReportsRoute: typeof ReportsRouteWithChildren
   WatcherApplicationsRoute: typeof WatcherApplicationsRoute
 }
 
@@ -438,6 +450,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/reports/create': {
+      id: '/reports/create'
+      path: '/create'
+      fullPath: '/reports/create'
+      preLoaderRoute: typeof ReportsCreateRouteImport
+      parentRoute: typeof ReportsRoute
     }
     '/publications/list': {
       id: '/publications/list'
@@ -590,6 +609,17 @@ const PublicationsRouteWithChildren = PublicationsRoute._addFileChildren(
   PublicationsRouteChildren,
 )
 
+interface ReportsRouteChildren {
+  ReportsCreateRoute: typeof ReportsCreateRoute
+}
+
+const ReportsRouteChildren: ReportsRouteChildren = {
+  ReportsCreateRoute: ReportsCreateRoute,
+}
+
+const ReportsRouteWithChildren =
+  ReportsRoute._addFileChildren(ReportsRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthRoute: AuthRoute,
@@ -602,7 +632,7 @@ const rootRouteChildren: RootRouteChildren = {
   NotificationsRoute: NotificationsRoute,
   ProfileRoute: ProfileRoute,
   PublicationsRoute: PublicationsRouteWithChildren,
-  ReportsRoute: ReportsRoute,
+  ReportsRoute: ReportsRouteWithChildren,
   WatcherApplicationsRoute: WatcherApplicationsRoute,
 }
 export const routeTree = rootRouteImport
