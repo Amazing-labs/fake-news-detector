@@ -88,14 +88,6 @@ export function VeriFactAuthPage(props: {
     actor: (typeof localAuthActors)[number]['actor'],
   ) {
     await signInLocalActor(actor)
-    await navigate({
-      to:
-        actor === 'director'
-          ? '/dashboard'
-          : actor === 'journalist'
-            ? '/journalist'
-            : '/citizen',
-    })
   }
 
   return (

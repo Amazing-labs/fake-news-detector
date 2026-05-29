@@ -104,9 +104,7 @@ function createLocalSession(user: {
 function getLocalSessionSnapshot() {
   if (typeof window === 'undefined') return null
 
-  const actor = window.localStorage.getItem(
-    localSessionStorageKey,
-  ) as LocalAuthActor | null
+  const actor = readLocalSessionActor()
 
   return actor ? (localSessions[actor] ?? null) : null
 }
@@ -130,20 +128,50 @@ function subscribeToLocalSession(onStoreChange: () => void) {
 }
 
 function emitLocalSessionChange() {
+  if (typeof window === 'undefined') return
+
   window.dispatchEvent(new Event(localSessionChangedEvent))
+}
+
+function readLocalSessionActor() {
+  try {
+    return window.localStorage.getItem(
+      localSessionStorageKey,
+    ) as LocalAuthActor | null
+  } catch {
+    return null
+  }
+}
+
+function writeLocalSessionActor(actor: LocalAuthActor) {
+  try {
+    window.localStorage.setItem(localSessionStorageKey, actor)
+    return true
+  } catch {
+    return false
+  }
+}
+
+function removeLocalSessionActor() {
+  try {
+    window.localStorage.removeItem(localSessionStorageKey)
+    return true
+  } catch {
+    return false
+  }
 }
 
 export async function signInLocalActor(actor: LocalAuthActor) {
   if (!isBetterAuthDisabled || typeof window === 'undefined') return
 
-  window.localStorage.setItem(localSessionStorageKey, actor)
-  emitLocalSessionChange()
+  if (writeLocalSessionActor(actor)) {
+    emitLocalSessionChange()
+  }
 }
 
 export async function signOutAppSession() {
   if (isBetterAuthDisabled) {
-    if (typeof window !== 'undefined') {
-      window.localStorage.removeItem(localSessionStorageKey)
+    if (typeof window !== 'undefined' && removeLocalSessionActor()) {
       emitLocalSessionChange()
     }
     return
