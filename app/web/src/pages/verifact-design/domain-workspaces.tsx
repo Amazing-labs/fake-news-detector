@@ -802,55 +802,59 @@ export function JournalistWorkspacePage() {
         </CardHeader>
         <CardContent className="grid gap-4">
           {currentInvestigation ? (
-            <div className="grid gap-5 rounded-lg border p-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-medium">{currentInvestigation.title}</p>
-                  <StatusBadge status={currentInvestigation.status} />
+            <div className="grid gap-4 rounded-lg border p-4">
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium">{currentInvestigation.title}</p>
+                    <StatusBadge status={currentInvestigation.status} />
+                  </div>
+                  <p className="text-muted-foreground mt-2 text-sm">
+                    {currentInvestigation.category} /{' '}
+                    {currentInvestigation.evidence}
+                  </p>
                 </div>
-                <p className="text-muted-foreground mt-2 text-sm">
-                  {currentInvestigation.category} /{' '}
-                  {currentInvestigation.evidence}
-                </p>
-                <div className="mt-4 grid gap-2 sm:grid-cols-3">
-                  <div className="bg-muted rounded-lg p-3">
-                    <p className="text-muted-foreground text-xs uppercase">
-                      Verdict brouillon
-                    </p>
-                    <p className="mt-1 font-medium">
-                      {domainLabel(currentInvestigation.verdict)}
-                    </p>
-                  </div>
-                  <div className="bg-muted rounded-lg p-3">
-                    <p className="text-muted-foreground text-xs uppercase">
-                      Sources
-                    </p>
-                    <p className="mt-1 font-medium">
-                      {currentInvestigation.evidence}
-                    </p>
-                  </div>
-                  <div className="bg-muted rounded-lg p-3">
-                    <p className="text-muted-foreground text-xs uppercase">
-                      Prochaine etape
-                    </p>
-                    <p className="mt-1 font-medium">Revue direction</p>
-                  </div>
+                <div className="grid gap-2 sm:grid-cols-2 lg:w-80">
+                  <Button size="sm" asChild>
+                    <Link
+                      to="/investigations/$investigationId"
+                      params={{
+                        investigationId: slugifyLabel(
+                          currentInvestigation.title,
+                        ),
+                      }}
+                    >
+                      Ouvrir le brouillon
+                    </Link>
+                  </Button>
+                  <Button size="sm" variant="outline">
+                    Soumettre en revue
+                  </Button>
                 </div>
               </div>
-              <div className="grid content-start gap-2">
-                <Button size="sm" asChild>
-                  <Link
-                    to="/investigations/$investigationId"
-                    params={{
-                      investigationId: slugifyLabel(currentInvestigation.title),
-                    }}
-                  >
-                    Ouvrir le brouillon
-                  </Link>
-                </Button>
-                <Button size="sm" variant="outline">
-                  Soumettre en revue
-                </Button>
+              <div className="grid gap-2 sm:grid-cols-3">
+                <div className="bg-muted rounded-lg p-3">
+                  <p className="text-muted-foreground text-xs uppercase">
+                    Verdict brouillon
+                  </p>
+                  <p className="mt-1 font-medium">
+                    {domainLabel(currentInvestigation.verdict)}
+                  </p>
+                </div>
+                <div className="bg-muted rounded-lg p-3">
+                  <p className="text-muted-foreground text-xs uppercase">
+                    Sources
+                  </p>
+                  <p className="mt-1 font-medium">
+                    {currentInvestigation.evidence}
+                  </p>
+                </div>
+                <div className="bg-muted rounded-lg p-3">
+                  <p className="text-muted-foreground text-xs uppercase">
+                    Prochaine etape
+                  </p>
+                  <p className="mt-1 font-medium">Revue direction</p>
+                </div>
               </div>
             </div>
           ) : null}
