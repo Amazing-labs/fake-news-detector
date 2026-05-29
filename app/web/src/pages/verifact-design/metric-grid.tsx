@@ -12,7 +12,7 @@ export function MetricGrid({ actor }: { actor: Actor }) {
   const metrics = useMemo(
     () => [
       ['Sujets ouverts', actor === 'guest' ? '24' : '18', Inbox, '+12%'],
-      ['A arbitrer', actor === 'director' ? '7' : '3', ShieldCheck, 'priorite'],
+      ['À arbitrer', actor === 'director' ? '7' : '3', ShieldCheck, 'priorité'],
       ['Preuves verifiees', '142', FileCheck2, '+28'],
       ['Notifications', '12', Bell, 'non lues'],
     ],

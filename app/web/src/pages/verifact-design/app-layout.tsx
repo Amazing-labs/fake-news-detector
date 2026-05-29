@@ -76,7 +76,9 @@ export function AppLayout(props: {
           </div>
           <div>
             <p className="text-sm font-semibold">Fake News Detector</p>
-            <p className="text-muted-foreground text-xs">Verification desk</p>
+            <p className="text-muted-foreground text-xs">
+              Desk de vérification
+            </p>
           </div>
         </div>
         <Separator />
@@ -117,7 +119,7 @@ export function AppLayout(props: {
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-medium">{displayName}</p>
               <p className="text-muted-foreground truncate text-xs">
-                {session ? roleLabel : 'Session invitee'}
+                {session ? roleLabel : 'Session invitée'}
               </p>
             </div>
           </div>
@@ -160,7 +162,7 @@ export function AppLayout(props: {
             <Button variant="outline" asChild>
               {session ? (
                 <button type="button" onClick={() => void handleSignOut()}>
-                  Deconnexion
+                  Déconnexion
                 </button>
               ) : (
                 <Link to="/auth" search={{ mode: 'sign-in' }}>

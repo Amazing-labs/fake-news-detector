@@ -23,7 +23,7 @@ export function CreateJournalistForm() {
 
   return (
     <SectionCard
-      title="Creer un journaliste"
+      title="Créer un journaliste"
       description="Formulaire directeur pour provisionner un acteur journaliste."
     >
       <form
@@ -39,7 +39,7 @@ export function CreateJournalistForm() {
           onChange={(event) => setName(event.target.value)}
         />
         <Input
-          label="Email"
+          label="E-mail"
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
@@ -48,10 +48,10 @@ export function CreateJournalistForm() {
           <Notice tone="error">{toApiErrorMessage(mutation.error)}</Notice>
         ) : null}
         {mutation.isSuccess ? (
-          <Notice tone="success">Journaliste cree.</Notice>
+          <Notice tone="success">Journaliste créé.</Notice>
         ) : null}
         <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Creation...' : 'Creer le journaliste'}
+          {mutation.isPending ? 'Création...' : 'Créer le journaliste'}
         </Button>
       </form>
     </SectionCard>

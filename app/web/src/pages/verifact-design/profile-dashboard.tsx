@@ -20,11 +20,11 @@ import type { Actor } from './types'
 import { WorkTable } from './work-table'
 
 const contributionScores: Record<Actor, { score: number; detail: string }> = {
-  guest: { score: 0, detail: 'session invitee' },
+  guest: { score: 0, detail: 'session invitée' },
   citizen: { score: 42, detail: 'signalements utiles' },
   watcher: { score: 68, detail: 'preuves relues' },
-  journalist: { score: 81, detail: 'dossiers documentes' },
-  director: { score: 89, detail: 'arbitrages finalises' },
+  journalist: { score: 81, detail: 'dossiers documentés' },
+  director: { score: 89, detail: 'arbitrages finalisés' },
   admin: { score: 74, detail: 'comptes maintenus' },
 }
 
@@ -32,7 +32,7 @@ export function ProfileDashboard() {
   const { session, actor } = useResolvedActor('journalist')
   const navigate = useNavigate()
   const displayName = session?.user.name ?? 'Utilisateur'
-  const email = session?.user.email ?? 'Session invitee'
+  const email = session?.user.email ?? 'Session invitée'
   const roleLabel = sessionRoleLabel(session, actor)
   const statusLabel = formatActorStatus(session?.user.actorStatus)
   const contribution = contributionScores[actor]
@@ -100,7 +100,7 @@ export function ProfileDashboard() {
               className="w-full"
               onClick={() => void handleSignOut()}
             >
-              Deconnexion
+              Déconnexion
             </Button>
           </CardContent>
         </Card>

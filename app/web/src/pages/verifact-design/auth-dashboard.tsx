@@ -85,17 +85,17 @@ export function VeriFactAuthPage(props: {
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-2xl">
             <ShieldCheck className="size-6" />
-            Espace verification
+            Espace vérification
           </CardTitle>
           <CardDescription>
-            Authentification shadcn, sobre et orientee dashboard.
+            Authentification shadcn, sobre et orientée dashboard.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           {isPending ? (
             <Alert>
               <Clock3 className="size-4" />
-              <AlertTitle>Verification de session</AlertTitle>
+              <AlertTitle>Vérification de session</AlertTitle>
               <AlertDescription>
                 Lecture de la session Better Auth.
               </AlertDescription>
@@ -106,7 +106,7 @@ export function VeriFactAuthPage(props: {
               <CheckCircle2 className="size-4" />
               <AlertTitle>Session active</AlertTitle>
               <AlertDescription>
-                Tu es connecte comme{' '}
+                Tu es connecté comme{' '}
                 {actorLabels[actorFromSession(session) ?? 'guest']}.
               </AlertDescription>
             </Alert>
@@ -115,7 +115,7 @@ export function VeriFactAuthPage(props: {
             <Sparkles className="size-4" />
             <AlertTitle>Dashboard-first</AlertTitle>
             <AlertDescription>
-              Apres connexion, chaque acteur arrive directement sur son espace
+              Après connexion, chaque acteur arrive directement sur son espace
               de travail.
             </AlertDescription>
           </Alert>
@@ -188,7 +188,7 @@ export function VeriFactAuthPage(props: {
                 {pending
                   ? 'En cours...'
                   : mode === 'sign-up'
-                    ? 'Creer un compte'
+                    ? 'Créer un compte'
                     : 'Connexion'}
               </Button>
             </form>

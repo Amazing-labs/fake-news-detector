@@ -47,7 +47,7 @@ export function SubmitWatcherEvidenceForm() {
   return (
     <SectionCard
       title="Soumettre une preuve vigie"
-      description="Formulaire citoyen pour enrichir une enquete ouverte."
+      description="Formulaire citoyen pour enrichir une enquête ouverte."
     >
       <form
         className="grid gap-3"
@@ -57,7 +57,7 @@ export function SubmitWatcherEvidenceForm() {
         }}
       >
         <Input
-          label="Reference enquete"
+          label="Référence enquête"
           value={investigationId}
           onChange={(event) => setInvestigationId(event.target.value)}
         />
@@ -72,17 +72,17 @@ export function SubmitWatcherEvidenceForm() {
           onChange={(event) => setContent(event.target.value)}
         />
         <MediaFields
-          title="Medias de la preuve"
+          title="Médias de la preuve"
           description="Ajoute les liens, images ou documents qui renforcent la verification."
           items={media}
           onChange={setMedia}
-          addLabel="Ajouter un media"
+          addLabel="Ajouter un média"
         />
         {mutation.isError ? (
           <Notice tone="error">{toApiErrorMessage(mutation.error)}</Notice>
         ) : null}
         {mutation.isSuccess ? (
-          <Notice tone="success">Preuve envoyee.</Notice>
+          <Notice tone="success">Preuve envoyée.</Notice>
         ) : null}
         <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending ? 'Envoi...' : 'Envoyer la preuve'}

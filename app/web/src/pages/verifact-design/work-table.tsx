@@ -67,12 +67,12 @@ const histories: Record<
       params: { reportId: slugifyLabel('Prix du mil') },
     },
     {
-      title: 'Alerte archivee',
+      title: 'Alerte archivée',
       context: 'Signalement citoyen',
       status: 'Archive',
       date: '12 mai 2026',
       to: '/reports/$reportId',
-      params: { reportId: slugifyLabel('Alerte archivee') },
+      params: { reportId: slugifyLabel('Alerte archivée') },
     },
   ],
   watcherReports: [
@@ -88,8 +88,8 @@ const histories: Record<
   watcher: [
     {
       title: 'Video de checkpoint',
-      context: 'Contribution media et contexte',
-      status: 'En enquete',
+      context: 'Contribution média et contexte',
+      status: 'En enquête',
       date: '17 mai 2026',
       to: '/investigations/$investigationId',
       params: { investigationId: slugifyLabel('Video de checkpoint') },
@@ -106,7 +106,7 @@ const histories: Record<
   journalist: [
     {
       title: 'Video de checkpoint',
-      context: 'Enquete documentee',
+      context: 'Enquête documentée',
       status: 'Revue direction',
       date: '17 mai 2026',
       to: '/investigations/$investigationId',
@@ -114,7 +114,7 @@ const histories: Record<
     },
     {
       title: 'Prix du mil',
-      context: 'Enquete a corriger',
+      context: 'Enquête à corriger',
       status: 'Relecture',
       date: '14 mai 2026',
       to: '/investigations/$investigationId',
@@ -134,7 +134,7 @@ const histories: Record<
     },
     {
       title: 'Correction sur le prix du mil',
-      context: 'Correctif publie',
+      context: 'Correctif publié',
       status: 'Corrigee',
       date: '16 mai 2026',
       to: '/publications/$publicationId',
@@ -168,7 +168,7 @@ function historyCopy(actor: Actor) {
 
   return {
     title: 'Historique des signalements',
-    description: 'Signalements envoyes au desk et suivi editorial associe.',
+    description: 'Signalements envoyés au desk et suivi éditorial associé.',
   }
 }
 
@@ -193,7 +193,7 @@ function HistoryCard(props: {
               <TableHead>Contexte</TableHead>
               <TableHead>Statut</TableHead>
               <TableHead>Date</TableHead>
-              <TableHead className="text-right">Details</TableHead>
+              <TableHead className="text-right">Détails</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -245,7 +245,7 @@ export function WorkTable(props: {
       <div className="grid gap-6">
         <HistoryCard
           title="Historique des signalements"
-          description="Signalements envoyes avant ou pendant le role vigie."
+          description="Signalements envoyés avant ou pendant le rôle vigie."
           items={histories.watcherReports}
         />
         <HistoryCard

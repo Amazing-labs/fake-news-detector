@@ -80,15 +80,15 @@ const inboxSubjects = [
     status: 'OPEN',
     owner: 'Non assigne',
     description:
-      "Rumeurs autour d'une origine djihadiste de la penurie de carburant.",
+      "Rumeurs autour d'une origine djihadiste de la pénurie de carburant.",
   },
   {
     theme: 'Video de checkpoint',
-    origin: 'Creation direction',
+    origin: 'Création direction',
     status: 'IN_PROGRESS',
     owner: 'Maimouna Traore',
     description:
-      "Verifier le lieu, la date et l'unite presente dans la sequence.",
+      "Vérifier le lieu, la date et l'unité présente dans la séquence.",
   },
   {
     theme: 'Prix du mil',
@@ -106,7 +106,7 @@ const reports = [
     status: 'OPEN',
     reporter: 'Malik Sissoko',
     content:
-      'Une rumeur locale relie la penurie a un groupe arme sans source directe.',
+      'Une rumeur locale relie la pénurie à un groupe armé sans source directe.',
   },
   {
     title: 'Prix du mil',
@@ -117,7 +117,7 @@ const reports = [
       'Les prix annonces sur les reseaux ne correspondent pas au releve officiel.',
   },
   {
-    title: 'Alerte archivee',
+    title: 'Alerte archivée',
     theme: 'Sante',
     status: 'ARCHIVED',
     reporter: 'Oumar Keita',
@@ -167,22 +167,22 @@ const publications = [
     type: 'Publication',
     evidence: '3 liens verifies',
     summary:
-      "La sequence est authentique, mais elle ne documente pas l'evenement recent mentionne dans les publications virales. Le journaliste a retrouve la publication originale et recoupe la date avec des archives et des sources de contexte.",
+      "La séquence est authentique, mais elle ne documente pas l'événement récent mentionné dans les publications virales. Le journaliste a retrouvé la publication originale et recoupé la date avec des archives et des sources de contexte.",
     verifiedLinks: [
       {
-        label: 'Publication originale archivee',
+        label: 'Publication originale archivée',
         url: 'https://example.org/archive/checkpoint-2022',
-        description: 'Archive de la sequence publiee en 2022.',
+        description: 'Archive de la séquence publiée en 2022.',
       },
       {
-        label: 'Contexte date par la redaction',
+        label: 'Contexte daté par la rédaction',
         url: 'https://example.org/fact-check/checkpoint-context',
         description: 'Chronologie utilisee pour verifier la date.',
       },
       {
-        label: 'Source locale recoupee',
+        label: 'Source locale recoupée',
         url: 'https://example.org/source/checkpoint-location',
-        description: 'Element de contexte sur le lieu de la sequence.',
+        description: 'Élément de contexte sur le lieu de la séquence.',
       },
     ],
     finalDocuments: [
@@ -235,7 +235,7 @@ const publications = [
     ],
     finalDocuments: [
       {
-        name: 'Correctif publie.pdf',
+        name: 'Correctif publié.pdf',
         type: 'PDF',
         size: '112 Ko',
         url: '#correctif-publie',
@@ -253,12 +253,12 @@ const publications = [
     ],
   },
   {
-    title: 'Archive: origine de la penurie non verifiable',
+    title: 'Archive : origine de la pénurie non vérifiable',
     verdict: 'UNVERIFIABLE',
     type: 'Archive',
     evidence: 'Dossier insuffisant',
     summary:
-      "Les elements disponibles ne permettent pas d'attribuer l'origine de la penurie a une source fiable.",
+      "Les éléments disponibles ne permettent pas d'attribuer l'origine de la pénurie à une source fiable.",
     verifiedLinks: [],
     finalDocuments: [
       {
@@ -277,7 +277,7 @@ const people = [
     name: 'Maimouna Traore',
     role: 'Journaliste',
     status: 'ACTIVE',
-    load: '1 enquete active',
+    load: '1 enquête active',
     type: 'journalist',
   },
   {
@@ -323,24 +323,24 @@ const domainLabelByValue: Record<string, string> = {
   ALERT: 'Alerte',
   APPROVED: 'Approuve',
   ARCHIVED: 'Archive',
-  ARCHIVED_PUBLICATION: 'Publication archivee',
+  ARCHIVED_PUBLICATION: 'Publication archivée',
   AUTHORITY_STATEMENT: 'Declaration officielle',
   CITIZEN_REPORT: 'Signalement citoyen',
   CONTEXT_COLLAPSE: 'Contexte detourne',
   CORRECTION: 'Correctif',
-  DIRECTOR_INITIATED: 'Cree par la direction',
+  DIRECTOR_INITIATED: 'Créé par la direction',
   DIRECT_EVIDENCE: 'Preuve directe',
-  DISABLED: 'Desactive',
+  DISABLED: 'Désactivé',
   FABRICATED: 'Fabrique',
   FALSE: 'Faux',
   IMAGE: 'Image',
   IMPOSTOR: 'Usurpation',
-  IN_PROGRESS: 'En enquete',
+  IN_PROGRESS: 'En enquête',
   JOURNALIST_PROOF: 'Preuve journaliste',
   MANIPULATED: 'Manipule',
-  MEDIA_CROSSCHECK: 'Recoupement media',
+  MEDIA_CROSSCHECK: 'Recoupement média',
   MISLEADING: 'Trompeur',
-  NEEDS_REVISION: 'A corriger',
+  NEEDS_REVISION: 'À corriger',
   OFFICIAL_DECREE: 'Decision officielle',
   OPEN: 'Ouvert',
   OTHER: 'Autre',
@@ -352,7 +352,7 @@ const domainLabelByValue: Record<string, string> = {
   SATIRE: 'Satire',
   TEXT: 'Texte',
   TRUE: 'Vrai',
-  UNVERIFIABLE: 'Non verifiable',
+  UNVERIFIABLE: 'Non vérifiable',
   VIDEO: 'Video',
 }
 
@@ -472,7 +472,7 @@ function PublishInvestigationDialog({ children }: { children: ReactNode }) {
         {withEvidence ? (
           <div className="grid gap-4">
             <div className="rounded-lg border p-4">
-              <p className="font-medium">Lien verifie</p>
+              <p className="font-medium">Lien vérifié</p>
               <p className="text-muted-foreground mt-1 text-sm">
                 Ces liens seront rattaches a la publication creee par
                 l'approbation.
@@ -483,7 +483,7 @@ function PublishInvestigationDialog({ children }: { children: ReactNode }) {
                   <Input placeholder="https://source-officielle.example" />
                 </Label>
                 <Label className="grid gap-2">
-                  Source d'autorite
+                  Source d'autorité
                   <Input placeholder="Nom de la source" />
                 </Label>
                 <Label className="grid gap-2">
@@ -494,18 +494,18 @@ function PublishInvestigationDialog({ children }: { children: ReactNode }) {
             </div>
 
             <div className="rounded-lg border p-4">
-              <p className="font-medium">Media verifie</p>
+              <p className="font-medium">Média vérifié</p>
               <p className="text-muted-foreground mt-1 text-sm">
-                Le backend attend une URL, un type de media et, si utile, une
-                source d'autorite.
+                Le backend attend une URL, un type de média et, si utile, une
+                source d'autorité.
               </p>
               <div className="mt-4 grid gap-3 sm:grid-cols-2">
                 <Label className="grid gap-2 sm:col-span-2">
-                  URL du media
+                  URL du média
                   <Input placeholder="https://source-officielle.example/preuve.jpg" />
                 </Label>
                 <Label className="grid gap-2">
-                  Type de media
+                  Type de média
                   <Input placeholder="Image, video, document..." />
                 </Label>
                 <Label className="grid gap-2">
@@ -596,7 +596,7 @@ function MediaDropzone({
     <div className="grid gap-3">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-sm font-medium">Medias</p>
+          <p className="text-sm font-medium">Médias</p>
           <p className="text-muted-foreground text-sm">{description}</p>
         </div>
         {files.length ? (
@@ -674,7 +674,7 @@ export function DirectorHomePage() {
     <AppLayout actor="director" page="dashboard">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          title="A arbitrer"
+          title="À arbitrer"
           value="7"
           hint="revue direction"
           icon={Gavel}
@@ -868,7 +868,7 @@ export function CitizenWorkspacePage() {
           <CardHeader>
             <CardTitle>Mes signalements</CardTitle>
             <CardDescription>
-              Suivre les rumeurs transmises au desk et leur etat editorial.
+              Suivre les rumeurs transmises au desk et leur état éditorial.
             </CardDescription>
             <CardAction>
               <Button asChild size="sm">
@@ -967,7 +967,7 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
         <CardHeader>
           <CardTitle>{report.title}</CardTitle>
           <CardDescription>
-            Historique du signalement et suivi editorial.
+            Historique du signalement et suivi éditorial.
           </CardDescription>
           <CardAction>
             <StatusBadge status={report.status} />
@@ -1009,11 +1009,11 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
                 ['Reception', 'Signalement recu et conserve dans le desk.'],
                 [
                   'Qualification',
-                  'Le desk verifie si un sujet doit etre ouvert.',
+                  'Le desk vérifie si un sujet doit être ouvert.',
                 ],
                 [
                   'Retour',
-                  'Une publication ou une archive sera rattachee ici.',
+                  'Une publication ou une archive sera rattachée ici.',
                 ],
               ].map(([title, body]) => (
                 <div key={title} className="flex gap-3">
@@ -1051,7 +1051,7 @@ export function CitizenDashboardPage() {
         <StatCard
           title="Retours recus"
           value="4"
-          hint="depuis la redaction"
+          hint="depuis la rédaction"
           icon={CheckCircle2}
         />
         <StatCard
@@ -1117,7 +1117,7 @@ export function WatcherWorkspacePage() {
           <CardHeader>
             <CardTitle>Enquetes a enrichir</CardTitle>
             <CardDescription>
-              Une vigie ajoute des preuves mais ne pilote pas l'enquete.
+              Une vigie ajoute des preuves mais ne pilote pas l'enquête.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
@@ -1128,7 +1128,7 @@ export function WatcherWorkspacePage() {
                   <Badge variant="outline">{domainLabel(item.category)}</Badge>
                 </div>
                 <p className="text-muted-foreground mt-2 text-sm">
-                  Ajouter media, contexte terrain et justification.
+                  Ajouter média, contexte terrain et justification.
                 </p>
               </div>
             ))}
@@ -1190,7 +1190,7 @@ export function ReportsWorkspacePage() {
                 <p className="mt-3 text-sm">{item.content}</p>
               </div>
               <div className="flex flex-wrap items-start gap-2">
-                <Button size="sm">Creer un sujet</Button>
+                <Button size="sm">Créer un sujet</Button>
                 <Button size="sm" variant="outline">
                   Archiver
                 </Button>
@@ -1218,7 +1218,7 @@ export function InboxWorkspacePage({
           <TabsList>
             <TabsTrigger value="global">Global</TabsTrigger>
             {canManageSubjects ? (
-              <TabsTrigger value="director">Creation direction</TabsTrigger>
+              <TabsTrigger value="director">Création direction</TabsTrigger>
             ) : null}
             <TabsTrigger value="reports">Signalements</TabsTrigger>
           </TabsList>
@@ -1258,13 +1258,13 @@ export function InboxCreateWorkspacePage() {
             <CardHeader>
               <CardTitle>Nouveau sujet direction</CardTitle>
               <CardDescription>
-                Un sujet cree par la direction entre directement dans l'inbox.
+                Un sujet créé par la direction entre directement dans l'inbox.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
               <Label className="grid gap-2">
                 Theme
-                <Input placeholder="Theme editorial" />
+                <Input placeholder="Thème éditorial" />
               </Label>
               <Label className="grid gap-2">
                 Contexte
@@ -1274,7 +1274,7 @@ export function InboxCreateWorkspacePage() {
                 inputId="director-subject-media"
                 description="Images, videos, audio, PDF ou documents utiles au desk."
               />
-              <Button className="w-fit">Creer le sujet</Button>
+              <Button className="w-fit">Créer le sujet</Button>
             </CardContent>
           </Card>
         </div>
@@ -1295,7 +1295,7 @@ function InboxList(props: {
       : inboxSubjects.filter((item) =>
           props.filter === 'REPORT'
             ? item.origin === 'Signalement citoyen'
-            : item.origin === 'Creation direction',
+            : item.origin === 'Création direction',
         )
 
   return (
@@ -1335,7 +1335,7 @@ function InboxList(props: {
                     <Link
                       to="/investigations/$investigationId"
                       params={{ investigationId: detailId }}
-                      aria-label={`Voir le detail de l'enquete ${item.theme}`}
+                      aria-label={`Voir le détail de l'enquête ${item.theme}`}
                     >
                       <ExternalLink />
                     </Link>
@@ -1511,7 +1511,7 @@ export function InvestigationsWorkspacePage({
               search={{ publicationId: undefined }}
             >
               <RotateCcw />
-              Creer un correctif
+              Créer un correctif
             </Link>
           </Button>
         </div>
@@ -1537,7 +1537,7 @@ function InvestigationList({ status }: { status: string }) {
       <CardHeader>
         <CardTitle>Liste des enquetes</CardTitle>
         <CardDescription>
-          Le detail contient les actions de publication, rejet et archive.
+          Le détail contient les actions de publication, rejet et archive.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
@@ -1588,7 +1588,7 @@ export function InvestigationDetailWorkspacePage({
   const dossier = {
     id: investigationId ?? 'selection courante',
     title: 'Video de checkpoint sortie de contexte',
-    subject: 'Verifier le lieu, la date et l unite presente dans la sequence.',
+    subject: "Vérifier le lieu, la date et l'unité présente dans la séquence.",
     journalist: 'Maimouna Traore',
     status: 'PENDING_REVIEW',
     category: 'CONTEXT_COLLAPSE',
@@ -1596,7 +1596,7 @@ export function InvestigationDetailWorkspacePage({
     attempts: 1,
     updatedAt: '16 mai 2026, 18:40',
     notes:
-      'La sequence est authentique mais ancienne. Elle est republiee comme si elle documentait la situation actuelle.',
+      'La séquence est authentique mais ancienne. Elle est republiée comme si elle documentait la situation actuelle.',
   }
 
   const sourceMedia = [
@@ -1607,10 +1607,10 @@ export function InvestigationDetailWorkspacePage({
       reliability: 'MISLEADING',
       category: 'CONTEXT_COLLAPSE',
       justification:
-        'Les uniformes et le decor correspondent a une patrouille archivee, pas a l evenement actuel.',
+        "Les uniformes et le décor correspondent à une patrouille archivée, pas à l'événement actuel.",
     },
     {
-      title: 'Capture publiee par la direction',
+      title: 'Capture publiée par la direction',
       type: 'IMAGE',
       origin: 'DIRECTOR_INITIATED',
       reliability: 'UNVERIFIABLE',
@@ -1649,14 +1649,14 @@ export function InvestigationDetailWorkspacePage({
       media: '1 lien',
       category: 'MISLEADING',
       reliability: 'TRUE',
-      note: 'Le meme extrait circule deja dans une archive de 2022.',
+      note: 'Le même extrait circule déjà dans une archive de 2022.',
     },
   ]
 
   const timeline = [
-    'Sujet cree depuis un signalement citoyen',
+    'Sujet créé depuis un signalement citoyen',
     'Journaliste assigne et medias classes',
-    'Sources d autorite rattachees',
+    "Sources d'autorité rattachées",
     'Dossier soumis a revue direction',
   ]
 
@@ -1762,7 +1762,7 @@ export function InvestigationDetailWorkspacePage({
                 </div>
                 <div className="rounded-lg border p-3">
                   <p className="text-muted-foreground text-xs font-medium uppercase">
-                    Categorie
+                    Catégorie
                   </p>
                   <p className="mt-1 font-medium">
                     {domainLabel(dossier.category)}
@@ -1784,7 +1784,7 @@ export function InvestigationDetailWorkspacePage({
                 </div>
               </div>
               <div className="rounded-lg border p-4">
-                <p className="font-medium">Notes d enquete</p>
+                <p className="font-medium">Notes d'enquête</p>
                 <p className="text-muted-foreground mt-2 text-sm">
                   {dossier.notes}
                 </p>
@@ -1794,9 +1794,9 @@ export function InvestigationDetailWorkspacePage({
 
           <Card>
             <CardHeader>
-              <CardTitle>Medias analyses</CardTitle>
+              <CardTitle>Médias analysés</CardTitle>
               <CardDescription>
-                Medias issus du signalement, de la direction ou du journaliste.
+                Médias issus du signalement, de la direction ou du journaliste.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3">
@@ -1859,7 +1859,7 @@ export function InvestigationDetailWorkspacePage({
         <div className="grid content-start gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Sources d autorite</CardTitle>
+              <CardTitle>Sources d'autorité</CardTitle>
               <CardDescription>
                 Sources rattachees aux preuves journalistiques.
               </CardDescription>
@@ -1978,7 +1978,7 @@ function JournalistInvestigationWorkspace({
                 </div>
                 <div className="rounded-lg border p-3">
                   <p className="text-muted-foreground text-xs font-medium uppercase">
-                    Categorie dominante
+                    Catégorie dominante
                   </p>
                   <p className="mt-1 font-medium">
                     {domainLabel(dossier.category)}
@@ -2000,7 +2000,7 @@ function JournalistInvestigationWorkspace({
                 </div>
               </div>
               <div className="rounded-lg border p-4">
-                <p className="font-medium">Notes d enquete</p>
+                <p className="font-medium">Notes d'enquête</p>
                 <p className="text-muted-foreground mt-2 text-sm">
                   {dossier.notes}
                 </p>
@@ -2022,7 +2022,7 @@ function JournalistInvestigationWorkspace({
               <CardTitle>Classification des medias source</CardTitle>
               <CardDescription>
                 Le backend attend categorie, fiabilite et justification pour
-                chaque media issu du sujet.
+                chaque média issu du sujet.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
@@ -2044,7 +2044,7 @@ function JournalistInvestigationWorkspace({
                   </div>
                   <div className="grid gap-3 md:grid-cols-2">
                     <Label className="grid gap-2">
-                      Categorie
+                      Catégorie
                       <select
                         defaultValue={media.category}
                         className="border-input bg-background h-10 rounded-md border px-3 text-sm"
@@ -2069,7 +2069,7 @@ function JournalistInvestigationWorkspace({
                         <option value="TRUE">Vrai</option>
                         <option value="FALSE">Faux</option>
                         <option value="MISLEADING">Trompeur</option>
-                        <option value="UNVERIFIABLE">Non verifiable</option>
+                        <option value="UNVERIFIABLE">Non vérifiable</option>
                       </select>
                     </Label>
                   </div>
@@ -2089,13 +2089,13 @@ function JournalistInvestigationWorkspace({
             <CardHeader>
               <CardTitle>Ajouter une preuve journalistique</CardTitle>
               <CardDescription>
-                Ajoute une URL verifiee et la source d autorite rattachee.
+                Ajoute une URL vérifiée et la source d'autorité rattachée.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
               <div className="grid gap-3 md:grid-cols-2">
                 <Label className="grid gap-2">
-                  Type de media
+                  Type de média
                   <select
                     value={proofMediaType}
                     onChange={(event) => setProofMediaType(event.target.value)}
@@ -2110,7 +2110,7 @@ function JournalistInvestigationWorkspace({
                   </select>
                 </Label>
                 <Label className="grid gap-2">
-                  Source d autorite
+                  Source d'autorité
                   <Input placeholder="Nom de la source" />
                 </Label>
                 <Label className="grid gap-2">
@@ -2121,9 +2121,9 @@ function JournalistInvestigationWorkspace({
                       Rectificatif original
                     </option>
                     <option value="DIRECT_EVIDENCE">Preuve directe</option>
-                    <option value="MEDIA_CROSSCHECK">Recoupement media</option>
+                    <option value="MEDIA_CROSSCHECK">Recoupement média</option>
                     <option value="AUTHORITY_STATEMENT">
-                      Declaration d autorite
+                      Déclaration d'autorité
                     </option>
                   </select>
                 </Label>
@@ -2136,7 +2136,7 @@ function JournalistInvestigationWorkspace({
               ) : (
                 <MediaDropzone
                   inputId="journalist-proof-media"
-                  description="Depose un fichier ou selectionne le media verifie a joindre a cette preuve."
+                  description="Dépose un fichier ou sélectionne le média vérifié à joindre à cette preuve."
                 />
               )}
               <Button className="w-fit">
@@ -2171,7 +2171,7 @@ function JournalistInvestigationWorkspace({
                         <Badge variant="outline">
                           {evidence.category
                             ? domainLabel(evidence.category)
-                            : 'Categorie a definir'}
+                            : 'Catégorie à définir'}
                         </Badge>
                         <Badge variant="secondary">
                           {evidence.reliability
@@ -2185,7 +2185,7 @@ function JournalistInvestigationWorkspace({
                     </p>
                     <div className="mt-4 grid gap-3 md:grid-cols-2">
                       <Label className="grid gap-2">
-                        Categorie
+                        Catégorie
                         <select
                           defaultValue={evidence.category ?? ''}
                           className="border-input bg-background h-10 rounded-md border px-3 text-sm"
@@ -2216,7 +2216,7 @@ function JournalistInvestigationWorkspace({
                           <option value="TRUE">Vrai</option>
                           <option value="FALSE">Faux</option>
                           <option value="MISLEADING">Trompeur</option>
-                          <option value="UNVERIFIABLE">Non verifiable</option>
+                          <option value="UNVERIFIABLE">Non vérifiable</option>
                         </select>
                       </Label>
                       <Label className="grid gap-2 md:col-span-2">
@@ -2238,7 +2238,7 @@ function JournalistInvestigationWorkspace({
         <div className="grid content-start gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Sources d autorite</CardTitle>
+              <CardTitle>Sources d'autorité</CardTitle>
               <CardDescription>
                 Sources rattachees aux preuves deja ajoutees.
               </CardDescription>
@@ -2380,7 +2380,7 @@ export function PublicationDetailWorkspacePage({
             <CardTitle>{publication.title}</CardTitle>
             <CardDescription>
               {actor === 'citizen'
-                ? 'Synthese publique du verdict et des preuves disponibles.'
+                ? 'Synthèse publique du verdict et des preuves disponibles.'
                 : 'Verdict final, preuves conservees et type de publication.'}
             </CardDescription>
             <CardAction>
@@ -2413,13 +2413,13 @@ export function PublicationDetailWorkspacePage({
             <div className="rounded-lg border p-4">
               <p className="font-medium">
                 {actor === 'citizen'
-                  ? "Resume de l'enquete"
+                  ? "Résumé de l'enquête"
                   : 'Trace editoriale'}
               </p>
               <p className="text-muted-foreground mt-2 text-sm">
                 {actor === 'citizen'
                   ? publication.summary
-                  : 'La publication garde le verdict, les sources utilisees et les corrections rattachees pour rester consultable par la redaction.'}
+                  : 'La publication garde le verdict, les sources utilisées et les corrections rattachées pour rester consultable par la rédaction.'}
               </p>
             </div>
             {actor === 'citizen' ? (
@@ -2472,7 +2472,7 @@ export function PublicationDetailWorkspacePage({
                   <div className="rounded-lg border p-4">
                     <p className="font-medium">Documents finaux</p>
                     <p className="text-muted-foreground mt-1 text-sm">
-                      Pieces conservees avec la publication finale.
+                      Pièces conservées avec la publication finale.
                     </p>
                     <div className="mt-4 grid gap-3">
                       {publication.finalDocuments.map((document) => (
@@ -2498,9 +2498,9 @@ export function PublicationDetailWorkspacePage({
                   </div>
 
                   <div className="rounded-lg border p-4">
-                    <p className="font-medium">Medias verifies</p>
+                    <p className="font-medium">Médias vérifiés</p>
                     <p className="text-muted-foreground mt-1 text-sm">
-                      Medias retenus ou compares pendant la verification.
+                      Médias retenus ou comparés pendant la vérification.
                     </p>
                     <div className="mt-4 grid gap-3">
                       {publication.verifiedMedia.length ? (
@@ -2592,7 +2592,7 @@ export function PublicationDetailWorkspacePage({
                         })
                       ) : (
                         <p className="text-muted-foreground rounded-lg border border-dashed p-3 text-sm">
-                          Aucun media final n'a ete joint a cette publication.
+                          Aucun média final n'a été joint à cette publication.
                         </p>
                       )}
                     </div>
@@ -2605,7 +2605,7 @@ export function PublicationDetailWorkspacePage({
                 <p className="font-medium">Pour aller plus loin</p>
                 <p className="text-muted-foreground mt-2 text-sm">
                   Si une information semble incomplete, tu peux creer un nouveau
-                  signalement depuis la page Signalements. La redaction
+                  signalement depuis la page Signalements. La rédaction
                   l'examinera comme une nouvelle alerte.
                 </p>
               </div>
@@ -2627,7 +2627,7 @@ export function PublicationDetailWorkspacePage({
                   search={{ publicationId: publicationId ?? undefined }}
                 >
                   <RotateCcw />
-                  Creer un correctif
+                  Créer un correctif
                 </Link>
               </Button>
               <Button variant="outline" asChild>
@@ -2654,10 +2654,10 @@ export function PublicationCorrectionsWorkspacePage({
     <AppLayout actor="director" page="publications">
       <Card>
         <CardHeader>
-          <CardTitle>Creer un correctif</CardTitle>
+          <CardTitle>Créer un correctif</CardTitle>
           <CardDescription>
             {publication
-              ? 'Le correctif sera rattache directement a cette publication.'
+              ? 'Le correctif sera rattaché directement à cette publication.'
               : 'Selectionne une publication depuis la liste pour creer un correctif.'}
           </CardDescription>
         </CardHeader>
@@ -2709,7 +2709,7 @@ export function PeopleManagementPage() {
           <Button asChild>
             <Link to="/journalists/create">
               <UserPlus />
-              Creer journaliste
+              Créer journaliste
             </Link>
           </Button>
         </div>
@@ -2797,7 +2797,7 @@ export function UserCreateWorkspacePage() {
           </Label>
           <Button className="w-fit">
             <UserPlus />
-            Creer le compte
+            Créer le compte
           </Button>
         </CardContent>
       </Card>
@@ -2812,7 +2812,7 @@ export function UserStatusWorkspacePage({ userLabel }: { userLabel?: string }) {
     <AppLayout actor="director" page="people">
       <Card>
         <CardHeader>
-          <CardTitle>{userLabel ?? 'Compte selectionne'}</CardTitle>
+          <CardTitle>{userLabel ?? 'Compte sélectionné'}</CardTitle>
           <CardDescription>
             Modifier le statut sans exposer les identifiants internes.
           </CardDescription>
@@ -2828,7 +2828,7 @@ export function UserStatusWorkspacePage({ userLabel }: { userLabel?: string }) {
             </select>
           </Label>
           <Label className="grid gap-2">
-            Details
+            Détails
             <Textarea placeholder="Commentaire interne" />
           </Label>
           <div className="flex flex-wrap gap-2">
@@ -2923,14 +2923,14 @@ function WatcherApplicationWorkspacePage() {
         <CardHeader>
           <CardTitle>Espace vigie</CardTitle>
           <CardDescription>
-            Candidate pour contribuer aux enquetes ouvertes par la redaction.
+            Candidate pour contribuer aux enquêtes ouvertes par la rédaction.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form className="grid gap-4">
             <Label className="grid gap-2">
               Motivation
-              <Textarea placeholder="Explique pourquoi tu veux devenir vigie et comment tu peux aider la redaction." />
+              <Textarea placeholder="Explique pourquoi tu veux devenir vigie et comment tu peux aider la rédaction." />
             </Label>
             <Button className="w-fit">
               <UserPlus />
@@ -2973,7 +2973,7 @@ function WatcherContributionWorkspacePage() {
                   {item.category} / {item.evidence}
                 </p>
                 <p className="text-muted-foreground mt-3 text-sm">
-                  Ajoute un contexte local, une source, un media ou une note qui
+                  Ajoute un contexte local, une source, un média ou une note qui
                   aide le journaliste a consolider le dossier.
                 </p>
               </div>
@@ -3013,8 +3013,8 @@ const notificationItems = [
   {
     id: 'correctif-publie',
     type: 'CORRECTION',
-    theme: 'Correctif publie',
-    message: 'Une publication a ete corrigee apres nouvelle validation.',
+    theme: 'Correctif publié',
+    message: 'Une publication a été corrigée après nouvelle validation.',
     isRead: false,
     publicationId: 'correction-sur-le-prix-du-mil',
     investigationId: null,
@@ -3022,8 +3022,8 @@ const notificationItems = [
   {
     id: 'dossier-archive',
     type: 'ARCHIVED_PUBLICATION',
-    theme: 'Dossier archive',
-    message: 'Une enquete non verifiable a ete archivee par la direction.',
+    theme: 'Dossier archivé',
+    message: 'Une enquête non vérifiable a été archivée par la direction.',
     isRead: true,
     publicationId: null,
     investigationId: 'crise-essence',
@@ -3032,7 +3032,7 @@ const notificationItems = [
     id: 'action-requise',
     type: 'ALERT',
     theme: 'Action requise',
-    message: 'Une preuve ou une revision attend ton intervention.',
+    message: 'Une preuve ou une révision attend ton intervention.',
     isRead: true,
     publicationId: null,
     investigationId: null,
@@ -3049,7 +3049,7 @@ const notificationTypeConfig = {
   CORRECTION: {
     icon: RotateCcw,
     label: 'Correctif',
-    intent: 'Publication corrigee',
+    intent: 'Publication corrigée',
     actionLabel: 'Ouvrir le correctif',
   },
   ALERT: {
@@ -3061,7 +3061,7 @@ const notificationTypeConfig = {
   ARCHIVED_PUBLICATION: {
     icon: Archive,
     label: 'Archive',
-    intent: 'Enquete archivee',
+    intent: 'Enquête archivée',
     actionLabel: 'Ouvrir le dossier',
   },
 } as const
@@ -3238,9 +3238,9 @@ export function GuestHomePage() {
     <AppLayout actor="guest" page="dashboard">
       <div className="grid gap-6 xl:grid-cols-3">
         {[
-          ['Citoyen', 'Depose un signalement ou candidate comme vigie.'],
+          ['Citoyen', 'Dépose un signalement ou candidate comme vigie.'],
           ['Journaliste', 'Prend un sujet et prepare le dossier.'],
-          ['Direction', 'Arbitre, publie, archive ou demande correction.'],
+          ['Direction', 'Arbitre, publie, archive ou demande une correction.'],
         ].map(([title, body]) => (
           <Card key={title}>
             <CardHeader>
@@ -3253,7 +3253,7 @@ export function GuestHomePage() {
           <CardHeader>
             <CardTitle>Session</CardTitle>
             <CardDescription>
-              Connecte-toi pour ouvrir l'espace adapte a ton role.
+              Connecte-toi pour ouvrir l'espace adapté à ton rôle.
             </CardDescription>
             <CardAction>
               <Button asChild>

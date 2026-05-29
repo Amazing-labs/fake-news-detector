@@ -56,7 +56,7 @@ export function RoleDashboard({ actor: fallbackActor }: { actor?: Actor }) {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Icon className="size-5" />
-              Vue role
+              Vue rôle
             </CardTitle>
             <CardDescription>{currentRole.description}</CardDescription>
           </CardHeader>

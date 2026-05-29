@@ -119,7 +119,7 @@ export function StatusBadge(props: { value: string | null | undefined }) {
     APPROVED: 'Approuve',
     PENDING: 'En attente',
     PENDING_REVIEW: 'En revue',
-    PUBLISHED: 'Publie',
+    PUBLISHED: 'Publié',
     REJECTED: 'Refuse',
     SUSPENDED: 'Suspendu',
     VALIDATED: 'Valide',

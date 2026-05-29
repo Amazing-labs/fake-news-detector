@@ -42,7 +42,7 @@ export function MediaFields(props: {
       }
       props.onChange([...props.items, ...uploaded])
       setUploadMessage(
-        `${uploaded.length} media${uploaded.length > 1 ? 's ajoutes' : ' ajoute'}.`,
+        `${uploaded.length} média${uploaded.length > 1 ? 's ajoutés' : ' ajouté'}.`,
       )
     } catch (error) {
       setUploadError(
@@ -58,7 +58,7 @@ export function MediaFields(props: {
 
   return (
     <SectionCard
-      title={props.title ?? 'Medias'}
+      title={props.title ?? 'Médias'}
       description={
         props.description ??
         'Ajoute un ou plusieurs medias via leur URL pour tester le backend.'
@@ -72,7 +72,7 @@ export function MediaFields(props: {
               className="grid gap-3 rounded-[1.15rem] border border-[#eee9e2] bg-[#fbfaf8] p-4"
             >
               <Input
-                label={`URL media ${index + 1}`}
+                label={`URL média ${index + 1}`}
                 value={item.url}
                 onChange={(event) => {
                   const next = [...props.items]
@@ -105,14 +105,14 @@ export function MediaFields(props: {
                     props.onChange(props.items.filter((_, i) => i !== index))
                   }}
                 >
-                  Retirer ce media
+                  Retirer ce média
                 </Button>
               </div>
             </div>
           ))
         ) : (
           <p className="text-sm text-[#706a63]">
-            Aucun media ajoute pour l'instant.
+            Aucun média ajouté pour l'instant.
           </p>
         )}
         <div>
@@ -122,7 +122,7 @@ export function MediaFields(props: {
               props.onChange([...props.items, createEmptyMediaDraft()])
             }
           >
-            {props.addLabel ?? 'Ajouter un media'}
+            {props.addLabel ?? 'Ajouter un média'}
           </Button>
         </div>
         <div className="grid gap-2">
