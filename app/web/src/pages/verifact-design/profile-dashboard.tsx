@@ -1,6 +1,8 @@
 import { useNavigate } from '@tanstack/react-router'
-import { formatActorStatus } from '../../entities/session/model'
-import { authClient } from '../../lib/auth-client'
+import {
+  formatActorStatus,
+  signOutAppSession,
+} from '../../entities/session/model'
 import {
   Avatar,
   AvatarFallback,
@@ -38,7 +40,7 @@ export function ProfileDashboard() {
   const contribution = contributionScores[actor]
 
   async function handleSignOut() {
-    await authClient.signOut()
+    await signOutAppSession()
     await navigate({ to: '/auth', search: { mode: 'sign-in' } })
   }
 

@@ -1,7 +1,12 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { CheckCircle2, Clock3, ShieldCheck, Sparkles } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { useAppSession } from '../../entities/session/model'
+import {
+  localAuthActors,
+  signInLocalActor,
+  useAppSession,
+} from '../../entities/session/model'
+import { isBetterAuthDisabled } from '../../lib/auth-config'
 import { authClient, type AppSession } from '../../lib/auth-client'
 import {
   Alert,
@@ -79,6 +84,20 @@ export function VeriFactAuthPage(props: {
     }
   }
 
+  async function handleLocalSignIn(
+    actor: (typeof localAuthActors)[number]['actor'],
+  ) {
+    await signInLocalActor(actor)
+    await navigate({
+      to:
+        actor === 'director'
+          ? '/dashboard'
+          : actor === 'journalist'
+            ? '/journalist'
+            : '/citizen',
+    })
+  }
+
   return (
     <div className="bg-background text-foreground grid min-h-screen place-items-center p-4">
       <Card className="w-full max-w-md">
@@ -92,7 +111,17 @@ export function VeriFactAuthPage(props: {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
-          {isPending ? (
+          {isBetterAuthDisabled ? (
+            <Alert>
+              <ShieldCheck className="size-4" />
+              <AlertTitle>Mode local frontend</AlertTitle>
+              <AlertDescription>
+                Better Auth est désactivé. Aucun appel backend n'est requis pour
+                explorer l'interface.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          {!isBetterAuthDisabled && isPending ? (
             <Alert>
               <Clock3 className="size-4" />
               <AlertTitle>Vérification de session</AlertTitle>
@@ -125,6 +154,25 @@ export function VeriFactAuthPage(props: {
                 Ouvrir mon dashboard
               </Link>
             </Button>
+          ) : isBetterAuthDisabled ? (
+            <div className="grid gap-3">
+              {localAuthActors.map((localActor) => (
+                <Button
+                  key={localActor.actor}
+                  type="button"
+                  variant="outline"
+                  className="h-auto justify-start rounded-xl p-4 text-left"
+                  onClick={() => void handleLocalSignIn(localActor.actor)}
+                >
+                  <span className="grid gap-1">
+                    <span className="font-semibold">{localActor.label}</span>
+                    <span className="text-muted-foreground text-sm font-normal">
+                      {localActor.description}
+                    </span>
+                  </span>
+                </Button>
+              ))}
+            </div>
           ) : (
             <form className="space-y-4" onSubmit={handleSubmit}>
               <Tabs
