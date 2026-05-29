@@ -2,8 +2,7 @@ import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import { Moon, Search, ShieldCheck, Sun } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useLayoutEffect, useRef } from 'react'
-import { useAppSession } from '../../entities/session/model'
-import { authClient } from '../../lib/auth-client'
+import { signOutAppSession, useAppSession } from '../../entities/session/model'
 import { cn } from '../../shared/lib/utils'
 import {
   Avatar,
@@ -45,7 +44,7 @@ export function AppLayout(props: {
   )
 
   async function handleSignOut() {
-    await authClient.signOut()
+    await signOutAppSession()
     await navigate({ to: '/auth', search: { mode: 'sign-in' } })
   }
 
