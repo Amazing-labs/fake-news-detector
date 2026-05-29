@@ -1412,9 +1412,35 @@ function InboxList(props: {
                   </Dialog>
                 ) : null}
                 {props.actor === 'journalist' && item.status === 'OPEN' ? (
-                  <Button size="sm" variant="outline">
-                    Prendre
-                  </Button>
+                  <Dialog>
+                    <DialogTrigger asChild>
+                      <Button size="sm" variant="outline">
+                        Prendre
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Prendre ce sujet ?</DialogTitle>
+                        <DialogDescription>
+                          Ce sujet sera assigne a ton espace de travail. Une
+                          fois pris, tu ne pourras pas revenir en arriere pour
+                          l'abandonner.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="rounded-lg border p-4">
+                        <p className="font-medium">{item.theme}</p>
+                        <p className="text-muted-foreground mt-1 text-sm">
+                          {item.description}
+                        </p>
+                      </div>
+                      <DialogFooter>
+                        <DialogClose asChild>
+                          <Button variant="outline">Annuler</Button>
+                        </DialogClose>
+                        <Button>Confirmer la prise</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
                 ) : null}
               </div>
             </div>
