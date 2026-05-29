@@ -768,9 +768,6 @@ export function JournalistWorkspacePage() {
   const currentInvestigation = investigations.find(
     (item) => item.status === 'PENDING_REVIEW',
   )
-  const correctionRequest = investigations.find(
-    (item) => item.status === 'NEEDS_REVISION',
-  )
 
   return (
     <AppLayout actor="journalist" page="dashboard">
@@ -855,28 +852,6 @@ export function JournalistWorkspacePage() {
                   Soumettre en revue
                 </Button>
               </div>
-            </div>
-          ) : null}
-
-          {correctionRequest ? (
-            <div className="bg-muted/30 flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4">
-              <div>
-                <p className="text-sm font-medium">Retour direction</p>
-                <p className="text-muted-foreground text-sm">
-                  {correctionRequest.title} attend une correction avant nouvelle
-                  soumission.
-                </p>
-              </div>
-              <Button size="sm" variant="outline" asChild>
-                <Link
-                  to="/investigations/$investigationId"
-                  params={{
-                    investigationId: slugifyLabel(correctionRequest.title),
-                  }}
-                >
-                  Reprendre
-                </Link>
-              </Button>
             </div>
           ) : null}
         </CardContent>
