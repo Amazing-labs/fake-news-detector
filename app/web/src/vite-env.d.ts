@@ -1,6 +1,7 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
+  readonly BETTER_AUTH_ALLOW_PRODUCTION_BYPASS?: 'true' | 'false'
   readonly BETTER_AUTH_DISABLE?: 'true' | 'false'
   readonly VITE_AUTH_BASE_URL: string
   readonly VITE_SERVER_PROXY_TARGET: string
