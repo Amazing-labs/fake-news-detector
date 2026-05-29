@@ -115,6 +115,10 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
         onSubmit={(event) => {
           event.preventDefault()
           setFormError('')
+          if (!investigationId.trim()) {
+            setFormError("La référence d'enquête est obligatoire.")
+            return
+          }
           publishMutation.mutate()
         }}
       >

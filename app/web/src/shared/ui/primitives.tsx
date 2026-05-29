@@ -126,6 +126,7 @@ export function StatusBadge(props: { value: string | null | undefined }) {
     LU: 'Lu',
     NON_LU: 'Non lu',
     CORRECTION: 'Correction',
+    'N/A': 'N/A',
   }
   const label =
     labels[value] ??

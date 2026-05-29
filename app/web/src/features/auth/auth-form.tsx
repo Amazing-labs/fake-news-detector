@@ -54,7 +54,12 @@ export function AuthForm(props: {
         setSuccess('Connexion réussie.')
       }
 
-      await props.onSuccess?.()
+      try {
+        await props.onSuccess?.()
+      } catch {
+        setError('Connexion réussie, mais redirection impossible.')
+        return
+      }
       setPassword('')
     } finally {
       setPending(false)

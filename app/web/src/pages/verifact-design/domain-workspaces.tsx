@@ -608,11 +608,11 @@ function MediaDropzone({
 
       <Label
         htmlFor={inputId}
-        onDragEnter={(event) => {
+        onDragEnter={(event: DragEvent<HTMLLabelElement>) => {
           event.preventDefault()
           setIsDragging(true)
         }}
-        onDragOver={(event) => {
+        onDragOver={(event: DragEvent<HTMLLabelElement>) => {
           event.preventDefault()
           setIsDragging(true)
         }}
@@ -2646,9 +2646,14 @@ export function PublicationCorrectionsWorkspacePage({
 }: {
   publicationId?: string
 }) {
-  const publication = publications.find(
-    (item) => slugifyLabel(item.title) === publicationId,
+  const [selectedPublicationId, setSelectedPublicationId] = useState(
+    publicationId ?? slugifyLabel(publications[0]?.title ?? ''),
   )
+  const activePublicationId = publicationId ?? selectedPublicationId
+  const publication = publications.find(
+    (item) => slugifyLabel(item.title) === activePublicationId,
+  )
+  const isPublicationLocked = Boolean(publicationId)
 
   return (
     <AppLayout actor="director" page="publications">
@@ -2658,10 +2663,31 @@ export function PublicationCorrectionsWorkspacePage({
           <CardDescription>
             {publication
               ? 'Le correctif sera rattaché directement à cette publication.'
-              : 'Selectionne une publication depuis la liste pour creer un correctif.'}
+              : 'Sélectionne une publication pour créer un correctif.'}
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
+          {!isPublicationLocked ? (
+            <Label className="grid gap-2">
+              Publication cible
+              <select
+                className="border-input bg-background ring-offset-background focus-visible:ring-ring flex h-10 w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                value={activePublicationId}
+                onChange={(event) =>
+                  setSelectedPublicationId(event.target.value)
+                }
+              >
+                {publications.map((item) => {
+                  const id = slugifyLabel(item.title)
+                  return (
+                    <option key={id} value={id}>
+                      {item.title}
+                    </option>
+                  )
+                })}
+              </select>
+            </Label>
+          ) : null}
           {publication ? (
             <div className="rounded-lg border p-4">
               <p className="text-muted-foreground text-xs font-medium uppercase">
@@ -2675,20 +2701,20 @@ export function PublicationCorrectionsWorkspacePage({
             </div>
           ) : (
             <div className="rounded-lg border border-dashed p-4">
-              <p className="font-medium">Aucune publication selectionnee</p>
+              <p className="font-medium">Aucune publication sélectionnée</p>
               <p className="text-muted-foreground mt-1 text-sm">
-                Retourne a la liste et utilise le bouton Correctif de la
-                publication concernee.
+                Choisis une publication dans la liste pour préparer le
+                correctif.
               </p>
             </div>
           )}
           <Label className="grid gap-2">
             Correction
-            <Textarea placeholder="Formuler le correctif a publier" />
+            <Textarea placeholder="Formuler le correctif à publier" />
           </Label>
           <Button className="w-fit" disabled={!publication}>
             <RotateCcw />
-            Preparer le correctif
+            Préparer le correctif
           </Button>
         </CardContent>
       </Card>

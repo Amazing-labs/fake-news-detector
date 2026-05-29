@@ -21,20 +21,26 @@ import {
 } from '../../shared/ui/shadcn/table'
 import type { Actor } from './types'
 
-type HistoryItem = {
+type HistoryItemBase = {
   title: string
   context: string
   status: string
   date: string
-  to:
-    | '/publications/$publicationId'
-    | '/investigations/$investigationId'
-    | '/reports/$reportId'
-  params:
-    | { publicationId: string }
-    | { investigationId: string }
-    | { reportId: string }
 }
+
+type HistoryItem =
+  | (HistoryItemBase & {
+      to: '/publications/$publicationId'
+      params: { publicationId: string }
+    })
+  | (HistoryItemBase & {
+      to: '/investigations/$investigationId'
+      params: { investigationId: string }
+    })
+  | (HistoryItemBase & {
+      to: '/reports/$reportId'
+      params: { reportId: string }
+    })
 
 function slugifyLabel(label: string) {
   return label
@@ -178,6 +184,29 @@ function HistoryCard(props: {
   items: HistoryItem[]
   action?: ReactNode
 }) {
+  function renderDetailsLink(item: HistoryItem) {
+    switch (item.to) {
+      case '/publications/$publicationId':
+        return (
+          <Link to={item.to} params={item.params}>
+            <ExternalLink className="size-4" />
+          </Link>
+        )
+      case '/investigations/$investigationId':
+        return (
+          <Link to={item.to} params={item.params}>
+            <ExternalLink className="size-4" />
+          </Link>
+        )
+      case '/reports/$reportId':
+        return (
+          <Link to={item.to} params={item.params}>
+            <ExternalLink className="size-4" />
+          </Link>
+        )
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -217,9 +246,7 @@ function HistoryCard(props: {
                     asChild
                     aria-label={`Voir ${item.title}`}
                   >
-                    <Link to={item.to} params={item.params}>
-                      <ExternalLink className="size-4" />
-                    </Link>
+                    {renderDetailsLink(item)}
                   </Button>
                 </TableCell>
               </TableRow>
