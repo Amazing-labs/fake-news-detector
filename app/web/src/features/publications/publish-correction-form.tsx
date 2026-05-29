@@ -50,7 +50,7 @@ export function PublishCorrectionForm(props: {
         }}
       >
         <Input
-          label="Reference publication"
+          label="Référence publication"
           value={currentPublicationId}
           readOnly={!!props.initialPublicationId}
           onChange={(event) => setPublicationId(event.target.value)}
@@ -69,7 +69,7 @@ export function PublishCorrectionForm(props: {
           <Notice tone="error">{toApiErrorMessage(mutation.error)}</Notice>
         ) : null}
         {mutation.isSuccess ? (
-          <Notice tone="success">Correction publiee.</Notice>
+          <Notice tone="success">Correction publiée.</Notice>
         ) : null}
         <Button type="submit" disabled={mutation.isPending}>
           {mutation.isPending ? 'Publication...' : 'Publier la correction'}

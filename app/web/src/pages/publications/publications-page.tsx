@@ -13,8 +13,9 @@ export function PublicationsListPage() {
 }
 
 export function PublicationCorrectionsPage(_props: { publicationId?: string }) {
-  void _props
-  return <PublicationCorrectionsWorkspacePage />
+  return (
+    <PublicationCorrectionsWorkspacePage publicationId={_props.publicationId} />
+  )
 }
 
 export function PublicationDetailPage(props: { publicationId: string }) {

@@ -83,7 +83,7 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
 
   function openCommentModal(action: CommentAction) {
     if (!investigationId.trim()) {
-      setFormError("La reference d'enquete est obligatoire.")
+      setFormError("La référence d'enquête est obligatoire.")
       return
     }
 
@@ -115,6 +115,10 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
         onSubmit={(event) => {
           event.preventDefault()
           setFormError('')
+          if (!investigationId.trim()) {
+            setFormError("La référence d'enquête est obligatoire.")
+            return
+          }
           publishMutation.mutate()
         }}
       >
@@ -127,7 +131,7 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
               <h2 className="truncate font-black tracking-[-0.02em] text-[#171514]">
                 Validation editoriale
               </h2>
-              <p className="text-sm text-[#7b7671]">Enquete en revue</p>
+              <p className="text-sm text-[#7b7671]">Enquête en revue</p>
             </div>
           </div>
           <span className="rounded-full bg-[#f7f4ef] px-3 py-1 text-xs font-black text-[#706a63]">
@@ -139,7 +143,7 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
           {fixedInvestigation ? (
             <div className="rounded-2xl border border-[#e7e2dc] bg-[#faf8f5] px-3 py-2.5 text-sm">
               <span className="block font-bold text-[#171514]">
-                Reference enquete
+                Référence enquête
               </span>
               <span className="mt-1 block truncate font-black text-[#706a63]">
                 {investigationId}
@@ -147,14 +151,14 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
             </div>
           ) : (
             <Input
-              label="Reference enquete"
+              label="Référence enquête"
               value={draftInvestigationId}
               required
               onChange={(event) => setDraftInvestigationId(event.target.value)}
             />
           )}
           <Input
-            label="Lien verifie (optionnel)"
+            label="Lien vérifié (optionnel)"
             value={verifiedLink}
             onChange={(event) => setVerifiedLink(event.target.value)}
           />
@@ -182,7 +186,7 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
           </Notice>
         ) : null}
         {publishMutation.isSuccess ? (
-          <Notice tone="success">Enquete publiee.</Notice>
+          <Notice tone="success">Enquête publiée.</Notice>
         ) : null}
 
         <div className="mt-4 grid gap-2 sm:grid-cols-3">
@@ -215,8 +219,8 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
               <div>
                 <h2 className="text-lg font-black tracking-[-0.02em] text-[#171514]">
                   {commentAction === 'reject'
-                    ? "Refuser l'enquete"
-                    : "Archiver l'enquete"}
+                    ? "Refuser l'enquête"
+                    : "Archiver l'enquête"}
                 </h2>
                 <p className="mt-1 text-sm leading-6 text-[#706a63]">
                   Le commentaire est obligatoire pour garder une trace
@@ -263,7 +267,7 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
                     ? 'Envoi...'
                     : commentAction === 'reject'
                       ? 'Confirmer le refus'
-                      : "Confirmer l'archive"}
+                      : "Confirmer l'archivage"}
                 </Button>
               </div>
             </div>

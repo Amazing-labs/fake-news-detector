@@ -1,18 +1,23 @@
 import { VeriFactAuthPage } from './auth-dashboard'
 import {
+  CitizenDashboardPage,
+  CitizenReportCreateWorkspacePage,
   CitizenWorkspacePage,
   DirectorHomePage,
   GuestHomePage,
   InboxCreateWorkspacePage,
+  InboxSubjectDetailWorkspacePage,
   InboxWorkspacePage,
   InvestigationDetailWorkspacePage,
   InvestigationsWorkspacePage,
   JournalistWorkspacePage,
+  NotificationDetailWorkspacePage,
   NotificationsWorkspacePage,
   PeopleManagementPage,
   PublicationCorrectionsWorkspacePage,
   PublicationDetailWorkspacePage,
   PublicationsWorkspacePage,
+  ReportDetailWorkspacePage,
   ReportsWorkspacePage,
   RoleAwareDashboardPage,
   UserCreateWorkspacePage,
@@ -24,20 +29,25 @@ import { NotFoundPage } from './not-found-page'
 import { ProfileDashboard } from './profile-dashboard'
 
 export {
+  CitizenDashboardPage,
+  CitizenReportCreateWorkspacePage,
   CitizenWorkspacePage,
   DirectorHomePage,
   GuestHomePage,
   InboxCreateWorkspacePage,
+  InboxSubjectDetailWorkspacePage,
   InboxWorkspacePage,
   InvestigationDetailWorkspacePage,
   InvestigationsWorkspacePage,
   JournalistWorkspacePage,
+  NotificationDetailWorkspacePage,
   NotFoundPage,
   NotificationsWorkspacePage,
   PeopleManagementPage,
   PublicationCorrectionsWorkspacePage,
   PublicationDetailWorkspacePage,
   PublicationsWorkspacePage,
+  ReportDetailWorkspacePage,
   ReportsWorkspacePage,
   UserCreateWorkspacePage,
   UserStatusWorkspacePage,
@@ -51,7 +61,7 @@ export function VeriFactDashboardPage() {
 }
 
 export function VeriFactCitizenDashboardPage() {
-  return <CitizenWorkspacePage />
+  return <CitizenDashboardPage />
 }
 
 export function VeriFactWatcherDashboardPage() {

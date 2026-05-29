@@ -7,7 +7,7 @@ export type CitizenType = 'REGULAR' | 'WATCHER'
 const roleLabels: Record<UserRole, string> = {
   CITIZEN: 'Citoyen',
   JOURNALIST: 'Journaliste',
-  EDITORIAL_DIRECTOR: 'Direction editoriale',
+  EDITORIAL_DIRECTOR: 'Direction éditoriale',
 }
 
 const statusLabels: Record<string, string> = {
@@ -56,7 +56,7 @@ function fallbackLabel(
 }
 
 export function formatUserRole(role: string | null | undefined) {
-  return roleLabels[role as UserRole] ?? fallbackLabel(role, 'Invite')
+  return roleLabels[role as UserRole] ?? fallbackLabel(role, 'Invité')
 }
 
 export function formatActorStatus(status: string | null | undefined) {

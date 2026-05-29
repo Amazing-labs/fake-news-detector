@@ -1,5 +1,6 @@
 import {
   InboxCreateWorkspacePage,
+  InboxSubjectDetailWorkspacePage,
   InboxWorkspacePage,
   ReportsWorkspacePage,
 } from '../verifact-design/verifact-design-page'
@@ -14,4 +15,8 @@ export function InboxSubjectsCreatePage() {
 
 export function InboxSubjectsReportsPage() {
   return <ReportsWorkspacePage />
+}
+
+export function InboxSubjectDetailPage({ subjectId }: { subjectId: string }) {
+  return <InboxSubjectDetailWorkspacePage subjectId={subjectId} />
 }

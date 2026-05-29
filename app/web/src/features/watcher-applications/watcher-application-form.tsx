@@ -27,7 +27,7 @@ export function WatcherApplicationForm() {
   return (
     <SectionCard
       title="Candidature vigie"
-      description="Permet de tester le flux citoyen de montee en role vigie."
+      description="Permet de tester le flux citoyen de montée en rôle vigie."
     >
       <form
         className="grid gap-3"

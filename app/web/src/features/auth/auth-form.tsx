@@ -39,7 +39,7 @@ export function AuthForm(props: {
           return
         }
 
-        setSuccess('Compte cree et session ouverte.')
+        setSuccess('Compte créé et session ouverte.')
       } else {
         const result = await authClient.signIn.email({
           email,
@@ -51,10 +51,15 @@ export function AuthForm(props: {
           return
         }
 
-        setSuccess('Connexion reussie.')
+        setSuccess('Connexion réussie.')
       }
 
-      await props.onSuccess?.()
+      try {
+        await props.onSuccess?.()
+      } catch {
+        setError('Connexion réussie, mais redirection impossible.')
+        return
+      }
       setPassword('')
     } finally {
       setPending(false)
@@ -92,7 +97,7 @@ export function AuthForm(props: {
         ) : null}
 
         <Input
-          label="Email"
+          label="E-mail"
           type="email"
           value={email}
           onChange={(event) => setEmail(event.target.value)}
@@ -114,7 +119,7 @@ export function AuthForm(props: {
           {pending
             ? 'En cours...'
             : mode === 'sign-up'
-              ? 'Creer un compte'
+              ? 'Créer un compte'
               : 'Se connecter'}
         </Button>
       </form>

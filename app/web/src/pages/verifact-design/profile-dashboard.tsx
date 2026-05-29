@@ -16,15 +16,26 @@ import {
 } from '../../shared/ui/shadcn/card'
 import { AppLayout } from './app-layout'
 import { initials, sessionRoleLabel, useResolvedActor } from './session-routing'
+import type { Actor } from './types'
 import { WorkTable } from './work-table'
+
+const contributionScores: Record<Actor, { score: number; detail: string }> = {
+  guest: { score: 0, detail: 'session invitée' },
+  citizen: { score: 42, detail: 'signalements utiles' },
+  watcher: { score: 68, detail: 'preuves relues' },
+  journalist: { score: 81, detail: 'dossiers documentés' },
+  director: { score: 89, detail: 'arbitrages finalisés' },
+  admin: { score: 74, detail: 'comptes maintenus' },
+}
 
 export function ProfileDashboard() {
   const { session, actor } = useResolvedActor('journalist')
   const navigate = useNavigate()
   const displayName = session?.user.name ?? 'Utilisateur'
-  const email = session?.user.email ?? 'Session invitee'
+  const email = session?.user.email ?? 'Session invitée'
   const roleLabel = sessionRoleLabel(session, actor)
   const statusLabel = formatActorStatus(session?.user.actorStatus)
+  const contribution = contributionScores[actor]
 
   async function handleSignOut() {
     await authClient.signOut()
@@ -55,7 +66,7 @@ export function ProfileDashboard() {
                 </p>
               </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+            <div className="grid gap-3 sm:grid-cols-3 xl:grid-cols-1 2xl:grid-cols-3">
               <div className="bg-muted rounded-lg p-3">
                 <p className="text-muted-foreground text-xs font-medium uppercase">
                   Role
@@ -72,17 +83,28 @@ export function ProfileDashboard() {
                   {statusLabel}
                 </p>
               </div>
+              <div className="bg-muted rounded-lg p-3">
+                <p className="text-muted-foreground text-xs font-medium uppercase">
+                  Score contribution
+                </p>
+                <p className="mt-1 text-base leading-tight font-medium">
+                  {contribution.score}
+                </p>
+                <p className="text-muted-foreground mt-1 text-xs">
+                  {contribution.detail}
+                </p>
+              </div>
             </div>
             <Button
               variant="outline"
               className="w-full"
               onClick={() => void handleSignOut()}
             >
-              Deconnexion
+              Déconnexion
             </Button>
           </CardContent>
         </Card>
-        <WorkTable />
+        <WorkTable actor={actor} />
       </div>
     </AppLayout>
   )

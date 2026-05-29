@@ -36,7 +36,7 @@ export function ActorTabsPage(props: {
           </TabsList>
           <Button>
             <FilePlus2 />
-            Creer
+            Créer
           </Button>
         </div>
         {props.tabs.map((tab) => (

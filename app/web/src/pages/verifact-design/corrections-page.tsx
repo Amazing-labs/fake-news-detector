@@ -18,22 +18,22 @@ export function CorrectionsPage() {
         <CardHeader>
           <CardTitle>Correctif</CardTitle>
           <CardDescription>
-            Associe la publication et redige la note.
+            Associe la publication et rédige la note.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="publication">Publication</Label>
-            <Input id="publication" placeholder="Titre ou reference publique" />
+            <Input id="publication" placeholder="Titre ou référence publique" />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="correction">Correction</Label>
             <Textarea
               id="correction"
-              placeholder="Explique le correctif a publier"
+              placeholder="Explique le correctif à publier"
             />
           </div>
-          <Button className="w-fit">Preparer le correctif</Button>
+          <Button className="w-fit">Préparer le correctif</Button>
         </CardContent>
       </Card>
     </AppLayout>
