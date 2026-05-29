@@ -58,7 +58,7 @@ export function ProfileDashboard() {
                 <div className="flex items-center gap-4">
                   <Avatar className="size-16">
                     <AvatarImage
-                      src={session?.user.image ?? ''}
+                      src={session?.user.image ?? undefined}
                       alt={displayName}
                     />
                     <AvatarFallback>{initials(displayName)}</AvatarFallback>
