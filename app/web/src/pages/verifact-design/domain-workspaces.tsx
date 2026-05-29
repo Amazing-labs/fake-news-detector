@@ -765,19 +765,26 @@ export function DirectorHomePage() {
 }
 
 export function JournalistWorkspacePage() {
+  const currentInvestigation = investigations.find(
+    (item) => item.status === 'PENDING_REVIEW',
+  )
+  const correctionRequest = investigations.find(
+    (item) => item.status === 'NEEDS_REVISION',
+  )
+
   return (
     <AppLayout actor="journalist" page="dashboard">
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
-          title="Enquetes actives"
-          value="5"
-          hint="capacite suivie"
+          title="Dossier courant"
+          value="1"
+          hint="en responsabilite"
           icon={FileSearch}
         />
         <StatCard
-          title="A soumettre"
-          value="2"
-          hint="pret pour revue"
+          title="Etat du dossier"
+          value="1"
+          hint="revue direction"
           icon={ClipboardCheck}
         />
         <StatCard
@@ -790,36 +797,88 @@ export function JournalistWorkspacePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Dossiers de travail</CardTitle>
+          <CardTitle>Dossier en cours</CardTitle>
           <CardDescription>
-            Prendre un sujet, documenter les sources, puis soumettre pour revue.
+            Un journaliste travaille un seul sujet actif, puis le soumet pour
+            revue.
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-3">
-          {investigations
-            .filter((item) => item.status !== 'PUBLISHED')
-            .map((item) => (
-              <div
-                key={item.title}
-                className="grid gap-4 rounded-lg border p-4 lg:grid-cols-[1fr_15rem]"
-              >
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium">{item.title}</p>
-                    <StatusBadge status={item.status} />
-                  </div>
-                  <p className="text-muted-foreground mt-2 text-sm">
-                    {item.category} / {item.evidence}
-                  </p>
+        <CardContent className="grid gap-4">
+          {currentInvestigation ? (
+            <div className="grid gap-5 rounded-lg border p-4 lg:grid-cols-[minmax(0,1fr)_16rem]">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-medium">{currentInvestigation.title}</p>
+                  <StatusBadge status={currentInvestigation.status} />
                 </div>
-                <div className="grid gap-2">
-                  <Button size="sm">Ouvrir le brouillon</Button>
-                  <Button size="sm" variant="outline">
-                    Soumettre en revue
-                  </Button>
+                <p className="text-muted-foreground mt-2 text-sm">
+                  {currentInvestigation.category} /{' '}
+                  {currentInvestigation.evidence}
+                </p>
+                <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                  <div className="bg-muted rounded-lg p-3">
+                    <p className="text-muted-foreground text-xs uppercase">
+                      Verdict brouillon
+                    </p>
+                    <p className="mt-1 font-medium">
+                      {domainLabel(currentInvestigation.verdict)}
+                    </p>
+                  </div>
+                  <div className="bg-muted rounded-lg p-3">
+                    <p className="text-muted-foreground text-xs uppercase">
+                      Sources
+                    </p>
+                    <p className="mt-1 font-medium">
+                      {currentInvestigation.evidence}
+                    </p>
+                  </div>
+                  <div className="bg-muted rounded-lg p-3">
+                    <p className="text-muted-foreground text-xs uppercase">
+                      Prochaine etape
+                    </p>
+                    <p className="mt-1 font-medium">Revue direction</p>
+                  </div>
                 </div>
               </div>
-            ))}
+              <div className="grid content-start gap-2">
+                <Button size="sm" asChild>
+                  <Link
+                    to="/investigations/$investigationId"
+                    params={{
+                      investigationId: slugifyLabel(currentInvestigation.title),
+                    }}
+                  >
+                    Ouvrir le brouillon
+                  </Link>
+                </Button>
+                <Button size="sm" variant="outline">
+                  Soumettre en revue
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
+          {correctionRequest ? (
+            <div className="bg-muted/30 flex flex-wrap items-center justify-between gap-3 rounded-lg border p-4">
+              <div>
+                <p className="text-sm font-medium">Retour direction</p>
+                <p className="text-muted-foreground text-sm">
+                  {correctionRequest.title} attend une correction avant nouvelle
+                  soumission.
+                </p>
+              </div>
+              <Button size="sm" variant="outline" asChild>
+                <Link
+                  to="/investigations/$investigationId"
+                  params={{
+                    investigationId: slugifyLabel(correctionRequest.title),
+                  }}
+                >
+                  Reprendre
+                </Link>
+              </Button>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
     </AppLayout>
@@ -860,8 +919,18 @@ export function CitizenWorkspacePage() {
                     {item.content}
                   </p>
                 </div>
-                <Button size="sm" variant="outline" className="self-start">
-                  Voir le suivi
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="self-start"
+                  asChild
+                >
+                  <Link
+                    to="/reports/$reportId"
+                    params={{ reportId: slugifyLabel(item.title) }}
+                  >
+                    Voir le suivi
+                  </Link>
                 </Button>
               </div>
             ))}
@@ -905,6 +974,82 @@ export function CitizenReportCreateWorkspacePage() {
             <Button variant="outline" asChild>
               <Link to="/reports">Retour aux signalements</Link>
             </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </AppLayout>
+  )
+}
+
+export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
+  const { actor } = useResolvedActor('citizen')
+  const report =
+    reports.find((item) => slugifyLabel(item.title) === reportId) ?? reports[0]
+
+  return (
+    <AppLayout actor={actor} page="reports">
+      <Card>
+        <CardHeader>
+          <CardTitle>{report.title}</CardTitle>
+          <CardDescription>
+            Historique du signalement et suivi editorial.
+          </CardDescription>
+          <CardAction>
+            <StatusBadge status={report.status} />
+          </CardAction>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-lg border p-4">
+              <p className="text-muted-foreground text-xs font-medium uppercase">
+                Theme
+              </p>
+              <p className="mt-1 font-medium">{report.theme}</p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <p className="text-muted-foreground text-xs font-medium uppercase">
+                Source
+              </p>
+              <p className="mt-1 font-medium">{report.reporter}</p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <p className="text-muted-foreground text-xs font-medium uppercase">
+                Derniere mise a jour
+              </p>
+              <p className="mt-1 font-medium">16 mai 2026</p>
+            </div>
+          </div>
+
+          <div className="rounded-lg border p-4">
+            <p className="font-medium">Rumeur transmise</p>
+            <p className="text-muted-foreground mt-2 text-sm">
+              {report.content}
+            </p>
+          </div>
+
+          <div className="rounded-lg border p-4">
+            <p className="font-medium">Suivi du desk</p>
+            <div className="mt-4 grid gap-3">
+              {[
+                ['Reception', 'Signalement recu et conserve dans le desk.'],
+                [
+                  'Qualification',
+                  'Le desk verifie si un sujet doit etre ouvert.',
+                ],
+                [
+                  'Retour',
+                  'Une publication ou une archive sera rattachee ici.',
+                ],
+              ].map(([title, body]) => (
+                <div key={title} className="flex gap-3">
+                  <CheckCircle2 className="text-muted-foreground mt-0.5 size-4" />
+                  <div>
+                    <p className="text-sm font-medium">{title}</p>
+                    <p className="text-muted-foreground text-sm">{body}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -1188,7 +1333,8 @@ function InboxList(props: {
       </CardHeader>
       <CardContent className="grid gap-3">
         {rows.map((item) => {
-          const investigationId = slugifyLabel(item.theme)
+          const detailId = slugifyLabel(item.theme)
+          const isInInvestigation = item.status === 'IN_PROGRESS'
 
           return (
             <div
@@ -1210,13 +1356,23 @@ function InboxList(props: {
                   className="text-muted-foreground hover:text-foreground hover:bg-muted size-8 rounded-full transition-colors"
                   asChild
                 >
-                  <Link
-                    to="/investigations/$investigationId"
-                    params={{ investigationId }}
-                    aria-label={`Voir le detail de ${item.theme}`}
-                  >
-                    <ExternalLink />
-                  </Link>
+                  {isInInvestigation ? (
+                    <Link
+                      to="/investigations/$investigationId"
+                      params={{ investigationId: detailId }}
+                      aria-label={`Voir le detail de l'enquete ${item.theme}`}
+                    >
+                      <ExternalLink />
+                    </Link>
+                  ) : (
+                    <Link
+                      to="/inbox-subjects/$subjectId"
+                      params={{ subjectId: detailId }}
+                      aria-label={`Voir le detail du sujet ${item.theme}`}
+                    >
+                      <ExternalLink />
+                    </Link>
+                  )}
                 </Button>
                 {props.actor === 'director' ? (
                   <Dialog>
@@ -1266,6 +1422,71 @@ function InboxList(props: {
         })}
       </CardContent>
     </Card>
+  )
+}
+
+export function InboxSubjectDetailWorkspacePage({
+  subjectId,
+}: {
+  subjectId: string
+}) {
+  const { actor } = useResolvedActor('journalist')
+  const subject =
+    inboxSubjects.find((item) => slugifyLabel(item.theme) === subjectId) ??
+    inboxSubjects[0]
+
+  return (
+    <AppLayout actor={actor} page="subjects">
+      <Card>
+        <CardHeader>
+          <CardTitle>{subject.theme}</CardTitle>
+          <CardDescription>
+            Detail du sujet avant prise en charge journalistique.
+          </CardDescription>
+          <CardAction>
+            <StatusBadge status={subject.status} />
+          </CardAction>
+        </CardHeader>
+        <CardContent className="grid gap-4">
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="rounded-lg border p-4">
+              <p className="text-muted-foreground text-xs font-medium uppercase">
+                Origine
+              </p>
+              <p className="mt-1 font-medium">{subject.origin}</p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <p className="text-muted-foreground text-xs font-medium uppercase">
+                Responsable
+              </p>
+              <p className="mt-1 font-medium">{subject.owner}</p>
+            </div>
+            <div className="rounded-lg border p-4">
+              <p className="text-muted-foreground text-xs font-medium uppercase">
+                Etat
+              </p>
+              <p className="mt-1 font-medium">{domainLabel(subject.status)}</p>
+            </div>
+          </div>
+
+          <div className="rounded-lg border p-4">
+            <p className="font-medium">Contexte</p>
+            <p className="text-muted-foreground mt-2 text-sm">
+              {subject.description}
+            </p>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            {actor === 'journalist' && subject.status === 'OPEN' ? (
+              <Button>Prendre le sujet</Button>
+            ) : null}
+            <Button variant="outline" asChild>
+              <Link to="/inbox-subjects/global">Retour aux sujets</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </AppLayout>
   )
 }
 
@@ -1362,6 +1583,7 @@ export function InvestigationDetailWorkspacePage({
 }: {
   investigationId?: string
 }) {
+  const { actor } = useResolvedActor('director')
   const dossier = {
     id: investigationId ?? 'selection courante',
     title: 'Video de checkpoint sortie de contexte',
@@ -1416,6 +1638,7 @@ export function InvestigationDetailWorkspacePage({
       title: 'Comparaison du decor',
       watcher: 'Awa Diarra',
       media: '2 images',
+      category: 'CONTEXT_COLLAPSE',
       reliability: 'TRUE',
       note: 'Le panneau visible dans la video correspond a l ancien checkpoint.',
     },
@@ -1423,6 +1646,7 @@ export function InvestigationDetailWorkspacePage({
       title: 'Recherche de publication anterieure',
       watcher: 'Malik Sissoko',
       media: '1 lien',
+      category: 'MISLEADING',
       reliability: 'TRUE',
       note: 'Le meme extrait circule deja dans une archive de 2022.',
     },
@@ -1435,8 +1659,20 @@ export function InvestigationDetailWorkspacePage({
     'Dossier soumis a revue direction',
   ]
 
+  if (actor === 'journalist') {
+    return (
+      <JournalistInvestigationWorkspace
+        dossier={dossier}
+        sourceMedia={sourceMedia}
+        authoritySources={authoritySources}
+        watcherEvidence={watcherEvidence}
+        timeline={timeline}
+      />
+    )
+  }
+
   return (
-    <AppLayout actor="director" page="investigations">
+    <AppLayout actor={actor} page="investigations">
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
         <div className="grid gap-6">
           <Card>
@@ -1656,6 +1892,385 @@ export function InvestigationDetailWorkspacePage({
             </CardHeader>
             <CardContent className="grid gap-3">
               {timeline.map((item) => (
+                <div key={item} className="flex items-center gap-3">
+                  <CheckCircle2 className="text-primary size-4" />
+                  <span className="text-sm">{item}</span>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </AppLayout>
+  )
+}
+
+function JournalistInvestigationWorkspace({
+  dossier,
+  sourceMedia,
+  authoritySources,
+  watcherEvidence,
+  timeline,
+}: {
+  dossier: {
+    title: string
+    subject: string
+    journalist: string
+    status: string
+    category: string
+    verdict: string
+    attempts: number
+    updatedAt: string
+    notes: string
+  }
+  sourceMedia: Array<{
+    title: string
+    type: string
+    origin: string
+    reliability: string
+    category: string
+    justification: string
+  }>
+  authoritySources: Array<{
+    name: string
+    type: string
+    detail: string
+  }>
+  watcherEvidence: Array<{
+    title: string
+    watcher: string
+    media: string
+    category?: string
+    reliability?: string
+    note: string
+  }>
+  timeline: string[]
+}) {
+  const [proofMediaType, setProofMediaType] = useState('LINK')
+  const isProofLink = proofMediaType === 'LINK'
+
+  return (
+    <AppLayout actor="journalist" page="investigations">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+        <div className="grid gap-6">
+          <Card>
+            <CardHeader>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <CardTitle>{dossier.title}</CardTitle>
+                  <CardDescription className="mt-2 max-w-2xl">
+                    {dossier.subject}
+                  </CardDescription>
+                </div>
+                <StatusBadge status={dossier.status} />
+              </div>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="rounded-lg border p-3">
+                  <p className="text-muted-foreground text-xs font-medium uppercase">
+                    Verdict brouillon
+                  </p>
+                  <p className="mt-1 font-medium">
+                    {domainLabel(dossier.verdict)}
+                  </p>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <p className="text-muted-foreground text-xs font-medium uppercase">
+                    Categorie dominante
+                  </p>
+                  <p className="mt-1 font-medium">
+                    {domainLabel(dossier.category)}
+                  </p>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <p className="text-muted-foreground text-xs font-medium uppercase">
+                    Revision
+                  </p>
+                  <p className="mt-1 font-medium">
+                    Tentative {dossier.attempts}
+                  </p>
+                </div>
+                <div className="rounded-lg border p-3">
+                  <p className="text-muted-foreground text-xs font-medium uppercase">
+                    Derniere mise a jour
+                  </p>
+                  <p className="mt-1 font-medium">{dossier.updatedAt}</p>
+                </div>
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="font-medium">Notes d enquete</p>
+                <p className="text-muted-foreground mt-2 text-sm">
+                  {dossier.notes}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button>
+                  <ClipboardCheck />
+                  Soumettre en revue
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link to="/inbox-subjects/global">Retour aux sujets</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Classification des medias source</CardTitle>
+              <CardDescription>
+                Le backend attend categorie, fiabilite et justification pour
+                chaque media issu du sujet.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              {sourceMedia.map((media) => (
+                <div
+                  key={media.title}
+                  className="grid gap-4 rounded-lg border p-4"
+                >
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="font-medium">{media.title}</p>
+                      <p className="text-muted-foreground text-sm">
+                        {domainLabel(media.origin)} / {domainLabel(media.type)}
+                      </p>
+                    </div>
+                    <Badge variant="outline">
+                      {domainLabel(media.category)}
+                    </Badge>
+                  </div>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <Label className="grid gap-2">
+                      Categorie
+                      <select
+                        defaultValue={media.category}
+                        className="border-input bg-background h-10 rounded-md border px-3 text-sm"
+                      >
+                        <option value="CONTEXT_COLLAPSE">
+                          Contexte detourne
+                        </option>
+                        <option value="MANIPULATED">Manipule</option>
+                        <option value="FABRICATED">Fabrique</option>
+                        <option value="SATIRE">Satire</option>
+                        <option value="MISLEADING">Trompeur</option>
+                        <option value="IMPOSTOR">Usurpation</option>
+                        <option value="OTHER">Autre</option>
+                      </select>
+                    </Label>
+                    <Label className="grid gap-2">
+                      Fiabilite
+                      <select
+                        defaultValue={media.reliability}
+                        className="border-input bg-background h-10 rounded-md border px-3 text-sm"
+                      >
+                        <option value="TRUE">Vrai</option>
+                        <option value="FALSE">Faux</option>
+                        <option value="MISLEADING">Trompeur</option>
+                        <option value="UNVERIFIABLE">Non verifiable</option>
+                      </select>
+                    </Label>
+                  </div>
+                  <Label className="grid gap-2">
+                    Justification
+                    <Textarea defaultValue={media.justification} />
+                  </Label>
+                  <Button size="sm" className="w-fit">
+                    Enregistrer la classification
+                  </Button>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Ajouter une preuve journalistique</CardTitle>
+              <CardDescription>
+                Ajoute une URL verifiee et la source d autorite rattachee.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4">
+              <div className="grid gap-3 md:grid-cols-2">
+                <Label className="grid gap-2">
+                  Type de media
+                  <select
+                    value={proofMediaType}
+                    onChange={(event) => setProofMediaType(event.target.value)}
+                    className="border-input bg-background h-10 rounded-md border px-3 text-sm"
+                  >
+                    <option value="LINK">Lien</option>
+                    <option value="IMAGE">Image</option>
+                    <option value="VIDEO">Video</option>
+                    <option value="DOCUMENT">Document</option>
+                    <option value="AUDIO">Audio</option>
+                    <option value="TEXT">Texte</option>
+                  </select>
+                </Label>
+                <Label className="grid gap-2">
+                  Source d autorite
+                  <Input placeholder="Nom de la source" />
+                </Label>
+                <Label className="grid gap-2">
+                  Type de source
+                  <select className="border-input bg-background h-10 rounded-md border px-3 text-sm">
+                    <option value="OFFICIAL_DECREE">Decision officielle</option>
+                    <option value="ORIGINAL_RETRACTION">
+                      Rectificatif original
+                    </option>
+                    <option value="DIRECT_EVIDENCE">Preuve directe</option>
+                    <option value="MEDIA_CROSSCHECK">Recoupement media</option>
+                    <option value="AUTHORITY_STATEMENT">
+                      Declaration d autorite
+                    </option>
+                  </select>
+                </Label>
+              </div>
+              {isProofLink ? (
+                <Label className="grid gap-2">
+                  URL de la preuve
+                  <Input placeholder="https://..." type="url" />
+                </Label>
+              ) : (
+                <MediaDropzone
+                  inputId="journalist-proof-media"
+                  description="Depose un fichier ou selectionne le media verifie a joindre a cette preuve."
+                />
+              )}
+              <Button className="w-fit">
+                <FilePlus2 />
+                Ajouter la preuve
+              </Button>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Contributions vigies</CardTitle>
+              <CardDescription>
+                Les apports des vigies restent consultables pour consolider le
+                dossier.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              {watcherEvidence.map((evidence) => {
+                const hasClassification = Boolean(evidence.reliability)
+
+                return (
+                  <div key={evidence.title} className="rounded-lg border p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <p className="font-medium">{evidence.title}</p>
+                        <p className="text-muted-foreground text-sm">
+                          {evidence.watcher} / {evidence.media}
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        <Badge variant="outline">
+                          {evidence.category
+                            ? domainLabel(evidence.category)
+                            : 'Categorie a definir'}
+                        </Badge>
+                        <Badge variant="secondary">
+                          {evidence.reliability
+                            ? domainLabel(evidence.reliability)
+                            : 'Verdict a definir'}
+                        </Badge>
+                      </div>
+                    </div>
+                    <p className="text-muted-foreground mt-3 text-sm">
+                      {evidence.note}
+                    </p>
+                    <div className="mt-4 grid gap-3 md:grid-cols-2">
+                      <Label className="grid gap-2">
+                        Categorie
+                        <select
+                          defaultValue={evidence.category ?? ''}
+                          className="border-input bg-background h-10 rounded-md border px-3 text-sm"
+                        >
+                          <option value="" disabled>
+                            Choisir une categorie
+                          </option>
+                          <option value="CONTEXT_COLLAPSE">
+                            Contexte detourne
+                          </option>
+                          <option value="MANIPULATED">Manipule</option>
+                          <option value="FABRICATED">Fabrique</option>
+                          <option value="SATIRE">Satire</option>
+                          <option value="MISLEADING">Trompeur</option>
+                          <option value="IMPOSTOR">Usurpation</option>
+                          <option value="OTHER">Autre</option>
+                        </select>
+                      </Label>
+                      <Label className="grid gap-2">
+                        Verdict
+                        <select
+                          defaultValue={evidence.reliability ?? ''}
+                          className="border-input bg-background h-10 rounded-md border px-3 text-sm"
+                        >
+                          <option value="" disabled>
+                            Choisir un verdict
+                          </option>
+                          <option value="TRUE">Vrai</option>
+                          <option value="FALSE">Faux</option>
+                          <option value="MISLEADING">Trompeur</option>
+                          <option value="UNVERIFIABLE">Non verifiable</option>
+                        </select>
+                      </Label>
+                      <Label className="grid gap-2 md:col-span-2">
+                        Justification
+                        <Textarea defaultValue={evidence.note} />
+                      </Label>
+                    </div>
+                    <Button size="sm" variant="outline" className="mt-3">
+                      {hasClassification ? 'Reclasser' : 'Classer'} cette
+                      contribution
+                    </Button>
+                  </div>
+                )
+              })}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid content-start gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Sources d autorite</CardTitle>
+              <CardDescription>
+                Sources rattachees aux preuves deja ajoutees.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              {authoritySources.map((source) => (
+                <div key={source.name} className="rounded-lg border p-3">
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <p className="font-medium">{source.name}</p>
+                      <p className="text-muted-foreground text-xs">
+                        {domainLabel(source.type)}
+                      </p>
+                    </div>
+                    <ShieldCheck className="text-primary size-4" />
+                  </div>
+                  <p className="text-muted-foreground mt-2 text-sm">
+                    {source.detail}
+                  </p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Progression</CardTitle>
+              <CardDescription>
+                Le dossier part en direction uniquement apres soumission.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-3">
+              {timeline.slice(0, 3).map((item) => (
                 <div key={item} className="flex items-center gap-3">
                   <CheckCircle2 className="text-primary size-4" />
                   <span className="text-sm">{item}</span>
@@ -2228,8 +2843,26 @@ export function UserStatusWorkspacePage({ userLabel }: { userLabel?: string }) {
 }
 
 export function WatcherApplicationsReviewPage() {
+  const { actor } = useResolvedActor('citizen')
+
+  if (actor === 'watcher') {
+    return <WatcherContributionWorkspacePage />
+  }
+
+  if (actor === 'citizen') {
+    return <WatcherApplicationWorkspacePage />
+  }
+
   return (
     <AppLayout actor="director" page="people">
+      <Card>
+        <CardHeader>
+          <CardTitle>Espace vigie</CardTitle>
+          <CardDescription>
+            Valider les candidatures et garder une trace des decisions.
+          </CardDescription>
+        </CardHeader>
+      </Card>
       <Tabs defaultValue="pending">
         <TabsList>
           <TabsTrigger value="pending">Candidatures</TabsTrigger>
@@ -2277,58 +2910,319 @@ export function WatcherApplicationsReviewPage() {
   )
 }
 
-export function NotificationsWorkspacePage() {
+function WatcherApplicationWorkspacePage() {
   return (
-    <AppLayout actor="journalist" page="notifications">
-      <div className="grid gap-4">
-        {[
-          {
-            icon: Newspaper,
-            type: 'PUBLICATION',
-            title: 'Nouvelle publication',
-            body: 'Un dossier suivi vient de recevoir un verdict public.',
-          },
-          {
-            icon: RotateCcw,
-            type: 'CORRECTION',
-            title: 'Correctif publie',
-            body: 'Une publication a ete corrigee apres nouvelle validation.',
-          },
-          {
-            icon: Archive,
-            type: 'ARCHIVED_PUBLICATION',
-            title: 'Dossier archive',
-            body: 'Une enquete non verifiable a ete archivee par la direction.',
-          },
-          {
-            icon: AlertTriangle,
-            type: 'ALERT',
-            title: 'Action requise',
-            body: 'Une preuve ou une revision attend ton intervention.',
-          },
-        ].map((item) => {
-          const Icon = item.icon
+    <AppLayout actor="citizen" page="reports">
+      <Card>
+        <CardHeader>
+          <CardTitle>Espace vigie</CardTitle>
+          <CardDescription>
+            Candidate pour contribuer aux enquetes ouvertes par la redaction.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form className="grid gap-4">
+            <Label className="grid gap-2">
+              Motivation
+              <Textarea placeholder="Explique pourquoi tu veux devenir vigie et comment tu peux aider la redaction." />
+            </Label>
+            <Button className="w-fit">
+              <UserPlus />
+              Envoyer la candidature
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </AppLayout>
+  )
+}
 
-          return (
-            <Card key={item.type}>
-              <CardContent className="flex items-start gap-4 p-5">
-                <div className="bg-muted flex size-10 shrink-0 items-center justify-center rounded-full">
-                  <Icon className="size-4" />
+function WatcherContributionWorkspacePage() {
+  const activeInvestigations = investigations.filter((item) =>
+    ['IN_PROGRESS', 'NEEDS_REVISION'].includes(item.status),
+  )
+
+  return (
+    <AppLayout actor="watcher" page="reports">
+      <Card>
+        <CardHeader>
+          <CardTitle>Espace vigie</CardTitle>
+          <CardDescription>
+            Contribue aux enquetes en cours avec des preuves, liens et
+            observations terrain.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3">
+          {activeInvestigations.map((item) => (
+            <div
+              key={item.title}
+              className="grid gap-4 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
+            >
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-medium">{item.title}</p>
+                  <Badge variant="secondary">{domainLabel(item.status)}</Badge>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-semibold">{item.title}</p>
-                    <Badge variant="secondary">{domainLabel(item.type)}</Badge>
-                  </div>
-                  <p className="text-muted-foreground mt-1 text-sm">
-                    {item.body}
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-          )
-        })}
+                <p className="text-muted-foreground mt-1 text-sm">
+                  {item.category} / {item.evidence}
+                </p>
+                <p className="text-muted-foreground mt-3 text-sm">
+                  Ajoute un contexte local, une source, un media ou une note qui
+                  aide le journaliste a consolider le dossier.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-start gap-2 md:justify-end">
+                <Button size="sm" variant="outline" asChild>
+                  <Link
+                    to="/investigations/$investigationId"
+                    params={{ investigationId: slugifyLabel(item.title) }}
+                  >
+                    <ExternalLink />
+                    Voir le dossier
+                  </Link>
+                </Button>
+                <Button size="sm">
+                  <FilePlus2 />
+                  Contribuer
+                </Button>
+              </div>
+            </div>
+          ))}
+        </CardContent>
+      </Card>
+    </AppLayout>
+  )
+}
+
+const notificationItems = [
+  {
+    id: 'nouvelle-publication',
+    type: 'PUBLICATION',
+    theme: 'Nouvelle publication',
+    message: 'Un dossier suivi vient de recevoir un verdict public.',
+    isRead: false,
+    publicationId: 'la-video-du-checkpoint-date-de-2022',
+    investigationId: null,
+  },
+  {
+    id: 'correctif-publie',
+    type: 'CORRECTION',
+    theme: 'Correctif publie',
+    message: 'Une publication a ete corrigee apres nouvelle validation.',
+    isRead: false,
+    publicationId: 'correction-sur-le-prix-du-mil',
+    investigationId: null,
+  },
+  {
+    id: 'dossier-archive',
+    type: 'ARCHIVED_PUBLICATION',
+    theme: 'Dossier archive',
+    message: 'Une enquete non verifiable a ete archivee par la direction.',
+    isRead: true,
+    publicationId: null,
+    investigationId: 'crise-essence',
+  },
+  {
+    id: 'action-requise',
+    type: 'ALERT',
+    theme: 'Action requise',
+    message: 'Une preuve ou une revision attend ton intervention.',
+    isRead: true,
+    publicationId: null,
+    investigationId: null,
+  },
+] as const
+
+const notificationTypeConfig = {
+  PUBLICATION: {
+    icon: Newspaper,
+    label: 'Publication',
+    intent: 'Verdict public disponible',
+    actionLabel: 'Ouvrir la publication',
+  },
+  CORRECTION: {
+    icon: RotateCcw,
+    label: 'Correctif',
+    intent: 'Publication corrigee',
+    actionLabel: 'Ouvrir le correctif',
+  },
+  ALERT: {
+    icon: AlertTriangle,
+    label: 'Alerte',
+    intent: 'Intervention attendue',
+    actionLabel: 'Retour aux notifications',
+  },
+  ARCHIVED_PUBLICATION: {
+    icon: Archive,
+    label: 'Archive',
+    intent: 'Enquete archivee',
+    actionLabel: 'Ouvrir le dossier',
+  },
+} as const
+
+function getNotificationConfig(
+  type: (typeof notificationItems)[number]['type'],
+) {
+  return notificationTypeConfig[type]
+}
+
+function getNotificationTarget(item: (typeof notificationItems)[number]) {
+  if (item.publicationId) {
+    return {
+      kind: 'publication',
+      id: item.publicationId,
+      label: getNotificationConfig(item.type).actionLabel,
+    } as const
+  }
+
+  if (item.investigationId) {
+    return {
+      kind: 'investigation',
+      id: item.investigationId,
+      label: getNotificationConfig(item.type).actionLabel,
+    } as const
+  }
+
+  return null
+}
+
+export function NotificationsWorkspacePage() {
+  const { actor } = useResolvedActor('journalist')
+
+  function renderNotificationCard(item: (typeof notificationItems)[number]) {
+    const config = getNotificationConfig(item.type)
+    const Icon = config.icon
+    const target = getNotificationTarget(item)
+    const card = (
+      <Card
+        className={cn(
+          'hover:border-primary/40 hover:bg-muted/40 transition-colors',
+          !item.isRead && 'border-primary/30 bg-primary/5 shadow-primary/10',
+        )}
+      >
+        <CardContent className="flex items-start gap-4 p-5">
+          <div
+            className={cn(
+              'bg-muted flex size-10 shrink-0 items-center justify-center rounded-full',
+              !item.isRead && 'bg-primary/10 text-primary',
+            )}
+          >
+            <Icon className="size-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2">
+              {!item.isRead ? (
+                <span className="bg-primary size-2 rounded-full" />
+              ) : null}
+              <p className="font-semibold">{item.theme}</p>
+              <Badge variant="secondary">{config.label}</Badge>
+            </div>
+            <p className="text-muted-foreground mt-1 text-sm">{item.message}</p>
+            <p className="text-muted-foreground mt-3 text-xs font-medium">
+              {config.intent}
+            </p>
+          </div>
+          {target ? (
+            <ExternalLink className="text-muted-foreground mt-1 size-4 shrink-0" />
+          ) : null}
+        </CardContent>
+      </Card>
+    )
+
+    return (
+      <Link
+        key={item.id}
+        to="/notifications/$notificationId"
+        params={{ notificationId: item.id }}
+        className="block"
+        aria-label={`Voir le detail: ${item.theme}`}
+      >
+        {card}
+      </Link>
+    )
+  }
+
+  return (
+    <AppLayout actor={actor} page="notifications">
+      <div className="grid gap-4">
+        {notificationItems.map(renderNotificationCard)}
       </div>
+    </AppLayout>
+  )
+}
+
+export function NotificationDetailWorkspacePage({
+  notificationId,
+}: {
+  notificationId: string
+}) {
+  const { actor } = useResolvedActor('journalist')
+  const item =
+    notificationItems.find((candidate) => candidate.id === notificationId) ??
+    notificationItems[0]
+  const config = getNotificationConfig(item.type)
+  const target = getNotificationTarget(item)
+  const Icon = config.icon
+
+  return (
+    <AppLayout actor={actor} page="notifications">
+      <Card
+        className={cn(
+          !item.isRead && 'border-primary/30 bg-primary/5 shadow-primary/10',
+        )}
+      >
+        <CardHeader>
+          <div className="flex flex-wrap items-start gap-4">
+            <div
+              className={cn(
+                'bg-muted flex size-11 shrink-0 items-center justify-center rounded-full',
+                !item.isRead && 'bg-primary/10 text-primary',
+              )}
+            >
+              <Icon className="size-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <div className="flex flex-wrap items-center gap-2">
+                {!item.isRead ? (
+                  <span className="bg-primary size-2 rounded-full" />
+                ) : null}
+                <CardTitle>{item.theme}</CardTitle>
+                <Badge variant="secondary">{config.label}</Badge>
+              </div>
+              <CardDescription className="mt-2">{item.message}</CardDescription>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-2">
+            {target?.kind === 'publication' ? (
+              <Button asChild>
+                <Link
+                  to="/publications/$publicationId"
+                  params={{ publicationId: target.id }}
+                >
+                  <ExternalLink />
+                  {target.label}
+                </Link>
+              </Button>
+            ) : null}
+            {target?.kind === 'investigation' ? (
+              <Button asChild>
+                <Link
+                  to="/investigations/$investigationId"
+                  params={{ investigationId: target.id }}
+                >
+                  <ExternalLink />
+                  {target.label}
+                </Link>
+              </Button>
+            ) : null}
+            <Button variant="outline" asChild>
+              <Link to="/notifications">Retour aux notifications</Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </AppLayout>
   )
 }
