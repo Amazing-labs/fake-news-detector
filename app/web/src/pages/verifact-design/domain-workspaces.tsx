@@ -2286,8 +2286,11 @@ function JournalistInvestigationWorkspace({
 }
 
 export function PublicationsWorkspacePage() {
+  const { actor } = useResolvedActor('director')
+  const canManagePublications = actor === 'director' || actor === 'admin'
+
   return (
-    <AppLayout actor="director" page="publications">
+    <AppLayout actor={actor} page="publications">
       <Card>
         <CardHeader>
           <CardTitle>Publications et correctifs</CardTitle>
@@ -2318,15 +2321,17 @@ export function PublicationsWorkspacePage() {
                   >
                     {domainLabel(item.type)}
                   </Badge>
-                  <Button size="sm" variant="outline" asChild>
-                    <Link
-                      to="/publications/corrections"
-                      search={{ publicationId }}
-                    >
-                      <RotateCcw />
-                      Correctif
-                    </Link>
-                  </Button>
+                  {canManagePublications ? (
+                    <Button size="sm" variant="outline" asChild>
+                      <Link
+                        to="/publications/corrections"
+                        search={{ publicationId }}
+                      >
+                        <RotateCcw />
+                        Correctif
+                      </Link>
+                    </Button>
+                  ) : null}
                   <Button
                     variant="ghost"
                     size="icon"
