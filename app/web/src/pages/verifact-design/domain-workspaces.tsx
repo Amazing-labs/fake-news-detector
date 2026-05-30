@@ -1678,7 +1678,7 @@ export function InvestigationDetailWorkspacePage({
 
   return (
     <AppLayout actor={actor} page="investigations">
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid gap-6">
         <div className="grid gap-6">
           <Card>
             <CardHeader>
@@ -1854,52 +1854,6 @@ export function InvestigationDetailWorkspacePage({
                   <p className="text-muted-foreground mt-3 text-sm">
                     {evidence.note}
                   </p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid content-start gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sources d'autorité</CardTitle>
-              <CardDescription>
-                Sources rattachees aux preuves journalistiques.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3">
-              {authoritySources.map((source) => (
-                <div key={source.name} className="rounded-lg border p-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-medium">{source.name}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {domainLabel(source.type)}
-                      </p>
-                    </div>
-                    <ShieldCheck className="text-primary size-4" />
-                  </div>
-                  <p className="text-muted-foreground mt-2 text-sm">
-                    {source.detail}
-                  </p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Progression</CardTitle>
-              <CardDescription>
-                Derniere mise a jour: {dossier.updatedAt}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3">
-              {timeline.map((item) => (
-                <div key={item} className="flex items-center gap-3">
-                  <CheckCircle2 className="text-primary size-4" />
-                  <span className="text-sm">{item}</span>
                 </div>
               ))}
             </CardContent>
