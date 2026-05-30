@@ -1624,20 +1624,6 @@ export function InvestigationDetailWorkspacePage({
     },
   ]
 
-  const authoritySources = [
-    {
-      name: 'Archive video originale',
-      type: 'MEDIA_CROSSCHECK',
-      detail: 'Publication source retrouvee, datee du 12 fevrier 2022.',
-    },
-    {
-      name: 'Communique local',
-      type: 'AUTHORITY_STATEMENT',
-      detail:
-        'La prefecture confirme qu aucun incident similaire n est en cours.',
-    },
-  ]
-
   const watcherEvidence = [
     {
       title: 'Comparaison du decor',
@@ -1657,21 +1643,12 @@ export function InvestigationDetailWorkspacePage({
     },
   ]
 
-  const timeline = [
-    'Sujet créé depuis un signalement citoyen',
-    'Journaliste assigne et medias classes',
-    "Sources d'autorité rattachées",
-    'Dossier soumis a revue direction',
-  ]
-
   if (actor === 'journalist') {
     return (
       <JournalistInvestigationWorkspace
         dossier={dossier}
         sourceMedia={sourceMedia}
-        authoritySources={authoritySources}
         watcherEvidence={watcherEvidence}
-        timeline={timeline}
       />
     )
   }
@@ -1867,9 +1844,7 @@ export function InvestigationDetailWorkspacePage({
 function JournalistInvestigationWorkspace({
   dossier,
   sourceMedia,
-  authoritySources,
   watcherEvidence,
-  timeline,
 }: {
   dossier: {
     title: string
@@ -1890,11 +1865,6 @@ function JournalistInvestigationWorkspace({
     category: string
     justification: string
   }>
-  authoritySources: Array<{
-    name: string
-    type: string
-    detail: string
-  }>
   watcherEvidence: Array<{
     title: string
     watcher: string
@@ -1903,14 +1873,13 @@ function JournalistInvestigationWorkspace({
     reliability?: string
     note: string
   }>
-  timeline: string[]
 }) {
   const [proofMediaType, setProofMediaType] = useState('LINK')
   const isProofLink = proofMediaType === 'LINK'
 
   return (
     <AppLayout actor="journalist" page="investigations">
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="grid gap-6">
         <div className="grid gap-6">
           <Card>
             <CardHeader>
@@ -2189,52 +2158,6 @@ function JournalistInvestigationWorkspace({
                   </div>
                 )
               })}
-            </CardContent>
-          </Card>
-        </div>
-
-        <div className="grid content-start gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Sources d'autorité</CardTitle>
-              <CardDescription>
-                Sources rattachees aux preuves deja ajoutees.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3">
-              {authoritySources.map((source) => (
-                <div key={source.name} className="rounded-lg border p-3">
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="font-medium">{source.name}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {domainLabel(source.type)}
-                      </p>
-                    </div>
-                    <ShieldCheck className="text-primary size-4" />
-                  </div>
-                  <p className="text-muted-foreground mt-2 text-sm">
-                    {source.detail}
-                  </p>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Progression</CardTitle>
-              <CardDescription>
-                Le dossier part en direction uniquement apres soumission.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3">
-              {timeline.slice(0, 3).map((item) => (
-                <div key={item} className="flex items-center gap-3">
-                  <CheckCircle2 className="text-primary size-4" />
-                  <span className="text-sm">{item}</span>
-                </div>
-              ))}
             </CardContent>
           </Card>
         </div>
