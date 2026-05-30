@@ -1,14 +1,9 @@
-import { useNavigate } from '@tanstack/react-router'
-import {
-  formatActorStatus,
-  signOutAppSession,
-} from '../../entities/session/model'
+import { formatActorStatus } from '../../entities/session/model'
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from '../../shared/ui/shadcn/avatar'
-import { Button } from '../../shared/ui/shadcn/button'
 import { Card, CardContent } from '../../shared/ui/shadcn/card'
 import { AppLayout } from './app-layout'
 import { initials, sessionRoleLabel, useResolvedActor } from './session-routing'
@@ -26,17 +21,11 @@ const contributionScores: Record<Actor, { score: number; detail: string }> = {
 
 export function ProfileDashboard() {
   const { session, actor } = useResolvedActor('journalist')
-  const navigate = useNavigate()
   const displayName = session?.user.name ?? 'Utilisateur'
   const email = session?.user.email ?? 'Session invitée'
   const roleLabel = sessionRoleLabel(session, actor)
   const statusLabel = formatActorStatus(session?.user.actorStatus)
   const contribution = contributionScores[actor]
-
-  async function handleSignOut() {
-    await signOutAppSession()
-    await navigate({ to: '/auth', search: { mode: 'sign-in' } })
-  }
 
   return (
     <AppLayout actor={actor} page="profile">
@@ -62,43 +51,34 @@ export function ProfileDashboard() {
                 </div>
               </div>
 
-              <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto]">
-                <div className="grid gap-3 md:grid-cols-3">
-                  <div className="bg-muted rounded-xl p-4">
-                    <p className="text-muted-foreground text-xs font-medium uppercase">
-                      Role
-                    </p>
-                    <p className="mt-2 text-base leading-tight font-medium">
-                      {roleLabel}
-                    </p>
-                  </div>
-                  <div className="bg-muted rounded-xl p-4">
-                    <p className="text-muted-foreground text-xs font-medium uppercase">
-                      Statut
-                    </p>
-                    <p className="mt-2 text-base leading-tight font-medium">
-                      {statusLabel}
-                    </p>
-                  </div>
-                  <div className="bg-muted rounded-xl p-4">
-                    <p className="text-muted-foreground text-xs font-medium uppercase">
-                      Score contribution
-                    </p>
-                    <p className="mt-2 text-base leading-tight font-medium">
-                      {contribution.score}
-                    </p>
-                    <p className="text-muted-foreground mt-1 text-xs">
-                      {contribution.detail}
-                    </p>
-                  </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                <div className="bg-muted rounded-xl p-4">
+                  <p className="text-muted-foreground text-xs font-medium uppercase">
+                    Role
+                  </p>
+                  <p className="mt-2 text-base leading-tight font-medium">
+                    {roleLabel}
+                  </p>
                 </div>
-                <Button
-                  variant="outline"
-                  className="w-full lg:w-40 lg:self-end"
-                  onClick={() => void handleSignOut()}
-                >
-                  DÃ©connexion
-                </Button>
+                <div className="bg-muted rounded-xl p-4">
+                  <p className="text-muted-foreground text-xs font-medium uppercase">
+                    Statut
+                  </p>
+                  <p className="mt-2 text-base leading-tight font-medium">
+                    {statusLabel}
+                  </p>
+                </div>
+                <div className="bg-muted rounded-xl p-4">
+                  <p className="text-muted-foreground text-xs font-medium uppercase">
+                    Score contribution
+                  </p>
+                  <p className="mt-2 text-base leading-tight font-medium">
+                    {contribution.score}
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    {contribution.detail}
+                  </p>
+                </div>
               </div>
             </div>
           </CardContent>
