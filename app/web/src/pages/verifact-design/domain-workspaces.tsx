@@ -2761,7 +2761,7 @@ export function WatcherApplicationsReviewPage() {
   if (isPending && !session) {
     return (
       <AppLayout actor="guest" page="people">
-        <Card>
+        <Card role="status" aria-live="polite" aria-busy="true">
           <CardHeader>
             <CardTitle>Vérification de session</CardTitle>
             <CardDescription>

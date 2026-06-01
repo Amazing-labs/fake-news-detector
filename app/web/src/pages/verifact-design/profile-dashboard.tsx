@@ -31,7 +31,12 @@ export function ProfileDashboard() {
   if (isPending && !session) {
     return (
       <AppLayout actor="guest" page="profile">
-        <Card className="mx-auto w-full max-w-5xl">
+        <Card
+          className="mx-auto w-full max-w-5xl"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
           <CardHeader>
             <CardTitle>Vérification de session</CardTitle>
             <CardDescription>
