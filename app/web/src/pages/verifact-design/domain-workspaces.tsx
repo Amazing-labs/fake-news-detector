@@ -12,8 +12,6 @@ import {
   FilePlus2,
   FileSearch,
   FileText,
-  Gavel,
-  Inbox,
   Link2,
   Newspaper,
   PenLine,
@@ -21,9 +19,7 @@ import {
   RotateCcw,
   ShieldCheck,
   Trash2,
-  UserCheck,
   UserPlus,
-  Users,
   XCircle,
 } from 'lucide-react'
 import {
@@ -34,24 +30,11 @@ import {
   type ReactNode,
 } from 'react'
 import {
-  investigationQueryKeys,
-  listInvestigations,
-} from '../../entities/investigation/api'
-import {
-  activateJournalist,
-  banJournalist,
-  disableJournalist,
-  journalistQueryKeys,
-  listJournalists,
-} from '../../entities/journalist/api'
-import { listReports, reportQueryKeys } from '../../entities/report/api'
-import {
   approveWatcherApplication,
   listWatcherApplications,
   rejectWatcherApplication,
   watcherApplicationQueryKeys,
 } from '../../entities/watcher-application/api'
-import { CreateReportForm } from '../../features/reports/create-report-form'
 import { WatcherApplicationForm } from '../../features/watcher-applications/watcher-application-form'
 import { toApiErrorMessage } from '../../shared/api/http'
 import { cn } from '../../shared/lib/utils'
@@ -78,14 +61,6 @@ import {
 import { Input } from '../../shared/ui/shadcn/input'
 import { Label } from '../../shared/ui/shadcn/label'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../../shared/ui/shadcn/table'
-import {
   Tabs,
   TabsContent,
   TabsList,
@@ -94,6 +69,15 @@ import {
 import { Textarea } from '../../shared/ui/shadcn/textarea'
 import { AppLayout } from './app-layout'
 import { useResolvedActor } from './session-routing'
+import {
+  CitizenReportCreateWorkspacePage as CitizenReportCreateWorkspace,
+  CitizenWorkspacePage as CitizenWorkspace,
+} from './workspaces/citizen-workspace-page'
+import { DirectorHomePage as DirectorHomeWorkspace } from './workspaces/director-home-page'
+import {
+  PeopleManagementPage as PeopleManagementWorkspace,
+  UserCreateWorkspacePage as UserCreateWorkspace,
+} from './workspaces/people-management-page'
 
 const inboxSubjects = [
   {
@@ -291,30 +275,6 @@ const publications = [
       },
     ],
     verifiedMedia: [],
-  },
-]
-
-const people = [
-  {
-    name: 'Maimouna Traore',
-    role: 'Journaliste',
-    status: 'ACTIVE',
-    load: '1 enquête active',
-    type: 'journalist',
-  },
-  {
-    name: 'Awa Diarra',
-    role: 'Citoyenne vigie',
-    status: 'ACTIVE',
-    load: '4 preuves envoyees',
-    type: 'citizen',
-  },
-  {
-    name: 'Malik Sissoko',
-    role: 'Citoyen',
-    status: 'DISABLED',
-    load: '0 signalement ouvert',
-    type: 'citizen',
   },
 ]
 
@@ -679,136 +639,7 @@ export function RoleAwareDashboardPage() {
 }
 
 export function DirectorHomePage() {
-  const pendingReviewsQuery = useQuery({
-    queryKey: investigationQueryKeys.list({ scope: 'pending-review' }),
-    queryFn: () => listInvestigations({ scope: 'pending-review' }),
-  })
-  const watcherApplicationsQuery = useQuery({
-    queryKey: watcherApplicationQueryKeys.list(),
-    queryFn: listWatcherApplications,
-  })
-  const pendingInvestigations = pendingReviewsQuery.data?.items ?? []
-  const pendingWatcherApplications =
-    watcherApplicationsQuery.data?.items.filter(
-      (application) => application.status === 'PENDING',
-    ) ?? []
-
-  return (
-    <AppLayout actor="director" page="dashboard">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="À arbitrer"
-          value={String(pendingReviewsQuery.data?.total ?? 0)}
-          hint="revue direction"
-          icon={Gavel}
-        />
-        <StatCard
-          title="Candidatures vigies"
-          value={String(pendingWatcherApplications.length)}
-          hint="en attente"
-          icon={UserCheck}
-        />
-        <StatCard
-          title="Correctifs"
-          value="3"
-          hint="a preparer"
-          icon={RotateCcw}
-        />
-        <StatCard title="Sujets ouverts" value="24" hint="inbox" icon={Inbox} />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Revue des enquetes</CardTitle>
-          <CardDescription>
-            Les actions visibles suivent les permissions du directeur de
-            publication.
-          </CardDescription>
-          <CardAction className="flex flex-wrap gap-2">
-            <Button asChild size="sm" variant="outline">
-              <Link to="/inbox-subjects/create">
-                <FilePlus2 />
-                Nouveau sujet
-              </Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <Link to="/watcher-applications">
-                <UserCheck />
-                Candidatures
-              </Link>
-            </Button>
-          </CardAction>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Dossier</TableHead>
-                <TableHead>Verdict</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {pendingReviewsQuery.isPending ? (
-                <TableRow>
-                  <TableCell colSpan={4}>Chargement des enquêtes...</TableCell>
-                </TableRow>
-              ) : null}
-              {pendingReviewsQuery.isError ? (
-                <TableRow>
-                  <TableCell colSpan={4} className="text-destructive">
-                    {toApiErrorMessage(pendingReviewsQuery.error)}
-                  </TableCell>
-                </TableRow>
-              ) : null}
-              {!pendingReviewsQuery.isPending &&
-              pendingInvestigations.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={4}>
-                    Aucune enquête en revue direction.
-                  </TableCell>
-                </TableRow>
-              ) : null}
-              {pendingInvestigations.map((item) => (
-                <TableRow key={item.id}>
-                  <TableCell className="font-medium">
-                    {item.inboxSubjectId}
-                  </TableCell>
-                  <TableCell>
-                    {item.draftVerdict ? domainLabel(item.draftVerdict) : '-'}
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={item.status} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button size="sm" variant="outline" asChild>
-                      <Link to="/investigations">Ouvrir</Link>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <div className="bg-muted/30 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
-            <div>
-              <p className="text-sm font-medium">Gestion des acteurs</p>
-              <p className="text-muted-foreground text-xs">
-                Comptes journalistes, citoyens et vigies restent accessibles
-                depuis la file utilisateurs.
-              </p>
-            </div>
-            <Button asChild size="sm" variant="ghost">
-              <Link to="/journalists/list">
-                <Users />
-                Utilisateurs
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </AppLayout>
-  )
+  return <DirectorHomeWorkspace />
 }
 
 export function JournalistWorkspacePage() {
@@ -912,88 +743,11 @@ export function JournalistWorkspacePage() {
 }
 
 export function CitizenWorkspacePage() {
-  const { session } = useResolvedActor('citizen')
-  const citizenId = session?.user.actorId ?? undefined
-  const reportsQuery = useQuery({
-    queryKey: reportQueryKeys.list({ citizenId }),
-    queryFn: () => listReports({ citizenId }),
-    enabled: !!citizenId,
-  })
-  const reportRows = reportsQuery.data?.items ?? []
-
-  return (
-    <AppLayout actor="citizen" page="reports">
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Mes signalements</CardTitle>
-            <CardDescription>
-              Suivre les rumeurs transmises au desk et leur état éditorial.
-            </CardDescription>
-            <CardAction>
-              <Button asChild size="sm">
-                <Link to="/reports/create">
-                  <FilePlus2 />
-                  Nouveau signalement
-                </Link>
-              </Button>
-            </CardAction>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            {reportsQuery.isPending ? (
-              <p className="text-muted-foreground text-sm">
-                Chargement des signalements...
-              </p>
-            ) : null}
-            {reportsQuery.isError ? (
-              <p className="text-destructive text-sm">
-                {toApiErrorMessage(reportsQuery.error)}
-              </p>
-            ) : null}
-            {!reportsQuery.isPending && reportRows.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                Aucun signalement pour le moment.
-              </p>
-            ) : null}
-            {reportRows.map((item) => (
-              <div
-                key={item.id}
-                className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
-              >
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium">{item.title}</p>
-                    <StatusBadge status={item.status} />
-                  </div>
-                  <p className="text-muted-foreground mt-2 text-sm">
-                    {item.content}
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="self-start"
-                  asChild
-                >
-                  <Link to="/reports/$reportId" params={{ reportId: item.id }}>
-                    Voir le suivi
-                  </Link>
-                </Button>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-    </AppLayout>
-  )
+  return <CitizenWorkspace />
 }
 
 export function CitizenReportCreateWorkspacePage() {
-  return (
-    <AppLayout actor="citizen" page="reports">
-      <CreateReportForm />
-    </AppLayout>
-  )
+  return <CitizenReportCreateWorkspace />
 }
 
 export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
@@ -2640,220 +2394,11 @@ export function PublicationCorrectionsWorkspacePage({
 }
 
 export function PeopleManagementPage() {
-  return (
-    <AppLayout actor="director" page="people">
-      <Tabs defaultValue="journalists">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <TabsList>
-            <TabsTrigger value="journalists">Journalistes</TabsTrigger>
-            <TabsTrigger value="citizens">Citoyens</TabsTrigger>
-            <TabsTrigger value="watchers">Vigies</TabsTrigger>
-          </TabsList>
-          <Button asChild>
-            <Link to="/journalists/create">
-              <UserPlus />
-              Créer journaliste
-            </Link>
-          </Button>
-        </div>
-        <TabsContent value="journalists" className="mt-4">
-          <PeopleList filter="journalist" />
-        </TabsContent>
-        <TabsContent value="citizens" className="mt-4">
-          <PeopleList filter="citizen" />
-        </TabsContent>
-        <TabsContent value="watchers" className="mt-4">
-          <PeopleList filter="citizen" watcherOnly />
-        </TabsContent>
-      </Tabs>
-    </AppLayout>
-  )
-}
-
-function PeopleList(props: {
-  filter: 'journalist' | 'citizen'
-  watcherOnly?: boolean
-}) {
-  const queryClient = useQueryClient()
-  const journalistsQuery = useQuery({
-    queryKey: journalistQueryKeys.list(),
-    queryFn: listJournalists,
-    enabled: props.filter === 'journalist',
-  })
-  const journalistStatusMutation = useMutation({
-    mutationFn: (input: {
-      journalistId: string
-      action: 'activate' | 'ban' | 'disable'
-    }) => {
-      if (input.action === 'activate') {
-        return activateJournalist(input.journalistId)
-      }
-
-      if (input.action === 'ban') {
-        return banJournalist(input.journalistId, { reason: 'OTHER' })
-      }
-
-      return disableJournalist(input.journalistId, { reason: 'OTHER' })
-    },
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: journalistQueryKeys.all })
-    },
-  })
-  const rows = people.filter((person) => {
-    if (person.type !== props.filter) return false
-    if (props.watcherOnly) return person.role.includes('vigie')
-    return true
-  })
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Comptes</CardTitle>
-        <CardDescription>
-          Activation, suspension ou bannissement selon le statut courant.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-3">
-        {props.filter === 'journalist' ? (
-          <>
-            {journalistsQuery.isPending ? (
-              <p className="text-muted-foreground text-sm">
-                Chargement des journalistes...
-              </p>
-            ) : null}
-            {journalistsQuery.isError ? (
-              <p className="text-destructive text-sm">
-                {toApiErrorMessage(journalistsQuery.error)}
-              </p>
-            ) : null}
-            {journalistsQuery.data?.items.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                Aucun journaliste provisionné.
-              </p>
-            ) : null}
-            {journalistsQuery.data?.items.map((journalist) => (
-              <div
-                key={journalist.id}
-                className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
-              >
-                <div>
-                  <p className="font-medium">{journalist.name}</p>
-                  <p className="text-muted-foreground text-sm">
-                    {journalist.email} / {journalist.activeInvestigationsCount}{' '}
-                    enquêtes actives
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <StatusBadge status={journalist.status} />
-                  {journalist.status === 'ACTIVE' ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      disabled={journalistStatusMutation.isPending}
-                      onClick={() =>
-                        journalistStatusMutation.mutate({
-                          journalistId: journalist.id,
-                          action: 'disable',
-                        })
-                      }
-                    >
-                      Désactiver
-                    </Button>
-                  ) : (
-                    <Button
-                      size="sm"
-                      disabled={journalistStatusMutation.isPending}
-                      onClick={() =>
-                        journalistStatusMutation.mutate({
-                          journalistId: journalist.id,
-                          action: 'activate',
-                        })
-                      }
-                    >
-                      Activer
-                    </Button>
-                  )}
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    disabled={journalistStatusMutation.isPending}
-                    onClick={() =>
-                      journalistStatusMutation.mutate({
-                        journalistId: journalist.id,
-                        action: 'ban',
-                      })
-                    }
-                  >
-                    Bannir
-                  </Button>
-                </div>
-              </div>
-            ))}
-            {journalistStatusMutation.isError ? (
-              <p className="text-destructive text-sm">
-                {toApiErrorMessage(journalistStatusMutation.error)}
-              </p>
-            ) : null}
-          </>
-        ) : (
-          rows.map((person) => (
-            <div
-              key={person.name}
-              className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
-            >
-              <div>
-                <p className="font-medium">{person.name}</p>
-                <p className="text-muted-foreground text-sm">
-                  {person.role} / {person.load}
-                </p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <StatusBadge status={person.status} />
-                <Button size="sm" variant="outline" asChild>
-                  <Link
-                    to="/journalists/status"
-                    search={{ journalistId: person.name }}
-                  >
-                    Gerer
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          ))
-        )}
-      </CardContent>
-    </Card>
-  )
+  return <PeopleManagementWorkspace />
 }
 
 export function UserCreateWorkspacePage() {
-  return (
-    <AppLayout actor="director" page="people">
-      <Card>
-        <CardHeader>
-          <CardTitle>Provisionner un journaliste</CardTitle>
-          <CardDescription>
-            Le compte pourra ensuite prendre des sujets et conduire des
-            enquetes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <Label className="grid gap-2">
-            Nom complet
-            <Input placeholder="Nom du journaliste" />
-          </Label>
-          <Label className="grid gap-2">
-            Email
-            <Input placeholder="email@redaction.test" />
-          </Label>
-          <Button className="w-fit">
-            <UserPlus />
-            Créer le compte
-          </Button>
-        </CardContent>
-      </Card>
-    </AppLayout>
-  )
+  return <UserCreateWorkspace />
 }
 
 export function UserStatusWorkspacePage({ userLabel }: { userLabel?: string }) {
