@@ -30,6 +30,7 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 .cache
 *.tsbuildinfo
 app/web/.tanstack/
+app/web/src/routeTree.gen.ts
 
 # local Codex skills/tooling
 .agents/
