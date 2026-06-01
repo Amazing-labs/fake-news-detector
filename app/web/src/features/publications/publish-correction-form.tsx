@@ -2,12 +2,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { apiRequest, toApiErrorMessage } from '../../shared/api/http'
 import {
-  Button,
-  Input,
-  Notice,
-  SectionCard,
-  TextArea,
-} from '../../shared/ui/primitives'
+  DarkButton,
+  DarkFormCard,
+  DarkInput,
+  DarkTextArea,
+} from '../../shared/ui/dark-form'
+import { Notice } from '../../shared/ui/primitives'
 
 export function PublishCorrectionForm(props: {
   initialPublicationId?: string
@@ -38,29 +38,29 @@ export function PublishCorrectionForm(props: {
   })
 
   return (
-    <SectionCard
+    <DarkFormCard
       title="Publier une correction"
       description="Flux directeur pour corriger une publication existante."
     >
       <form
-        className="grid gap-3"
+        className="mt-6 grid gap-4"
         onSubmit={(event) => {
           event.preventDefault()
           mutation.mutate()
         }}
       >
-        <Input
+        <DarkInput
           label="Référence publication"
           value={currentPublicationId}
           readOnly={!!props.initialPublicationId}
           onChange={(event) => setPublicationId(event.target.value)}
         />
-        <Input
+        <DarkInput
           label="Titre"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
         />
-        <TextArea
+        <DarkTextArea
           label="Contenu"
           value={content}
           onChange={(event) => setContent(event.target.value)}
@@ -71,10 +71,12 @@ export function PublishCorrectionForm(props: {
         {mutation.isSuccess ? (
           <Notice tone="success">Correction publiée.</Notice>
         ) : null}
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Publication...' : 'Publier la correction'}
-        </Button>
+        <div>
+          <DarkButton type="submit" disabled={mutation.isPending}>
+            {mutation.isPending ? 'Publication...' : 'Publier la correction'}
+          </DarkButton>
+        </div>
       </form>
-    </SectionCard>
+    </DarkFormCard>
   )
 }

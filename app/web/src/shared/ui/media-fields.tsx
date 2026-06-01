@@ -16,11 +16,13 @@ export function MediaFields(props: {
   items: MediaDraft[]
   onChange: (items: MediaDraft[]) => void
   addLabel?: string
+  variant?: 'default' | 'dark'
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [uploadMessage, setUploadMessage] = useState<string | null>(null)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
+  const isDark = props.variant === 'dark'
 
   async function handleFiles(files: FileList | null) {
     if (!files?.length) {
@@ -54,6 +56,100 @@ export function MediaFields(props: {
         fileInputRef.current.value = ''
       }
     }
+  }
+
+  if (isDark) {
+    return (
+      <section className="grid gap-3">
+        <div>
+          <h2 className="text-sm font-semibold text-white">
+            {props.title ?? 'Médias'}
+          </h2>
+          <p className="mt-1 text-sm text-white/65">
+            {props.description ??
+              'Ajoute un ou plusieurs médias via leur URL pour tester le backend.'}
+          </p>
+        </div>
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={(event) => {
+            void handleFiles(event.target.files)
+          }}
+        />
+
+        {props.items.length ? (
+          props.items.map((item, index) => (
+            <div
+              key={`${index}-${item.type}`}
+              className="grid gap-3 rounded-lg border border-white/10 bg-black/70 p-4"
+            >
+              <label className="grid gap-2 text-sm font-medium text-white">
+                {`URL média ${index + 1}`}
+                <input
+                  value={item.url}
+                  onChange={(event) => {
+                    const next = [...props.items]
+                    next[index] = { ...item, url: event.target.value }
+                    props.onChange(next)
+                  }}
+                  className="rounded-lg border border-white/15 bg-black px-3 py-2.5 text-white transition outline-none placeholder:text-white/55 focus:border-white/45"
+                />
+              </label>
+              <label className="grid gap-2 text-sm font-medium text-white">
+                Type
+                <select
+                  value={item.type}
+                  onChange={(event) => {
+                    const next = [...props.items]
+                    next[index] = {
+                      ...item,
+                      type: event.target.value as MediaDraft['type'],
+                    }
+                    props.onChange(next)
+                  }}
+                  className="rounded-lg border border-white/15 bg-black px-3 py-2.5 text-white transition outline-none focus:border-white/45"
+                >
+                  {mediaTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    props.onChange(props.items.filter((_, i) => i !== index))
+                  }}
+                  className="inline-flex items-center justify-center rounded-lg border border-white/15 bg-black px-3 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+                >
+                  Retirer ce média
+                </button>
+              </div>
+            </div>
+          ))
+        ) : (
+          <button
+            type="button"
+            disabled={!isSupabaseUploadConfigured() || isUploading}
+            onClick={() => fileInputRef.current?.click()}
+            className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-white/15 bg-black/25 px-4 py-8 text-center transition hover:bg-black/40 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <span className="text-sm font-semibold">Glisse les médias ici</span>
+            <span className="mt-2 text-sm text-white/65">
+              ou clique pour les sélectionner
+            </span>
+          </button>
+        )}
+
+        {uploadMessage ? <Notice tone="success">{uploadMessage}</Notice> : null}
+        {uploadError ? <Notice tone="error">{uploadError}</Notice> : null}
+      </section>
+    )
   }
 
   return (
