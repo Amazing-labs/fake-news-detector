@@ -4,7 +4,13 @@ import {
   AvatarFallback,
   AvatarImage,
 } from '../../shared/ui/shadcn/avatar'
-import { Card, CardContent } from '../../shared/ui/shadcn/card'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '../../shared/ui/shadcn/card'
 import { AppLayout } from './app-layout'
 import { initials, sessionRoleLabel, useResolvedActor } from './session-routing'
 import type { Actor } from './types'
@@ -20,7 +26,23 @@ const contributionScores: Record<Actor, { score: number; detail: string }> = {
 }
 
 export function ProfileDashboard() {
-  const { session, actor } = useResolvedActor('journalist')
+  const { session, actor, isPending } = useResolvedActor('journalist')
+
+  if (isPending && !session) {
+    return (
+      <AppLayout actor="guest" page="profile">
+        <Card className="mx-auto w-full max-w-5xl">
+          <CardHeader>
+            <CardTitle>Vérification de session</CardTitle>
+            <CardDescription>
+              Lecture du rôle avant d’afficher le profil.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </AppLayout>
+    )
+  }
+
   const displayName = session?.user.name ?? 'Utilisateur'
   const email = session?.user.email ?? 'Session invitée'
   const roleLabel = sessionRoleLabel(session, actor)

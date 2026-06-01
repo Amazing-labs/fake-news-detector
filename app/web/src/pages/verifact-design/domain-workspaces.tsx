@@ -2756,7 +2756,22 @@ export function UserStatusWorkspacePage({ userLabel }: { userLabel?: string }) {
 }
 
 export function WatcherApplicationsReviewPage() {
-  const { actor } = useResolvedActor('citizen')
+  const { actor, isPending, session } = useResolvedActor('citizen')
+
+  if (isPending && !session) {
+    return (
+      <AppLayout actor="guest" page="people">
+        <Card>
+          <CardHeader>
+            <CardTitle>Vérification de session</CardTitle>
+            <CardDescription>
+              Lecture du rôle avant d’afficher l’espace vigie.
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </AppLayout>
+    )
+  }
 
   if (actor === 'watcher') {
     return <WatcherContributionWorkspacePage />
