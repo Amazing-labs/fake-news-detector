@@ -31,9 +31,12 @@ export function actorFromSession(
 
 export function useResolvedActor(fallback: Actor = 'guest') {
   const { session, isPending } = useAppSession()
+  const actor = actorFromSession(session)
+  const isActorPending = isPending || (!!session && !actor)
 
   return {
-    actor: actorFromSession(session) ?? fallback,
+    actor: actor ?? fallback,
+    isActorPending,
     isPending,
     session,
   }

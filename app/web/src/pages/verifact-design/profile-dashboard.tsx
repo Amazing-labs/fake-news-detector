@@ -26,9 +26,9 @@ const contributionScores: Record<Actor, { score: number; detail: string }> = {
 }
 
 export function ProfileDashboard() {
-  const { session, actor, isPending } = useResolvedActor('journalist')
+  const { session, actor, isActorPending } = useResolvedActor('journalist')
 
-  if (isPending && !session) {
+  if (isActorPending) {
     return (
       <AppLayout actor="guest" page="profile">
         <Card

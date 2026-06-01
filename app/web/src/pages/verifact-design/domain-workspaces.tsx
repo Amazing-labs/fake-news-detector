@@ -2756,9 +2756,9 @@ export function UserStatusWorkspacePage({ userLabel }: { userLabel?: string }) {
 }
 
 export function WatcherApplicationsReviewPage() {
-  const { actor, isPending, session } = useResolvedActor('citizen')
+  const { actor, isActorPending } = useResolvedActor('citizen')
 
-  if (isPending && !session) {
+  if (isActorPending) {
     return (
       <AppLayout actor="guest" page="people">
         <Card role="status" aria-live="polite" aria-busy="true">
