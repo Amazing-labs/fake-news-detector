@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { apiRequest, toApiErrorMessage } from '../../shared/api/http'
+import { createReport, reportQueryKeys } from '../../entities/report/api'
+import { toApiErrorMessage } from '../../shared/api/http'
 import {
   Button,
   Input,
@@ -24,14 +25,11 @@ export function CreateReportForm() {
 
   const mutation = useMutation({
     mutationFn: () =>
-      apiRequest<{ id: string }>('/api/reports', {
-        method: 'POST',
-        body: JSON.stringify({
-          theme,
-          title,
-          content,
-          media: normalizeMediaDrafts(media),
-        }),
+      createReport({
+        theme,
+        title,
+        content,
+        media: normalizeMediaDrafts(media),
       }),
     onSuccess: () => {
       setTheme('')
@@ -39,7 +37,7 @@ export function CreateReportForm() {
       setContent('')
       setMedia([])
       setMessage('Signalement créé.')
-      void queryClient.invalidateQueries({ queryKey: ['reports'] })
+      void queryClient.invalidateQueries({ queryKey: reportQueryKeys.all })
     },
   })
 

@@ -1,6 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { apiRequest, toApiErrorMessage } from '../../shared/api/http'
+import {
+  createJournalist,
+  journalistQueryKeys,
+} from '../../entities/journalist/api'
+import { toApiErrorMessage } from '../../shared/api/http'
 import { Button, Input, Notice, SectionCard } from '../../shared/ui/primitives'
 
 export function CreateJournalistForm() {
@@ -10,14 +14,14 @@ export function CreateJournalistForm() {
 
   const mutation = useMutation({
     mutationFn: () =>
-      apiRequest<{ id: string }>('/api/journalists', {
-        method: 'POST',
-        body: JSON.stringify({ name, email }),
+      createJournalist({
+        name,
+        email,
       }),
     onSuccess: () => {
       setName('')
       setEmail('')
-      void queryClient.invalidateQueries({ queryKey: ['journalists'] })
+      void queryClient.invalidateQueries({ queryKey: journalistQueryKeys.all })
     },
   })
 

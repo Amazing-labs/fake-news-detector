@@ -1,6 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { apiRequest, toApiErrorMessage } from '../../shared/api/http'
+import {
+  submitWatcherApplication,
+  watcherApplicationQueryKeys,
+} from '../../entities/watcher-application/api'
+import { toApiErrorMessage } from '../../shared/api/http'
 import {
   Button,
   Notice,
@@ -14,13 +18,14 @@ export function WatcherApplicationForm() {
 
   const mutation = useMutation({
     mutationFn: () =>
-      apiRequest<{ id: string }>('/api/watcher-applications', {
-        method: 'POST',
-        body: JSON.stringify({ motivation }),
+      submitWatcherApplication({
+        motivation,
       }),
     onSuccess: () => {
       setMotivation('')
-      void queryClient.invalidateQueries({ queryKey: ['watcher-applications'] })
+      void queryClient.invalidateQueries({
+        queryKey: watcherApplicationQueryKeys.all,
+      })
     },
   })
 
