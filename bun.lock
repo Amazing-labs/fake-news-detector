@@ -10,15 +10,14 @@
       },
       "devDependencies": {
         "@eslint/js": "^10.0.1",
+        "@safets-org/cli": "1.0.2",
         "@types/bun": "latest",
         "eslint-config-prettier": "^10.1.8",
         "globals": "^17.5.0",
         "prettier": "^3.8.3",
         "prettier-plugin-prisma": "^5.0.0",
         "prettier-plugin-tailwindcss": "^0.7.2",
-      },
-      "peerDependencies": {
-        "typescript": "^5",
+        "typescript": "~5.9.3",
       },
     },
     "app/server": {
@@ -544,6 +543,8 @@
     "@rollup/rollup-win32-x64-gnu": ["@rollup/rollup-win32-x64-gnu@4.59.0", "", { "os": "win32", "cpu": "x64" }, "sha512-laBkYlSS1n2L8fSo1thDNGrCTQMmxjYY5G0WFWjFFYZkKPjsMBsgJfGf4TLxXrF6RyhI60L8TMOjBMvXiTcxeA=="],
 
     "@rollup/rollup-win32-x64-msvc": ["@rollup/rollup-win32-x64-msvc@4.59.0", "", { "os": "win32", "cpu": "x64" }, "sha512-2HRCml6OztYXyJXAvdDXPKcawukWY2GpR5/nxKp4iBgiO3wcoEGkAaqctIbZcNB6KlUQBIqt8VYkNSj2397EfA=="],
+
+    "@safets-org/cli": ["@safets-org/cli@1.0.2", "", { "peerDependencies": { "typescript": ">=4.9.0" }, "bin": { "safets": "dist/index.js" } }, "sha512-7qAD5yrcGbzAjH47puqbQZK5oWz1Ai37I43TJpdtgI/VM+Y1t5PC754h8SihOZYdo7oiXxu5dJxJMZdwsOtHiQ=="],
 
     "@sindresorhus/is": ["@sindresorhus/is@7.2.0", "", {}, "sha512-P1Cz1dWaFfR4IR+U13mqqiGsLFf1KbayybWwdd2vfctdV6hDpUkgCY0nKOLLTMSoRd/jJNjtbqzf13K8DCCXQw=="],
 
