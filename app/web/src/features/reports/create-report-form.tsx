@@ -1,4 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
 import { createReport, reportQueryKeys } from '../../entities/report/api'
 import { toApiErrorMessage } from '../../shared/api/http'
@@ -92,12 +93,12 @@ export function CreateReportForm() {
           <DarkButton type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? 'Envoi...' : 'Envoyer le signalement'}
           </DarkButton>
-          <a
-            href="/reports"
+          <Link
+            to="/reports"
             className="inline-flex items-center justify-center rounded-lg border border-white/15 bg-black px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/10"
           >
             Retour aux signalements
-          </a>
+          </Link>
         </div>
       </form>
     </DarkFormCard>

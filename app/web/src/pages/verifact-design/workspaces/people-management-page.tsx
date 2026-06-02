@@ -109,6 +109,7 @@ function PeopleList(props: {
     if (props.watcherOnly) return person.role.includes('vigie')
     return true
   })
+  const journalistRows = journalistsQuery.data?.items ?? []
 
   return (
     <Card>
@@ -131,12 +132,12 @@ function PeopleList(props: {
                 {toApiErrorMessage(journalistsQuery.error)}
               </p>
             ) : null}
-            {journalistsQuery.data?.items.length === 0 ? (
+            {!journalistsQuery.isPending && journalistRows.length === 0 ? (
               <p className="text-muted-foreground text-sm">
                 Aucun journaliste provisionné.
               </p>
             ) : null}
-            {journalistsQuery.data?.items.map((journalist) => (
+            {journalistRows.map((journalist) => (
               <div
                 key={journalist.id}
                 className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
@@ -181,7 +182,10 @@ function PeopleList(props: {
                   <Button
                     size="sm"
                     variant="destructive"
-                    disabled={journalistStatusMutation.isPending}
+                    disabled={
+                      journalistStatusMutation.isPending ||
+                      journalist.status === 'BANNED'
+                    }
                     onClick={() =>
                       journalistStatusMutation.mutate({
                         journalistId: journalist.id,

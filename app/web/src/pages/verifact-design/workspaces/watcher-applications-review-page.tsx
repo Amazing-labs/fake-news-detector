@@ -58,6 +58,10 @@ export function WatcherApplicationsReviewPage() {
       })
     },
   })
+  const applications = applicationsQuery.data?.items ?? []
+  const pendingApplications = applications.filter(
+    (item) => item.status === 'PENDING',
+  )
 
   if (isActorPending) {
     return (
@@ -110,12 +114,13 @@ export function WatcherApplicationsReviewPage() {
                   {toApiErrorMessage(applicationsQuery.error)}
                 </p>
               ) : null}
-              {applicationsQuery.data?.items.length === 0 ? (
+              {!applicationsQuery.isPending &&
+              pendingApplications.length === 0 ? (
                 <p className="text-muted-foreground text-sm">
                   Aucune candidature vigie.
                 </p>
               ) : null}
-              {applicationsQuery.data?.items.map((item) => (
+              {pendingApplications.map((item) => (
                 <div
                   key={item.id}
                   className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]"

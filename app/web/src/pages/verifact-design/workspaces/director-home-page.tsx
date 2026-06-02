@@ -48,10 +48,10 @@ export function DirectorHomePage() {
     queryFn: listWatcherApplications,
   })
   const pendingInvestigations = pendingReviewsQuery.data?.items ?? []
-  const pendingWatcherApplications =
-    watcherApplicationsQuery.data?.items.filter(
-      (application) => application.status === 'PENDING',
-    ) ?? []
+  const watcherApplications = watcherApplicationsQuery.data?.items ?? []
+  const pendingWatcherApplications = watcherApplications.filter(
+    (application) => application.status === 'PENDING',
+  )
 
   return (
     <AppLayout actor="director" page="dashboard">

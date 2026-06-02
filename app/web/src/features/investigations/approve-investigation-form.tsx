@@ -151,6 +151,7 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
           )}
           <DarkInput
             label="Lien vérifié (optionnel)"
+            type="url"
             value={verifiedLink}
             onChange={(event) => setVerifiedLink(event.target.value)}
           />
