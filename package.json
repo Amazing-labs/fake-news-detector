@@ -17,14 +17,14 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@safets-org/cli": "^1.0.2",
+    "@safets-org/cli": "1.0.2",
     "@types/bun": "latest",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.5.0",
     "prettier": "^3.8.3",
     "prettier-plugin-prisma": "^5.0.0",
     "prettier-plugin-tailwindcss": "^0.7.2",
-    "typescript": "^6.0.3"
+    "typescript": "~5.9.3"
   },
   "dependencies": {
     "eslint": "^10.2.1",
