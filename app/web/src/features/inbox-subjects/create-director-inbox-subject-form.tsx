@@ -2,17 +2,17 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { apiRequest, toApiErrorMessage } from '../../shared/api/http'
 import {
-  Button,
-  Input,
-  Notice,
-  SectionCard,
-  TextArea,
-} from '../../shared/ui/primitives'
+  DarkButton,
+  DarkFormCard,
+  DarkInput,
+  DarkTextArea,
+} from '../../shared/ui/dark-form'
 import { MediaFields } from '../../shared/ui/media-fields'
 import {
   normalizeMediaDrafts,
   type MediaDraft,
 } from '../../shared/ui/media-fields.model'
+import { Notice } from '../../shared/ui/primitives'
 
 export function CreateDirectorInboxSubjectForm() {
   const queryClient = useQueryClient()
@@ -39,23 +39,23 @@ export function CreateDirectorInboxSubjectForm() {
   })
 
   return (
-    <SectionCard
+    <DarkFormCard
       title="Créer un sujet directeur"
       description="Flux manuel d'ouverture d'un sujet hors signalement."
     >
       <form
-        className="grid gap-3"
+        className="mt-6 grid gap-4"
         onSubmit={(event) => {
           event.preventDefault()
           mutation.mutate()
         }}
       >
-        <Input
-          label="Theme"
+        <DarkInput
+          label="Thème"
           value={theme}
           onChange={(event) => setTheme(event.target.value)}
         />
-        <TextArea
+        <DarkTextArea
           label="Description"
           value={description}
           onChange={(event) => setDescription(event.target.value)}
@@ -66,6 +66,7 @@ export function CreateDirectorInboxSubjectForm() {
           items={media}
           onChange={setMedia}
           addLabel="Ajouter un média au sujet"
+          variant="dark"
         />
         {mutation.isError ? (
           <Notice tone="error">{toApiErrorMessage(mutation.error)}</Notice>
@@ -73,10 +74,12 @@ export function CreateDirectorInboxSubjectForm() {
         {mutation.isSuccess ? (
           <Notice tone="success">Sujet créé.</Notice>
         ) : null}
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Création...' : 'Créer le sujet'}
-        </Button>
+        <div>
+          <DarkButton type="submit" disabled={mutation.isPending}>
+            {mutation.isPending ? 'Création...' : 'Créer le sujet'}
+          </DarkButton>
+        </div>
       </form>
-    </SectionCard>
+    </DarkFormCard>
   )
 }

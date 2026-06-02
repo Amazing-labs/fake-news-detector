@@ -1,15 +1,20 @@
 import {
   PeopleManagementPage,
-  UserCreateWorkspacePage,
   UserStatusWorkspacePage,
 } from '../verifact-design/verifact-design-page'
+import { AppLayout } from '../verifact-design/app-layout'
+import { CreateJournalistForm } from '../../features/journalists/create-journalist-form'
 
 export function JournalistsListPage() {
   return <PeopleManagementPage />
 }
 
 export function JournalistCreatePage() {
-  return <UserCreateWorkspacePage />
+  return (
+    <AppLayout actor="director" page="people">
+      <CreateJournalistForm />
+    </AppLayout>
+  )
 }
 
 export function JournalistStatusPage(props: { journalistId?: string }) {

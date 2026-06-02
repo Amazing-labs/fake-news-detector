@@ -1,18 +1,20 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
-import { apiRequest, toApiErrorMessage } from '../../shared/api/http'
+import { createReport, reportQueryKeys } from '../../entities/report/api'
+import { toApiErrorMessage } from '../../shared/api/http'
 import {
-  Button,
-  Input,
-  Notice,
-  SectionCard,
-  TextArea,
-} from '../../shared/ui/primitives'
+  DarkButton,
+  DarkFormCard,
+  DarkInput,
+  DarkTextArea,
+} from '../../shared/ui/dark-form'
 import { MediaFields } from '../../shared/ui/media-fields'
 import {
   normalizeMediaDrafts,
   type MediaDraft,
 } from '../../shared/ui/media-fields.model'
+import { Notice } from '../../shared/ui/primitives'
 
 export function CreateReportForm() {
   const queryClient = useQueryClient()
@@ -24,14 +26,11 @@ export function CreateReportForm() {
 
   const mutation = useMutation({
     mutationFn: () =>
-      apiRequest<{ id: string }>('/api/reports', {
-        method: 'POST',
-        body: JSON.stringify({
-          theme,
-          title,
-          content,
-          media: normalizeMediaDrafts(media),
-        }),
+      createReport({
+        theme,
+        title,
+        content,
+        media: normalizeMediaDrafts(media),
       }),
     onSuccess: () => {
       setTheme('')
@@ -39,44 +38,50 @@ export function CreateReportForm() {
       setContent('')
       setMedia([])
       setMessage('Signalement créé.')
-      void queryClient.invalidateQueries({ queryKey: ['reports'] })
+      void queryClient.invalidateQueries({ queryKey: reportQueryKeys.all })
     },
   })
 
   return (
-    <SectionCard
-      title="Créer un signalement"
-      description="Point d'entrée citoyen. Le backend ouvre ensuite automatiquement un sujet inbox."
+    <DarkFormCard
+      title="Nouveau signalement"
+      description="Décris la rumeur, ajoute les messages ou médias reçus, puis envoie le tout au desk."
     >
       <form
-        className="grid gap-3"
+        className="mt-6 grid gap-4"
         onSubmit={(event) => {
           event.preventDefault()
           setMessage(null)
           mutation.mutate()
         }}
       >
-        <Input
-          label="Theme"
+        <DarkInput
+          label="Thème"
           value={theme}
           onChange={(event) => setTheme(event.target.value)}
+          placeholder="Ex. santé, sécurité, économie"
         />
-        <Input
-          label="Titre"
+        <DarkTextArea
+          label="Rumeur à vérifier"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
+          className="min-h-16"
+          placeholder="Décris la rumeur et le contexte connu"
         />
-        <TextArea
-          label="Contenu"
+        <DarkTextArea
+          label="Message reçu"
           value={content}
           onChange={(event) => setContent(event.target.value)}
+          className="min-h-20"
+          placeholder="Colle ici le message, la publication ou le texte reçu"
         />
         <MediaFields
-          title="Médias du signalement"
-          description="Ajoute des medias via URL pour tester la creation du signalement avec pieces jointes."
+          title="Médias"
+          description="Images, captures d'écran, vidéos, notes audio ou documents reçus avec la rumeur."
           items={media}
           onChange={setMedia}
-          addLabel="Ajouter un média au signalement"
+          addLabel="Ajouter un média"
+          variant="dark"
         />
 
         {mutation.isError ? (
@@ -84,10 +89,18 @@ export function CreateReportForm() {
         ) : null}
         {message ? <Notice tone="success">{message}</Notice> : null}
 
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Envoi...' : 'Envoyer le signalement'}
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <DarkButton type="submit" disabled={mutation.isPending}>
+            {mutation.isPending ? 'Envoi...' : 'Envoyer le signalement'}
+          </DarkButton>
+          <Link
+            to="/reports"
+            className="inline-flex items-center justify-center rounded-lg border border-white/15 bg-black px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/10"
+          >
+            Retour aux signalements
+          </Link>
+        </div>
       </form>
-    </SectionCard>
+    </DarkFormCard>
   )
 }

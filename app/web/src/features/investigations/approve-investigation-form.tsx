@@ -1,7 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { apiRequest, toApiErrorMessage } from '../../shared/api/http'
-import { Button, Input, Notice, TextArea } from '../../shared/ui/primitives'
+import {
+  DarkButton,
+  DarkFormCard,
+  DarkInput,
+  DarkTextArea,
+} from '../../shared/ui/dark-form'
+import { Notice } from '../../shared/ui/primitives'
 
 type CommentAction = 'reject' | 'archive'
 
@@ -110,126 +116,112 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
 
   return (
     <>
-      <form
-        className="mx-auto w-full max-w-[540px] rounded-[1.65rem] border border-[#ece7df] bg-white p-5 shadow-[0_14px_38px_rgba(33,28,23,0.055)]"
-        onSubmit={(event) => {
-          event.preventDefault()
-          setFormError('')
-          if (!investigationId.trim()) {
-            setFormError("La référence d'enquête est obligatoire.")
-            return
-          }
-          publishMutation.mutate()
-        }}
+      <DarkFormCard
+        title="Validation éditoriale"
+        description="Publier, refuser ou archiver une enquête en revue."
       >
-        <div className="flex items-center justify-between gap-4 border-b border-[#eee9e2] pb-4">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-[#fff5d6] to-[#ffe8ef] text-sm font-black text-[#171514] ring-1 ring-[#e8e2da]">
-              ED
-            </div>
-            <div className="min-w-0">
-              <h2 className="truncate font-black tracking-[-0.02em] text-[#171514]">
-                Validation editoriale
-              </h2>
-              <p className="text-sm text-[#7b7671]">Enquête en revue</p>
-            </div>
-          </div>
-          <span className="rounded-full bg-[#f7f4ef] px-3 py-1 text-xs font-black text-[#706a63]">
-            Directeur
-          </span>
-        </div>
-
-        <div className="mt-5 grid gap-4">
+        <form
+          className="mt-6 grid gap-4"
+          onSubmit={(event) => {
+            event.preventDefault()
+            setFormError('')
+            if (!investigationId.trim()) {
+              setFormError("La référence d'enquête est obligatoire.")
+              return
+            }
+            publishMutation.mutate()
+          }}
+        >
           {fixedInvestigation ? (
-            <div className="rounded-2xl border border-[#e7e2dc] bg-[#faf8f5] px-3 py-2.5 text-sm">
-              <span className="block font-bold text-[#171514]">
+            <div className="rounded-lg border border-white/15 bg-black px-3 py-2.5 text-sm">
+              <span className="block font-medium text-white">
                 Référence enquête
               </span>
-              <span className="mt-1 block truncate font-black text-[#706a63]">
+              <span className="mt-1 block truncate text-white/65">
                 {investigationId}
               </span>
             </div>
           ) : (
-            <Input
+            <DarkInput
               label="Référence enquête"
               value={draftInvestigationId}
               required
               onChange={(event) => setDraftInvestigationId(event.target.value)}
             />
           )}
-          <Input
+          <DarkInput
             label="Lien vérifié (optionnel)"
+            type="url"
             value={verifiedLink}
             onChange={(event) => setVerifiedLink(event.target.value)}
           />
-        </div>
 
-        <div className="mt-5 flex items-center justify-between gap-4 border-t border-[#eee9e2] pt-4 text-sm font-black text-[#77716b]">
-          <span>Decision editoriale</span>
-          <span>Commentaire requis sauf publication</span>
-        </div>
+          <div className="rounded-lg border border-white/10 bg-black/35 px-3 py-2.5 text-sm text-white/70">
+            Commentaire requis uniquement pour le refus ou l'archivage.
+          </div>
 
-        {formError ? <Notice tone="error">{formError}</Notice> : null}
-        {publishMutation.isError ? (
-          <Notice tone="error">
-            {toApiErrorMessage(publishMutation.error)}
-          </Notice>
-        ) : null}
-        {rejectMutation.isError ? (
-          <Notice tone="error">
-            {toApiErrorMessage(rejectMutation.error)}
-          </Notice>
-        ) : null}
-        {archiveMutation.isError ? (
-          <Notice tone="error">
-            {toApiErrorMessage(archiveMutation.error)}
-          </Notice>
-        ) : null}
-        {publishMutation.isSuccess ? (
-          <Notice tone="success">Enquête publiée.</Notice>
-        ) : null}
+          {formError ? <Notice tone="error">{formError}</Notice> : null}
+          {publishMutation.isError ? (
+            <Notice tone="error">
+              {toApiErrorMessage(publishMutation.error)}
+            </Notice>
+          ) : null}
+          {rejectMutation.isError ? (
+            <Notice tone="error">
+              {toApiErrorMessage(rejectMutation.error)}
+            </Notice>
+          ) : null}
+          {archiveMutation.isError ? (
+            <Notice tone="error">
+              {toApiErrorMessage(archiveMutation.error)}
+            </Notice>
+          ) : null}
+          {publishMutation.isSuccess ? (
+            <Notice tone="success">Enquête publiée.</Notice>
+          ) : null}
 
-        <div className="mt-4 grid gap-2 sm:grid-cols-3">
-          <Button type="submit" disabled={isPending}>
-            {publishMutation.isPending ? 'Publication...' : 'Publier'}
-          </Button>
-          <Button
-            type="button"
-            variant="danger"
-            disabled={isPending}
-            onClick={() => openCommentModal('reject')}
-          >
-            Refuser
-          </Button>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={isPending}
-            onClick={() => openCommentModal('archive')}
-          >
-            Archiver
-          </Button>
-        </div>
-      </form>
+          <div className="grid gap-2 sm:grid-cols-3">
+            <DarkButton type="submit" disabled={isPending}>
+              {publishMutation.isPending ? 'Publication...' : 'Publier'}
+            </DarkButton>
+            <DarkButton
+              type="button"
+              variant="secondary"
+              disabled={isPending}
+              onClick={() => openCommentModal('reject')}
+            >
+              Refuser
+            </DarkButton>
+            <DarkButton
+              type="button"
+              variant="secondary"
+              disabled={isPending}
+              onClick={() => openCommentModal('archive')}
+            >
+              Archiver
+            </DarkButton>
+          </div>
+        </form>
+      </DarkFormCard>
 
       {commentAction ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-[#171514]/35 px-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-[1.55rem] border border-[#ece7df] bg-white p-5 shadow-[0_24px_80px_rgba(23,21,20,0.24)]">
-            <div className="flex items-start justify-between gap-4 border-b border-[#eee9e2] pb-4">
+        <div className="fixed inset-0 z-50 grid place-items-center bg-black/55 px-4 backdrop-blur-sm">
+          <div className="w-full max-w-md rounded-2xl border border-white/10 bg-[#151515] p-5 text-white shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+            <div className="flex items-start justify-between gap-4 border-b border-white/10 pb-4">
               <div>
-                <h2 className="text-lg font-black tracking-[-0.02em] text-[#171514]">
+                <h2 className="text-lg font-semibold">
                   {commentAction === 'reject'
                     ? "Refuser l'enquête"
                     : "Archiver l'enquête"}
                 </h2>
-                <p className="mt-1 text-sm leading-6 text-[#706a63]">
+                <p className="mt-1 text-sm leading-6 text-white/65">
                   Le commentaire est obligatoire pour garder une trace
-                  editoriale claire.
+                  éditoriale claire.
                 </p>
               </div>
               <button
                 type="button"
-                className="rounded-full px-3 py-1 text-lg font-black text-[#706a63] hover:bg-[#f7f4ef] hover:text-[#171514]"
+                className="rounded-full px-3 py-1 text-lg font-semibold text-white/65 hover:bg-white/10 hover:text-white"
                 onClick={closeCommentModal}
                 aria-label="Fermer"
               >
@@ -237,7 +229,7 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
               </button>
             </div>
             <div className="mt-4 grid gap-4">
-              <TextArea
+              <DarkTextArea
                 label="Commentaire obligatoire"
                 value={comment}
                 onChange={(event) => setComment(event.target.value)}
@@ -249,17 +241,16 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
                 </Notice>
               ) : null}
               <div className="flex flex-wrap justify-end gap-2">
-                <Button
+                <DarkButton
                   type="button"
                   variant="secondary"
                   onClick={closeCommentModal}
                   disabled={activeCommentMutation.isPending}
                 >
                   Annuler
-                </Button>
-                <Button
+                </DarkButton>
+                <DarkButton
                   type="button"
-                  variant={commentAction === 'reject' ? 'danger' : 'primary'}
                   onClick={submitCommentAction}
                   disabled={activeCommentMutation.isPending}
                 >
@@ -268,7 +259,7 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
                     : commentAction === 'reject'
                       ? 'Confirmer le refus'
                       : "Confirmer l'archivage"}
-                </Button>
+                </DarkButton>
               </div>
             </div>
           </div>

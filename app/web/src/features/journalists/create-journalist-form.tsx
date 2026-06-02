@@ -1,7 +1,12 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { apiRequest, toApiErrorMessage } from '../../shared/api/http'
-import { Button, Input, Notice, SectionCard } from '../../shared/ui/primitives'
+import {
+  createJournalist,
+  journalistQueryKeys,
+} from '../../entities/journalist/api'
+import { toApiErrorMessage } from '../../shared/api/http'
+import { DarkButton, DarkFormCard, DarkInput } from '../../shared/ui/dark-form'
+import { Notice } from '../../shared/ui/primitives'
 
 export function CreateJournalistForm() {
   const queryClient = useQueryClient()
@@ -10,35 +15,35 @@ export function CreateJournalistForm() {
 
   const mutation = useMutation({
     mutationFn: () =>
-      apiRequest<{ id: string }>('/api/journalists', {
-        method: 'POST',
-        body: JSON.stringify({ name, email }),
+      createJournalist({
+        name,
+        email,
       }),
     onSuccess: () => {
       setName('')
       setEmail('')
-      void queryClient.invalidateQueries({ queryKey: ['journalists'] })
+      void queryClient.invalidateQueries({ queryKey: journalistQueryKeys.all })
     },
   })
 
   return (
-    <SectionCard
+    <DarkFormCard
       title="Créer un journaliste"
       description="Formulaire directeur pour provisionner un acteur journaliste."
     >
       <form
-        className="grid gap-3"
+        className="mt-6 grid gap-4"
         onSubmit={(event) => {
           event.preventDefault()
           mutation.mutate()
         }}
       >
-        <Input
+        <DarkInput
           label="Nom"
           value={name}
           onChange={(event) => setName(event.target.value)}
         />
-        <Input
+        <DarkInput
           label="E-mail"
           type="email"
           value={email}
@@ -50,10 +55,12 @@ export function CreateJournalistForm() {
         {mutation.isSuccess ? (
           <Notice tone="success">Journaliste créé.</Notice>
         ) : null}
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Création...' : 'Créer le journaliste'}
-        </Button>
+        <div>
+          <DarkButton type="submit" disabled={mutation.isPending}>
+            {mutation.isPending ? 'Création...' : 'Créer le journaliste'}
+          </DarkButton>
+        </div>
       </form>
-    </SectionCard>
+    </DarkFormCard>
   )
 }

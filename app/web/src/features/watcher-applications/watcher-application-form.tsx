@@ -1,12 +1,17 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { UserPlus } from 'lucide-react'
 import { useState } from 'react'
-import { apiRequest, toApiErrorMessage } from '../../shared/api/http'
 import {
-  Button,
-  Notice,
-  SectionCard,
-  TextArea,
-} from '../../shared/ui/primitives'
+  submitWatcherApplication,
+  watcherApplicationQueryKeys,
+} from '../../entities/watcher-application/api'
+import { toApiErrorMessage } from '../../shared/api/http'
+import {
+  DarkButton,
+  DarkFormCard,
+  DarkTextArea,
+} from '../../shared/ui/dark-form'
+import { Notice } from '../../shared/ui/primitives'
 
 export function WatcherApplicationForm() {
   const queryClient = useQueryClient()
@@ -14,43 +19,50 @@ export function WatcherApplicationForm() {
 
   const mutation = useMutation({
     mutationFn: () =>
-      apiRequest<{ id: string }>('/api/watcher-applications', {
-        method: 'POST',
-        body: JSON.stringify({ motivation }),
+      submitWatcherApplication({
+        motivation,
       }),
     onSuccess: () => {
       setMotivation('')
-      void queryClient.invalidateQueries({ queryKey: ['watcher-applications'] })
+      void queryClient.invalidateQueries({
+        queryKey: watcherApplicationQueryKeys.all,
+      })
     },
   })
 
   return (
-    <SectionCard
-      title="Candidature vigie"
-      description="Permet de tester le flux citoyen de montée en rôle vigie."
+    <DarkFormCard
+      title="Espace vigie"
+      description="Candidate pour contribuer aux enquêtes ouvertes par la rédaction."
     >
       <form
-        className="grid gap-3"
+        className="mt-6 grid gap-4"
         onSubmit={(event) => {
           event.preventDefault()
           mutation.mutate()
         }}
       >
-        <TextArea
+        <DarkTextArea
           label="Motivation"
           value={motivation}
           onChange={(event) => setMotivation(event.target.value)}
+          placeholder="Explique pourquoi tu veux devenir vigie et comment tu peux aider la rédaction."
         />
+
         {mutation.isError ? (
           <Notice tone="error">{toApiErrorMessage(mutation.error)}</Notice>
         ) : null}
         {mutation.isSuccess ? (
-          <Notice tone="success">Candidature envoyee.</Notice>
+          <Notice tone="success">Candidature envoyée.</Notice>
         ) : null}
-        <Button type="submit" disabled={mutation.isPending}>
-          {mutation.isPending ? 'Envoi...' : 'Envoyer la candidature'}
-        </Button>
+
+        <div>
+          <DarkButton type="submit" disabled={mutation.isPending}>
+            <UserPlus className="size-4" />
+            {mutation.isPending ? 'Envoi...' : 'Envoyer la candidature'}
+          </DarkButton>
+        </div>
       </form>
-    </SectionCard>
+    </DarkFormCard>
   )
 }

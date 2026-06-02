@@ -11,27 +11,15 @@ import {
   FilePlus2,
   FileSearch,
   FileText,
-  Gavel,
-  Inbox,
   Link2,
-  Newspaper,
   PenLine,
   Play,
   RotateCcw,
   ShieldCheck,
   Trash2,
-  UserCheck,
-  UserPlus,
-  Users,
   XCircle,
 } from 'lucide-react'
-import {
-  useRef,
-  useState,
-  type ComponentType,
-  type DragEvent,
-  type ReactNode,
-} from 'react'
+import { useRef, useState, type DragEvent, type ReactNode } from 'react'
 import { cn } from '../../shared/lib/utils'
 import { Badge } from '../../shared/ui/shadcn/badge'
 import { Button } from '../../shared/ui/shadcn/button'
@@ -56,14 +44,6 @@ import {
 import { Input } from '../../shared/ui/shadcn/input'
 import { Label } from '../../shared/ui/shadcn/label'
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '../../shared/ui/shadcn/table'
-import {
   Tabs,
   TabsContent,
   TabsList,
@@ -72,242 +52,28 @@ import {
 import { Textarea } from '../../shared/ui/shadcn/textarea'
 import { AppLayout } from './app-layout'
 import { useResolvedActor } from './session-routing'
-
-const inboxSubjects = [
-  {
-    theme: "Crise d'essence",
-    origin: 'Signalement citoyen',
-    status: 'OPEN',
-    owner: 'Non assigne',
-    description:
-      "Rumeurs autour d'une origine djihadiste de la pénurie de carburant.",
-  },
-  {
-    theme: 'Video de checkpoint',
-    origin: 'Création direction',
-    status: 'IN_PROGRESS',
-    owner: 'Maimouna Traore',
-    description:
-      "Vérifier le lieu, la date et l'unité présente dans la séquence.",
-  },
-  {
-    theme: 'Prix du mil',
-    origin: 'Signalement citoyen',
-    status: 'OPEN',
-    owner: 'Non assigne',
-    description: 'Comparer les chiffres publies avec les releves officiels.',
-  },
-]
-
-const reports = [
-  {
-    title: "Crise d'essence",
-    theme: 'Securite',
-    status: 'OPEN',
-    reporter: 'Malik Sissoko',
-    content:
-      'Une rumeur locale relie la pénurie à un groupe armé sans source directe.',
-  },
-  {
-    title: 'Prix du mil',
-    theme: 'Economie',
-    status: 'OPEN',
-    reporter: 'Awa Diarra',
-    content:
-      'Les prix annonces sur les reseaux ne correspondent pas au releve officiel.',
-  },
-  {
-    title: 'Alerte archivée',
-    theme: 'Sante',
-    status: 'ARCHIVED',
-    reporter: 'Oumar Keita',
-    content: 'Doublon d un signalement deja transforme en sujet.',
-  },
-]
-
-const investigations = [
-  {
-    title: 'Video de checkpoint',
-    status: 'PENDING_REVIEW',
-    category: 'Contexte trompeur',
-    verdict: 'MISLEADING',
-    journalist: 'Maimouna Traore',
-    evidence: '3 medias classes',
-  },
-  {
-    title: "Crise d'essence",
-    status: 'IN_PROGRESS',
-    category: 'Source insuffisante',
-    verdict: 'UNVERIFIABLE',
-    journalist: 'Ibrahim Diallo',
-    evidence: '2 sources terrain',
-  },
-  {
-    title: 'Prix du mil',
-    status: 'NEEDS_REVISION',
-    category: 'Chiffre public',
-    verdict: 'TRUE',
-    journalist: 'Maimouna Traore',
-    evidence: 'Retour direction',
-  },
-  {
-    title: 'Date de publication virale',
-    status: 'PUBLISHED',
-    category: 'Archive retrouvee',
-    verdict: 'MISLEADING',
-    journalist: 'Cellule preuves',
-    evidence: 'Publication originale',
-  },
-]
-
-const publications = [
-  {
-    title: 'La video du checkpoint date de 2022',
-    verdict: 'MISLEADING',
-    type: 'Publication',
-    evidence: '3 liens verifies',
-    summary:
-      "La séquence est authentique, mais elle ne documente pas l'événement récent mentionné dans les publications virales. Le journaliste a retrouvé la publication originale et recoupé la date avec des archives et des sources de contexte.",
-    verifiedLinks: [
-      {
-        label: 'Publication originale archivée',
-        url: 'https://example.org/archive/checkpoint-2022',
-        description: 'Archive de la séquence publiée en 2022.',
-      },
-      {
-        label: 'Contexte daté par la rédaction',
-        url: 'https://example.org/fact-check/checkpoint-context',
-        description: 'Chronologie utilisee pour verifier la date.',
-      },
-      {
-        label: 'Source locale recoupée',
-        url: 'https://example.org/source/checkpoint-location',
-        description: 'Élément de contexte sur le lieu de la séquence.',
-      },
-    ],
-    finalDocuments: [
-      {
-        name: 'Note de verification finale.pdf',
-        type: 'PDF',
-        size: '248 Ko',
-        url: '#note-verification-finale',
-      },
-      {
-        name: 'Journal des sources.csv',
-        type: 'CSV',
-        size: '18 Ko',
-        url: '#journal-sources',
-      },
-    ],
-    verifiedMedia: [
-      {
-        name: 'Capture publication originale',
-        type: 'Image',
-        url: '#capture-publication-originale',
-        imageUrl:
-          'https://images.unsplash.com/photo-1495020689067-958852a7765e?auto=format&fit=crop&w=1200&q=80',
-        alt: 'Journal et notes de verification',
-      },
-      {
-        name: 'Extrait video compare',
-        type: 'Video',
-        url: '#extrait-video-compare',
-        posterUrl:
-          'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
-        videoUrl:
-          'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
-      },
-    ],
-  },
-  {
-    title: 'Correction sur le prix du mil',
-    verdict: 'TRUE',
-    type: 'Correctif',
-    evidence: '1 source officielle',
-    summary:
-      'Le correctif confirme les chiffres officiels et remplace une estimation partagee sans source primaire.',
-    verifiedLinks: [
-      {
-        label: 'Releve officiel du marche',
-        url: 'https://example.org/source/prix-du-mil',
-        description: 'Source officielle utilisee pour corriger la publication.',
-      },
-    ],
-    finalDocuments: [
-      {
-        name: 'Correctif publié.pdf',
-        type: 'PDF',
-        size: '112 Ko',
-        url: '#correctif-publie',
-      },
-    ],
-    verifiedMedia: [
-      {
-        name: 'Photo du releve officiel',
-        type: 'Image',
-        url: '#photo-releve-officiel',
-        imageUrl:
-          'https://images.unsplash.com/photo-1450101499163-c8848c66ca85?auto=format&fit=crop&w=1200&q=80',
-        alt: 'Documents administratifs verifies',
-      },
-    ],
-  },
-  {
-    title: 'Archive : origine de la pénurie non vérifiable',
-    verdict: 'UNVERIFIABLE',
-    type: 'Archive',
-    evidence: 'Dossier insuffisant',
-    summary:
-      "Les éléments disponibles ne permettent pas d'attribuer l'origine de la pénurie à une source fiable.",
-    verifiedLinks: [],
-    finalDocuments: [
-      {
-        name: 'Decision archivage.pdf',
-        type: 'PDF',
-        size: '96 Ko',
-        url: '#decision-archivage',
-      },
-    ],
-    verifiedMedia: [],
-  },
-]
-
-const people = [
-  {
-    name: 'Maimouna Traore',
-    role: 'Journaliste',
-    status: 'ACTIVE',
-    load: '1 enquête active',
-    type: 'journalist',
-  },
-  {
-    name: 'Awa Diarra',
-    role: 'Citoyenne vigie',
-    status: 'ACTIVE',
-    load: '4 preuves envoyees',
-    type: 'citizen',
-  },
-  {
-    name: 'Malik Sissoko',
-    role: 'Citoyen',
-    status: 'DISABLED',
-    load: '0 signalement ouvert',
-    type: 'citizen',
-  },
-]
-
-const watcherApplications = [
-  {
-    name: 'Awa Diarra',
-    status: 'PENDING',
-    motivation: 'Veille locale, sources terrain et suivi des publications.',
-  },
-  {
-    name: 'Oumar Keita',
-    status: 'APPROVED',
-    motivation: 'Experience de moderation communautaire.',
-  },
-]
+import { domainLabel } from './workspace-labels'
+import { StatCard, StatusBadge } from './workspace-ui'
+import {
+  CitizenReportCreateWorkspacePage as CitizenReportCreateWorkspace,
+  CitizenWorkspacePage as CitizenWorkspace,
+} from './workspaces/citizen-workspace-page'
+import { DirectorHomePage as DirectorHomeWorkspace } from './workspaces/director-home-page'
+import {
+  PeopleManagementPage as PeopleManagementWorkspace,
+  UserCreateWorkspacePage as UserCreateWorkspace,
+} from './workspaces/people-management-page'
+import { WatcherApplicationsReviewPage as WatcherApplicationsReviewWorkspace } from './workspaces/watcher-applications-review-page'
+import {
+  NotificationDetailWorkspacePage as NotificationDetailWorkspace,
+  NotificationsWorkspacePage as NotificationsWorkspace,
+} from './workspaces/notifications-workspace-page'
+import {
+  inboxSubjects,
+  investigations,
+  publications,
+  reports,
+} from './workspace-mocks'
 
 function slugifyLabel(label: string) {
   return label
@@ -316,99 +82,6 @@ function slugifyLabel(label: string) {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')
-}
-
-const domainLabelByValue: Record<string, string> = {
-  ACTIVE: 'Actif',
-  ALERT: 'Alerte',
-  APPROVED: 'Approuve',
-  ARCHIVED: 'Archive',
-  ARCHIVED_PUBLICATION: 'Publication archivée',
-  AUTHORITY_STATEMENT: 'Declaration officielle',
-  CITIZEN_REPORT: 'Signalement citoyen',
-  CONTEXT_COLLAPSE: 'Contexte detourne',
-  CORRECTION: 'Correctif',
-  DIRECTOR_INITIATED: 'Créé par la direction',
-  DIRECT_EVIDENCE: 'Preuve directe',
-  DISABLED: 'Désactivé',
-  FABRICATED: 'Fabrique',
-  FALSE: 'Faux',
-  IMAGE: 'Image',
-  IMPOSTOR: 'Usurpation',
-  IN_PROGRESS: 'En enquête',
-  JOURNALIST_PROOF: 'Preuve journaliste',
-  MANIPULATED: 'Manipule',
-  MEDIA_CROSSCHECK: 'Recoupement média',
-  MISLEADING: 'Trompeur',
-  NEEDS_REVISION: 'À corriger',
-  OFFICIAL_DECREE: 'Decision officielle',
-  OPEN: 'Ouvert',
-  OTHER: 'Autre',
-  PENDING: 'En attente',
-  PENDING_REVIEW: 'Revue direction',
-  PUBLICATION: 'Publication',
-  PUBLISHED: 'Publie',
-  REJECTED: 'Rejete',
-  SATIRE: 'Satire',
-  TEXT: 'Texte',
-  TRUE: 'Vrai',
-  UNVERIFIABLE: 'Non vérifiable',
-  VIDEO: 'Video',
-}
-
-function domainLabel(value: string) {
-  return domainLabelByValue[value] ?? value
-}
-
-function StatusBadge({
-  status,
-  className,
-}: {
-  status: string
-  className?: string
-}) {
-  if (status === 'PUBLISHED' || status === 'APPROVED' || status === 'ACTIVE') {
-    return (
-      <Badge className={cn('h-6 rounded-full px-2.5', className)}>
-        {domainLabel(status)}
-      </Badge>
-    )
-  }
-
-  if (
-    status === 'PENDING' ||
-    status === 'OPEN' ||
-    status === 'PENDING_REVIEW'
-  ) {
-    return (
-      <Badge
-        variant="secondary"
-        className={cn('h-6 rounded-full px-2.5', className)}
-      >
-        {domainLabel(status)}
-      </Badge>
-    )
-  }
-
-  if (status === 'DISABLED' || status === 'REJECTED') {
-    return (
-      <Badge
-        variant="destructive"
-        className={cn('h-6 rounded-full px-2.5', className)}
-      >
-        {domainLabel(status)}
-      </Badge>
-    )
-  }
-
-  return (
-    <Badge
-      variant="outline"
-      className={cn('h-6 rounded-full px-2.5', className)}
-    >
-      {domainLabel(status)}
-    </Badge>
-  )
 }
 
 function ArbitrationReasonDialog({
@@ -543,32 +216,6 @@ function PublishInvestigationDialog({ children }: { children: ReactNode }) {
   )
 }
 
-function StatCard(props: {
-  title: string
-  value: string
-  hint: string
-  icon: ComponentType<{ className?: string }>
-}) {
-  const Icon = props.icon
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-muted-foreground flex items-center justify-between text-sm font-medium">
-          {props.title}
-          <Icon className="size-4" />
-        </CardTitle>
-        <CardDescription>
-          <span className="text-foreground text-3xl font-semibold">
-            {props.value}
-          </span>
-          <span className="ml-2">{props.hint}</span>
-        </CardDescription>
-      </CardHeader>
-    </Card>
-  )
-}
-
 function MediaDropzone({
   inputId = 'media-upload',
   description = 'Images, videos, audio, PDF ou documents utiles au desk.',
@@ -670,98 +317,7 @@ export function RoleAwareDashboardPage() {
 }
 
 export function DirectorHomePage() {
-  return (
-    <AppLayout actor="director" page="dashboard">
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-        <StatCard
-          title="À arbitrer"
-          value="7"
-          hint="revue direction"
-          icon={Gavel}
-        />
-        <StatCard
-          title="Candidatures vigies"
-          value="2"
-          hint="en attente"
-          icon={UserCheck}
-        />
-        <StatCard
-          title="Correctifs"
-          value="3"
-          hint="a preparer"
-          icon={RotateCcw}
-        />
-        <StatCard title="Sujets ouverts" value="24" hint="inbox" icon={Inbox} />
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Revue des enquetes</CardTitle>
-          <CardDescription>
-            Les actions visibles suivent les permissions du directeur de
-            publication.
-          </CardDescription>
-          <CardAction className="flex flex-wrap gap-2">
-            <Button asChild size="sm" variant="outline">
-              <Link to="/inbox-subjects/create">
-                <FilePlus2 />
-                Nouveau sujet
-              </Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <Link to="/watcher-applications">
-                <UserCheck />
-                Candidatures
-              </Link>
-            </Button>
-          </CardAction>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Dossier</TableHead>
-                <TableHead>Verdict</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {investigations.map((item) => (
-                <TableRow key={item.title}>
-                  <TableCell className="font-medium">{item.title}</TableCell>
-                  <TableCell>{domainLabel(item.verdict)}</TableCell>
-                  <TableCell>
-                    <StatusBadge status={item.status} />
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button size="sm" variant="outline" asChild>
-                      <Link to="/investigations">Ouvrir</Link>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-          <div className="bg-muted/30 mt-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border p-3">
-            <div>
-              <p className="text-sm font-medium">Gestion des acteurs</p>
-              <p className="text-muted-foreground text-xs">
-                Comptes journalistes, citoyens et vigies restent accessibles
-                depuis la file utilisateurs.
-              </p>
-            </div>
-            <Button asChild size="sm" variant="ghost">
-              <Link to="/journalists/list">
-                <Users />
-                Utilisateurs
-              </Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </AppLayout>
-  )
+  return <DirectorHomeWorkspace />
 }
 
 export function JournalistWorkspacePage() {
@@ -865,99 +421,11 @@ export function JournalistWorkspacePage() {
 }
 
 export function CitizenWorkspacePage() {
-  return (
-    <AppLayout actor="citizen" page="reports">
-      <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Mes signalements</CardTitle>
-            <CardDescription>
-              Suivre les rumeurs transmises au desk et leur état éditorial.
-            </CardDescription>
-            <CardAction>
-              <Button asChild size="sm">
-                <Link to="/reports/create">
-                  <FilePlus2 />
-                  Nouveau signalement
-                </Link>
-              </Button>
-            </CardAction>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            {reports.slice(0, 3).map((item) => (
-              <div
-                key={item.title}
-                className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
-              >
-                <div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium">{item.title}</p>
-                    <StatusBadge status={item.status} />
-                  </div>
-                  <p className="text-muted-foreground mt-2 text-sm">
-                    {item.content}
-                  </p>
-                </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="self-start"
-                  asChild
-                >
-                  <Link
-                    to="/reports/$reportId"
-                    params={{ reportId: slugifyLabel(item.title) }}
-                  >
-                    Voir le suivi
-                  </Link>
-                </Button>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-      </div>
-    </AppLayout>
-  )
+  return <CitizenWorkspace />
 }
 
 export function CitizenReportCreateWorkspacePage() {
-  return (
-    <AppLayout actor="citizen" page="reports">
-      <Card>
-        <CardHeader>
-          <CardTitle>Nouveau signalement</CardTitle>
-          <CardDescription>
-            Decris la rumeur, ajoute les messages ou medias recus, puis envoie
-            le tout au desk.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <Label className="grid gap-2">
-            Theme
-            <Input placeholder="Ex. sante, securite, economie" />
-          </Label>
-          <Label className="grid gap-2">
-            Rumeur a verifier
-            <Textarea placeholder="Decris la rumeur et le contexte connu" />
-          </Label>
-          <Label className="grid gap-2">
-            Message recu
-            <Textarea placeholder="Colle ici le message, la publication ou le texte recu" />
-          </Label>
-          <MediaDropzone
-            inputId="citizen-report-media"
-            description="Images, captures d'ecran, videos, notes audio ou documents recus avec la rumeur."
-          />
-          <div className="flex flex-wrap gap-2">
-            <Button>Envoyer le signalement</Button>
-            <Button variant="outline" asChild>
-              <Link to="/reports">Retour aux signalements</Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </AppLayout>
-  )
+  return <CitizenReportCreateWorkspace />
 }
 
 export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
@@ -2604,112 +2072,11 @@ export function PublicationCorrectionsWorkspacePage({
 }
 
 export function PeopleManagementPage() {
-  return (
-    <AppLayout actor="director" page="people">
-      <Tabs defaultValue="journalists">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <TabsList>
-            <TabsTrigger value="journalists">Journalistes</TabsTrigger>
-            <TabsTrigger value="citizens">Citoyens</TabsTrigger>
-            <TabsTrigger value="watchers">Vigies</TabsTrigger>
-          </TabsList>
-          <Button asChild>
-            <Link to="/journalists/create">
-              <UserPlus />
-              Créer journaliste
-            </Link>
-          </Button>
-        </div>
-        <TabsContent value="journalists" className="mt-4">
-          <PeopleList filter="journalist" />
-        </TabsContent>
-        <TabsContent value="citizens" className="mt-4">
-          <PeopleList filter="citizen" />
-        </TabsContent>
-        <TabsContent value="watchers" className="mt-4">
-          <PeopleList filter="citizen" watcherOnly />
-        </TabsContent>
-      </Tabs>
-    </AppLayout>
-  )
-}
-
-function PeopleList(props: {
-  filter: 'journalist' | 'citizen'
-  watcherOnly?: boolean
-}) {
-  const rows = people.filter((person) => {
-    if (person.type !== props.filter) return false
-    if (props.watcherOnly) return person.role.includes('vigie')
-    return true
-  })
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Comptes</CardTitle>
-        <CardDescription>
-          Activation, suspension ou bannissement selon le statut courant.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-3">
-        {rows.map((person) => (
-          <div
-            key={person.name}
-            className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
-          >
-            <div>
-              <p className="font-medium">{person.name}</p>
-              <p className="text-muted-foreground text-sm">
-                {person.role} / {person.load}
-              </p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <StatusBadge status={person.status} />
-              <Button size="sm" variant="outline" asChild>
-                <Link
-                  to="/journalists/status"
-                  search={{ journalistId: person.name }}
-                >
-                  Gerer
-                </Link>
-              </Button>
-            </div>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  )
+  return <PeopleManagementWorkspace />
 }
 
 export function UserCreateWorkspacePage() {
-  return (
-    <AppLayout actor="director" page="people">
-      <Card>
-        <CardHeader>
-          <CardTitle>Provisionner un journaliste</CardTitle>
-          <CardDescription>
-            Le compte pourra ensuite prendre des sujets et conduire des
-            enquetes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <Label className="grid gap-2">
-            Nom complet
-            <Input placeholder="Nom du journaliste" />
-          </Label>
-          <Label className="grid gap-2">
-            Email
-            <Input placeholder="email@redaction.test" />
-          </Label>
-          <Button className="w-fit">
-            <UserPlus />
-            Créer le compte
-          </Button>
-        </CardContent>
-      </Card>
-    </AppLayout>
-  )
+  return <UserCreateWorkspace />
 }
 
 export function UserStatusWorkspacePage({ userLabel }: { userLabel?: string }) {
@@ -2756,327 +2123,11 @@ export function UserStatusWorkspacePage({ userLabel }: { userLabel?: string }) {
 }
 
 export function WatcherApplicationsReviewPage() {
-  const { actor, isActorPending } = useResolvedActor('citizen')
-
-  if (isActorPending) {
-    return (
-      <AppLayout actor="guest" page="people">
-        <Card role="status" aria-live="polite" aria-busy="true">
-          <CardHeader>
-            <CardTitle>Vérification de session</CardTitle>
-            <CardDescription>
-              Lecture du rôle avant d’afficher l’espace vigie.
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </AppLayout>
-    )
-  }
-
-  if (actor === 'watcher') {
-    return <WatcherContributionWorkspacePage />
-  }
-
-  if (actor === 'citizen') {
-    return <WatcherApplicationWorkspacePage />
-  }
-
-  return (
-    <AppLayout actor="director" page="people">
-      <Card>
-        <CardHeader>
-          <CardTitle>Espace vigie</CardTitle>
-          <CardDescription>
-            Valider les candidatures et garder une trace des decisions.
-          </CardDescription>
-        </CardHeader>
-      </Card>
-      <Tabs defaultValue="pending">
-        <TabsList>
-          <TabsTrigger value="pending">Candidatures</TabsTrigger>
-          <TabsTrigger value="history">Historique</TabsTrigger>
-        </TabsList>
-        <TabsContent value="pending" className="mt-4">
-          <Card>
-            <CardContent className="grid gap-3 p-5">
-              {watcherApplications.map((item) => (
-                <div
-                  key={item.name}
-                  className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
-                >
-                  <div>
-                    <p className="font-medium">{item.name}</p>
-                    <p className="text-muted-foreground text-sm">
-                      {item.motivation}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Button size="sm">
-                      <CheckCircle2 />
-                      Approuver
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      Rejeter
-                    </Button>
-                  </div>
-                </div>
-              ))}
-            </CardContent>
-          </Card>
-        </TabsContent>
-        <TabsContent value="history" className="mt-4">
-          <Card>
-            <CardContent className="p-5">
-              <p className="text-muted-foreground text-sm">
-                Decisions passees, refus motives et approbations de vigies.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </AppLayout>
-  )
-}
-
-function WatcherApplicationWorkspacePage() {
-  return (
-    <AppLayout actor="citizen" page="reports">
-      <Card>
-        <CardHeader>
-          <CardTitle>Espace vigie</CardTitle>
-          <CardDescription>
-            Candidate pour contribuer aux enquêtes ouvertes par la rédaction.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form className="grid gap-4">
-            <Label className="grid gap-2">
-              Motivation
-              <Textarea placeholder="Explique pourquoi tu veux devenir vigie et comment tu peux aider la rédaction." />
-            </Label>
-            <Button className="w-fit">
-              <UserPlus />
-              Envoyer la candidature
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </AppLayout>
-  )
-}
-
-function WatcherContributionWorkspacePage() {
-  const activeInvestigations = investigations.filter((item) =>
-    ['IN_PROGRESS', 'NEEDS_REVISION'].includes(item.status),
-  )
-
-  return (
-    <AppLayout actor="watcher" page="reports">
-      <Card>
-        <CardHeader>
-          <CardTitle>Espace vigie</CardTitle>
-          <CardDescription>
-            Contribue aux enquetes en cours avec des preuves, liens et
-            observations terrain.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-3">
-          {activeInvestigations.map((item) => (
-            <div
-              key={item.title}
-              className="grid gap-4 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
-            >
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-medium">{item.title}</p>
-                  <Badge variant="secondary">{domainLabel(item.status)}</Badge>
-                </div>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  {item.category} / {item.evidence}
-                </p>
-                <p className="text-muted-foreground mt-3 text-sm">
-                  Ajoute un contexte local, une source, un média ou une note qui
-                  aide le journaliste a consolider le dossier.
-                </p>
-              </div>
-              <div className="flex flex-wrap items-start gap-2 md:justify-end">
-                <Button size="sm" variant="outline" asChild>
-                  <Link
-                    to="/investigations/$investigationId"
-                    params={{ investigationId: slugifyLabel(item.title) }}
-                  >
-                    <ExternalLink />
-                    Voir le dossier
-                  </Link>
-                </Button>
-                <Button size="sm">
-                  <FilePlus2 />
-                  Contribuer
-                </Button>
-              </div>
-            </div>
-          ))}
-        </CardContent>
-      </Card>
-    </AppLayout>
-  )
-}
-
-const notificationItems = [
-  {
-    id: 'nouvelle-publication',
-    type: 'PUBLICATION',
-    theme: 'Nouvelle publication',
-    message: 'Un dossier suivi vient de recevoir un verdict public.',
-    isRead: false,
-    publicationId: 'la-video-du-checkpoint-date-de-2022',
-    investigationId: null,
-  },
-  {
-    id: 'correctif-publie',
-    type: 'CORRECTION',
-    theme: 'Correctif publié',
-    message: 'Une publication a été corrigée après nouvelle validation.',
-    isRead: false,
-    publicationId: 'correction-sur-le-prix-du-mil',
-    investigationId: null,
-  },
-  {
-    id: 'dossier-archive',
-    type: 'ARCHIVED_PUBLICATION',
-    theme: 'Dossier archivé',
-    message: 'Une enquête non vérifiable a été archivée par la direction.',
-    isRead: true,
-    publicationId: null,
-    investigationId: 'crise-essence',
-  },
-  {
-    id: 'action-requise',
-    type: 'ALERT',
-    theme: 'Action requise',
-    message: 'Une preuve ou une révision attend ton intervention.',
-    isRead: true,
-    publicationId: null,
-    investigationId: null,
-  },
-] as const
-
-const notificationTypeConfig = {
-  PUBLICATION: {
-    icon: Newspaper,
-    label: 'Publication',
-    intent: 'Verdict public disponible',
-    actionLabel: 'Ouvrir la publication',
-  },
-  CORRECTION: {
-    icon: RotateCcw,
-    label: 'Correctif',
-    intent: 'Publication corrigée',
-    actionLabel: 'Ouvrir le correctif',
-  },
-  ALERT: {
-    icon: AlertTriangle,
-    label: 'Alerte',
-    intent: 'Intervention attendue',
-    actionLabel: 'Retour aux notifications',
-  },
-  ARCHIVED_PUBLICATION: {
-    icon: Archive,
-    label: 'Archive',
-    intent: 'Enquête archivée',
-    actionLabel: 'Ouvrir le dossier',
-  },
-} as const
-
-function getNotificationConfig(
-  type: (typeof notificationItems)[number]['type'],
-) {
-  return notificationTypeConfig[type]
-}
-
-function getNotificationTarget(item: (typeof notificationItems)[number]) {
-  if (item.publicationId) {
-    return {
-      kind: 'publication',
-      id: item.publicationId,
-      label: getNotificationConfig(item.type).actionLabel,
-    } as const
-  }
-
-  if (item.investigationId) {
-    return {
-      kind: 'investigation',
-      id: item.investigationId,
-      label: getNotificationConfig(item.type).actionLabel,
-    } as const
-  }
-
-  return null
+  return <WatcherApplicationsReviewWorkspace />
 }
 
 export function NotificationsWorkspacePage() {
-  const { actor } = useResolvedActor('journalist')
-
-  function renderNotificationCard(item: (typeof notificationItems)[number]) {
-    const config = getNotificationConfig(item.type)
-    const Icon = config.icon
-    const target = getNotificationTarget(item)
-    const card = (
-      <Card
-        className={cn(
-          'hover:border-primary/40 hover:bg-muted/40 transition-colors',
-          !item.isRead && 'border-primary/30 bg-primary/5 shadow-primary/10',
-        )}
-      >
-        <CardContent className="flex items-start gap-4 p-5">
-          <div
-            className={cn(
-              'bg-muted flex size-10 shrink-0 items-center justify-center rounded-full',
-              !item.isRead && 'bg-primary/10 text-primary',
-            )}
-          >
-            <Icon className="size-4" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              {!item.isRead ? (
-                <span className="bg-primary size-2 rounded-full" />
-              ) : null}
-              <p className="font-semibold">{item.theme}</p>
-              <Badge variant="secondary">{config.label}</Badge>
-            </div>
-            <p className="text-muted-foreground mt-1 text-sm">{item.message}</p>
-            <p className="text-muted-foreground mt-3 text-xs font-medium">
-              {config.intent}
-            </p>
-          </div>
-          {target ? (
-            <ExternalLink className="text-muted-foreground mt-1 size-4 shrink-0" />
-          ) : null}
-        </CardContent>
-      </Card>
-    )
-
-    return (
-      <Link
-        key={item.id}
-        to="/notifications/$notificationId"
-        params={{ notificationId: item.id }}
-        className="block"
-        aria-label={`Voir le detail: ${item.theme}`}
-      >
-        {card}
-      </Link>
-    )
-  }
-
-  return (
-    <AppLayout actor={actor} page="notifications">
-      <div className="grid gap-4">
-        {notificationItems.map(renderNotificationCard)}
-      </div>
-    </AppLayout>
-  )
+  return <NotificationsWorkspace />
 }
 
 export function NotificationDetailWorkspacePage({
@@ -3084,75 +2135,7 @@ export function NotificationDetailWorkspacePage({
 }: {
   notificationId: string
 }) {
-  const { actor } = useResolvedActor('journalist')
-  const item =
-    notificationItems.find((candidate) => candidate.id === notificationId) ??
-    notificationItems[0]
-  const config = getNotificationConfig(item.type)
-  const target = getNotificationTarget(item)
-  const Icon = config.icon
-
-  return (
-    <AppLayout actor={actor} page="notifications">
-      <Card
-        className={cn(
-          !item.isRead && 'border-primary/30 bg-primary/5 shadow-primary/10',
-        )}
-      >
-        <CardHeader>
-          <div className="flex flex-wrap items-start gap-4">
-            <div
-              className={cn(
-                'bg-muted flex size-11 shrink-0 items-center justify-center rounded-full',
-                !item.isRead && 'bg-primary/10 text-primary',
-              )}
-            >
-              <Icon className="size-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                {!item.isRead ? (
-                  <span className="bg-primary size-2 rounded-full" />
-                ) : null}
-                <CardTitle>{item.theme}</CardTitle>
-                <Badge variant="secondary">{config.label}</Badge>
-              </div>
-              <CardDescription className="mt-2">{item.message}</CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-2">
-            {target?.kind === 'publication' ? (
-              <Button asChild>
-                <Link
-                  to="/publications/$publicationId"
-                  params={{ publicationId: target.id }}
-                >
-                  <ExternalLink />
-                  {target.label}
-                </Link>
-              </Button>
-            ) : null}
-            {target?.kind === 'investigation' ? (
-              <Button asChild>
-                <Link
-                  to="/investigations/$investigationId"
-                  params={{ investigationId: target.id }}
-                >
-                  <ExternalLink />
-                  {target.label}
-                </Link>
-              </Button>
-            ) : null}
-            <Button variant="outline" asChild>
-              <Link to="/notifications">Retour aux notifications</Link>
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </AppLayout>
-  )
+  return <NotificationDetailWorkspace notificationId={notificationId} />
 }
 
 export function GuestHomePage() {
