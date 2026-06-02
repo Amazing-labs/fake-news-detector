@@ -11,6 +11,19 @@ on:
   workflow_dispatch:
 
 jobs:
+  safets:
+    name: SafeTS Runtime Safety
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v5
+
+      - name: Run SafeTS
+        uses: Dioman-Keita/safets@v1.0.2
+        with:
+          version: 1.0.2
+          fail-on-new: 'true'
+
   client:
     name: 🎨 Web Checks
     runs-on: ubuntu-latest
