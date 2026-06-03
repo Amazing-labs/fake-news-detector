@@ -205,7 +205,7 @@ export async function resolveSessionActorForAuthUser(
       name: actor.name,
       role: actor.role,
       status: actor.status,
-      citizenType: actor.citizenType,
+      citizenType: actor.citizenType ?? undefined,
     }
 
     const actorLink = await findAuthLinkByActorId(sessionActor.id)

@@ -5,10 +5,11 @@ import { PrismaClient, type Prisma } from '@prisma/client'
 import { readProcessEnv } from '../../shared'
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-  prismaConnectionString: string | undefined
+  prismaClients: Map<string, PrismaClient> | undefined
   defaultDatabaseUrl: string | undefined
 }
+
+globalForPrisma.prismaClients ??= new Map()
 
 const prismaConnectionStringContext = new AsyncLocalStorage<
   string | undefined
@@ -38,16 +39,16 @@ function createPrismaClient(connectionString: string): PrismaClient {
 
 function getRootPrisma(): PrismaClient {
   const connectionString = resolveConnectionString()
+  const cachedClient = globalForPrisma.prismaClients?.get(connectionString)
 
-  if (
-    !globalForPrisma.prisma ||
-    globalForPrisma.prismaConnectionString !== connectionString
-  ) {
-    globalForPrisma.prisma = createPrismaClient(connectionString)
-    globalForPrisma.prismaConnectionString = connectionString
+  if (cachedClient) {
+    return cachedClient
   }
 
-  return globalForPrisma.prisma
+  const client = createPrismaClient(connectionString)
+  globalForPrisma.prismaClients?.set(connectionString, client)
+
+  return client
 }
 
 export type PrismaDbClient = PrismaClient | Prisma.TransactionClient
@@ -90,8 +91,12 @@ export function runWithPrismaConnectionString<T>(
 
 if (typeof process !== 'undefined' && typeof process.on === 'function') {
   process.on('beforeExit', async () => {
-    if (globalForPrisma.prisma) {
-      await globalForPrisma.prisma.$disconnect()
+    if (globalForPrisma.prismaClients) {
+      await Promise.all(
+        [...globalForPrisma.prismaClients.values()].map((client) =>
+          client.$disconnect(),
+        ),
+      )
     }
   })
 }
