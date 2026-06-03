@@ -3,7 +3,7 @@ import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { customSession } from 'better-auth/plugins'
 import { scryptSync, timingSafeEqual } from 'node:crypto'
 import { prisma } from '../../infrastructure/config/database'
-import { readProcessEnv } from '../../shared'
+import { hasProcessEnv, readProcessEnv } from '../../shared'
 import {
   provisionCitizenActorForAuthUser,
   resolveSessionActorForAuthUser,
@@ -78,7 +78,10 @@ function decodeBase64(value: string): Uint8Array {
 }
 
 function isProduction(): boolean {
-  return readProcessEnv('NODE_ENV') === 'production'
+  const nodeEnv = readProcessEnv('NODE_ENV')
+  return (
+    nodeEnv === 'production' || (!hasProcessEnv() && nodeEnv !== 'development')
+  )
 }
 
 function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
