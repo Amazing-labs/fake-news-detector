@@ -36,6 +36,19 @@ export const sourceTypeSchema = z.enum([
   'AUTHORITY_STATEMENT',
 ])
 
+export const verificationThemeSchema = z.enum([
+  'Santé',
+  'Sécurité',
+  'Économie',
+  'Éducation',
+  'Politique',
+  'Environnement',
+  'Technologie',
+  'Société',
+  'Sport',
+  'International',
+])
+
 export const journalistStatusReasonSchema = z.enum([
   'SPAM',
   'ABUSE',

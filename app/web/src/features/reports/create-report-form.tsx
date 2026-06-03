@@ -6,9 +6,13 @@ import { toApiErrorMessage } from '../../shared/api/http'
 import {
   DarkButton,
   DarkFormCard,
-  DarkInput,
+  DarkSelect,
   DarkTextArea,
 } from '../../shared/ui/dark-form'
+import {
+  defaultVerificationTheme,
+  verificationThemes,
+} from '../../shared/domain/themes'
 import { MediaFields } from '../../shared/ui/media-fields'
 import {
   normalizeMediaDrafts,
@@ -18,7 +22,7 @@ import { Notice } from '../../shared/ui/primitives'
 
 export function CreateReportForm() {
   const queryClient = useQueryClient()
-  const [theme, setTheme] = useState('')
+  const [theme, setTheme] = useState<string>(defaultVerificationTheme)
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [media, setMedia] = useState<MediaDraft[]>([])
@@ -33,7 +37,7 @@ export function CreateReportForm() {
         media: normalizeMediaDrafts(media),
       }),
     onSuccess: () => {
-      setTheme('')
+      setTheme(defaultVerificationTheme)
       setTitle('')
       setContent('')
       setMedia([])
@@ -55,11 +59,11 @@ export function CreateReportForm() {
           mutation.mutate()
         }}
       >
-        <DarkInput
+        <DarkSelect
           label="Thème"
           value={theme}
           onChange={(event) => setTheme(event.target.value)}
-          placeholder="Ex. santé, sécurité, économie"
+          options={verificationThemes}
         />
         <DarkTextArea
           label="Rumeur à vérifier"

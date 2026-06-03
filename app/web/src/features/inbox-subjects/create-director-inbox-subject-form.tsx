@@ -4,9 +4,13 @@ import { apiRequest, toApiErrorMessage } from '../../shared/api/http'
 import {
   DarkButton,
   DarkFormCard,
-  DarkInput,
+  DarkSelect,
   DarkTextArea,
 } from '../../shared/ui/dark-form'
+import {
+  defaultVerificationTheme,
+  verificationThemes,
+} from '../../shared/domain/themes'
 import { MediaFields } from '../../shared/ui/media-fields'
 import {
   normalizeMediaDrafts,
@@ -16,7 +20,7 @@ import { Notice } from '../../shared/ui/primitives'
 
 export function CreateDirectorInboxSubjectForm() {
   const queryClient = useQueryClient()
-  const [theme, setTheme] = useState('')
+  const [theme, setTheme] = useState<string>(defaultVerificationTheme)
   const [description, setDescription] = useState('')
   const [media, setMedia] = useState<MediaDraft[]>([])
 
@@ -31,7 +35,7 @@ export function CreateDirectorInboxSubjectForm() {
         }),
       }),
     onSuccess: () => {
-      setTheme('')
+      setTheme(defaultVerificationTheme)
       setDescription('')
       setMedia([])
       void queryClient.invalidateQueries({ queryKey: ['inbox-subjects'] })
@@ -50,10 +54,11 @@ export function CreateDirectorInboxSubjectForm() {
           mutation.mutate()
         }}
       >
-        <DarkInput
+        <DarkSelect
           label="Thème"
           value={theme}
           onChange={(event) => setTheme(event.target.value)}
+          options={verificationThemes}
         />
         <DarkTextArea
           label="Description"

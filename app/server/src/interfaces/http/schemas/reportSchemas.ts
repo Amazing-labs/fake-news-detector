@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { mediaInputSchema } from './common'
+import { mediaInputSchema, verificationThemeSchema } from './common'
 
 export const submitReportSchema = z.object({
-  theme: z.string().min(1),
+  theme: verificationThemeSchema,
   title: z
     .string()
     .nullable()

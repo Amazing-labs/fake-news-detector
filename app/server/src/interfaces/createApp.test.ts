@@ -126,7 +126,7 @@ describe('createApp', () => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        theme: 'theme',
+        theme: 'Santé',
       }),
     })
 
@@ -143,7 +143,7 @@ describe('createApp', () => {
         Authorization: 'Bearer citizen-1:CITIZEN',
       },
       body: JSON.stringify({
-        theme: 'health',
+        theme: 'Santé',
         title: 'Title',
         content: 'Body',
       }),
@@ -222,7 +222,7 @@ describe('createApp', () => {
         Authorization: 'Bearer citizen-1:CITIZEN',
       },
       body: JSON.stringify({
-        theme: 'health',
+        theme: 'Santé',
         title: 'Title',
         content: 'Body',
       }),
@@ -231,10 +231,87 @@ describe('createApp', () => {
     expect(response.status).toBe(201)
     expect(submitReport).toHaveBeenCalledWith({
       citizenId: 'citizen-1',
-      theme: 'health',
+      theme: 'Santé',
       title: 'Title',
       content: 'Body',
     })
+  })
+
+  test('rejects report submission with an unsupported theme', async () => {
+    const submitReport = vi.fn()
+    const securityService = new SecurityService({
+      authenticate: vi.fn(async () => ({
+        isValid: true,
+        actorId: 'citizen-1',
+        role: 'CITIZEN' as const,
+      })),
+    })
+    const app = createApp({
+      securityService,
+      reportController: new ReportController(
+        { submitReport } as any,
+        { findByCitizenId: vi.fn(), findAll: vi.fn() } as any,
+      ),
+      inboxSubjectController: {
+        list: vi.fn(),
+        listOpenReports: vi.fn(),
+        createDirectorSubject: vi.fn(),
+        pick: vi.fn(),
+        delete: vi.fn(),
+      } as any,
+      investigationController: {
+        list: vi.fn(),
+        submitForReview: vi.fn(),
+        updateSourceMedia: vi.fn(),
+        updateWatcherEvidenceMedia: vi.fn(),
+        addProofMedia: vi.fn(),
+        approve: vi.fn(),
+        reject: vi.fn(),
+        archive: vi.fn(),
+        cancel: vi.fn(),
+        submitWatcherEvidence: vi.fn(),
+      } as any,
+      publicationController: {
+        list: vi.fn(),
+        publishCorrection: vi.fn(),
+      } as any,
+      watcherApplicationController: {
+        submit: vi.fn(),
+        list: vi.fn(),
+        approve: vi.fn(),
+        reject: vi.fn(),
+      } as any,
+      journalistManagementController: {
+        create: vi.fn(),
+        ban: vi.fn(),
+        disable: vi.fn(),
+        activate: vi.fn(),
+      } as any,
+      directorController: {
+        getDashboard: vi.fn(),
+      } as any,
+      notificationController: {
+        list: vi.fn(),
+        markAsRead: vi.fn(),
+        markAllAsRead: vi.fn(),
+      } as any,
+    })
+
+    const response = await app.request('/api/reports', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer citizen-1:CITIZEN',
+      },
+      body: JSON.stringify({
+        theme: 'Rumeur libre',
+        title: 'Title',
+        content: 'Body',
+      }),
+    })
+
+    expect(response.status).toBe(400)
+    expect(submitReport).not.toHaveBeenCalled()
   })
 
   test('returns 400 when request JSON is malformed', async () => {
