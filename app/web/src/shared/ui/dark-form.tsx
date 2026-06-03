@@ -36,6 +36,31 @@ export function DarkInput(
   )
 }
 
+export function DarkSelect(
+  props: React.SelectHTMLAttributes<HTMLSelectElement> & {
+    label: string
+    options: ReadonlyArray<{ value: string; label: string }>
+  },
+) {
+  const { label, options, className, ...rest } = props
+
+  return (
+    <label className="grid gap-2 text-sm font-medium">
+      {label}
+      <select
+        className={`rounded-lg border border-white/15 bg-black px-3 py-2.5 text-white transition outline-none focus:border-white/45 ${className ?? ''}`}
+        {...rest}
+      >
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
+
 export function DarkTextArea(
   props: React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
     label: string

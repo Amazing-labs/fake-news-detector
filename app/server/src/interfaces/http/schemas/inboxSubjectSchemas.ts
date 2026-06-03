@@ -1,8 +1,8 @@
 import { z } from 'zod'
-import { mediaInputSchema } from './common'
+import { mediaInputSchema, verificationThemeSchema } from './common'
 
 export const createDirectorInboxSubjectSchema = z.object({
-  theme: z.string().min(1),
+  theme: verificationThemeSchema,
   description: z.string().min(1),
   media: z.array(mediaInputSchema).optional(),
 })

@@ -1,12 +1,18 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { apiRequest, toApiErrorMessage } from '../../shared/api/http'
 import {
   DarkButton,
   DarkFormCard,
-  DarkInput,
+  DarkSelect,
   DarkTextArea,
 } from '../../shared/ui/dark-form'
+import {
+  defaultVerificationTheme,
+  verificationThemes,
+  type VerificationTheme,
+} from '../../shared/domain/themes'
 import { MediaFields } from '../../shared/ui/media-fields'
 import {
   normalizeMediaDrafts,
@@ -16,27 +22,46 @@ import { Notice } from '../../shared/ui/primitives'
 
 export function CreateDirectorInboxSubjectForm() {
   const queryClient = useQueryClient()
-  const [theme, setTheme] = useState('')
+  const [theme, setTheme] = useState<VerificationTheme>(
+    defaultVerificationTheme,
+  )
   const [description, setDescription] = useState('')
   const [media, setMedia] = useState<MediaDraft[]>([])
 
   const mutation = useMutation({
-    mutationFn: () =>
-      apiRequest<{ id: string }>('/api/inbox-subjects', {
+    mutationFn: () => {
+      const normalizedMedia = normalizeMediaDrafts(media)
+      return apiRequest<{ id: string }>('/api/inbox-subjects', {
         method: 'POST',
         body: JSON.stringify({
           theme,
-          description,
-          media: normalizeMediaDrafts(media),
+          description: description.trim(),
+          media: normalizedMedia,
         }),
-      }),
+      })
+    },
     onSuccess: () => {
-      setTheme('')
+      setTheme(defaultVerificationTheme)
       setDescription('')
       setMedia([])
+      toast.success('Sujet créé.')
       void queryClient.invalidateQueries({ queryKey: ['inbox-subjects'] })
     },
+    onError: (error) => {
+      toast.error(toApiErrorMessage(error))
+    },
   })
+
+  function handleSubmit() {
+    if (!description.trim() && normalizeMediaDrafts(media).length === 0) {
+      toast.error(
+        'Ajoute une description ou au moins un média avant de créer le sujet.',
+      )
+      return
+    }
+
+    mutation.mutate()
+  }
 
   return (
     <DarkFormCard
@@ -47,13 +72,16 @@ export function CreateDirectorInboxSubjectForm() {
         className="mt-6 grid gap-4"
         onSubmit={(event) => {
           event.preventDefault()
-          mutation.mutate()
+          handleSubmit()
         }}
       >
-        <DarkInput
+        <DarkSelect
           label="Thème"
           value={theme}
-          onChange={(event) => setTheme(event.target.value)}
+          onChange={(event) =>
+            setTheme(event.target.value as VerificationTheme)
+          }
+          options={verificationThemes}
         />
         <DarkTextArea
           label="Description"
