@@ -127,15 +127,17 @@ export async function provisionCitizenActorForAuthUser(
       return
     }
 
-    const actorLink = await findAuthLinkByActorId(existingActor.id)
+    const existingActorId = existingActor.id
+    const existingActorRole = existingActor.role
+    const actorLink = await findAuthLinkByActorId(existingActorId)
 
-    if (existingActor.role === 'CITIZEN' && !actorLink) {
-      await createAuthLink(user.id, existingActor.id)
+    if (existingActorRole === 'CITIZEN' && !actorLink) {
+      await createAuthLink(user.id, existingActorId)
       logAuthLinkDebug(
         'provisionCitizenActorForAuthUser:linked-existing-citizen',
         {
           userId: user.id,
-          actorId: existingActor.id,
+          actorId: existingActorId,
         },
       )
     }
@@ -198,14 +200,22 @@ export async function resolveSessionActorForAuthUser(
       return null
     }
 
-    const actorLink = await findAuthLinkByActorId(actor.id)
+    const sessionActor: ActorAccessCandidate = {
+      id: actor.id,
+      name: actor.name,
+      role: actor.role,
+      status: actor.status,
+      citizenType: actor.citizenType ?? undefined,
+    }
+
+    const actorLink = await findAuthLinkByActorId(sessionActor.id)
 
     if (actorLink && actorLink.userId !== user.id) {
       logAuthLinkDebug(
         'resolveSessionActorForAuthUser:actor-owned-by-other-user',
         {
           userId: user.id,
-          actorId: actor.id,
+          actorId: sessionActor.id,
           linkedUserId: actorLink.userId,
         },
       )
@@ -213,32 +223,26 @@ export async function resolveSessionActorForAuthUser(
     }
 
     if (
-      !canAttachActorToSession(actor, user.emailVerified) &&
-      !canClaimPreprovisionedActorWithoutVerification(actor)
+      !canAttachActorToSession(sessionActor, user.emailVerified) &&
+      !canClaimPreprovisionedActorWithoutVerification(sessionActor)
     ) {
       logAuthLinkDebug('resolveSessionActorForAuthUser:actor-not-attachable', {
         userId: user.id,
-        actorId: actor.id,
-        actorRole: actor.role,
+        actorId: sessionActor.id,
+        actorRole: sessionActor.role,
         emailVerified: user.emailVerified,
       })
       return null
     }
 
-    await createAuthLink(user.id, actor.id)
+    await createAuthLink(user.id, sessionActor.id)
     logAuthLinkDebug('resolveSessionActorForAuthUser:auth-link-created', {
       userId: user.id,
-      actorId: actor.id,
-      actorRole: actor.role,
+      actorId: sessionActor.id,
+      actorRole: sessionActor.role,
     })
 
-    return {
-      id: actor.id,
-      name: actor.name,
-      role: actor.role,
-      status: actor.status,
-      citizenType: actor.citizenType,
-    }
+    return sessionActor
   } catch (error) {
     logAuthLinkError('resolveSessionActorForAuthUser:failed', error, {
       userId: user.id,

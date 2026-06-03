@@ -5,6 +5,7 @@ import {
   prisma,
   setPrismaConnectionString,
 } from '../infrastructure/config/database'
+import { readProcessEnv } from '../shared'
 
 type CliArgs = {
   name: string
@@ -37,11 +38,12 @@ function readArgs(): CliArgs {
 }
 
 async function main() {
-  if (!process.env.DATABASE_URL) {
+  const databaseUrl = readProcessEnv('DATABASE_URL')
+  if (!databaseUrl) {
     throw new Error('DATABASE_URL is not set')
   }
 
-  setPrismaConnectionString(process.env.DATABASE_URL)
+  setPrismaConnectionString(databaseUrl)
 
   const input = readArgs()
 

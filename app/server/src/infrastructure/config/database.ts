@@ -2,17 +2,24 @@ import { AsyncLocalStorage } from 'node:async_hooks'
 
 import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient, type Prisma } from '@prisma/client'
+import { readProcessEnv } from '../../shared'
 
 const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
-  prismaConnectionString: string | undefined
-  requestDatabaseUrl: string | undefined
+  prismaClients: Map<string, PrismaClient> | undefined
+  defaultDatabaseUrl: string | undefined
 }
+
+globalForPrisma.prismaClients ??= new Map()
+
+const prismaConnectionStringContext = new AsyncLocalStorage<
+  string | undefined
+>()
 
 function resolveConnectionString(): string {
   return (
-    globalForPrisma.requestDatabaseUrl ??
-    process.env.DATABASE_URL ??
+    prismaConnectionStringContext.getStore() ??
+    globalForPrisma.defaultDatabaseUrl ??
+    readProcessEnv('DATABASE_URL') ??
     (() => {
       throw new Error('DATABASE_URL is not configured')
     })()
@@ -32,16 +39,16 @@ function createPrismaClient(connectionString: string): PrismaClient {
 
 function getRootPrisma(): PrismaClient {
   const connectionString = resolveConnectionString()
+  const cachedClient = globalForPrisma.prismaClients?.get(connectionString)
 
-  if (
-    !globalForPrisma.prisma ||
-    globalForPrisma.prismaConnectionString !== connectionString
-  ) {
-    globalForPrisma.prisma = createPrismaClient(connectionString)
-    globalForPrisma.prismaConnectionString = connectionString
+  if (cachedClient) {
+    return cachedClient
   }
 
-  return globalForPrisma.prisma
+  const client = createPrismaClient(connectionString)
+  globalForPrisma.prismaClients?.set(connectionString, client)
+
+  return client
 }
 
 export type PrismaDbClient = PrismaClient | Prisma.TransactionClient
@@ -72,13 +79,24 @@ export async function runInPrismaTransaction<T>(
 }
 
 export function setPrismaConnectionString(connectionString?: string): void {
-  globalForPrisma.requestDatabaseUrl = connectionString
+  globalForPrisma.defaultDatabaseUrl = connectionString
+}
+
+export function runWithPrismaConnectionString<T>(
+  connectionString: string | undefined,
+  work: () => Promise<T>,
+): Promise<T> {
+  return prismaConnectionStringContext.run(connectionString, work)
 }
 
 if (typeof process !== 'undefined' && typeof process.on === 'function') {
   process.on('beforeExit', async () => {
-    if (globalForPrisma.prisma) {
-      await globalForPrisma.prisma.$disconnect()
+    if (globalForPrisma.prismaClients) {
+      await Promise.all(
+        [...globalForPrisma.prismaClients.values()].map((client) =>
+          client.$disconnect(),
+        ),
+      )
     }
   })
 }

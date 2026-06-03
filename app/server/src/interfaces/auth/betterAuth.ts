@@ -3,6 +3,7 @@ import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { customSession } from 'better-auth/plugins'
 import { scryptSync, timingSafeEqual } from 'node:crypto'
 import { prisma } from '../../infrastructure/config/database'
+import { hasProcessEnv, readProcessEnv } from '../../shared'
 import {
   provisionCitizenActorForAuthUser,
   resolveSessionActorForAuthUser,
@@ -74,6 +75,13 @@ function encodeBase64(buffer: ArrayBuffer | Uint8Array): string {
 
 function decodeBase64(value: string): Uint8Array {
   return new Uint8Array(Buffer.from(value, 'base64'))
+}
+
+function isProduction(): boolean {
+  const nodeEnv = readProcessEnv('NODE_ENV')
+  return (
+    nodeEnv === 'production' || (!hasProcessEnv() && nodeEnv !== 'development')
+  )
 }
 
 function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
@@ -250,9 +258,9 @@ async function verifyWorkerPassword({
 }
 
 function resolveBetterAuthSecret(): string {
-  const secret = process.env.BETTER_AUTH_SECRET ?? DEFAULT_SECRET
+  const secret = readProcessEnv('BETTER_AUTH_SECRET') ?? DEFAULT_SECRET
 
-  if (process.env.NODE_ENV === 'production' && secret === DEFAULT_SECRET) {
+  if (isProduction() && secret === DEFAULT_SECRET) {
     throw new Error(
       'BETTER_AUTH_SECRET must be set in production. Refusing to use the default development secret.',
     )
@@ -262,7 +270,7 @@ function resolveBetterAuthSecret(): string {
 }
 
 function readTrustedOrigins(): string[] {
-  const configured = process.env.BETTER_AUTH_TRUSTED_ORIGINS
+  const configured = readProcessEnv('BETTER_AUTH_TRUSTED_ORIGINS')
   if (!configured) {
     return [...DEFAULT_TRUSTED_ORIGINS]
   }
@@ -277,7 +285,7 @@ function readTrustedOrigins(): string[] {
 
 export const auth = betterAuth({
   secret: resolveBetterAuthSecret(),
-  baseURL: process.env.BETTER_AUTH_URL ?? DEFAULT_BASE_URL,
+  baseURL: readProcessEnv('BETTER_AUTH_URL') ?? DEFAULT_BASE_URL,
   trustedOrigins: readTrustedOrigins(),
   database: prismaAdapter(prisma, {
     provider: 'postgresql',
@@ -292,7 +300,7 @@ export const auth = betterAuth({
   },
   advanced: {
     cookiePrefix: 'fake-news-detector',
-    useSecureCookies: process.env.NODE_ENV === 'production',
+    useSecureCookies: isProduction(),
   },
   databaseHooks: {
     user: {
