@@ -44,24 +44,28 @@ export class InvestigationLifecycleService {
       throw new NotFoundError('InboxSubject', investigation.inboxSubjectId)
     }
 
+    const subjectOrigin = subject.origin
+    const subjectReportId = subject.reportId
+
     if (!subject.isArchived()) {
       subject.archive()
       await this.inboxSubjectRepository.update(subject)
     }
 
-    if (subject.origin !== 'REPORT' || !subject.reportId) {
+    if (subjectOrigin !== 'REPORT' || !subjectReportId) {
       return null
     }
 
-    const report = await this.reportRepository.findById(subject.reportId)
+    const report = await this.reportRepository.findById(subjectReportId)
     if (!report) {
-      throw new NotFoundError('Report', subject.reportId)
+      throw new NotFoundError('Report', subjectReportId)
     }
 
     report.changeStatus('ARCHIVED')
+    const citizenId = report.citizenId
     await this.reportRepository.save(report)
 
-    const citizen = await this.citizenRepository.findById(report.citizenId)
+    const citizen = await this.citizenRepository.findById(citizenId)
     if (citizen) {
       citizen.reportResolved()
       await this.citizenRepository.update(citizen)
