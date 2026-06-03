@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { UserPlus } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import {
   submitWatcherApplication,
   watcherApplicationQueryKeys,
@@ -20,15 +21,28 @@ export function WatcherApplicationForm() {
   const mutation = useMutation({
     mutationFn: () =>
       submitWatcherApplication({
-        motivation,
+        motivation: motivation.trim(),
       }),
     onSuccess: () => {
       setMotivation('')
+      toast.success('Candidature envoyée.')
       void queryClient.invalidateQueries({
         queryKey: watcherApplicationQueryKeys.all,
       })
     },
+    onError: (error) => {
+      toast.error(toApiErrorMessage(error))
+    },
   })
+
+  function handleSubmit() {
+    if (motivation.trim().length < 20) {
+      toast.error('Explique ta motivation en au moins 20 caractères.')
+      return
+    }
+
+    mutation.mutate()
+  }
 
   return (
     <DarkFormCard
@@ -39,7 +53,7 @@ export function WatcherApplicationForm() {
         className="mt-6 grid gap-4"
         onSubmit={(event) => {
           event.preventDefault()
-          mutation.mutate()
+          handleSubmit()
         }}
       >
         <DarkTextArea

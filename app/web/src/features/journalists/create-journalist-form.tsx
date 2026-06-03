@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import {
   createJournalist,
   journalistQueryKeys,
@@ -16,15 +17,36 @@ export function CreateJournalistForm() {
   const mutation = useMutation({
     mutationFn: () =>
       createJournalist({
-        name,
-        email,
+        name: name.trim(),
+        email: email.trim(),
       }),
     onSuccess: () => {
       setName('')
       setEmail('')
+      toast.success('Journaliste créé.')
       void queryClient.invalidateQueries({ queryKey: journalistQueryKeys.all })
     },
+    onError: (error) => {
+      toast.error(toApiErrorMessage(error))
+    },
   })
+
+  function handleSubmit() {
+    const trimmedName = name.trim()
+    const trimmedEmail = email.trim()
+
+    if (trimmedName.length < 2) {
+      toast.error('Renseigne un nom de journaliste valide.')
+      return
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+      toast.error('Renseigne une adresse e-mail valide.')
+      return
+    }
+
+    mutation.mutate()
+  }
 
   return (
     <DarkFormCard
@@ -35,7 +57,7 @@ export function CreateJournalistForm() {
         className="mt-6 grid gap-4"
         onSubmit={(event) => {
           event.preventDefault()
-          mutation.mutate()
+          handleSubmit()
         }}
       >
         <DarkInput

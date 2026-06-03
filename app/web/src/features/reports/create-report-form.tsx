@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { createReport, reportQueryKeys } from '../../entities/report/api'
 import { toApiErrorMessage } from '../../shared/api/http'
 import {
@@ -12,6 +13,7 @@ import {
 import {
   defaultVerificationTheme,
   verificationThemes,
+  type VerificationTheme,
 } from '../../shared/domain/themes'
 import { MediaFields } from '../../shared/ui/media-fields'
 import {
@@ -22,29 +24,51 @@ import { Notice } from '../../shared/ui/primitives'
 
 export function CreateReportForm() {
   const queryClient = useQueryClient()
-  const [theme, setTheme] = useState<string>(defaultVerificationTheme)
+  const [theme, setTheme] = useState<VerificationTheme>(
+    defaultVerificationTheme,
+  )
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [media, setMedia] = useState<MediaDraft[]>([])
   const [message, setMessage] = useState<string | null>(null)
 
   const mutation = useMutation({
-    mutationFn: () =>
-      createReport({
+    mutationFn: () => {
+      const normalizedMedia = normalizeMediaDrafts(media)
+      return createReport({
         theme,
-        title,
-        content,
-        media: normalizeMediaDrafts(media),
-      }),
+        title: title.trim(),
+        content: content.trim(),
+        media: normalizedMedia,
+      })
+    },
     onSuccess: () => {
       setTheme(defaultVerificationTheme)
       setTitle('')
       setContent('')
       setMedia([])
       setMessage('Signalement créé.')
+      toast.success('Signalement envoyé.')
       void queryClient.invalidateQueries({ queryKey: reportQueryKeys.all })
     },
+    onError: (error) => {
+      toast.error(toApiErrorMessage(error))
+    },
   })
+
+  function handleSubmit() {
+    const hasText = title.trim().length > 0 || content.trim().length > 0
+    const normalizedMedia = normalizeMediaDrafts(media)
+
+    if (!hasText && normalizedMedia.length === 0) {
+      toast.error(
+        'Ajoute une rumeur, un message reçu ou au moins un média avant d’envoyer.',
+      )
+      return
+    }
+
+    mutation.mutate()
+  }
 
   return (
     <DarkFormCard
@@ -56,13 +80,15 @@ export function CreateReportForm() {
         onSubmit={(event) => {
           event.preventDefault()
           setMessage(null)
-          mutation.mutate()
+          handleSubmit()
         }}
       >
         <DarkSelect
           label="Thème"
           value={theme}
-          onChange={(event) => setTheme(event.target.value)}
+          onChange={(event) =>
+            setTheme(event.target.value as VerificationTheme)
+          }
           options={verificationThemes}
         />
         <DarkTextArea
