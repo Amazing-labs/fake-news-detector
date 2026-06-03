@@ -36,12 +36,17 @@ function readArgs(): CliArgs {
   }
 }
 
+function readProcessEnv(name: string): string | undefined {
+  return typeof process !== 'undefined' ? process.env[name] : undefined
+}
+
 async function main() {
-  if (!process.env.DATABASE_URL) {
+  const databaseUrl = readProcessEnv('DATABASE_URL')
+  if (!databaseUrl) {
     throw new Error('DATABASE_URL is not set')
   }
 
-  setPrismaConnectionString(process.env.DATABASE_URL)
+  setPrismaConnectionString(databaseUrl)
 
   const input = readArgs()
 

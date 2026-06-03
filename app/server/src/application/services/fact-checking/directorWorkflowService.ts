@@ -214,24 +214,28 @@ export class DirectorWorkflowService {
       )
     }
 
+    const subjectOrigin = subject.origin
     let reportCitizenId: string | null = null
-    if (subject.origin === 'REPORT' && subject.reportId) {
-      const report = await this.reportRepository.findById(subject.reportId)
-      if (!report) throw new NotFoundError('Report', subject.reportId)
+    if (subjectOrigin === 'REPORT' && subject.reportId) {
+      const subjectReportId = subject.reportId
+      const report = await this.reportRepository.findById(subjectReportId)
+      if (!report) throw new NotFoundError('Report', subjectReportId)
 
-      reportCitizenId = report.citizenId
-      const citizen = await this.citizenRepository.findById(report.citizenId)
+      const reportId = report.id
+      const citizenId = report.citizenId
+      reportCitizenId = citizenId
+      const citizen = await this.citizenRepository.findById(citizenId)
       if (citizen) {
         citizen.reportResolved()
         await this.citizenRepository.update(citizen)
       }
 
-      await this.reportRepository.delete(report.id)
+      await this.reportRepository.delete(reportId)
     }
 
     await this.inboxSubjectRepository.delete(subject.id)
 
-    if (subject.origin === 'REPORT' && reportCitizenId) {
+    if (subjectOrigin === 'REPORT' && reportCitizenId) {
       const notification = NotificationFactory.createAlertNotification(
         reportCitizenId,
         'Signalement supprimé',

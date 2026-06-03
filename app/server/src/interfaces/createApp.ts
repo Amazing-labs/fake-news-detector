@@ -13,12 +13,18 @@ import { toErrorResponse } from './http/responses'
 import { setPrismaConnectionString } from '../infrastructure/config/database'
 import { auth } from './auth/betterAuth'
 
+function readProcessEnv(name: string): string | undefined {
+  return typeof process !== 'undefined' ? process.env[name] : undefined
+}
+
 export function createApp(dependencies: AppDependencies) {
   const app = new Hono()
 
   app.use('*', async (c, next) => {
     const env = c.env as { DATABASE_URL?: string } | undefined
-    setPrismaConnectionString(env?.DATABASE_URL ?? process.env.DATABASE_URL)
+    setPrismaConnectionString(
+      env?.DATABASE_URL ?? readProcessEnv('DATABASE_URL'),
+    )
     await next()
   })
 
