@@ -5,6 +5,7 @@ import {
   prisma,
   setPrismaConnectionString,
 } from '../infrastructure/config/database'
+import { readProcessEnv } from '../shared'
 
 type CliArgs = {
   name: string
@@ -34,10 +35,6 @@ function readArgs(): CliArgs {
     name,
     email: email.trim().toLowerCase(),
   }
-}
-
-function readProcessEnv(name: string): string | undefined {
-  return typeof process !== 'undefined' ? process.env[name] : undefined
 }
 
 async function main() {

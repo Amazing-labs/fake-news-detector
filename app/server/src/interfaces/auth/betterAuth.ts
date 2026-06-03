@@ -3,6 +3,7 @@ import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { customSession } from 'better-auth/plugins'
 import { scryptSync, timingSafeEqual } from 'node:crypto'
 import { prisma } from '../../infrastructure/config/database'
+import { readProcessEnv } from '../../shared'
 import {
   provisionCitizenActorForAuthUser,
   resolveSessionActorForAuthUser,
@@ -74,10 +75,6 @@ function encodeBase64(buffer: ArrayBuffer | Uint8Array): string {
 
 function decodeBase64(value: string): Uint8Array {
   return new Uint8Array(Buffer.from(value, 'base64'))
-}
-
-function readProcessEnv(name: string): string | undefined {
-  return typeof process !== 'undefined' ? process.env[name] : undefined
 }
 
 function isProduction(): boolean {
