@@ -223,11 +223,11 @@ export class DirectorWorkflowService {
 
       const reportId = report.id
       const citizenId = report.citizenId
-      reportCitizenId = citizenId
       const citizen = await this.citizenRepository.findById(citizenId)
       if (citizen) {
         citizen.reportResolved()
         await this.citizenRepository.update(citizen)
+        reportCitizenId = citizenId
       }
 
       await this.reportRepository.delete(reportId)

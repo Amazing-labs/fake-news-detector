@@ -10,22 +10,19 @@ import { createPublicationRoutes } from './routes/publicationRoutes'
 import { createReportRoutes } from './routes/reportRoutes'
 import { createWatcherApplicationRoutes } from './routes/watcherApplicationRoutes'
 import { toErrorResponse } from './http/responses'
-import { setPrismaConnectionString } from '../infrastructure/config/database'
+import { runWithPrismaConnectionString } from '../infrastructure/config/database'
 import { auth } from './auth/betterAuth'
-
-function readProcessEnv(name: string): string | undefined {
-  return typeof process !== 'undefined' ? process.env[name] : undefined
-}
+import { readProcessEnv } from '../shared'
 
 export function createApp(dependencies: AppDependencies) {
   const app = new Hono()
 
   app.use('*', async (c, next) => {
     const env = c.env as { DATABASE_URL?: string } | undefined
-    setPrismaConnectionString(
+    await runWithPrismaConnectionString(
       env?.DATABASE_URL ?? readProcessEnv('DATABASE_URL'),
+      next,
     )
-    await next()
   })
 
   app.use(
