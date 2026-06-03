@@ -314,6 +314,10 @@ export function InboxSubjectDetailWorkspacePage({
     inboxSubjects.find((item) => slugifyLabel(item.theme) === subjectId) ??
     inboxSubjects[0]
 
+  if (!subject) {
+    return null
+  }
+
   return (
     <AppLayout actor={actor} page="subjects">
       <Card>

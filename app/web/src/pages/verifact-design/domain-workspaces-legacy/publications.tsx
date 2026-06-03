@@ -110,6 +110,10 @@ export function PublicationDetailWorkspacePage({
   const { actor } = useResolvedActor('director')
   const canManagePublication = actor === 'director' || actor === 'admin'
 
+  if (!publication) {
+    return null
+  }
+
   return (
     <AppLayout actor={actor} page="publications">
       <div

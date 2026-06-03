@@ -1,4 +1,6 @@
-export function slugifyLabel(label: string) {
+export function slugifyLabel(label: unknown) {
+  if (typeof label !== 'string') return ''
+
   return label
     .toLowerCase()
     .normalize('NFD')

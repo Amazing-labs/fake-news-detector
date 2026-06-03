@@ -162,6 +162,10 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
   const report =
     reports.find((item) => slugifyLabel(item.title) === reportId) ?? reports[0]
 
+  if (!report) {
+    return null
+  }
+
   return (
     <AppLayout actor={actor} page="reports">
       <Card>

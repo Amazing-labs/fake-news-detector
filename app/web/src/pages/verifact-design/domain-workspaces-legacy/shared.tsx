@@ -207,9 +207,11 @@ export function MediaDropzone({
           isDragging && 'border-primary bg-primary/10',
         )}
       >
-        <FilePlus2 className="text-muted-foreground size-6" />
-        <span className="mt-3 text-sm font-medium">Glisse les medias ici</span>
-        <span className="text-muted-foreground mt-1 text-sm">
+        <FilePlus2 className="text-muted-foreground pointer-events-none size-6" />
+        <span className="pointer-events-none mt-3 text-sm font-medium">
+          Glisse les medias ici
+        </span>
+        <span className="text-muted-foreground pointer-events-none mt-1 text-sm">
           ou clique pour les selectionner
         </span>
         <Input
