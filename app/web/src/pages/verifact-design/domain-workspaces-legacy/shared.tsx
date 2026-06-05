@@ -17,6 +17,26 @@ import { Input } from '../../../shared/ui/shadcn/input'
 import { Label } from '../../../shared/ui/shadcn/label'
 import { Textarea } from '../../../shared/ui/shadcn/textarea'
 
+const fieldControlClassName =
+  'border-input bg-background ring-offset-background focus-visible:ring-ring h-10 w-full rounded-md border px-3 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none'
+
+const sourceTypeOptions = [
+  ['OFFICIAL_DECREE', 'Décision officielle'],
+  ['ORIGINAL_RETRACTION', 'Rectificatif original'],
+  ['DIRECT_EVIDENCE', 'Preuve directe'],
+  ['MEDIA_CROSSCHECK', 'Recoupement média'],
+  ['AUTHORITY_STATEMENT', "Déclaration d'autorité"],
+]
+
+const mediaTypeOptions = [
+  ['IMAGE', 'Image'],
+  ['VIDEO', 'Vidéo'],
+  ['DOCUMENT', 'Document'],
+  ['AUDIO', 'Audio'],
+  ['TEXT', 'Texte'],
+  ['LINK', 'Lien'],
+]
+
 export function ArbitrationReasonDialog({
   action,
   children,
@@ -80,14 +100,15 @@ export function PublishInvestigationDialog({
         </DialogHeader>
 
         {withEvidence ? (
-          <div className="grid gap-4">
-            <div className="rounded-lg border p-4">
-              <p className="font-medium">Lien vérifié</p>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Ces liens seront rattaches a la publication creee par
-                l'approbation.
-              </p>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-6">
+            <section className="grid gap-3">
+              <div>
+                <p className="text-sm font-medium">Lien vérifié</p>
+                <p className="text-muted-foreground text-sm">
+                  Ajoute seulement les liens déjà publics.
+                </p>
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
                 <Label className="grid gap-2 sm:col-span-2">
                   URL
                   <Input placeholder="https://source-officielle.example" />
@@ -98,32 +119,51 @@ export function PublishInvestigationDialog({
                 </Label>
                 <Label className="grid gap-2">
                   Type de source
-                  <Input placeholder="Declaration officielle" />
+                  <select className={fieldControlClassName}>
+                    {sourceTypeOptions.map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
                 </Label>
               </div>
-            </div>
+            </section>
 
-            <div className="rounded-lg border p-4">
-              <p className="font-medium">Média vérifié</p>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Le backend attend une URL, un type de média et, si utile, une
-                source d'autorité.
-              </p>
-              <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                <Label className="grid gap-2 sm:col-span-2">
-                  URL du média
-                  <Input placeholder="https://source-officielle.example/preuve.jpg" />
-                </Label>
+            <section className="grid gap-3 border-t pt-5">
+              <div>
+                <p className="text-sm font-medium">Média vérifié</p>
+                <p className="text-muted-foreground text-sm">
+                  Upload un fichier, puis qualifie sa nature et sa source.
+                </p>
+              </div>
+              <MediaDropzone
+                inputId="publication-proof-media"
+                description="Images, vidéos, audio, PDF ou documents qui renforcent la publication."
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
                 <Label className="grid gap-2">
                   Type de média
-                  <Input placeholder="Image, video, document..." />
+                  <select className={fieldControlClassName}>
+                    {mediaTypeOptions.map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
                 </Label>
                 <Label className="grid gap-2">
-                  Source rattachee
-                  <Input placeholder="Archive officielle" />
+                  Source rattachée
+                  <select className={fieldControlClassName}>
+                    {sourceTypeOptions.map(([value, label]) => (
+                      <option key={value} value={value}>
+                        {label}
+                      </option>
+                    ))}
+                  </select>
                 </Label>
               </div>
-            </div>
+            </section>
           </div>
         ) : null}
 
@@ -178,11 +218,8 @@ export function MediaDropzone({
 
   return (
     <div className="grid gap-3">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-medium">Médias</p>
-          <p className="text-muted-foreground text-sm">{description}</p>
-        </div>
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-muted-foreground text-sm">{description}</p>
         {files.length ? (
           <Badge variant="secondary" className="shrink-0 rounded-full">
             {files.length} fichier{files.length > 1 ? 's' : ''}
@@ -203,7 +240,7 @@ export function MediaDropzone({
         onDragLeave={() => setIsDragging(false)}
         onDrop={handleDrop}
         className={cn(
-          'border-border bg-background/40 hover:bg-muted/40 flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 py-7 text-center transition-colors',
+          'border-border bg-background/40 hover:bg-muted/40 flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 py-5 text-center transition-colors',
           isDragging && 'border-primary bg-primary/10',
         )}
       >
