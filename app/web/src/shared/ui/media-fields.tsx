@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type DragEvent } from 'react'
 import {
   isSupabaseUploadConfigured,
   uploadFileToSupabase,
@@ -9,6 +9,23 @@ import {
   mediaTypes,
   type MediaDraft,
 } from './media-fields.model'
+
+const acceptedMediaFileTypes = [
+  'image/*',
+  'video/*',
+  'audio/*',
+  'application/pdf',
+  'text/plain',
+  '.doc',
+  '.docx',
+  '.xls',
+  '.xlsx',
+  '.ppt',
+  '.pptx',
+  '.odt',
+  '.ods',
+  '.odp',
+].join(',')
 
 export function MediaFields(props: {
   title?: string
@@ -25,7 +42,15 @@ export function MediaFields(props: {
   const isDark = props.variant === 'dark'
   const canUploadToSupabase = isSupabaseUploadConfigured()
 
+  function addUrlDraft() {
+    props.onChange([...props.items, createEmptyMediaDraft()])
+  }
+
   async function handleFiles(files: FileList | null) {
+    if (isUploading) {
+      return
+    }
+
     if (!files?.length) {
       return
     }
@@ -59,17 +84,17 @@ export function MediaFields(props: {
     }
   }
 
-  function addUrlDraft() {
-    props.onChange([...props.items, createEmptyMediaDraft()])
-  }
-
-  function handleDarkMediaEntry() {
-    if (canUploadToSupabase) {
-      fileInputRef.current?.click()
+  function handleDrop(event: DragEvent<HTMLElement>) {
+    event.preventDefault()
+    if (isUploading || !event.dataTransfer) {
       return
     }
 
-    addUrlDraft()
+    void handleFiles(event.dataTransfer.files)
+  }
+
+  function preventDragNavigation(event: DragEvent<HTMLElement>) {
+    event.preventDefault()
   }
 
   if (isDark) {
@@ -81,18 +106,9 @@ export function MediaFields(props: {
           </h2>
           <p className="mt-1 text-sm text-white/65">
             {props.description ??
-              'Ajoute un ou plusieurs médias via leur URL pour tester le backend.'}
+              'Ajoute un ou plusieurs médias via upload ou URL.'}
           </p>
         </div>
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          className="hidden"
-          onChange={(event) => {
-            void handleFiles(event.target.files)
-          }}
-        />
 
         {props.items.map((item, index) => (
           <div
@@ -146,19 +162,44 @@ export function MediaFields(props: {
           </div>
         ))}
 
-        <button
-          type="button"
-          disabled={isUploading}
-          onClick={handleDarkMediaEntry}
-          className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-white/15 bg-black/25 px-4 py-8 text-center transition hover:bg-black/40 disabled:cursor-not-allowed disabled:opacity-50"
+        <label
+          onDragEnter={preventDragNavigation}
+          onDragOver={preventDragNavigation}
+          onDrop={handleDrop}
+          className={`flex min-h-36 flex-col items-center justify-center rounded-lg border border-dashed border-white/15 bg-black/25 px-4 py-8 text-center transition hover:bg-black/40 ${
+            isUploading
+              ? 'pointer-events-none cursor-not-allowed opacity-50'
+              : 'cursor-pointer'
+          }`}
         >
           <span className="text-sm font-semibold">Glisse les médias ici</span>
           <span className="mt-2 text-sm text-white/65">
             {canUploadToSupabase
               ? 'ou clique pour les sélectionner'
-              : 'ou clique pour ajouter une URL'}
+              : 'configure Supabase pour activer l’upload'}
           </span>
-        </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept={acceptedMediaFileTypes}
+            className="hidden"
+            disabled={isUploading}
+            onChange={(event) => {
+              void handleFiles(event.target.files)
+            }}
+          />
+        </label>
+
+        <div>
+          <button
+            type="button"
+            onClick={addUrlDraft}
+            className="inline-flex items-center justify-center rounded-lg border border-white/15 bg-black px-3 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+          >
+            Ajouter une URL
+          </button>
+        </div>
 
         {uploadMessage ? <Notice tone="success">{uploadMessage}</Notice> : null}
         {uploadError ? <Notice tone="error">{uploadError}</Notice> : null}
@@ -170,8 +211,7 @@ export function MediaFields(props: {
     <SectionCard
       title={props.title ?? 'Médias'}
       description={
-        props.description ??
-        'Ajoute un ou plusieurs médias via leur URL pour tester le backend.'
+        props.description ?? 'Ajoute un ou plusieurs médias via upload ou URL.'
       }
     >
       <div className="grid gap-3">
@@ -225,39 +265,46 @@ export function MediaFields(props: {
             Aucun média ajouté pour l'instant.
           </p>
         )}
-        <div>
-          <Button variant="secondary" onClick={addUrlDraft}>
-            {props.addLabel ?? 'Ajouter un média'}
-          </Button>
-        </div>
-        <div className="grid gap-2">
+
+        <label
+          onDragEnter={preventDragNavigation}
+          onDragOver={preventDragNavigation}
+          onDrop={handleDrop}
+          className={`flex min-h-40 flex-col items-center justify-center rounded-[1.15rem] border border-dashed border-[#d8d0c7] bg-[#fbfaf8] px-4 py-8 text-center transition hover:border-[#171514] hover:bg-white ${
+            isUploading
+              ? 'pointer-events-none cursor-not-allowed opacity-50'
+              : 'cursor-pointer'
+          }`}
+        >
+          <span className="text-sm font-black text-[#171514]">
+            {isUploading ? 'Upload en cours...' : 'Glisse les fichiers ici'}
+          </span>
+          <span className="mt-2 text-sm text-[#706a63]">
+            {canUploadToSupabase
+              ? 'ou clique pour uploader une image, vidéo, audio ou document'
+              : 'configure Supabase pour activer l’upload de fichiers'}
+          </span>
           <input
             ref={fileInputRef}
             type="file"
             multiple
+            accept={acceptedMediaFileTypes}
             className="hidden"
+            disabled={isUploading}
             onChange={(event) => {
               void handleFiles(event.target.files)
             }}
           />
-          <Button
-            variant="secondary"
-            disabled={!canUploadToSupabase || isUploading}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            {isUploading ? 'Upload en cours...' : 'Uploader un fichier'}
+        </label>
+
+        <div>
+          <Button variant="secondary" onClick={addUrlDraft}>
+            Ajouter une URL
           </Button>
-          {!canUploadToSupabase ? (
-            <Notice tone="info">
-              Configure Supabase côté frontend pour activer l'upload de
-              fichiers.
-            </Notice>
-          ) : null}
-          {uploadMessage ? (
-            <Notice tone="success">{uploadMessage}</Notice>
-          ) : null}
-          {uploadError ? <Notice tone="error">{uploadError}</Notice> : null}
         </div>
+
+        {uploadMessage ? <Notice tone="success">{uploadMessage}</Notice> : null}
+        {uploadError ? <Notice tone="error">{uploadError}</Notice> : null}
       </div>
     </SectionCard>
   )
