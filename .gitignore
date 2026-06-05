@@ -33,7 +33,9 @@ app/web/.tanstack/
 app/web/src/routeTree.gen.ts
 
 # local Codex skills/tooling
-.agents/
+.agents/*
+!.agents/skills/
+!.agents/skills/**
 skills-lock.json
 
 # IntelliJ based IDEs

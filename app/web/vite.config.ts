@@ -11,9 +11,8 @@ export default defineConfig(({ mode }) => {
       'import.meta.env.VITE_BETTER_AUTH_DISABLE': JSON.stringify(
         env.VITE_BETTER_AUTH_DISABLE ?? 'false',
       ),
-      'import.meta.env.VITE_BETTER_AUTH_ALLOW_PRODUCTION_BYPASS': JSON.stringify(
-        env.VITE_BETTER_AUTH_ALLOW_PRODUCTION_BYPASS ?? 'false',
-      ),
+      'import.meta.env.VITE_BETTER_AUTH_ALLOW_PRODUCTION_BYPASS':
+        JSON.stringify(env.VITE_BETTER_AUTH_ALLOW_PRODUCTION_BYPASS ?? 'false'),
     },
     plugins: [
       tanstackRouter({
