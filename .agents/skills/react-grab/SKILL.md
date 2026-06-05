@@ -11,8 +11,8 @@ description: >-
 # React Grab
 
 The user selects UI elements in their browser and copies them with React Grab.
-`npx grab pull` waits for new grabs and prints each as one line of JSON (usually
-one, sometimes a few if several were copied), starting the background watcher
+`npx react-grab pull` waits for new grabs and prints each as one line of JSON
+(usually one, sometimes a few if several were copied), starting the background watcher
 automatically the first time. Run it in a loop.
 
 ## The loop
@@ -22,7 +22,7 @@ Repeat until the user says stop:
 1. Wait for the next grab:
 
 ```bash
-npx grab pull
+npx react-grab pull
 ```
 
 It blocks until the user grabs something, then prints the new grab(s) — one JSON
@@ -50,12 +50,12 @@ mode, `prompt` (the user's typed instruction):
 When the user says stop, run this and don't pull again:
 
 ```bash
-npx grab stop
+npx react-grab stop
 ```
 
 ## Notes
 
 - The watcher reads the clipboard on the machine it runs on — run it on the same
   machine as the browser, not over SSH or in a remote container.
-- Grabs older than ~5 minutes are skipped as stale; use `npx grab pull --max-age 0`
-  to deliver every grab regardless of age.
+- Grabs older than ~5 minutes are skipped as stale; use
+  `npx react-grab pull --max-age 0` to deliver every grab regardless of age.
