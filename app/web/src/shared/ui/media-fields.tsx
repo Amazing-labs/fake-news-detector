@@ -10,6 +10,23 @@ import {
   type MediaDraft,
 } from './media-fields.model'
 
+const acceptedMediaFileTypes = [
+  'image/*',
+  'video/*',
+  'audio/*',
+  'application/pdf',
+  'text/plain',
+  '.doc',
+  '.docx',
+  '.xls',
+  '.xlsx',
+  '.ppt',
+  '.pptx',
+  '.odt',
+  '.ods',
+  '.odp',
+].join(',')
+
 export function MediaFields(props: {
   title?: string
   description?: string
@@ -30,6 +47,10 @@ export function MediaFields(props: {
   }
 
   async function handleFiles(files: FileList | null) {
+    if (isUploading) {
+      return
+    }
+
     if (!files?.length) {
       return
     }
@@ -65,6 +86,10 @@ export function MediaFields(props: {
 
   function handleDrop(event: DragEvent<HTMLElement>) {
     event.preventDefault()
+    if (isUploading || !event.dataTransfer) {
+      return
+    }
+
     void handleFiles(event.dataTransfer.files)
   }
 
@@ -141,7 +166,11 @@ export function MediaFields(props: {
           onDragEnter={preventDragNavigation}
           onDragOver={preventDragNavigation}
           onDrop={handleDrop}
-          className="flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-white/15 bg-black/25 px-4 py-8 text-center transition hover:bg-black/40"
+          className={`flex min-h-36 flex-col items-center justify-center rounded-lg border border-dashed border-white/15 bg-black/25 px-4 py-8 text-center transition hover:bg-black/40 ${
+            isUploading
+              ? 'pointer-events-none cursor-not-allowed opacity-50'
+              : 'cursor-pointer'
+          }`}
         >
           <span className="text-sm font-semibold">Glisse les médias ici</span>
           <span className="mt-2 text-sm text-white/65">
@@ -153,7 +182,7 @@ export function MediaFields(props: {
             ref={fileInputRef}
             type="file"
             multiple
-            accept="image/*,video/*,audio/*,application/pdf,text/plain"
+            accept={acceptedMediaFileTypes}
             className="hidden"
             disabled={isUploading}
             onChange={(event) => {
@@ -241,7 +270,11 @@ export function MediaFields(props: {
           onDragEnter={preventDragNavigation}
           onDragOver={preventDragNavigation}
           onDrop={handleDrop}
-          className="flex min-h-40 cursor-pointer flex-col items-center justify-center rounded-[1.15rem] border border-dashed border-[#d8d0c7] bg-[#fbfaf8] px-4 py-8 text-center transition hover:border-[#171514] hover:bg-white"
+          className={`flex min-h-40 flex-col items-center justify-center rounded-[1.15rem] border border-dashed border-[#d8d0c7] bg-[#fbfaf8] px-4 py-8 text-center transition hover:border-[#171514] hover:bg-white ${
+            isUploading
+              ? 'pointer-events-none cursor-not-allowed opacity-50'
+              : 'cursor-pointer'
+          }`}
         >
           <span className="text-sm font-black text-[#171514]">
             {isUploading ? 'Upload en cours...' : 'Glisse les fichiers ici'}
@@ -255,7 +288,7 @@ export function MediaFields(props: {
             ref={fileInputRef}
             type="file"
             multiple
-            accept="image/*,video/*,audio/*,application/pdf,text/plain"
+            accept={acceptedMediaFileTypes}
             className="hidden"
             disabled={isUploading}
             onChange={(event) => {
