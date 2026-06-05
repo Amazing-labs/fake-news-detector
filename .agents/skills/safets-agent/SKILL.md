@@ -60,7 +60,7 @@ On Windows PowerShell:
 $tmp = Join-Path ([System.IO.Path]::GetTempPath()) ("safets-" + [System.Guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path $tmp | Out-Null
 try {
-  npm install --prefix $tmp --no-save --silent @safets-org/cli@latest
+  npm install --prefix "$tmp" --no-save --silent @safets-org/cli@latest
   & "$tmp\node_modules\.bin\safets.cmd" doctor
 } finally {
   Remove-Item -LiteralPath $tmp -Recurse -Force
