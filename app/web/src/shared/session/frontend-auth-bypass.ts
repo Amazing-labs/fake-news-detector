@@ -123,20 +123,33 @@ export function getFrontendBypassAccountById(
   return FRONTEND_BYPASS_ACCOUNTS.find((account) => account.id === accountId)
 }
 
+let cachedRaw: String | null = null
+let cachedSession: AppSession | null = null
+
 export function readFrontendBypassSession(): AppSession | null {
   if (!FRONTEND_AUTH_BYPASS_ENABLED || typeof window === 'undefined') {
     return null
   }
 
-  const rawValue = window.localStorage.getItem(FRONTEND_AUTH_BYPASS_STORAGE_KEY)
-  if (!rawValue) {
+  const raw = localStorage.getItem(FRONTEND_AUTH_BYPASS_STORAGE_KEY)
+  if (!raw) {
+    cachedRaw = null
+    cachedSession = null
     return null
   }
 
+  if (raw === cachedRaw) {
+    return cachedSession
+  }
+
   try {
-    return JSON.parse(rawValue) as AppSession
+    cachedRaw = raw
+    cachedSession = JSON.parse(raw) as AppSession
+    return cachedSession
   } catch {
-    window.localStorage.removeItem(FRONTEND_AUTH_BYPASS_STORAGE_KEY)
+    localStorage.removeItem(FRONTEND_AUTH_BYPASS_STORAGE_KEY)
+    cachedRaw = null
+    cachedSession = null
     return null
   }
 }

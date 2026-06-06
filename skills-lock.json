@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "safets-agent": {
+      "source": "Dioman-Keita/safets",
+      "sourceType": "github",
+      "skillPath": "skills/safets-agent/SKILL.md",
+      "computedHash": "702946de4f52739f01ffd9548225b1d049e8ac81902628d59d181834ceaae5ea"
+    }
+  }
+}
