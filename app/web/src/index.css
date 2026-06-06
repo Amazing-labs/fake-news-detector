@@ -1,29 +1,204 @@
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Manrope:wght@400;500;600;700;800&display=swap');
 @import 'tailwindcss';
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --radius: 0.625rem;
+
+  /* ─── Warm Ivory Light Theme ─── */
+  --background: oklch(0.979 0.008 60); /* #faf8f4 — ivory chaud */
+  --foreground: oklch(0.22 0.03 50); /* #3d2c1e — brun sombre */
+  --card: oklch(1 0 0); /* blanc pur pour les cartes */
+  --card-foreground: oklch(0.22 0.03 50);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.22 0.03 50);
+  --primary: oklch(0.48 0.07 55); /* #8b6e52 — brun accent */
+  --primary-foreground: oklch(0.979 0.008 60); /* ivory sur bouton */
+  --secondary: oklch(0.935 0.012 60); /* #ede8df — ivory moyen */
+  --secondary-foreground: oklch(0.22 0.03 50);
+  --muted: oklch(0.935 0.012 60);
+  --muted-foreground: oklch(0.5 0.04 55); /* brun moyen pour texte secondaire */
+  --accent: oklch(0.91 0.018 58); /* #e8ddd0 — ivory doré */
+  --accent-foreground: oklch(0.22 0.03 50);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.875 0.022 58); /* #ddd3c4 — brun clair */
+  --input: oklch(0.875 0.022 58);
+  --ring: oklch(0.6 0.06 55); /* brun moyen pour focus */
+  --chart-1: oklch(0.55 0.09 50);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: oklch(0.96 0.012 60); /* légèrement plus sombre que bg */
+  --sidebar-foreground: oklch(0.22 0.03 50);
+  --sidebar-primary: oklch(0.48 0.07 55);
+  --sidebar-primary-foreground: oklch(0.979 0.008 60);
+  --sidebar-accent: oklch(0.91 0.018 58);
+  --sidebar-accent-foreground: oklch(0.22 0.03 50);
+  --sidebar-border: oklch(0.875 0.022 58);
+  --sidebar-ring: oklch(0.6 0.06 55);
+}
+
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.488 0.243 264.376);
+  --chart-2: oklch(0.696 0.17 162.48);
+  --chart-3: oklch(0.769 0.188 70.08);
+  --chart-4: oklch(0.627 0.265 303.9);
+  --chart-5: oklch(0.645 0.246 16.439);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
 
 @layer base {
   * {
     box-sizing: border-box;
+    border-color: var(--border);
+    outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
   }
 
   html {
     font-family:
-      ui-sans-serif,
-      system-ui,
+      'Manrope',
       -apple-system,
       BlinkMacSystemFont,
+      'SF Pro Display',
+      'Helvetica Neue',
       'Segoe UI',
+      ui-sans-serif,
+      system-ui,
       sans-serif;
   }
 
   body {
     margin: 0;
     min-height: 100vh;
-    background: rgb(241 245 249);
-    color: rgb(15 23 42);
+    background: var(--background);
+    color: var(--foreground);
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    text-rendering: optimizeLegibility;
+  }
+
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
   }
 
   a {
     color: inherit;
     text-decoration: none;
+  }
+
+  ::selection {
+    background: var(--accent);
+  }
+
+  * {
+    scrollbar-color: var(--border) var(--background);
+  }
+
+  *::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: var(--background);
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border: 3px solid var(--background);
+    border-radius: 999px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
+}
+
+@layer utilities {
+  .font-editorial {
+    font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -0.055em;
+  }
+
+  .font-ui {
+    font-family:
+      'Manrope',
+      -apple-system,
+      BlinkMacSystemFont,
+      'SF Pro Display',
+      'Helvetica Neue',
+      'Segoe UI',
+      ui-sans-serif,
+      system-ui,
+      sans-serif;
   }
 }
