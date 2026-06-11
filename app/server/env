@@ -1,0 +1,10 @@
+# Connect to Supabase via connection pooling
+DATABASE_URL="postgresql://postgres.aciewkvewjjufsaqppuc:mouhammad%40123@aws-0-eu-west-1.pooler.supabase.com:6543/postgres?pgbouncer=true"
+
+# Direct connection to the database. Used for migrations
+DIRECT_URL="postgresql://postgres.aciewkvewjjufsaqppuc:mouhammad%40123@aws-0-eu-west-1.pooler.supabase.com:5432/postgres"
+
+# Better Auth
+BETTER_AUTH_SECRET="development-better-auth-secret-please-change-me"
+BETTER_AUTH_URL="http://localhost:3000/api/auth"
+BETTER_AUTH_TRUSTED_ORIGINS="http://localhost:3000,http://localhost:5173,https://fake-news-detector-web-sooty.vercel.app"
