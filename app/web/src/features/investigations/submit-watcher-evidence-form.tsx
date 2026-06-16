@@ -9,7 +9,6 @@ import {
 } from '../../shared/ui/dark-form'
 import { MediaFields } from '../../shared/ui/media-fields'
 import {
-  createEmptyMediaDraft,
   normalizeMediaDrafts,
   type MediaDraft,
 } from '../../shared/ui/media-fields.model'
@@ -20,7 +19,7 @@ export function SubmitWatcherEvidenceForm() {
   const [investigationId, setInvestigationId] = useState('')
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const [media, setMedia] = useState<MediaDraft[]>([createEmptyMediaDraft()])
+  const [media, setMedia] = useState<MediaDraft[]>([])
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -39,7 +38,7 @@ export function SubmitWatcherEvidenceForm() {
       setInvestigationId('')
       setTitle('')
       setContent('')
-      setMedia([createEmptyMediaDraft()])
+      setMedia([])
       void queryClient.invalidateQueries({ queryKey: ['investigations'] })
     },
   })
@@ -73,10 +72,9 @@ export function SubmitWatcherEvidenceForm() {
         />
         <MediaFields
           title="Médias de la preuve"
-          description="Ajoute les liens, images ou documents qui renforcent la vérification."
+          description="Ajoute les images ou documents qui renforcent la vérification."
           items={media}
           onChange={setMedia}
-          addLabel="Ajouter un média"
           variant="dark"
         />
         {mutation.isError ? (

@@ -110,7 +110,6 @@ export function CreateReportForm() {
           description="Images, captures d'écran, vidéos, notes audio ou documents reçus avec la rumeur."
           items={media}
           onChange={setMedia}
-          addLabel="Ajouter un média"
           variant="dark"
         />
 
