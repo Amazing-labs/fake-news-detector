@@ -93,7 +93,6 @@ export function CreateDirectorInboxSubjectForm() {
           description="Ajoute les médias d'origine quand le sujet est ouvert directement par le directeur."
           items={media}
           onChange={setMedia}
-          addLabel="Ajouter un média au sujet"
           variant="dark"
         />
         {mutation.isError ? (

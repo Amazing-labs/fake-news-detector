@@ -4,11 +4,7 @@ import {
   uploadFileToSupabase,
 } from '../lib/supabase'
 import { Button, Input, Notice, Select, SectionCard } from './primitives'
-import {
-  createEmptyMediaDraft,
-  mediaTypes,
-  type MediaDraft,
-} from './media-fields.model'
+import { mediaTypes, type MediaDraft } from './media-fields.model'
 
 const acceptedMediaFileTypes = [
   'image/*',
@@ -32,7 +28,6 @@ export function MediaFields(props: {
   description?: string
   items: MediaDraft[]
   onChange: (items: MediaDraft[]) => void
-  addLabel?: string
   variant?: 'default' | 'dark'
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -41,10 +36,6 @@ export function MediaFields(props: {
   const [isUploading, setIsUploading] = useState(false)
   const isDark = props.variant === 'dark'
   const canUploadToSupabase = isSupabaseUploadConfigured()
-
-  function addUrlDraft() {
-    props.onChange([...props.items, createEmptyMediaDraft()])
-  }
 
   async function handleFiles(files: FileList | null) {
     if (isUploading) {
@@ -105,8 +96,7 @@ export function MediaFields(props: {
             {props.title ?? 'Médias'}
           </h2>
           <p className="mt-1 text-sm text-white/65">
-            {props.description ??
-              'Ajoute un ou plusieurs médias via upload ou URL.'}
+            {props.description ?? 'Ajoute un ou plusieurs médias via upload.'}
           </p>
         </div>
 
@@ -191,16 +181,6 @@ export function MediaFields(props: {
           />
         </label>
 
-        <div>
-          <button
-            type="button"
-            onClick={addUrlDraft}
-            className="inline-flex items-center justify-center rounded-lg border border-white/15 bg-black px-3 py-2 text-sm font-medium text-white transition hover:bg-white/10"
-          >
-            Ajouter une URL
-          </button>
-        </div>
-
         {uploadMessage ? <Notice tone="success">{uploadMessage}</Notice> : null}
         {uploadError ? <Notice tone="error">{uploadError}</Notice> : null}
       </section>
@@ -211,7 +191,7 @@ export function MediaFields(props: {
     <SectionCard
       title={props.title ?? 'Médias'}
       description={
-        props.description ?? 'Ajoute un ou plusieurs médias via upload ou URL.'
+        props.description ?? 'Ajoute un ou plusieurs médias via upload.'
       }
     >
       <div className="grid gap-3">
@@ -296,12 +276,6 @@ export function MediaFields(props: {
             }}
           />
         </label>
-
-        <div>
-          <Button variant="secondary" onClick={addUrlDraft}>
-            Ajouter une URL
-          </Button>
-        </div>
 
         {uploadMessage ? <Notice tone="success">{uploadMessage}</Notice> : null}
         {uploadError ? <Notice tone="error">{uploadError}</Notice> : null}

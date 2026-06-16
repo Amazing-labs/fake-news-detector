@@ -114,7 +114,7 @@ Recommended pinned workflow:
 - uses: Dioman-Keita/safets@v1.0.2
   with:
     version: 1.0.2
-    fail-on-new: "true"
+    fail-on-new: 'true'
 ```
 
 Use `json: "true"` when a later workflow step needs structured output.

@@ -6,11 +6,13 @@ export function DarkFormCard(props: {
   children: ReactNode
 }) {
   return (
-    <section className="rounded-2xl border border-white/10 bg-[#151515] p-6 text-white shadow-sm">
+    <section className="bg-card text-card-foreground border-border rounded-2xl border p-6 shadow-sm">
       <div>
         <h1 className="text-lg font-semibold">{props.title}</h1>
         {props.description ? (
-          <p className="mt-1 text-sm text-white/70">{props.description}</p>
+          <p className="text-muted-foreground mt-1 text-sm">
+            {props.description}
+          </p>
         ) : null}
       </div>
       {props.children}
@@ -29,7 +31,7 @@ export function DarkInput(
     <label className="grid gap-2 text-sm font-medium">
       {label}
       <input
-        className={`rounded-lg border border-white/15 bg-black px-3 py-2.5 text-white transition outline-none placeholder:text-white/55 focus:border-white/45 ${className ?? ''}`}
+        className={`border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border px-3 py-2.5 transition outline-none focus-visible:ring-[3px] ${className ?? ''}`}
         {...rest}
       />
     </label>
@@ -48,7 +50,7 @@ export function DarkSelect(
     <label className="grid gap-2 text-sm font-medium">
       {label}
       <select
-        className={`rounded-lg border border-white/15 bg-black px-3 py-2.5 text-white transition outline-none focus:border-white/45 ${className ?? ''}`}
+        className={`border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border px-3 py-2.5 transition outline-none focus-visible:ring-[3px] ${className ?? ''}`}
         {...rest}
       >
         {options.map((option) => (
@@ -72,7 +74,7 @@ export function DarkTextArea(
     <label className="grid gap-2 text-sm font-medium">
       {label}
       <textarea
-        className={`min-h-24 rounded-lg border border-white/15 bg-black px-3 py-2.5 text-white transition outline-none placeholder:text-white/55 focus:border-white/45 ${className ?? ''}`}
+        className={`border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 min-h-24 rounded-lg border px-3 py-2.5 transition outline-none focus-visible:ring-[3px] ${className ?? ''}`}
         {...rest}
       />
     </label>
@@ -88,8 +90,8 @@ export function DarkButton(
   const { className, variant = 'primary', type = 'button', ...rest } = props
   const tone =
     variant === 'primary'
-      ? 'bg-white text-black hover:bg-white/90'
-      : 'border border-white/15 bg-black text-white hover:bg-white/10'
+      ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+      : 'border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground border'
 
   return (
     <button
