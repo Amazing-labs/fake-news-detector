@@ -4,10 +4,7 @@ import {
   uploadFileToSupabase,
 } from '../lib/supabase'
 import { Button, Input, Notice, Select, SectionCard } from './primitives'
-import {
-  mediaTypes,
-  type MediaDraft,
-} from './media-fields.model'
+import { mediaTypes, type MediaDraft } from './media-fields.model'
 
 const acceptedMediaFileTypes = [
   'image/*',
@@ -99,8 +96,7 @@ export function MediaFields(props: {
             {props.title ?? 'Médias'}
           </h2>
           <p className="mt-1 text-sm text-white/65">
-            {props.description ??
-              'Ajoute un ou plusieurs médias via upload.'}
+            {props.description ?? 'Ajoute un ou plusieurs médias via upload.'}
           </p>
         </div>
 

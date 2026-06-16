@@ -6,11 +6,13 @@ export function DarkFormCard(props: {
   children: ReactNode
 }) {
   return (
-    <section className="bg-card text-card-foreground rounded-2xl border border-border p-6 shadow-sm">
+    <section className="bg-card text-card-foreground border-border rounded-2xl border p-6 shadow-sm">
       <div>
         <h1 className="text-lg font-semibold">{props.title}</h1>
         {props.description ? (
-          <p className="text-muted-foreground mt-1 text-sm">{props.description}</p>
+          <p className="text-muted-foreground mt-1 text-sm">
+            {props.description}
+          </p>
         ) : null}
       </div>
       {props.children}
