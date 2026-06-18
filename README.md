@@ -373,6 +373,19 @@ Comprehensive UML diagrams are available in the `/doc` directory:
 - `GET /api/inbox-subjects` - List subjects
 - `POST /api/inbox-subjects/:id/archive` - Archive subject
 
+### Environment var config for supabase media uploading
+
+```sql
+create policy "Allow public media uploads"
+on storage.objects
+for insert
+to anon
+with check (
+  bucket_id = 'fake-news-media'
+  and name like 'uploads/%'
+);
+```
+
 ## Contributing
 
 1. Fork the repository
