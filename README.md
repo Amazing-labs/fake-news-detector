@@ -375,7 +375,7 @@ Comprehensive UML diagrams are available in the `/doc` directory:
 
 ### Environment var config for supabase media uploading
 
-``sql
+```sql
 create policy "Allow public media uploads"
 on storage.objects
 for insert
@@ -384,7 +384,7 @@ with check (
   bucket_id = 'fake-news-media'
   and name like 'uploads/%'
 );
-``
+```
 
 ## Contributing
 
