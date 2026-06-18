@@ -20,7 +20,6 @@ import {
   normalizeMediaDrafts,
   type MediaDraft,
 } from '../../shared/ui/media-fields.model'
-import { Notice } from '../../shared/ui/primitives'
 
 export function CreateReportForm() {
   const queryClient = useQueryClient()
@@ -30,7 +29,6 @@ export function CreateReportForm() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [media, setMedia] = useState<MediaDraft[]>([])
-  const [message, setMessage] = useState<string | null>(null)
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -47,7 +45,6 @@ export function CreateReportForm() {
       setTitle('')
       setContent('')
       setMedia([])
-      setMessage('Signalement créé.')
       toast.success('Signalement envoyé.')
       void queryClient.invalidateQueries({ queryKey: reportQueryKeys.all })
     },
@@ -79,7 +76,6 @@ export function CreateReportForm() {
         className="mt-6 grid gap-4"
         onSubmit={(event) => {
           event.preventDefault()
-          setMessage(null)
           handleSubmit()
         }}
       >
@@ -112,11 +108,6 @@ export function CreateReportForm() {
           onChange={setMedia}
           variant="dark"
         />
-
-        {mutation.isError ? (
-          <Notice tone="error">{toApiErrorMessage(mutation.error)}</Notice>
-        ) : null}
-        {message ? <Notice tone="success">{message}</Notice> : null}
 
         <div className="flex flex-wrap gap-2">
           <DarkButton type="submit" disabled={mutation.isPending}>

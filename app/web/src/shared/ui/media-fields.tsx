@@ -1,9 +1,11 @@
 import { useRef, useState, type DragEvent } from 'react'
+import { toast } from 'sonner'
 import {
   isSupabaseUploadConfigured,
   uploadFileToSupabase,
 } from '../lib/supabase'
-import { Button, Input, Notice, Select, SectionCard } from './primitives'
+import { cn } from '../lib/utils'
+import { Button, Input, Select, SectionCard } from './primitives'
 import { mediaTypes, type MediaDraft } from './media-fields.model'
 
 const acceptedMediaFileTypes = [
@@ -23,6 +25,14 @@ const acceptedMediaFileTypes = [
   '.odp',
 ].join(',')
 
+const uploadDropzoneBaseClassName =
+  'flex min-h-36 flex-col items-center justify-center rounded-lg border border-dashed border-input bg-background px-4 py-8 text-center transition hover:border-ring hover:bg-accent/50 focus-within:border-ring focus-within:ring-ring/50 focus-within:ring-[3px]'
+
+const uploadDropzoneDisabledClassName =
+  'pointer-events-none cursor-not-allowed opacity-50'
+
+const uploadDropzoneEnabledClassName = 'cursor-pointer'
+
 export function MediaFields(props: {
   title?: string
   description?: string
@@ -31,8 +41,6 @@ export function MediaFields(props: {
   variant?: 'default' | 'dark'
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const [uploadMessage, setUploadMessage] = useState<string | null>(null)
-  const [uploadError, setUploadError] = useState<string | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const isDark = props.variant === 'dark'
   const canUploadToSupabase = isSupabaseUploadConfigured()
@@ -46,8 +54,6 @@ export function MediaFields(props: {
       return
     }
 
-    setUploadError(null)
-    setUploadMessage(null)
     setIsUploading(true)
 
     try {
@@ -60,13 +66,11 @@ export function MediaFields(props: {
         })
       }
       props.onChange([...props.items, ...uploaded])
-      setUploadMessage(
+      toast.success(
         `${uploaded.length} média${uploaded.length > 1 ? 's ajoutés' : ' ajouté'}.`,
       )
     } catch (error) {
-      setUploadError(
-        error instanceof Error ? error.message : 'Upload impossible.',
-      )
+      toast.error(error instanceof Error ? error.message : 'Upload impossible.')
     } finally {
       setIsUploading(false)
       if (fileInputRef.current) {
@@ -156,14 +160,17 @@ export function MediaFields(props: {
           onDragEnter={preventDragNavigation}
           onDragOver={preventDragNavigation}
           onDrop={handleDrop}
-          className={`flex min-h-36 flex-col items-center justify-center rounded-lg border border-dashed border-white/15 bg-black/25 px-4 py-8 text-center transition hover:bg-black/40 ${
+          className={cn(
+            uploadDropzoneBaseClassName,
             isUploading
-              ? 'pointer-events-none cursor-not-allowed opacity-50'
-              : 'cursor-pointer'
-          }`}
+              ? uploadDropzoneDisabledClassName
+              : uploadDropzoneEnabledClassName,
+          )}
         >
-          <span className="text-sm font-semibold">Glisse les médias ici</span>
-          <span className="mt-2 text-sm text-white/65">
+          <span className="text-foreground text-sm font-semibold">
+            {isUploading ? 'Upload en cours...' : 'Glisse les médias ici'}
+          </span>
+          <span className="text-muted-foreground mt-2 text-sm">
             {canUploadToSupabase
               ? 'ou clique pour les sélectionner'
               : 'configure Supabase pour activer l’upload'}
@@ -180,9 +187,6 @@ export function MediaFields(props: {
             }}
           />
         </label>
-
-        {uploadMessage ? <Notice tone="success">{uploadMessage}</Notice> : null}
-        {uploadError ? <Notice tone="error">{uploadError}</Notice> : null}
       </section>
     )
   }
@@ -250,16 +254,18 @@ export function MediaFields(props: {
           onDragEnter={preventDragNavigation}
           onDragOver={preventDragNavigation}
           onDrop={handleDrop}
-          className={`flex min-h-40 flex-col items-center justify-center rounded-[1.15rem] border border-dashed border-[#d8d0c7] bg-[#fbfaf8] px-4 py-8 text-center transition hover:border-[#171514] hover:bg-white ${
+          className={cn(
+            uploadDropzoneBaseClassName,
+            'min-h-40',
             isUploading
-              ? 'pointer-events-none cursor-not-allowed opacity-50'
-              : 'cursor-pointer'
-          }`}
+              ? uploadDropzoneDisabledClassName
+              : uploadDropzoneEnabledClassName,
+          )}
         >
-          <span className="text-sm font-black text-[#171514]">
+          <span className="text-foreground text-sm font-black">
             {isUploading ? 'Upload en cours...' : 'Glisse les fichiers ici'}
           </span>
-          <span className="mt-2 text-sm text-[#706a63]">
+          <span className="text-muted-foreground mt-2 text-sm">
             {canUploadToSupabase
               ? 'ou clique pour uploader une image, vidéo, audio ou document'
               : 'configure Supabase pour activer l’upload de fichiers'}
@@ -276,9 +282,6 @@ export function MediaFields(props: {
             }}
           />
         </label>
-
-        {uploadMessage ? <Notice tone="success">{uploadMessage}</Notice> : null}
-        {uploadError ? <Notice tone="error">{uploadError}</Notice> : null}
       </div>
     </SectionCard>
   )

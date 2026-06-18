@@ -7,7 +7,6 @@ import {
 } from '../../entities/journalist/api'
 import { toApiErrorMessage } from '../../shared/api/http'
 import { DarkButton, DarkFormCard, DarkInput } from '../../shared/ui/dark-form'
-import { Notice } from '../../shared/ui/primitives'
 
 export function CreateJournalistForm() {
   const queryClient = useQueryClient()
@@ -71,12 +70,6 @@ export function CreateJournalistForm() {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
         />
-        {mutation.isError ? (
-          <Notice tone="error">{toApiErrorMessage(mutation.error)}</Notice>
-        ) : null}
-        {mutation.isSuccess ? (
-          <Notice tone="success">Journaliste créé.</Notice>
-        ) : null}
         <div>
           <DarkButton type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? 'Création...' : 'Créer le journaliste'}

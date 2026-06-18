@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { apiRequest, toApiErrorMessage } from '../../shared/api/http'
 import {
   DarkButton,
@@ -12,7 +13,6 @@ import {
   normalizeMediaDrafts,
   type MediaDraft,
 } from '../../shared/ui/media-fields.model'
-import { Notice } from '../../shared/ui/primitives'
 
 export function SubmitWatcherEvidenceForm() {
   const queryClient = useQueryClient()
@@ -39,7 +39,11 @@ export function SubmitWatcherEvidenceForm() {
       setTitle('')
       setContent('')
       setMedia([])
+      toast.success('Preuve envoyée.')
       void queryClient.invalidateQueries({ queryKey: ['investigations'] })
+    },
+    onError: (error) => {
+      toast.error(toApiErrorMessage(error))
     },
   })
 
@@ -77,12 +81,6 @@ export function SubmitWatcherEvidenceForm() {
           onChange={setMedia}
           variant="dark"
         />
-        {mutation.isError ? (
-          <Notice tone="error">{toApiErrorMessage(mutation.error)}</Notice>
-        ) : null}
-        {mutation.isSuccess ? (
-          <Notice tone="success">Preuve envoyée.</Notice>
-        ) : null}
         <div>
           <DarkButton type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? 'Envoi...' : 'Envoyer la preuve'}

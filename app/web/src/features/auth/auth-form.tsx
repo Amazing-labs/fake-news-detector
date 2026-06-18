@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import { authClient } from '../../lib/auth-client'
-import { Button, Input, Notice, SectionCard } from '../../shared/ui/primitives'
+import { Button, Input, SectionCard } from '../../shared/ui/primitives'
 
 export function AuthForm(props: {
   initialMode?: 'sign-in' | 'sign-up'
@@ -13,8 +14,6 @@ export function AuthForm(props: {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [pending, setPending] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
 
   useEffect(() => {
     setMode(props.initialMode ?? 'sign-in')
@@ -23,8 +22,6 @@ export function AuthForm(props: {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setPending(true)
-    setError(null)
-    setSuccess(null)
 
     try {
       if (mode === 'sign-up') {
@@ -35,11 +32,11 @@ export function AuthForm(props: {
         })
 
         if (result.error) {
-          setError(result.error.message ?? 'Inscription impossible')
+          toast.error(result.error.message ?? 'Inscription impossible')
           return
         }
 
-        setSuccess('Compte créé et session ouverte.')
+        toast.success('Compte créé et session ouverte.')
       } else {
         const result = await authClient.signIn.email({
           email,
@@ -47,17 +44,17 @@ export function AuthForm(props: {
         })
 
         if (result.error) {
-          setError(result.error.message ?? 'Connexion impossible')
+          toast.error(result.error.message ?? 'Connexion impossible')
           return
         }
 
-        setSuccess('Connexion réussie.')
+        toast.success('Connexion réussie.')
       }
 
       try {
         await props.onSuccess?.()
       } catch {
-        setError('Connexion réussie, mais redirection impossible.')
+        toast.error('Connexion réussie, mais redirection impossible.')
         return
       }
       setPassword('')
@@ -111,9 +108,6 @@ export function AuthForm(props: {
           onChange={(event) => setPassword(event.target.value)}
           placeholder="Au moins 8 caracteres"
         />
-
-        {error ? <Notice tone="error">{error}</Notice> : null}
-        {success ? <Notice tone="success">{success}</Notice> : null}
 
         <Button type="submit" disabled={pending}>
           {pending

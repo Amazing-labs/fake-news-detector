@@ -10,7 +10,7 @@ export function PageLayout(props: {
   return (
     <div className="space-y-7">
       <header className="relative overflow-hidden rounded-[1.8rem] border border-[#ebe5dc] bg-white/88 px-5 py-6 shadow-[0_22px_75px_rgba(35,29,23,0.07)] backdrop-blur md:px-7 md:py-7">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-[#171514]/20 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-[#171514]/20 to-transparent" />
         <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
           <div className="max-w-3xl">
             <PlatformBreadcrumb section={props.title} />
@@ -78,7 +78,7 @@ export function DataList(props: {
           <dt className="text-xs font-bold tracking-wide text-[#8c8680] uppercase">
             {item.label}
           </dt>
-          <dd className="mt-2 text-xl leading-tight font-black break-words text-[#171514]">
+          <dd className="mt-2 text-xl leading-tight font-black wrap-break-word text-[#171514]">
             {item.value}
           </dd>
         </div>
@@ -234,23 +234,5 @@ export function Select(
         {children}
       </select>
     </label>
-  )
-}
-
-export function Notice(props: {
-  tone?: 'error' | 'success' | 'info'
-  children: ReactNode
-}) {
-  const tone =
-    props.tone === 'error'
-      ? 'border-[#ffd9d7] bg-[#fff0ef] text-[#b13a35]'
-      : props.tone === 'success'
-        ? 'border-[#d6ead8] bg-[#eff8ef] text-[#247044]'
-        : 'border-[#cce3f6] bg-[#edf7ff] text-[#1d78c1]'
-
-  return (
-    <div className={`rounded-2xl border px-3 py-2 text-sm font-bold ${tone}`}>
-      {props.children}
-    </div>
   )
 }

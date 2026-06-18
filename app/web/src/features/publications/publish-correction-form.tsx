@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { apiRequest, toApiErrorMessage } from '../../shared/api/http'
 import {
   DarkButton,
@@ -7,7 +8,6 @@ import {
   DarkInput,
   DarkTextArea,
 } from '../../shared/ui/dark-form'
-import { Notice } from '../../shared/ui/primitives'
 
 export function PublishCorrectionForm(props: {
   initialPublicationId?: string
@@ -33,7 +33,11 @@ export function PublishCorrectionForm(props: {
       }
       setTitle('')
       setContent('')
+      toast.success('Correction publiée.')
       void queryClient.invalidateQueries({ queryKey: ['publications'] })
+    },
+    onError: (error) => {
+      toast.error(toApiErrorMessage(error))
     },
   })
 
@@ -65,12 +69,6 @@ export function PublishCorrectionForm(props: {
           value={content}
           onChange={(event) => setContent(event.target.value)}
         />
-        {mutation.isError ? (
-          <Notice tone="error">{toApiErrorMessage(mutation.error)}</Notice>
-        ) : null}
-        {mutation.isSuccess ? (
-          <Notice tone="success">Correction publiée.</Notice>
-        ) : null}
         <div>
           <DarkButton type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? 'Publication...' : 'Publier la correction'}

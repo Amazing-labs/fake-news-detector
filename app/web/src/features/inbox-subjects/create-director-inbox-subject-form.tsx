@@ -18,7 +18,6 @@ import {
   normalizeMediaDrafts,
   type MediaDraft,
 } from '../../shared/ui/media-fields.model'
-import { Notice } from '../../shared/ui/primitives'
 
 export function CreateDirectorInboxSubjectForm() {
   const queryClient = useQueryClient()
@@ -95,12 +94,6 @@ export function CreateDirectorInboxSubjectForm() {
           onChange={setMedia}
           variant="dark"
         />
-        {mutation.isError ? (
-          <Notice tone="error">{toApiErrorMessage(mutation.error)}</Notice>
-        ) : null}
-        {mutation.isSuccess ? (
-          <Notice tone="success">Sujet créé.</Notice>
-        ) : null}
         <div>
           <DarkButton type="submit" disabled={mutation.isPending}>
             {mutation.isPending ? 'Création...' : 'Créer le sujet'}

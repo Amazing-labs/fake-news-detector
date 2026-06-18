@@ -1,5 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { apiRequest, toApiErrorMessage } from '../../shared/api/http'
 import {
   DarkButton,
@@ -7,7 +8,6 @@ import {
   DarkInput,
   DarkTextArea,
 } from '../../shared/ui/dark-form'
-import { Notice } from '../../shared/ui/primitives'
 
 type CommentAction = 'reject' | 'archive'
 
@@ -17,7 +17,6 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
   const [verifiedLink, setVerifiedLink] = useState('')
   const [commentAction, setCommentAction] = useState<CommentAction | null>(null)
   const [comment, setComment] = useState('')
-  const [formError, setFormError] = useState('')
   const investigationId = props.investigationId ?? draftInvestigationId
   const fixedInvestigation = !!props.investigationId
 
@@ -38,9 +37,12 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
         setDraftInvestigationId('')
       }
       setVerifiedLink('')
-      setFormError('')
       void queryClient.invalidateQueries({ queryKey: ['investigations'] })
       void queryClient.invalidateQueries({ queryKey: ['publications'] })
+      toast.success('Enquête publiée.')
+    },
+    onError: (error) => {
+      toast.error(toApiErrorMessage(error))
     },
   })
 
@@ -56,6 +58,10 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
         setDraftInvestigationId('')
       }
       void queryClient.invalidateQueries({ queryKey: ['investigations'] })
+      toast.success('Enquête refusée.')
+    },
+    onError: (error) => {
+      toast.error(toApiErrorMessage(error))
     },
   })
 
@@ -71,6 +77,10 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
         setDraftInvestigationId('')
       }
       void queryClient.invalidateQueries({ queryKey: ['investigations'] })
+      toast.success('Enquête archivée.')
+    },
+    onError: (error) => {
+      toast.error(toApiErrorMessage(error))
     },
   })
 
@@ -84,16 +94,14 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
   function closeCommentModal() {
     setCommentAction(null)
     setComment('')
-    setFormError('')
   }
 
   function openCommentModal(action: CommentAction) {
     if (!investigationId.trim()) {
-      setFormError("La référence d'enquête est obligatoire.")
+      toast.error("La référence d'enquête est obligatoire.")
       return
     }
 
-    setFormError('')
     setComment('')
     setCommentAction(action)
   }
@@ -102,7 +110,7 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
     const cleanComment = comment.trim()
 
     if (!cleanComment) {
-      setFormError('Commentaire obligatoire.')
+      toast.error('Commentaire obligatoire.')
       return
     }
 
@@ -124,9 +132,8 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
           className="mt-6 grid gap-4"
           onSubmit={(event) => {
             event.preventDefault()
-            setFormError('')
             if (!investigationId.trim()) {
-              setFormError("La référence d'enquête est obligatoire.")
+              toast.error("La référence d'enquête est obligatoire.")
               return
             }
             publishMutation.mutate()
@@ -159,26 +166,6 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
           <div className="rounded-lg border border-white/10 bg-black/35 px-3 py-2.5 text-sm text-white/70">
             Commentaire requis uniquement pour le refus ou l'archivage.
           </div>
-
-          {formError ? <Notice tone="error">{formError}</Notice> : null}
-          {publishMutation.isError ? (
-            <Notice tone="error">
-              {toApiErrorMessage(publishMutation.error)}
-            </Notice>
-          ) : null}
-          {rejectMutation.isError ? (
-            <Notice tone="error">
-              {toApiErrorMessage(rejectMutation.error)}
-            </Notice>
-          ) : null}
-          {archiveMutation.isError ? (
-            <Notice tone="error">
-              {toApiErrorMessage(archiveMutation.error)}
-            </Notice>
-          ) : null}
-          {publishMutation.isSuccess ? (
-            <Notice tone="success">Enquête publiée.</Notice>
-          ) : null}
 
           <div className="grid gap-2 sm:grid-cols-3">
             <DarkButton type="submit" disabled={isPending}>
@@ -234,12 +221,6 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
                 value={comment}
                 onChange={(event) => setComment(event.target.value)}
               />
-              {formError ? <Notice tone="error">{formError}</Notice> : null}
-              {activeCommentMutation.isError ? (
-                <Notice tone="error">
-                  {toApiErrorMessage(activeCommentMutation.error)}
-                </Notice>
-              ) : null}
               <div className="flex flex-wrap justify-end gap-2">
                 <DarkButton
                   type="button"

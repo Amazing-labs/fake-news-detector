@@ -12,7 +12,6 @@ import {
   DarkFormCard,
   DarkTextArea,
 } from '../../shared/ui/dark-form'
-import { Notice } from '../../shared/ui/primitives'
 
 export function WatcherApplicationForm() {
   const queryClient = useQueryClient()
@@ -62,13 +61,6 @@ export function WatcherApplicationForm() {
           onChange={(event) => setMotivation(event.target.value)}
           placeholder="Explique pourquoi tu veux devenir vigie et comment tu peux aider la rédaction."
         />
-
-        {mutation.isError ? (
-          <Notice tone="error">{toApiErrorMessage(mutation.error)}</Notice>
-        ) : null}
-        {mutation.isSuccess ? (
-          <Notice tone="success">Candidature envoyée.</Notice>
-        ) : null}
 
         <div>
           <DarkButton type="submit" disabled={mutation.isPending}>
