@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { ExternalLink, FilePlus2, Trash2 } from 'lucide-react'
+import { Download, ExternalLink, FilePlus2, FileText, Trash2 } from 'lucide-react'
 import { Button } from '../../../shared/ui/shadcn/button'
 import {
   Card,
@@ -40,7 +40,7 @@ import { slugifyLabel } from './utils'
 export function ReportsWorkspacePage() {
   const { actor } = useResolvedActor('director')
 
-  if (actor === 'citizen') return <CitizenWorkspacePage />
+  if (actor === 'citizen' || actor === 'watcher') return <CitizenWorkspacePage />
 
   return (
     <AppLayout actor="director" page="reports">
@@ -359,6 +359,21 @@ export function InboxSubjectDetailWorkspacePage({
             </p>
           </div>
 
+          {subject.media && subject.media.length > 0 ? (
+            <div className="grid gap-3">
+              <p className="font-medium">Médias joints</p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                {subject.media.map((item) => (
+                  <SubjectMediaItem
+                    key={item.name}
+                    item={item}
+                    canDownload={actor === 'journalist' || actor === 'director'}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : null}
+
           <div className="flex flex-wrap gap-2">
             {actor === 'journalist' && subject.status === 'OPEN' ? (
               <Button>Prendre le sujet</Button>
@@ -370,5 +385,117 @@ export function InboxSubjectDetailWorkspacePage({
         </CardContent>
       </Card>
     </AppLayout>
+  )
+}
+
+function triggerBlobDownload(blob: Blob, filename: string) {
+  const objectUrl = URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = objectUrl
+  anchor.download = filename
+  document.body.appendChild(anchor)
+  anchor.click()
+  document.body.removeChild(anchor)
+  URL.revokeObjectURL(objectUrl)
+}
+
+async function downloadMedia(item: SubjectMedia) {
+  const contentUrl =
+    item.type === 'IMAGE'
+      ? item.imageUrl
+      : item.type === 'VIDEO'
+        ? item.videoUrl
+        : item.type === 'AUDIO'
+          ? item.audioUrl
+          : item.url
+
+  if (!contentUrl || contentUrl.startsWith('#')) {
+    if (item.type === 'DOCUMENT') {
+      const blob = new Blob(
+        [
+          `[Fichier de démonstration]\n\n${item.name}\n\nCe fichier est un placeholder. Il sera remplacé par le document réel une fois les médias connectés au stockage.`,
+        ],
+        { type: 'text/plain' },
+      )
+      triggerBlobDownload(blob, item.name)
+    }
+    return
+  }
+
+  try {
+    const response = await fetch(contentUrl)
+    const blob = await response.blob()
+    triggerBlobDownload(blob, item.name)
+  } catch {
+    window.open(contentUrl, '_blank')
+  }
+}
+
+type SubjectMedia = {
+  name: string
+  type: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'DOCUMENT'
+  url: string
+  imageUrl?: string
+  alt?: string
+  videoUrl?: string
+  posterUrl?: string
+  audioUrl?: string
+  size?: string
+}
+
+function SubjectMediaItem({
+  item,
+  canDownload,
+}: {
+  item: SubjectMedia
+  canDownload: boolean
+}) {
+  return (
+    <div className="overflow-hidden rounded-lg border">
+      {item.type === 'IMAGE' && item.imageUrl ? (
+        <img
+          src={item.imageUrl}
+          alt={item.alt ?? item.name}
+          className="h-48 w-full object-cover"
+        />
+      ) : item.type === 'VIDEO' && item.videoUrl ? (
+        <video
+          src={item.videoUrl}
+          poster={item.posterUrl}
+          controls
+          className="h-48 w-full bg-black object-contain"
+        />
+      ) : item.type === 'AUDIO' && item.audioUrl ? (
+        <div className="bg-muted/40 flex h-24 items-center justify-center px-4">
+          <audio src={item.audioUrl} controls className="w-full" />
+        </div>
+      ) : (
+        <div className="bg-muted/40 flex h-24 items-center justify-center gap-3 px-4">
+          <FileText className="text-muted-foreground size-8 shrink-0" />
+          <p className="text-muted-foreground min-w-0 truncate text-sm">
+            {item.name}
+          </p>
+        </div>
+      )}
+      <div className="flex items-center justify-between gap-2 px-3 py-2">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium">{item.name}</p>
+          {item.size ? (
+            <p className="text-muted-foreground text-xs">{item.size}</p>
+          ) : null}
+        </div>
+        {canDownload ? (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground size-8 shrink-0"
+            aria-label={`Télécharger ${item.name}`}
+            onClick={() => downloadMedia(item)}
+          >
+            <Download className="size-4" />
+          </Button>
+        ) : null}
+      </div>
+    </div>
   )
 }

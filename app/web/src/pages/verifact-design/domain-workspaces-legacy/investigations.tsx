@@ -38,6 +38,7 @@ import {
   ArbitrationReasonDialog,
   MediaDropzone,
   PublishInvestigationDialog,
+  WatcherContributeDialog,
 } from './shared'
 
 export function InvestigationsWorkspacePage({
@@ -45,6 +46,8 @@ export function InvestigationsWorkspacePage({
 }: {
   defaultTab?: 'pending' | 'published' | 'canceled'
 }) {
+  const { actor } = useResolvedActor('director')
+
   return (
     <AppLayout actor="director" page="investigations">
       <Tabs defaultValue={defaultTab}>
@@ -54,15 +57,17 @@ export function InvestigationsWorkspacePage({
             <TabsTrigger value="published">Publiees</TabsTrigger>
             <TabsTrigger value="canceled">Annulees</TabsTrigger>
           </TabsList>
-          <Button asChild>
-            <Link
-              to="/publications/corrections"
-              search={{ publicationId: undefined }}
-            >
-              <RotateCcw />
-              Créer un correctif
-            </Link>
-          </Button>
+          {actor === 'director' ? (
+            <Button asChild>
+              <Link
+                to="/publications/corrections"
+                search={{ publicationId: undefined }}
+              >
+                <RotateCcw />
+                Créer un correctif
+              </Link>
+            </Button>
+          ) : null}
         </div>
         <TabsContent value="pending" className="mt-4">
           <InvestigationList status="PENDING_REVIEW" />
@@ -193,6 +198,15 @@ export function InvestigationDetailWorkspacePage({
       <JournalistInvestigationWorkspace
         dossier={dossier}
         sourceMedia={sourceMedia}
+        watcherEvidence={watcherEvidence}
+      />
+    )
+  }
+
+  if (actor === 'watcher') {
+    return (
+      <WatcherInvestigationWorkspace
+        dossier={dossier}
         watcherEvidence={watcherEvidence}
       />
     )
@@ -381,6 +395,101 @@ export function InvestigationDetailWorkspacePage({
             </CardContent>
           </Card>
         </div>
+      </div>
+    </AppLayout>
+  )
+}
+
+function WatcherInvestigationWorkspace({
+  dossier,
+  watcherEvidence,
+}: {
+  dossier: {
+    title: string
+    subject: string
+    status: string
+    category: string
+    journalist: string
+    attempts: number
+  }
+  watcherEvidence: Array<{
+    title: string
+    watcher: string
+    media: string
+    note: string
+  }>
+}) {
+  return (
+    <AppLayout actor="watcher" page="investigations">
+      <div className="grid gap-6">
+        <Card>
+          <CardHeader>
+            <div className="flex min-w-0 flex-wrap items-start justify-between gap-3">
+              <div className="min-w-0">
+                <CardTitle className="truncate">{dossier.title}</CardTitle>
+                <CardDescription className="mt-2">
+                  {dossier.subject}
+                </CardDescription>
+              </div>
+              <div className="flex shrink-0 items-center gap-3">
+                <StatusBadge status={dossier.status} />
+                <WatcherContributeDialog>
+                  <Button size="sm">
+                    <FilePlus2 />
+                    Contribuer
+                  </Button>
+                </WatcherContributeDialog>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-3">
+              <div className="rounded-lg border p-3">
+                <p className="text-muted-foreground text-xs font-medium uppercase">
+                  Catégorie
+                </p>
+                <p className="mt-1 font-medium">
+                  {domainLabel(dossier.category)}
+                </p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-muted-foreground text-xs font-medium uppercase">
+                  Journaliste
+                </p>
+                <p className="mt-1 font-medium">{dossier.journalist}</p>
+              </div>
+              <div className="rounded-lg border p-3">
+                <p className="text-muted-foreground text-xs font-medium uppercase">
+                  Révision
+                </p>
+                <p className="mt-1 font-medium">Tentative {dossier.attempts}</p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Contributions déjà soumises</CardTitle>
+            <CardDescription>
+              Consultez les preuves déjà envoyées par d'autres vigies pour
+              éviter les doublons.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-3">
+            {watcherEvidence.map((evidence) => (
+              <div key={evidence.title} className="rounded-lg border p-4">
+                <p className="font-medium">{evidence.title}</p>
+                <p className="text-muted-foreground text-sm">
+                  {evidence.watcher} / {evidence.media}
+                </p>
+                <p className="text-muted-foreground mt-2 text-sm">
+                  {evidence.note}
+                </p>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
       </div>
     </AppLayout>
   )

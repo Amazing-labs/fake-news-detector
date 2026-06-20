@@ -193,6 +193,50 @@ export function PublishInvestigationDialog({
   )
 }
 
+export function WatcherContributeDialog({
+  children,
+}: {
+  children: ReactNode
+}) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Soumettre une preuve</DialogTitle>
+          <DialogDescription>
+            Les médias seront classés par le journaliste avant la revue
+            éditoriale.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4">
+          <Label className="grid gap-2">
+            Titre
+            <Input placeholder="Source locale, image, lien..." />
+          </Label>
+          <Label className="grid gap-2">
+            Observation
+            <Textarea placeholder="Ce que la preuve confirme ou écarte" />
+          </Label>
+          <MediaDropzone
+            inputId="watcher-contribute-media"
+            description="Images, vidéos, audio, PDF ou documents utiles au dossier."
+          />
+        </div>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline">Annuler</Button>
+          </DialogClose>
+          <Button>
+            <FilePlus2 />
+            Ajouter la preuve
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export function MediaDropzone({
   inputId = 'media-upload',
   description = 'Images, videos, audio, PDF ou documents utiles au desk.',
