@@ -37,6 +37,7 @@ Regular users who submit reports and can become Watchers.
 **Key attributes:** `citizenType: REGULAR | WATCHER`, `openReportsCount`, `engagementScore`, `maxOpenReports (= 3)`
 
 **Invariants:**
+
 - `canSubmitReport()` → active AND `openReportsCount < 3`
 - `canSubmitEvidence()` → active AND `citizenType === WATCHER`
 - `canApplyForWatcher()` → active AND `citizenType === REGULAR`
@@ -50,6 +51,7 @@ Users who investigate reports and produce verifications.
 **Key attributes:** `activeInvestigationsCount`, `maxActiveInvestigations (= 1)`, `engagementScore`
 
 **Invariants:**
+
 - `canAnalyze()` → active AND `activeInvestigationsCount < 1`
 - `correctInvestigation()` → fails if `attemptCount >= MAX_CORRECTION_ATTEMPTS`
 
@@ -84,6 +86,7 @@ The fact-checking process linked to an InboxSubject.
 **Attributes:** `inboxSubjectId`, `journalistId`, `mediaCategory: MediaCategory | null`, `draftVerdict: Verdict`, `investigationNotes`, `attemptCount`, `status: InvestigationStatus`
 
 **Lifecycle:**
+
 ```
 OPEN → IN_PROGRESS → PENDING_REVIEW → PUBLISHED
                                     → ARCHIVED      (UNVERIFIABLE verdict only)
@@ -92,6 +95,7 @@ OPEN → IN_PROGRESS → PENDING_REVIEW → PUBLISHED
 ```
 
 **Invariants:**
+
 - `canBeEdited()` → status in `{OPEN, IN_PROGRESS, NEEDS_REVISION}`
 - `submitForReview()` → requires `mediaCategory` non-null
 - `approve()` → requires `draftVerdict` in `{TRUE, FALSE, MISLEADING}` (not UNVERIFIABLE)
@@ -140,6 +144,7 @@ System alerts for users.
 **Attributes:** `type: NotificationType`, `theme`, `message`, `actorId`, `isRead`, `publicationId?`, `investigationId?`
 
 **Invariants by type:**
+
 - `PUBLICATION`, `CORRECTION` → require `publicationId`, no `investigationId`
 - `ARCHIVED_PUBLICATION` → requires `investigationId`, no `publicationId`
 - `ALERT` → neither required
@@ -169,13 +174,13 @@ Citizen      1──0..1 WatcherApplication (applies for)
 
 Orchestrates state transitions with audit trail:
 
-| Function | Actor | Action |
-|---|---|---|
-| `submitInvestigationForReviewWithAudit` | Journalist | Validates readiness, transitions to PENDING_REVIEW |
-| `directorApproveInvestigationWithAudit` | Director | Calls `investigation.approve()` → PUBLISHED |
-| `directorRejectInvestigationWithAudit` | Director | Calls `rejectInvestigation()` → NEEDS_REVISION or CANCELED |
-| `directorAcceptUnverifiableArchiveWithAudit` | Director | Calls `markAsArchived()` → ARCHIVED |
-| `directorCancelInvestigationWithAudit` | Director | Calls `cancelManually()` → CANCELED |
+| Function                                     | Actor      | Action                                                     |
+| -------------------------------------------- | ---------- | ---------------------------------------------------------- |
+| `submitInvestigationForReviewWithAudit`      | Journalist | Validates readiness, transitions to PENDING_REVIEW         |
+| `directorApproveInvestigationWithAudit`      | Director   | Calls `investigation.approve()` → PUBLISHED                |
+| `directorRejectInvestigationWithAudit`       | Director   | Calls `rejectInvestigation()` → NEEDS_REVISION or CANCELED |
+| `directorAcceptUnverifiableArchiveWithAudit` | Director   | Calls `markAsArchived()` → ARCHIVED                        |
+| `directorCancelInvestigationWithAudit`       | Director   | Calls `cancelManually()` → CANCELED                        |
 
 ### `investigationReviewReadiness`
 
@@ -208,33 +213,33 @@ On journalist pickup, copies source media (from Report or DirectorInboxSubject) 
 
 ### Actor
 
-| Enum | Values |
-|---|---|
-| `Role` | `EDITORIAL_DIRECTOR`, `JOURNALIST`, `CITIZEN` |
-| `AccountStatus` | `ACTIVE`, `DISABLED`, `BANNED` |
-| `StatusReason` | `SPAM`, `ABUSE`, `FRAUD`, `INACTIVITY`, `USER_REQUEST`, `OTHER` |
-| `CitizenType` | `REGULAR`, `WATCHER` |
+| Enum            | Values                                                          |
+| --------------- | --------------------------------------------------------------- |
+| `Role`          | `EDITORIAL_DIRECTOR`, `JOURNALIST`, `CITIZEN`                   |
+| `AccountStatus` | `ACTIVE`, `DISABLED`, `BANNED`                                  |
+| `StatusReason`  | `SPAM`, `ABUSE`, `FRAUD`, `INACTIVITY`, `USER_REQUEST`, `OTHER` |
+| `CitizenType`   | `REGULAR`, `WATCHER`                                            |
 
 ### Content Lifecycle
 
-| Enum | Values |
-|---|---|
-| `ReportStatus` | `OPEN`, `ARCHIVED` |
-| `InvestigationStatus` | `OPEN`, `IN_PROGRESS`, `PENDING_REVIEW`, `NEEDS_REVISION`, `PUBLISHED`, `ARCHIVED`, `CANCELED` |
-| `WatcherApplicationStatus` | `PENDING`, `APPROVED`, `REJECTED` |
-| `InboxSubjectStatus` | `OPEN`, `IN_PROGRESS`, `ARCHIVED` |
-| `InboxSubjectOrigin` | `REPORT`, `DIRECTOR_INITIATED` |
+| Enum                       | Values                                                                                         |
+| -------------------------- | ---------------------------------------------------------------------------------------------- |
+| `ReportStatus`             | `OPEN`, `ARCHIVED`                                                                             |
+| `InvestigationStatus`      | `OPEN`, `IN_PROGRESS`, `PENDING_REVIEW`, `NEEDS_REVISION`, `PUBLISHED`, `ARCHIVED`, `CANCELED` |
+| `WatcherApplicationStatus` | `PENDING`, `APPROVED`, `REJECTED`                                                              |
+| `InboxSubjectStatus`       | `OPEN`, `IN_PROGRESS`, `ARCHIVED`                                                              |
+| `InboxSubjectOrigin`       | `REPORT`, `DIRECTOR_INITIATED`                                                                 |
 
 ### Verdicts & Media
 
-| Enum | Values |
-|---|---|
-| `Verdict` | `TRUE`, `FALSE`, `MISLEADING`, `UNVERIFIABLE` |
-| `MediaCategory` | `CONTEXT_COLLAPSE`, `MANIPULATED`, `FABRICATED`, `SATIRE`, `MISLEADING`, `IMPOSTOR`, `OTHER` |
-| `MediaType` | `IMAGE`, `VIDEO`, `AUDIO`, `DOCUMENT`, `LINK`, `TEXT` |
-| `MediaOrigin` | `CITIZEN_REPORT`, `JOURNALIST_PROOF`, `DIRECTOR_INITIATED` |
-| `SourceType` | `OFFICIAL_DECREE`, `ORIGINAL_RETRACTION`, `DIRECT_EVIDENCE`, `MEDIA_CROSSCHECK`, `AUTHORITY_STATEMENT` |
-| `NotificationType` | `PUBLICATION`, `CORRECTION`, `ALERT`, `ARCHIVED_PUBLICATION` |
+| Enum               | Values                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------ |
+| `Verdict`          | `TRUE`, `FALSE`, `MISLEADING`, `UNVERIFIABLE`                                                          |
+| `MediaCategory`    | `CONTEXT_COLLAPSE`, `MANIPULATED`, `FABRICATED`, `SATIRE`, `MISLEADING`, `IMPOSTOR`, `OTHER`           |
+| `MediaType`        | `IMAGE`, `VIDEO`, `AUDIO`, `DOCUMENT`, `LINK`, `TEXT`                                                  |
+| `MediaOrigin`      | `CITIZEN_REPORT`, `JOURNALIST_PROOF`, `DIRECTOR_INITIATED`                                             |
+| `SourceType`       | `OFFICIAL_DECREE`, `ORIGINAL_RETRACTION`, `DIRECT_EVIDENCE`, `MEDIA_CROSSCHECK`, `AUTHORITY_STATEMENT` |
+| `NotificationType` | `PUBLICATION`, `CORRECTION`, `ALERT`, `ARCHIVED_PUBLICATION`                                           |
 
 ---
 
@@ -242,25 +247,25 @@ On journalist pickup, copies source media (from Report or DirectorInboxSubject) 
 
 ### Report & Evidence Management
 
-| Permission            | Citizen | Journalist | Director | Notes                  |
-| :-------------------- | :-----: | :--------: | :------: | :--------------------- |
-| Submit Report         |   ✅    |     ❌     |    ❌    | Max 3 open; ACTIVE only |
-| Submit Evidence       |   ✅    |     ❌     |    ❌    | WATCHER type required  |
-| Pick InboxSubject     |   ❌    |     ✅     |    ❌    | Subject must be OPEN   |
-| Classify Source Media |   ❌    |     ✅     |    ❌    | Before review submission |
+| Permission            | Citizen | Journalist | Director | Notes                     |
+| :-------------------- | :-----: | :--------: | :------: | :------------------------ |
+| Submit Report         |   ✅    |     ❌     |    ❌    | Max 3 open; ACTIVE only   |
+| Submit Evidence       |   ✅    |     ❌     |    ❌    | WATCHER type required     |
+| Pick InboxSubject     |   ❌    |     ✅     |    ❌    | Subject must be OPEN      |
+| Classify Source Media |   ❌    |     ✅     |    ❌    | Before review submission  |
 | Add Proof Media       |   ❌    |     ✅     |    ❌    | Requires authority source |
-| Submit for Review     |   ❌    |     ✅     |    ❌    | mediaCategory required |
-| Correct Investigation |   ❌    |     ✅     |    ❌    | After NEEDS_REVISION   |
+| Submit for Review     |   ❌    |     ✅     |    ❌    | mediaCategory required    |
+| Correct Investigation |   ❌    |     ✅     |    ❌    | After NEEDS_REVISION      |
 
 ### Validation & Publishing
 
-| Permission              | Citizen | Journalist | Director | Notes                        |
-| :---------------------- | :-----: | :--------: | :------: | :--------------------------- |
-| Approve Investigation   |   ❌    |     ❌     |    ✅    | Verdict TRUE/FALSE/MISLEADING |
-| Archive Unverifiable    |   ❌    |     ❌     |    ✅    | Verdict UNVERIFIABLE only    |
-| Reject for Revision     |   ❌    |     ❌     |    ✅    | → NEEDS_REVISION or CANCELED |
-| Cancel Investigation    |   ❌    |     ❌     |    ✅    | Any non-terminal status      |
-| Publish Correction      |   ❌    |     ❌     |    ✅    | From existing publication    |
+| Permission            | Citizen | Journalist | Director | Notes                         |
+| :-------------------- | :-----: | :--------: | :------: | :---------------------------- |
+| Approve Investigation |   ❌    |     ❌     |    ✅    | Verdict TRUE/FALSE/MISLEADING |
+| Archive Unverifiable  |   ❌    |     ❌     |    ✅    | Verdict UNVERIFIABLE only     |
+| Reject for Revision   |   ❌    |     ❌     |    ✅    | → NEEDS_REVISION or CANCELED  |
+| Cancel Investigation  |   ❌    |     ❌     |    ✅    | Any non-terminal status       |
+| Publish Correction    |   ❌    |     ❌     |    ✅    | From existing publication     |
 
 ### User & Watcher Management
 

@@ -317,14 +317,14 @@ Comprehensive UML diagrams are available in the `/doc` directory:
 
 ### Report & Investigation Management
 
-| Permission            | Citizen | Journalist | Director | Notes                                           |
-| :-------------------- | :-----: | :--------: | :------: | :---------------------------------------------- |
-| Submit Report         |   ✅    |     ❌     |    ❌    | Max 3 open reports; Must be ACTIVE              |
-| Submit Evidence       |   ✅    |     ❌     |    ❌    | Requires WATCHER type                           |
+| Permission            | Citizen | Journalist | Director | Notes                                            |
+| :-------------------- | :-----: | :--------: | :------: | :----------------------------------------------- |
+| Submit Report         |   ✅    |     ❌     |    ❌    | Max 3 open reports; Must be ACTIVE               |
+| Submit Evidence       |   ✅    |     ❌     |    ❌    | Requires WATCHER type                            |
 | Pick InboxSubject     |   ❌    |     ✅     |    ❌    | Max 1 active investigation; Subject must be OPEN |
-| Draft Investigation   |   ❌    |     ✅     |    ❌    | Update media category, verdict, notes           |
-| Submit for Review     |   ❌    |     ✅     |    ❌    | Must have media category set                    |
-| Correct Investigation |   ❌    |     ✅     |    ❌    | After rejection; Limited attempts               |
+| Draft Investigation   |   ❌    |     ✅     |    ❌    | Update media category, verdict, notes            |
+| Submit for Review     |   ❌    |     ✅     |    ❌    | Must have media category set                     |
+| Correct Investigation |   ❌    |     ✅     |    ❌    | After rejection; Limited attempts                |
 
 ### Validation & Publishing
 
