@@ -20,11 +20,16 @@ function InvestigationsRoute() {
   })
 
   useEffect(() => {
-    if (!isActorPending && actor === 'watcher' && pathname === '/investigations') {
+    if (
+      !isActorPending &&
+      actor === 'watcher' &&
+      pathname === '/investigations'
+    ) {
       navigate({ to: '/watcher-applications', replace: true })
     }
   }, [actor, isActorPending, navigate, pathname])
 
+  if (isActorPending) return null
   if (actor === 'watcher' && pathname === '/investigations') return null
 
   if (pathname === '/investigations') {

@@ -17,6 +17,7 @@ function InboxSubjectGlobalRoute() {
     }
   }, [actor, isActorPending, navigate])
 
+  if (isActorPending) return null
   if (actor === 'watcher') return null
 
   return <InboxSubjectsPage />

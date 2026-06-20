@@ -8,8 +8,9 @@ export const Route = createFileRoute('/watcher-applications')({
 })
 
 function WatcherApplicationsRoute() {
-  const { actor } = useResolvedActor('guest')
+  const { actor, isActorPending } = useResolvedActor('guest')
 
+  if (isActorPending) return null
   if (actor === 'watcher') return <InvestigationsPage />
 
   return <WatcherApplicationsPage />

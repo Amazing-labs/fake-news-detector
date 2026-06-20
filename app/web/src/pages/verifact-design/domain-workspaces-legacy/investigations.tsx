@@ -46,7 +46,9 @@ export function InvestigationsWorkspacePage({
 }: {
   defaultTab?: 'pending' | 'published' | 'canceled'
 }) {
-  const { actor } = useResolvedActor('director')
+  const { actor, isActorPending } = useResolvedActor('guest')
+
+  if (isActorPending) return null
 
   return (
     <AppLayout actor="director" page="investigations">
@@ -138,7 +140,9 @@ export function InvestigationDetailWorkspacePage({
 }: {
   investigationId?: string
 }) {
-  const { actor } = useResolvedActor('director')
+  const { actor, isActorPending } = useResolvedActor('guest')
+
+  if (isActorPending) return null
   const dossier = {
     id: investigationId ?? 'selection courante',
     title: 'Video de checkpoint sortie de contexte',

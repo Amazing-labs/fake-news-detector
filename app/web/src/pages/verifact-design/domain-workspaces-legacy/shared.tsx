@@ -193,11 +193,7 @@ export function PublishInvestigationDialog({
   )
 }
 
-export function WatcherContributeDialog({
-  children,
-}: {
-  children: ReactNode
-}) {
+export function WatcherContributeDialog({ children }: { children: ReactNode }) {
   return (
     <Dialog>
       <DialogTrigger asChild>{children}</DialogTrigger>

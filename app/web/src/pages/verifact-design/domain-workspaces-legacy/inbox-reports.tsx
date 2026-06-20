@@ -1,5 +1,11 @@
 import { Link } from '@tanstack/react-router'
-import { Download, ExternalLink, FilePlus2, FileText, Trash2 } from 'lucide-react'
+import {
+  Download,
+  ExternalLink,
+  FilePlus2,
+  FileText,
+  Trash2,
+} from 'lucide-react'
 import { Button } from '../../../shared/ui/shadcn/button'
 import {
   Card,
@@ -38,9 +44,11 @@ import { MediaDropzone } from './shared'
 import { slugifyLabel } from './utils'
 
 export function ReportsWorkspacePage() {
-  const { actor } = useResolvedActor('director')
+  const { actor, isActorPending } = useResolvedActor('guest')
 
-  if (actor === 'citizen' || actor === 'watcher') return <CitizenWorkspacePage />
+  if (isActorPending) return null
+  if (actor === 'citizen' || actor === 'watcher')
+    return <CitizenWorkspacePage />
 
   return (
     <AppLayout actor="director" page="reports">
@@ -424,10 +432,11 @@ async function downloadMedia(item: SubjectMedia) {
 
   try {
     const response = await fetch(contentUrl)
+    if (!response.ok) throw new Error(`Download failed: ${response.status}`)
     const blob = await response.blob()
     triggerBlobDownload(blob, item.name)
   } catch {
-    window.open(contentUrl, '_blank')
+    window.open(contentUrl, '_blank', 'noopener,noreferrer')
   }
 }
 
