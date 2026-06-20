@@ -44,12 +44,13 @@ entity "Reports" as Reports {
 entity "Investigations" as Investigations {
   * id : UUID [PK]
   --
-  reportId : UUID [FK,Unique]
+  inboxSubjectId : UUID [FK,Unique]
   journalistId : UUID [FK]
   mediaCategory : string
   draftVerdict : string
   investigationNotes : string
   attemptCount : int
+  status : string
 }
 
 entity "Evidence" as Evidence {
@@ -76,15 +77,18 @@ entity "Notifications" as Notifications {
   --
   actorId : UUID [FK]
   type : string
+  theme : string
   message : string
-  isActive : boolean
-  publicationId : UUID [FK]
+  isRead : boolean
+  publicationId : UUID [FK,Nullable]
+  investigationId : UUID [FK,Nullable]
 }
 
 entity "WatcherApplications" as WatcherApplications {
   * id : UUID [PK]
   --
-  applicantId : UUID [FK,Unique]
+  actorId : UUID [FK,Unique]
+  motivation : string
   status : string
 }
 
@@ -94,6 +98,8 @@ entity "InboxSubjects" as InboxSubjects {
   theme : string
   description : string
   createdById : UUID [FK]
+  reportId : UUID [FK,Nullable]
+  origin : string
   status : string
 }
 

@@ -31,11 +31,11 @@ deactivate System
 
 == Assignment ==
 
-Journalist -> System : Pick report
+Journalist -> System : Pick inbox subject
 activate System
 
 System -> System : Verify Journalist role
-System -> DB : Create investigation
+System -> DB : Create investigation (status=OPEN)
 activate DB
 DB --> System : Investigation created
 deactivate DB
@@ -45,10 +45,10 @@ deactivate System
 
 == Watcher Contribution ==
 
-Citizen -> System : Submit evidence
+Citizen -> System : Submit evidence (WATCHER type)
 activate System
 
-System -> System : Verify Watcher role
+System -> System : Verify Watcher citizen type
 System -> DB : Add evidence
 activate DB
 DB --> System : Evidence saved

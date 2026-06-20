@@ -63,19 +63,27 @@ Report ──▶ InboxSubject ──▶ Investigation ──▶ Review ──▶
 The application follows DDD principles with clear bounded contexts:
 
 ```
-src/
-├── domain/              # Business logic and entities
-│   ├── entities/        # Core domain objects
-│   ├── value-objects/   # Immutable value types (Media, VerifiedMedia, etc.)
+app/server/src/
+├── domain/              # Pure business logic (no infrastructure imports)
+│   ├── entities/        # Core domain objects (Citizen, Journalist, Director, etc.)
+│   ├── value-objects/   # Immutable value types (Media, VerifiedMedia, EvidenceMedia)
 │   ├── factories/       # Entity factories
-│   ├── repositories/    # Repository interfaces
-│   ├── services/        # Domain services
-│   └── processes/       # Complex business processes (workflow orchestration)
-├── application/      # Use cases and application services
-├── infrastructure/   # Technical implementations
-│   ├── config/       # Database, Prisma
-│   └── persistence/  # Repositories
-└── interfaces/       # API controllers, DTOs
+│   ├── repositories/    # Repository interfaces (I*Repository.ts)
+│   ├── processes/       # Workflow orchestration (investigationStatusWorkflow,
+│   │                    #   investigationReviewReadiness, investigationMediaCopy)
+│   └── events/          # Domain events
+├── application/         # Use-case orchestration
+│   └── services/        # FactCheckingService (facade) + sub-workflow services
+├── infrastructure/      # Technical implementations
+│   ├── config/          # Database, Prisma (modular schema via prismaSchemaFolder)
+│   └── repositories/    # Prisma*Repository implementations
+├── interfaces/          # HTTP boundary
+│   ├── routes/          # Hono route definitions
+│   ├── controllers/     # Request handlers
+│   ├── http/schemas/    # Zod OpenAPI schemas
+│   ├── auth/            # better-auth integration + actor linking
+│   └── middlewares/     # Auth middleware
+└── shared/              # Constants, types, errors, env
 ```
 
 ### Core Entities
@@ -96,17 +104,21 @@ src/
 ### Investigation Lifecycle
 
 ```
-OPEN → IN_PROGRESS → PENDING_REVIEW → [PUBLISHED | ARCHIVED | NEEDS_REVISION → IN_PROGRESS]
+OPEN → IN_PROGRESS → PENDING_REVIEW → PUBLISHED
+                                    → ARCHIVED      (UNVERIFIABLE verdict only)
+                                    → NEEDS_REVISION → IN_PROGRESS (correction cycle)
+                                    → CANCELED
 ```
 
 **Status Definitions:**
 
-- **OPEN** - Initial state when journalist picks a report
+- **OPEN** - Initial state when journalist picks an InboxSubject
 - **IN_PROGRESS** - Journalist working on draft (can edit media category, verdict, notes)
 - **PENDING_REVIEW** - Submitted to Director for validation
-- **NEEDS_REVISION** - Director rejected; sent back for corrections
-- **PUBLISHED** - Director approved; investigation is public
-- **ARCHIVED** - Investigation with UNVERIFIABLE verdict (cannot be verified)
+- **NEEDS_REVISION** - Director rejected; sent back for corrections (limited attempts before CANCELED)
+- **PUBLISHED** - Director approved with TRUE/FALSE/MISLEADING verdict
+- **ARCHIVED** - UNVERIFIABLE verdict accepted by Director (cannot be published)
+- **CANCELED** - Manually canceled by Director, or max correction attempts exceeded
 
 **Source of Truth Principle:**
 
@@ -116,11 +128,13 @@ OPEN → IN_PROGRESS → PENDING_REVIEW → [PUBLISHED | ARCHIVED | NEEDS_REVISI
 
 **Transitions:**
 
-- Journalist: `OPEN` → `PENDING_REVIEW` (via `submitForReview()`)
+- Journalist: `OPEN` → `IN_PROGRESS` (automatically on pick)
+- Journalist: `IN_PROGRESS` → `PENDING_REVIEW` (via `submitForReview()`)
 - Director: `PENDING_REVIEW` → `PUBLISHED` (if verdict is TRUE/FALSE/MISLEADING)
 - Director: `PENDING_REVIEW` → `ARCHIVED` (if verdict is UNVERIFIABLE)
-- Director: `PENDING_REVIEW` → `NEEDS_REVISION` (rejection with feedback)
-- Journalist: `NEEDS_REVISION` → `OPEN` (correction cycle)
+- Director: `PENDING_REVIEW` → `NEEDS_REVISION` (rejection with feedback; → CANCELED if max attempts reached)
+- Journalist: `NEEDS_REVISION` → `IN_PROGRESS` (correction cycle)
+- Director: any non-terminal → `CANCELED` (manual cancel)
 
 ### Domain Values
 
@@ -190,18 +204,26 @@ bun install
 3. Configure environment variables:
 
 ```bash
-cp .env.example .env
-# Edit .env with your database credentials
+cp app/server/.env.example app/server/.env
+# Edit app/server/.env with your database credentials and auth secrets
 ```
 
 4. Run database migrations:
 
 ```bash
 cd app/server
-bunx prisma migrate dev
+bun run generate   # Generate Prisma Client
+bun run migrate    # Run migrations (dev)
 ```
 
-5. Start the development server:
+5. Seed an initial director account:
+
+```bash
+cd app/server
+bun run create:director
+```
+
+6. Start all dev servers from the repo root:
 
 ```bash
 bun run dev
@@ -209,20 +231,36 @@ bun run dev
 
 ### Available Scripts
 
+**Root (monorepo):**
+
 ```bash
-# Development
-bun run dev              # Start development server
-bun run build            # Build for production
-bun run start            # Start production server
+bun run dev              # Start all workspaces in parallel
+bun run build            # Build all workspaces
+bun run lint             # ESLint across all workspaces
+bun run test             # Run all tests
+bun run format           # Prettier write (all files)
+```
 
-# Database
-bun run migrate          # Run migrations
-bun run deploy           # Deploy migrations to production
-bunx prisma studio       # Open Prisma Studio
-bun run generate         # Generate Prisma Client
+**Server (`app/server`):**
 
-# Testing
-bun test                 # Run tests
+```bash
+bun run dev              # Hot-reload dev server
+bun run test             # Vitest unit tests
+bun run generate         # Prisma Client codegen (run after schema changes)
+bun run migrate          # prisma migrate dev
+bun run deploy           # prisma migrate deploy (production)
+bun run reset            # prisma migrate reset --force (destructive)
+bun run create:director  # Seed a director account
+bun run auth:generate    # Regenerate better-auth schema
+```
+
+**Web (`app/web`):**
+
+```bash
+bun run dev              # Vite dev server
+bun run build            # vite build + tsc typecheck
+bun run preview          # Preview production build
+bun run test             # bun test
 ```
 
 ## Project Structure
@@ -231,21 +269,26 @@ bun test                 # Run tests
 app/
 ├── server/
 │   ├── src/
-│   │   ├── domain/              # Domain layer
-│   │   │   ├── entities/        # Core domain entities
+│   │   ├── domain/              # Domain layer (no infra imports)
+│   │   │   ├── entities/        # Citizen, Journalist, Director, Investigation, etc.
 │   │   │   ├── value-objects/   # Media, VerifiedMedia, EvidenceMedia, etc.
 │   │   │   ├── factories/       # Entity factories
-│   │   │   ├── repositories/    # Repository interfaces
-│   │   │   ├── services/        # Domain services
-│   │   │   └── processes/       # Workflow orchestration (investigationStatusWorkflow, investigationReviewReadiness, investigationMediaCopy)
-│   │   ├── application/         # Application layer
-│   │   │   └── services/        # Use cases & app services
-│   │   ├── infrastructure/      # Infrastructure layer
-│   │   │   ├── config/          # Database, Prisma config
-│   │   │   └── persistence/     # Repository implementations
-│   │   └── interfaces/          # Interface layer (API controllers, DTOs)
-│   └── prisma/                  # Prisma schema & migrations
-└── web/                         # Frontend (if applicable)
+│   │   │   ├── repositories/    # Repository interfaces (I*Repository.ts)
+│   │   │   ├── processes/       # investigationStatusWorkflow, investigationReviewReadiness, investigationMediaCopy
+│   │   │   └── events/          # Domain events
+│   │   ├── application/
+│   │   │   └── services/        # FactCheckingService (facade) + sub-workflow services
+│   │   ├── infrastructure/
+│   │   │   ├── config/          # Prisma config (modular schema via prismaSchemaFolder)
+│   │   │   └── repositories/    # Prisma*Repository implementations
+│   │   ├── interfaces/
+│   │   │   ├── routes/          # Hono route definitions
+│   │   │   ├── controllers/     # Request handlers
+│   │   │   ├── http/schemas/    # Zod OpenAPI schemas
+│   │   │   ├── auth/            # better-auth + actor linking
+│   │   │   └── middlewares/     # Auth middleware
+│   │   └── shared/              # Constants, types, errors, env
+└── web/                         # React/Vite frontend (TanStack Router)
 
 doc/                             # Documentation diagrams
 ├── class/                       # Class diagrams
@@ -278,7 +321,7 @@ Comprehensive UML diagrams are available in the `/doc` directory:
 | :-------------------- | :-----: | :--------: | :------: | :---------------------------------------------- |
 | Submit Report         |   ✅    |     ❌     |    ❌    | Max 3 open reports; Must be ACTIVE              |
 | Submit Evidence       |   ✅    |     ❌     |    ❌    | Requires WATCHER type                           |
-| Pick Report           |   ❌    |     ✅     |    ❌    | Max 1 active investigation; Report must be OPEN |
+| Pick InboxSubject     |   ❌    |     ✅     |    ❌    | Max 1 active investigation; Subject must be OPEN |
 | Draft Investigation   |   ❌    |     ✅     |    ❌    | Update media category, verdict, notes           |
 | Submit for Review     |   ❌    |     ✅     |    ❌    | Must have media category set                    |
 | Correct Investigation |   ❌    |     ✅     |    ❌    | After rejection; Limited attempts               |
@@ -309,69 +352,70 @@ Comprehensive UML diagrams are available in the `/doc` directory:
 
 ## API Endpoints
 
-### Authentication
+### Authentication (`/api/auth/*`)
 
-- `POST /api/auth/login` - User authentication
-- `POST /api/auth/logout` - User logout
+Handled by better-auth — `GET` and `POST /api/auth/*`.
 
 ### Reports
 
-- `POST /api/reports` - Submit new report (Citizen)
-- `GET /api/reports` - List available reports (Journalist - OPEN status only)
-- `GET /api/reports/:id` - Get report details
-- `PATCH /api/reports/:id` - Update report content (if not picked)
+- `GET /api/reports/` - List reports (auth required)
+- `POST /api/reports/` - Submit new report (permission: `report.submit`)
+
+### Inbox Subjects
+
+- `GET /api/inbox-subjects/` - List inbox subjects (auth required)
+- `GET /api/inbox-subjects/report-inbox` - List open reports for journalists (permission: `report.pick`)
+- `POST /api/inbox-subjects/` - Create director-initiated subject (permission: `inbox.manage`)
+- `POST /api/inbox-subjects/:inboxSubjectId/pick` - Journalist picks subject, starts investigation (permission: `report.pick`)
+- `DELETE /api/inbox-subjects/:inboxSubjectId` - Delete subject (permission: `inbox.manage`)
 
 ### Investigations
 
-- `POST /api/investigations` - Create investigation from report (Journalist picks report)
-- `GET /api/investigations` - List investigations (filtered by role)
-- `GET /api/investigations/:id` - Get investigation details
-- `PATCH /api/investigations/:id/draft` - Update investigation draft (mediaCategory, draftVerdict, notes)
-- `POST /api/investigations/:id/submit` - Submit for director review
-- `POST /api/investigations/:id/publish` - Publish investigation (Director - TRUE/FALSE/MISLEADING verdicts)
-- `POST /api/investigations/:id/archive` - Archive investigation (Director - UNVERIFIABLE verdicts)
-- `POST /api/investigations/:id/reject` - Reject with feedback (Director → NEEDS_REVISION)
-- `POST /api/investigations/:id/correct` - Submit corrected draft (Journalist after rejection)
-
-### Evidence
-
-- `POST /api/evidence` - Submit evidence (Watcher only)
-- `GET /api/investigations/:id/evidence` - List evidence for investigation
-- `DELETE /api/evidence/:id` - Remove evidence (Watcher who submitted it)
+- `GET /api/investigations/` - List investigations (auth required)
+- `POST /api/investigations/:investigationId/review` - Submit for director review (permission: `investigation.submitForReview`)
+- `POST /api/investigations/:investigationId/source-media/:mediaId` - Classify source media item (permission: `investigation.update`)
+- `POST /api/investigations/:investigationId/evidence/:evidenceId/media/:mediaId` - Classify watcher evidence media (permission: `investigation.update`)
+- `POST /api/investigations/:investigationId/proof-media` - Add journalist proof media (permission: `investigation.update`)
+- `POST /api/investigations/:investigationId/evidence` - Submit watcher evidence (permission: `evidence.submit`)
+- `POST /api/investigations/:investigationId/approve` - Approve investigation (permission: `investigation.approve`)
+- `POST /api/investigations/:investigationId/reject` - Reject → NEEDS_REVISION or CANCELED (permission: `investigation.reject`)
+- `POST /api/investigations/:investigationId/archive` - Archive UNVERIFIABLE investigation (permission: `investigation.archive`)
+- `POST /api/investigations/:investigationId/cancel` - Cancel investigation (permission: `investigation.cancel`)
 
 ### Publications
 
-- `GET /api/publications` - List published investigations
-- `GET /api/publications/:id` - Get publication details
-- `POST /api/publications/:id/correction` - Mark as correction (Director)
+- `GET /api/publications/` - List publications (auth required)
+- `POST /api/publications/:publicationId/corrections` - Publish a correction (permission: `publication.correct`)
 
 ### Watcher Applications
 
-- `POST /api/watcher-applications` - Apply for watcher status (Citizen)
-- `GET /api/watcher-applications` - List applications (Director)
-- `POST /api/watcher-applications/:id/approve` - Approve application (Director)
-- `POST /api/watcher-applications/:id/reject` - Reject application (Director)
+- `GET /api/watcher-applications/` - List applications (permission: `watcherApplication.decide`)
+- `POST /api/watcher-applications/` - Apply for watcher status (permission: `watcher.apply`)
+- `POST /api/watcher-applications/:applicationId/approve` - Approve application (permission: `watcherApplication.decide`)
+- `POST /api/watcher-applications/:applicationId/reject` - Reject application (permission: `watcherApplication.decide`)
 
-### User Management (Director only)
+### Journalists / User Management
 
-- `GET /api/users` - List all users
-- `POST /api/users/:id/ban` - Ban user (with reason)
-- `POST /api/users/:id/disable` - Disable user (with reason)
-- `POST /api/users/:id/activate` - Activate user
-- `GET /api/users/:id/profile` - Get user profile with engagement score
+- `GET /api/journalists/` - List journalists (permission: `journalist.manage`)
+- `POST /api/journalists/` - Create journalist account (permission: `journalist.manage`)
+- `POST /api/journalists/:journalistId/ban` - Ban journalist (permission: `journalist.manage`)
+- `POST /api/journalists/:journalistId/disable` - Disable journalist (permission: `journalist.manage`)
+- `POST /api/journalists/:journalistId/activate` - Activate journalist (permission: `journalist.manage`)
+
+### Director
+
+- `GET /api/director/dashboard` - Director dashboard stats (permission: `director.dashboard.read`)
+- `GET /api/director/citizens` - List citizens (permission: `journalist.manage`)
 
 ### Notifications
 
-- `GET /api/notifications` - List user notifications
-- `POST /api/notifications/:id/read` - Mark as read
-- `POST /api/notifications/:id/unread` - Mark as unread
-- `POST /api/notifications/read-all` - Mark all as read
+- `GET /api/notifications/` - List user notifications (permission: `notifications.read`)
+- `POST /api/notifications/:notificationId/read` - Mark as read (permission: `notifications.read`)
+- `POST /api/notifications/read-all` - Mark all as read (permission: `notifications.read`)
 
-### Inbox Subjects (Director only)
+### Health
 
-- `POST /api/inbox-subjects` - Create new subject
-- `GET /api/inbox-subjects` - List subjects
-- `POST /api/inbox-subjects/:id/archive` - Archive subject
+- `GET /health` - Health check (no auth)
 
 ### Environment var config for supabase media uploading
 
