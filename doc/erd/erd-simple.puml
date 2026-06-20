@@ -114,7 +114,8 @@ Actors ||--o{ InboxSubjects : "creates"
 Actors ||--o{ Notifications : "receives"
 Actors ||--o{ WatcherApplications : "applies"
 
-Reports ||--|| Investigations : "becomes"
+Reports ||--o| InboxSubjects : "becomes"
+InboxSubjects ||--o| Investigations : "assigned to"
 Investigations ||--o{ Evidence : "contains"
 Investigations ||--|| Publications : "produces"
 

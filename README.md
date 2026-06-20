@@ -226,6 +226,7 @@ bun run create:director
 6. Start all dev servers from the repo root:
 
 ```bash
+cd ../..
 bun run dev
 ```
 

@@ -100,7 +100,7 @@ OPEN → IN_PROGRESS → PENDING_REVIEW → PUBLISHED
 - `submitForReview()` → requires `mediaCategory` non-null
 - `approve()` → requires `draftVerdict` in `{TRUE, FALSE, MISLEADING}` (not UNVERIFIABLE)
 - `markAsArchived()` → requires `draftVerdict === UNVERIFIABLE`
-- `requestRevision()` → if `attemptCount >= MAX_CORRECTION_ATTEMPTS`, sets CANCELED instead
+- `requestRevision()` → if `attemptCount >= MAX_REVISION_ATTEMPTS`, sets CANCELED instead
 - `cancelManually()` → throws if already terminal (PUBLISHED, ARCHIVED, CANCELED)
 
 ### Evidence
