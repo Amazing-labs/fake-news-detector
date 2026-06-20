@@ -38,20 +38,22 @@ bun run lint    # ESLint
 
 ## Architecture
 
-This is a **Bun monorepo** with two workspaces:
+This is a **Bun monorepo** with the following workspace groups (declared in root `package.json`):
 - `app/server` — Hono API (DDD, Cloudflare Workers target)
 - `app/web` — React 19 SPA (TanStack Router + Query, Vite)
+- `packages/*` — Shared packages (directory exists in workspace config; currently unpopulated)
 
 ### Backend: Strict DDD Layering
 
-```
-interfaces/      ← HTTP boundary: Hono routes, controllers, presenters, Zod OpenAPI schemas, auth
-application/     ← Use-case orchestration: FactCheckingService (facade) delegates to
-                    Citizen/Journalist/Director/CorrectionWorkflowService
-domain/          ← Pure business logic: entities, value objects, repository interfaces,
-                    domain processes, domain events (no infrastructure imports)
-infrastructure/  ← Prisma repository implementations, DB config, EmailAdapter
-shared/          ← Cross-cutting: constants, types, errors, env
+```text
+app/server/src/
+  interfaces/      ← HTTP boundary: Hono routes, controllers, presenters, Zod OpenAPI schemas, auth
+  application/     ← Use-case orchestration: FactCheckingService (facade) delegates to
+                      Citizen/Journalist/Director/CorrectionWorkflowService
+  domain/          ← Pure business logic: entities, value objects, repository interfaces,
+                      domain processes, domain events (no infrastructure imports)
+  infrastructure/  ← Prisma repository implementations, DB config, EmailAdapter
+  shared/          ← Cross-cutting: constants, types, errors, env
 ```
 
 **Dependency injection** is manual: `interfaces/createAppDependencies.ts` wires all Prisma repositories into application services and controllers — no DI container. This is the single place to add new wiring.
@@ -60,18 +62,19 @@ shared/          ← Cross-cutting: constants, types, errors, env
 
 **Repository pattern:** Domain defines interfaces (`domain/repositories/I*Repository.ts`); Prisma implementations live in `infrastructure/repositories/persistence/Prisma*Repository.ts`. Application and domain code depend only on the interfaces.
 
-**Prisma schema** is modular: individual `.prisma` files per entity in `infrastructure/config/prisma/models/` are assembled by the root `schema.prisma`. After any schema change run `bun run generate` in `app/server`.
+**Prisma schema** is modular: individual `.prisma` files per entity live in `app/server/src/infrastructure/config/prisma/models/`. Prisma's `prismaSchemaFolder` preview feature assembles them with the root `app/server/src/infrastructure/config/prisma/schema.prisma` at codegen time. After any schema change run `bun run generate` in `app/server`.
 
 ### Frontend: Feature-Sliced Design (FSD)-influenced
 
-```
-routes/     ← TanStack Router file-based routes
-pages/      ← Page-level components
-features/   ← Self-contained feature forms (create-report-form, auth-form, etc.)
-entities/   ← Domain entity API calls + Zustand store models
-shared/api/ ← Base HTTP client (http.ts) and React Query client setup
-shared/ui/  ← Shadcn/UI component library (Radix + Tailwind)
-lib/        ← auth-client.ts, auth-config.ts
+```text
+app/web/src/
+  routes/     ← TanStack Router file-based routes
+  pages/      ← Page-level components
+  features/   ← Self-contained feature forms (create-report-form, auth-form, etc.)
+  entities/   ← Domain entity API calls + Zustand store models
+  shared/api/ ← Base HTTP client (http.ts) and React Query client setup
+  shared/ui/  ← Shadcn/UI component library (Radix + Tailwind)
+  lib/        ← auth-client.ts, auth-config.ts
 ```
 
 Data fetching uses **TanStack Query** for server state and **Zustand** for client state. API calls are defined in `entities/<name>/api/`.
