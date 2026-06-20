@@ -316,7 +316,28 @@ export function CitizenDashboardPage() {
 
 export function WatcherWorkspacePage() {
   return (
-    <AppLayout actor="watcher" page="reports">
+    <AppLayout actor="watcher" page="dashboard">
+      <div className="grid gap-4 md:grid-cols-3">
+        <StatCard
+          title="Enquêtes suivies"
+          value="3"
+          hint="actives"
+          icon={FileSearch}
+        />
+        <StatCard
+          title="Preuves soumises"
+          value="7"
+          hint="ce mois"
+          icon={ClipboardCheck}
+        />
+        <StatCard
+          title="Contributions acceptées"
+          value="5"
+          hint="validées"
+          icon={CheckCircle2}
+        />
+      </div>
+
       <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
         <Card>
           <CardHeader>

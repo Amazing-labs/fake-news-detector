@@ -46,9 +46,7 @@ export const navByActor: Record<Actor, string[]> = {
   watcher: [
     'Tableau de bord',
     'Vigies',
-    'Sujets',
     'Signalements',
-    'Enquêtes',
     'Publications',
     'Notifications',
     'Profil',

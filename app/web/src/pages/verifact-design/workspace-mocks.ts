@@ -6,6 +6,40 @@ export const inboxSubjects = [
     owner: 'Non assigne',
     description:
       "Rumeurs autour d'une origine djihadiste de la pénurie de carburant.",
+    media: [
+      {
+        name: 'Photo de la station vide',
+        type: 'IMAGE' as const,
+        url: '#photo-station',
+        imageUrl:
+          'https://images.unsplash.com/photo-1611689342806-0863700ce1e4?auto=format&fit=crop&w=1200&q=80',
+        alt: 'Station essence avec files d attente',
+        size: '340 Ko',
+      },
+      {
+        name: 'Capture message viral',
+        type: 'IMAGE' as const,
+        url: '#capture-message',
+        imageUrl:
+          'https://images.unsplash.com/photo-1585776245991-cf89dd7fc73a?auto=format&fit=crop&w=1200&q=80',
+        alt: 'Message circulant sur les reseaux',
+        size: '210 Ko',
+      },
+      {
+        name: 'Témoignage audio du signalant',
+        type: 'AUDIO' as const,
+        url: '#temoignage-audio',
+        audioUrl:
+          'https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3',
+        size: '512 Ko',
+      },
+      {
+        name: 'Note terrain du signalant.pdf',
+        type: 'DOCUMENT' as const,
+        url: '#note-terrain',
+        size: '128 Ko',
+      },
+    ],
   },
   {
     theme: 'Video de checkpoint',
@@ -14,6 +48,27 @@ export const inboxSubjects = [
     owner: 'Maimouna Traore',
     description:
       "Vérifier le lieu, la date et l'unité présente dans la séquence.",
+    media: [
+      {
+        name: 'Séquence checkpoint partagée',
+        type: 'VIDEO' as const,
+        url: '#sequence-checkpoint',
+        videoUrl:
+          'https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4',
+        posterUrl:
+          'https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80',
+        size: '4,2 Mo',
+      },
+      {
+        name: 'Capture localisation revendiquee',
+        type: 'IMAGE' as const,
+        url: '#capture-localisation',
+        imageUrl:
+          'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&w=1200&q=80',
+        alt: 'Lieu revendique dans la video',
+        size: '185 Ko',
+      },
+    ],
   },
   {
     theme: 'Prix du mil',
@@ -21,6 +76,23 @@ export const inboxSubjects = [
     status: 'OPEN',
     owner: 'Non assigne',
     description: 'Comparer les chiffres publies avec les releves officiels.',
+    media: [
+      {
+        name: 'Tableau des prix du marche.pdf',
+        type: 'DOCUMENT' as const,
+        url: '#tableau-prix',
+        size: '96 Ko',
+      },
+      {
+        name: 'Photo du panneau de prix',
+        type: 'IMAGE' as const,
+        url: '#photo-panneau',
+        imageUrl:
+          'https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=1200&q=80',
+        alt: 'Panneau de prix affiche au marche',
+        size: '275 Ko',
+      },
+    ],
   },
 ]
 
