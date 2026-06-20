@@ -5,6 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## Commands
 
 ### Monorepo (root)
+
 ```bash
 bun run dev          # Start all workspace dev servers in parallel
 bun run build        # Build all workspaces
@@ -15,6 +16,7 @@ bun run format:check # Prettier check only
 ```
 
 ### Server (`app/server`)
+
 ```bash
 bun run dev                # Hot-reload dev server
 bun run test               # Vitest unit tests (run from app/server for server-only tests)
@@ -28,6 +30,7 @@ bun run auth:generate      # Regenerate better-auth schema
 ```
 
 ### Web (`app/web`)
+
 ```bash
 bun run dev     # Vite dev server
 bun run build   # vite build + tsc -b typecheck
@@ -39,6 +42,7 @@ bun run lint    # ESLint
 ## Architecture
 
 This is a **Bun monorepo** with the following workspace groups (declared in root `package.json`):
+
 - `app/server` — Hono API (DDD, Cloudflare Workers target)
 - `app/web` — React 19 SPA (TanStack Router + Query, Vite)
 - `packages/*` — Shared packages (directory exists in workspace config; currently unpopulated)

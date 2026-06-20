@@ -26,27 +26,35 @@ rectangle "Fact-Checking Platform" {
     (Submit Report) as SubmitReport
     (View Profile) as ViewProfile
     (Apply for Watcher) as ApplyWatcher
-    (Submit Evidence) as SubmitEvidence
     (View Notifications) as ViewNotifications
     (View Inbox) as ViewInbox
   }
-  
+
+  ' ---------- WATCHER (citizen subtype) ----------
+  package "Watcher Features" {
+    (Submit Evidence) as SubmitEvidence
+    (View Investigations) as ViewInvestigations
+  }
+
   ' ---------- JOURNALIST ----------
   package "Journalist Features" {
-    (Analyze Report) as AnalyzeReport
+    (Pick Inbox Subject) as PickSubject
     (Write Investigation) as WriteInvestigation
     (Submit for Review) as SubmitForReview
     (Correct Investigation) as CorrectInvestigation
   }
-  
+
   ' ---------- DIRECTOR ----------
   package "Director Features" {
     (Validate Investigation) as ValidateInvestigation
     (Reject Investigation) as RejectInvestigation
+    (Archive Unverifiable) as ArchiveUnverifiable
+    (Cancel Investigation) as CancelInvestigation
     (Publish Analysis) as PublishAnalysis
     (Publish Correction) as PublishCorrection
     (Manage Users) as ManageUsers
     (Manage Watchers) as ManageWatchers
+    (Manage Inbox Subjects) as ManageInbox
     (View Dashboard) as ViewDashboard
   }
 }
@@ -59,33 +67,40 @@ rectangle "Fact-Checking Platform" {
 SubmitReport ..> Auth : <<include>>
 ViewProfile ..> Auth : <<include>>
 ApplyWatcher ..> Auth : <<include>>
-SubmitEvidence ..> Auth : <<include>>
 ViewNotifications ..> Auth : <<include>>
 ViewInbox ..> Auth : <<include>>
+SubmitEvidence ..> Auth : <<include>>
+ViewInvestigations ..> Auth : <<include>>
 
-AnalyzeReport ..> Auth : <<include>>
+PickSubject ..> Auth : <<include>>
 WriteInvestigation ..> Auth : <<include>>
 SubmitForReview ..> Auth : <<include>>
 CorrectInvestigation ..> Auth : <<include>>
 
 ValidateInvestigation ..> Auth : <<include>>
 RejectInvestigation ..> Auth : <<include>>
+ArchiveUnverifiable ..> Auth : <<include>>
+CancelInvestigation ..> Auth : <<include>>
 PublishAnalysis ..> Auth : <<include>>
 PublishCorrection ..> Auth : <<include>>
 ManageUsers ..> Auth : <<include>>
 ManageWatchers ..> Auth : <<include>>
+ManageInbox ..> Auth : <<include>>
 ViewDashboard ..> Auth : <<include>>
 
 ' Citizen associations
 Citizen --> SubmitReport
 Citizen --> ViewProfile
 Citizen --> ApplyWatcher
-Citizen --> SubmitEvidence
 Citizen --> ViewNotifications
 Citizen --> ViewInbox
 
+' Watcher associations (citizen subtype)
+Citizen --> SubmitEvidence
+Citizen --> ViewInvestigations
+
 ' Journalist associations
-Journalist --> AnalyzeReport
+Journalist --> PickSubject
 Journalist --> WriteInvestigation
 Journalist --> SubmitForReview
 Journalist --> CorrectInvestigation
@@ -93,22 +108,26 @@ Journalist --> CorrectInvestigation
 ' Director associations
 Director --> ValidateInvestigation
 Director --> RejectInvestigation
+Director --> ArchiveUnverifiable
+Director --> CancelInvestigation
 Director --> PublishAnalysis
 Director --> PublishCorrection
 Director --> ManageUsers
 Director --> ManageWatchers
+Director --> ManageInbox
 Director --> ViewDashboard
 
 ' Functional dependencies
-AnalyzeReport ..> SubmitReport : <<include>>
-WriteInvestigation ..> AnalyzeReport : <<include>>
+WriteInvestigation ..> PickSubject : <<include>>
 SubmitForReview ..> WriteInvestigation : <<include>>
 CorrectInvestigation ..> SubmitForReview : <<extend>>
 
 ValidateInvestigation ..> SubmitForReview : <<include>>
 RejectInvestigation ..> SubmitForReview : <<extend>>
 PublishAnalysis ..> ValidateInvestigation : <<include>>
+ArchiveUnverifiable ..> SubmitForReview : <<extend>>
+CancelInvestigation ..> WriteInvestigation : <<extend>>
 
-SubmitEvidence ..> WriteInvestigation : <<include>>
+SubmitEvidence ..> ViewInvestigations : <<include>>
 
 @enduml
