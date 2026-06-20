@@ -123,6 +123,9 @@ export function getFrontendBypassAccountById(
   return FRONTEND_BYPASS_ACCOUNTS.find((account) => account.id === accountId)
 }
 
+let cachedSession: AppSession | null = null
+let cachedRawValue: string | null = null
+
 export function readFrontendBypassSession(): AppSession | null {
   if (!FRONTEND_AUTH_BYPASS_ENABLED || typeof window === 'undefined') {
     return null
@@ -130,13 +133,24 @@ export function readFrontendBypassSession(): AppSession | null {
 
   const rawValue = window.localStorage.getItem(FRONTEND_AUTH_BYPASS_STORAGE_KEY)
   if (!rawValue) {
+    cachedSession = null
+    cachedRawValue = null
     return null
   }
 
+  // Return cached session if raw value hasn't changed
+  if (rawValue === cachedRawValue && cachedSession) {
+    return cachedSession
+  }
+
   try {
-    return JSON.parse(rawValue) as AppSession
+    cachedSession = JSON.parse(rawValue) as AppSession
+    cachedRawValue = rawValue
+    return cachedSession
   } catch {
     window.localStorage.removeItem(FRONTEND_AUTH_BYPASS_STORAGE_KEY)
+    cachedSession = null
+    cachedRawValue = null
     return null
   }
 }
@@ -153,10 +167,16 @@ export function activateFrontendBypassAccount(
     return null
   }
 
+  const sessionString = JSON.stringify(account.session)
   window.localStorage.setItem(
     FRONTEND_AUTH_BYPASS_STORAGE_KEY,
-    JSON.stringify(account.session),
+    sessionString,
   )
+  
+  // Update cache
+  cachedSession = account.session
+  cachedRawValue = sessionString
+  
   notifyFrontendBypassSessionChanged()
   return account.session
 }
@@ -167,6 +187,11 @@ export function clearFrontendBypassSession(): void {
   }
 
   window.localStorage.removeItem(FRONTEND_AUTH_BYPASS_STORAGE_KEY)
+  
+  // Clear cache
+  cachedSession = null
+  cachedRawValue = null
+  
   notifyFrontendBypassSessionChanged()
 }
 
