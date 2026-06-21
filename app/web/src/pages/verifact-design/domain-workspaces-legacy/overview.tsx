@@ -12,7 +12,6 @@ import { Badge } from '../../../shared/ui/shadcn/badge'
 import { Button } from '../../../shared/ui/shadcn/button'
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -21,10 +20,16 @@ import {
 import { Input } from '../../../shared/ui/shadcn/input'
 import { Label } from '../../../shared/ui/shadcn/label'
 import { Textarea } from '../../../shared/ui/shadcn/textarea'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '../../../shared/ui/shadcn/tabs'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { domainLabel } from '../workspace-labels'
-import { StatCard, StatusBadge } from '../workspace-ui'
+import { MetaCell, StatCard, StatusBadge } from '../workspace-ui'
 import {
   CitizenReportCreateWorkspacePage as CitizenReportCreateWorkspace,
   CitizenWorkspacePage as CitizenWorkspace,
@@ -168,50 +173,60 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
 
   return (
     <AppLayout actor={actor} page="reports">
+      {/* Header card */}
       <Card>
         <CardHeader>
-          <CardTitle>{report.title}</CardTitle>
-          <CardDescription>
-            Historique du signalement et suivi éditorial.
-          </CardDescription>
-          <CardAction>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-lg font-semibold">{report.title}</h1>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Historique du signalement et suivi éditorial.
+              </p>
+            </div>
             <StatusBadge status={report.status} />
-          </CardAction>
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <MetaCell label="Thème" value={report.theme} />
+            <MetaCell label="Source" value={report.reporter} />
+            <MetaCell label="Dernière mise à jour" value="16 mai 2026" />
+          </div>
         </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid gap-3 md:grid-cols-3">
-            <div className="rounded-lg border p-4">
-              <p className="text-muted-foreground text-xs font-medium uppercase">
-                Theme
-              </p>
-              <p className="mt-1 font-medium">{report.theme}</p>
-            </div>
-            <div className="rounded-lg border p-4">
-              <p className="text-muted-foreground text-xs font-medium uppercase">
-                Source
-              </p>
-              <p className="mt-1 font-medium">{report.reporter}</p>
-            </div>
-            <div className="rounded-lg border p-4">
-              <p className="text-muted-foreground text-xs font-medium uppercase">
-                Derniere mise a jour
-              </p>
-              <p className="mt-1 font-medium">16 mai 2026</p>
-            </div>
-          </div>
+      </Card>
 
-          <div className="rounded-lg border p-4">
-            <p className="font-medium">Rumeur transmise</p>
-            <p className="text-muted-foreground mt-2 text-sm">
-              {report.content}
-            </p>
-          </div>
+      {/* Tabs */}
+      <Tabs defaultValue="content">
+        <TabsList>
+          <TabsTrigger value="content">Contenu</TabsTrigger>
+          <TabsTrigger value="tracking">Suivi</TabsTrigger>
+        </TabsList>
 
-          <div className="rounded-lg border p-4">
-            <p className="font-medium">Suivi du desk</p>
-            <div className="mt-4 grid gap-3">
+        <TabsContent value="content" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Rumeur transmise</CardTitle>
+              <CardDescription>
+                Le texte exact soumis par le citoyen au moment du signalement.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {report.content}
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="tracking" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Suivi du desk</CardTitle>
+              <CardDescription>
+                Étapes de traitement depuis la réception jusqu'au retour.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-4">
               {[
-                ['Reception', 'Signalement recu et conserve dans le desk.'],
+                ['Réception', 'Signalement reçu et conservé dans le desk.'],
                 [
                   'Qualification',
                   'Le desk vérifie si un sujet doit être ouvert.',
@@ -222,17 +237,17 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
                 ],
               ].map(([title, body]) => (
                 <div key={title} className="flex gap-3">
-                  <CheckCircle2 className="text-muted-foreground mt-0.5 size-4" />
+                  <CheckCircle2 className="text-muted-foreground mt-0.5 size-4 shrink-0" />
                   <div>
                     <p className="text-sm font-medium">{title}</p>
                     <p className="text-muted-foreground text-sm">{body}</p>
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </AppLayout>
   )
 }

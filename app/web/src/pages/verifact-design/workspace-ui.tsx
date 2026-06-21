@@ -60,6 +60,17 @@ export function StatusBadge({
   )
 }
 
+export function MetaCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border p-3">
+      <p className="text-muted-foreground text-xs font-medium uppercase">
+        {label}
+      </p>
+      <p className="mt-1 font-medium">{value}</p>
+    </div>
+  )
+}
+
 export function StatCard(props: {
   title: string
   value: string

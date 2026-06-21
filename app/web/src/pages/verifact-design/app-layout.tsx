@@ -1,6 +1,16 @@
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
-import { Moon, Search, ShieldCheck, Sun } from 'lucide-react'
-import type { ReactNode } from 'react'
+import {
+  AlertTriangle,
+  Archive,
+  Bell,
+  Moon,
+  Newspaper,
+  RotateCcw,
+  Search,
+  ShieldCheck,
+  Sun,
+} from 'lucide-react'
+import type { ComponentType, ReactNode } from 'react'
 import { useLayoutEffect, useRef } from 'react'
 import { signOutAppSession, useAppSession } from '../../entities/session/model'
 import { cn } from '../../shared/lib/utils'
@@ -12,8 +22,14 @@ import {
 import { Badge } from '../../shared/ui/shadcn/badge'
 import { Button } from '../../shared/ui/shadcn/button'
 import { Input } from '../../shared/ui/shadcn/input'
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from '../../shared/ui/shadcn/hover-card'
 import { Separator } from '../../shared/ui/shadcn/separator'
 import { actorLabels, navByActor, navItems } from './data'
+import { notificationItems } from './workspace-mocks'
 import {
   actorFromSession,
   inferActor,
@@ -24,6 +40,94 @@ import { useTheme } from './theme'
 import type { Actor, PageKind } from './types'
 
 let tabletNavScrollLeft = 0
+
+const NOTIF_ICONS: Record<
+  (typeof notificationItems)[number]['type'],
+  ComponentType<{ className?: string }>
+> = {
+  PUBLICATION: Newspaper,
+  CORRECTION: RotateCcw,
+  ALERT: AlertTriangle,
+  ARCHIVED_PUBLICATION: Archive,
+}
+
+function NotificationPopover({ unreadCount }: { unreadCount: number }) {
+  return (
+    <HoverCard openDelay={150} closeDelay={250}>
+      <HoverCardTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label="Notifications">
+          <span className="relative">
+            <Bell className="size-4" />
+            {unreadCount > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 flex size-3">
+                <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive opacity-60" />
+                <span className="relative inline-flex size-3 items-center justify-center rounded-full bg-destructive text-[8px] font-bold text-white">
+                  {unreadCount}
+                </span>
+              </span>
+            )}
+          </span>
+        </Button>
+      </HoverCardTrigger>
+      <HoverCardContent align="end" className="w-[380px] p-0">
+        {/* Header */}
+        <div className="flex items-center gap-2 px-4 py-3">
+          <span className="text-sm font-semibold">Notifications</span>
+          {unreadCount > 0 && (
+            <Badge variant="secondary" className="h-5 px-1.5 text-xs">
+              {unreadCount} non lues
+            </Badge>
+          )}
+        </div>
+        <Separator />
+        {/* Notification rows */}
+        <div className="max-h-[340px] overflow-y-auto">
+          {notificationItems.map((item) => {
+            const Icon = NOTIF_ICONS[item.type]
+            return (
+              <Link
+                key={item.id}
+                to="/notifications/$notificationId"
+                params={{ notificationId: item.id }}
+                className={cn(
+                  'hover:bg-muted/60 flex items-start gap-3 px-4 py-3 transition-colors',
+                  !item.isRead && 'bg-primary/5',
+                )}
+              >
+                <div
+                  className={cn(
+                    'bg-muted mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full',
+                    !item.isRead && 'bg-primary/10 text-primary',
+                  )}
+                >
+                  <Icon className="size-3.5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    {!item.isRead && (
+                      <span className="bg-primary size-1.5 shrink-0 rounded-full" />
+                    )}
+                    <p className="truncate text-sm font-medium">{item.theme}</p>
+                  </div>
+                  <p className="text-muted-foreground mt-0.5 line-clamp-2 text-xs">
+                    {item.message}
+                  </p>
+                </div>
+              </Link>
+            )
+          })}
+        </div>
+        <Separator />
+        {/* Footer */}
+        <div className="px-4 py-2">
+          <Button variant="ghost" size="sm" className="w-full text-xs" asChild>
+            <Link to="/notifications">Voir toutes les notifications</Link>
+          </Button>
+        </div>
+      </HoverCardContent>
+    </HoverCard>
+  )
+}
 
 export function AppLayout(props: {
   actor?: Actor
@@ -42,6 +146,7 @@ export function AppLayout(props: {
   const visibleNavItems = navItems.filter((item) =>
     navByActor[actor].includes(item.label),
   )
+  const unreadCount = notificationItems.filter((n) => !n.isRead).length
 
   async function handleSignOut() {
     await signOutAppSession()
@@ -146,6 +251,7 @@ export function AppLayout(props: {
             <Badge variant="outline" className="ml-auto hidden sm:inline-flex">
               {roleLabel}
             </Badge>
+            <NotificationPopover unreadCount={unreadCount} />
             <Button
               variant="ghost"
               size="icon"

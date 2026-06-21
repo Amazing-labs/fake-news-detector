@@ -9,12 +9,10 @@ import {
   RotateCcw,
 } from 'lucide-react'
 import { useState } from 'react'
-import { cn } from '../../../shared/lib/utils'
 import { Badge } from '../../../shared/ui/shadcn/badge'
 import { Button } from '../../../shared/ui/shadcn/button'
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -22,49 +20,95 @@ import {
 } from '../../../shared/ui/shadcn/card'
 import { Label } from '../../../shared/ui/shadcn/label'
 import { Textarea } from '../../../shared/ui/shadcn/textarea'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '../../../shared/ui/shadcn/tabs'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { domainLabel } from '../workspace-labels'
+import { MetaCell } from '../workspace-ui'
 import { publications } from '../workspace-mocks'
 import { slugifyLabel } from './utils'
 
+// ── Publications list ──────────────────────────────────────────────────────────
+
 export function PublicationsWorkspacePage() {
   const { actor } = useResolvedActor('director')
-  const canManagePublications = actor === 'director' || actor === 'admin'
+  const canManage = actor === 'director' || actor === 'admin'
+
+  const mainItems = publications.filter((item) => item.type !== 'Correctif')
+  const correctionItems = publications.filter((item) => item.type === 'Correctif')
 
   return (
     <AppLayout actor={actor} page="publications">
-      <Card>
-        <CardHeader>
-          <CardTitle>Publications et correctifs</CardTitle>
-          <CardDescription>
-            Chaque publication conserve son verdict final et ses preuves.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-3">
-          {publications.map((item) => {
-            const publicationId = slugifyLabel(item.title)
+      <Tabs defaultValue="all">
+        <TabsList>
+          <TabsTrigger value="all">
+            Toutes ({publications.length})
+          </TabsTrigger>
+          <TabsTrigger value="publications">
+            Publications ({mainItems.length})
+          </TabsTrigger>
+          <TabsTrigger value="corrections">
+            Correctifs ({correctionItems.length})
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="all" className="mt-4">
+          <PublicationList items={publications} canManage={canManage} />
+        </TabsContent>
+        <TabsContent value="publications" className="mt-4">
+          <PublicationList items={mainItems} canManage={canManage} />
+        </TabsContent>
+        <TabsContent value="corrections" className="mt-4">
+          <PublicationList items={correctionItems} canManage={canManage} />
+        </TabsContent>
+      </Tabs>
+    </AppLayout>
+  )
+}
 
+function PublicationList({
+  items,
+  canManage,
+}: {
+  items: (typeof publications)[number][]
+  canManage: boolean
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Publications et correctifs</CardTitle>
+        <CardDescription>
+          Chaque publication conserve son verdict final et ses preuves.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-3">
+        {items.length ? (
+          items.map((item) => {
+            const publicationId = slugifyLabel(item.title)
             return (
               <div
                 key={item.title}
                 className="grid gap-3 rounded-lg border p-4 sm:grid-cols-[1fr_auto] sm:items-start"
               >
                 <div className="min-w-0">
-                  <p className="font-medium">{item.title}</p>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-medium">{item.title}</p>
+                    <Badge
+                      variant={item.type === 'Correctif' ? 'secondary' : 'outline'}
+                    >
+                      {domainLabel(item.type)}
+                    </Badge>
+                  </div>
                   <p className="text-muted-foreground mt-2 text-sm">
-                    Verdict: {domainLabel(item.verdict)} / {item.evidence}
+                    Verdict : {domainLabel(item.verdict)} · {item.evidence}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 sm:justify-end">
-                  <Badge
-                    variant={
-                      item.type === 'Correctif' ? 'secondary' : 'outline'
-                    }
-                  >
-                    {domainLabel(item.type)}
-                  </Badge>
-                  {canManagePublications ? (
+                  {canManage && (
                     <Button size="sm" variant="outline" asChild>
                       <Link
                         to="/publications/corrections"
@@ -74,7 +118,7 @@ export function PublicationsWorkspacePage() {
                         Correctif
                       </Link>
                     </Button>
-                  ) : null}
+                  )}
                   <Button
                     variant="ghost"
                     size="icon"
@@ -84,7 +128,7 @@ export function PublicationsWorkspacePage() {
                     <Link
                       to="/publications/$publicationId"
                       params={{ publicationId }}
-                      aria-label={`Voir le detail de ${item.title}`}
+                      aria-label={`Voir le détail de ${item.title}`}
                     >
                       <ExternalLink />
                     </Link>
@@ -92,12 +136,21 @@ export function PublicationsWorkspacePage() {
                 </div>
               </div>
             )
-          })}
-        </CardContent>
-      </Card>
-    </AppLayout>
+          })
+        ) : (
+          <div className="rounded-lg border border-dashed p-8 text-center">
+            <p className="font-medium">Aucune publication ici</p>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Les publications apparaîtront ici une fois validées.
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
+
+// ── Publication detail ─────────────────────────────────────────────────────────
 
 export function PublicationDetailWorkspacePage({
   publicationId,
@@ -108,285 +161,309 @@ export function PublicationDetailWorkspacePage({
     publications.find((item) => slugifyLabel(item.title) === publicationId) ??
     publications[0]
   const { actor } = useResolvedActor('director')
-  const canManagePublication = actor === 'director' || actor === 'admin'
+  const canManage = actor === 'director' || actor === 'admin'
 
-  if (!publication) {
-    return null
-  }
+  if (!publication) return null
+
+  const linkCount = publication.verifiedLinks.length
+  const mediaCount = publication.verifiedMedia.length
+  const docCount = publication.finalDocuments.length
 
   return (
     <AppLayout actor={actor} page="publications">
-      <div
-        className={cn(
-          'grid gap-6',
-          canManagePublication && 'lg:grid-cols-[1fr_320px]',
-        )}
-      >
-        <Card>
-          <CardHeader>
-            <CardTitle>{publication.title}</CardTitle>
-            <CardDescription>
-              {actor === 'citizen'
-                ? 'Synthèse publique du verdict et des preuves disponibles.'
-                : 'Verdict final, preuves conservees et type de publication.'}
-            </CardDescription>
-            <CardAction>
+      {/* Header card — all roles */}
+      <Card>
+        <CardHeader>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-lg font-semibold">{publication.title}</h1>
+              <p className="text-muted-foreground mt-1 text-sm">
+                {actor === 'citizen'
+                  ? 'Synthèse publique du verdict et des preuves disponibles.'
+                  : 'Verdict final, preuves conservées et type de publication.'}
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
               <Badge
-                variant={
-                  publication.type === 'Correctif' ? 'secondary' : 'outline'
-                }
+                variant={publication.type === 'Correctif' ? 'secondary' : 'outline'}
               >
                 {domainLabel(publication.type)}
               </Badge>
-            </CardAction>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            <div className="grid gap-3 rounded-lg border p-4 sm:grid-cols-2">
-              <div>
-                <p className="text-muted-foreground text-xs font-medium uppercase">
-                  Verdict
-                </p>
-                <p className="mt-1 font-medium">
-                  {domainLabel(publication.verdict)}
-                </p>
-              </div>
-              <div>
-                <p className="text-muted-foreground text-xs font-medium uppercase">
-                  Preuves
-                </p>
-                <p className="mt-1 font-medium">{publication.evidence}</p>
-              </div>
+              {canManage && (
+                <Button size="sm" asChild>
+                  <Link
+                    to="/publications/corrections"
+                    search={{ publicationId: publicationId ?? undefined }}
+                  >
+                    <RotateCcw />
+                    Créer un correctif
+                  </Link>
+                </Button>
+              )}
             </div>
-            <div className="rounded-lg border p-4">
-              <p className="font-medium">
-                {actor === 'citizen'
-                  ? "Résumé de l'enquête"
-                  : 'Trace editoriale'}
-              </p>
-              <p className="text-muted-foreground mt-2 text-sm">
-                {actor === 'citizen'
-                  ? publication.summary
-                  : 'La publication garde le verdict, les sources utilisées et les corrections rattachées pour rester consultable par la rédaction.'}
-              </p>
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <MetaCell label="Verdict" value={domainLabel(publication.verdict)} />
+            <MetaCell label="Preuves" value={publication.evidence} />
+          </div>
+        </CardHeader>
+      </Card>
+
+      {/* Citizen: rich tabbed view */}
+      {actor === 'citizen' ? (
+        <Tabs defaultValue="summary">
+          <TabsList>
+            <TabsTrigger value="summary">Synthèse</TabsTrigger>
+            <TabsTrigger value="sources">
+              Sources ({linkCount + docCount})
+            </TabsTrigger>
+            <TabsTrigger value="media">Médias ({mediaCount})</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="summary" className="mt-4">
+            <div className="grid gap-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">
+                    Résumé de l'enquête
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground text-sm leading-relaxed">
+                    {publication.summary}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="pt-4">
+                  <p className="text-sm font-medium">Pour aller plus loin</p>
+                  <p className="text-muted-foreground mt-2 text-sm">
+                    Si une information semble incomplète, tu peux créer un
+                    nouveau signalement depuis la page Signalements. La rédaction
+                    l'examinera comme une nouvelle alerte.
+                  </p>
+                  <Button className="mt-4 w-fit" variant="outline" asChild>
+                    <Link to="/reports/create">Faire un signalement</Link>
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
-            {actor === 'citizen' ? (
-              <>
-                <div className="rounded-lg border p-4">
-                  <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <p className="font-medium">Liens verifies</p>
-                      <p className="text-muted-foreground mt-1 text-sm">
-                        Ouvre les sources et compare-les avec le resume avant de
-                        partager la publication.
-                      </p>
-                    </div>
-                    <Badge variant="outline" className="w-fit">
-                      {publication.verifiedLinks.length} lien
-                      {publication.verifiedLinks.length > 1 ? 's' : ''}
-                    </Badge>
-                  </div>
-                  <div className="mt-4 grid gap-3">
-                    {publication.verifiedLinks.length ? (
-                      publication.verifiedLinks.map((source) => (
+          </TabsContent>
+
+          <TabsContent value="sources" className="mt-4">
+            <div className="grid gap-4">
+              {linkCount > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">
+                      Liens vérifiés
+                    </CardTitle>
+                    <CardDescription>
+                      Ouvre les sources et compare-les avec le résumé avant de
+                      partager la publication.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid gap-3">
+                    {publication.verifiedLinks.map((source) => (
+                      <a
+                        key={source.label}
+                        href={source.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="hover:bg-muted/40 flex items-start gap-3 rounded-lg border p-3 transition-colors"
+                      >
+                        <Link2 className="text-muted-foreground mt-0.5 size-4 shrink-0" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block font-medium">
+                            {source.label}
+                          </span>
+                          <span className="text-muted-foreground mt-1 block text-sm">
+                            {source.description}
+                          </span>
+                        </span>
+                        <ExternalLink className="text-muted-foreground size-4 shrink-0" />
+                      </a>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {docCount > 0 && (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">
+                      Documents finaux
+                    </CardTitle>
+                    <CardDescription>
+                      Pièces conservées avec la publication finale.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid gap-3">
+                    {publication.finalDocuments.map((document) => (
+                      <a
+                        key={document.name}
+                        href={document.url}
+                        download
+                        className="hover:bg-muted/40 flex items-center gap-3 rounded-lg border p-3 transition-colors"
+                      >
+                        <FileText className="text-muted-foreground size-4 shrink-0" />
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-medium">
+                            {document.name}
+                          </span>
+                          <span className="text-muted-foreground text-sm">
+                            {document.type} / {document.size}
+                          </span>
+                        </span>
+                        <Download className="text-muted-foreground size-4 shrink-0" />
+                      </a>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              {linkCount === 0 && docCount === 0 && (
+                <div className="rounded-lg border border-dashed p-8 text-center">
+                  <p className="font-medium">Aucune source attachée</p>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    Les sources seront disponibles une fois la publication
+                    complète.
+                  </p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="media" className="mt-4">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Médias vérifiés</CardTitle>
+                <CardDescription>
+                  Médias retenus ou comparés pendant la vérification.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {mediaCount > 0 ? (
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    {publication.verifiedMedia.map((media) => {
+                      if (media.type === 'Image') {
+                        return (
+                          <figure
+                            key={media.name}
+                            className="bg-card overflow-hidden rounded-lg border"
+                          >
+                            <img
+                              src={media.imageUrl}
+                              alt={media.alt ?? media.name}
+                              className="aspect-video w-full object-cover"
+                              loading="lazy"
+                            />
+                            <figcaption className="flex items-center justify-between gap-3 p-3">
+                              <span>
+                                <span className="block font-medium">
+                                  {media.name}
+                                </span>
+                                <span className="text-muted-foreground text-sm">
+                                  Image de référence Unsplash
+                                </span>
+                              </span>
+                              <a
+                                href={media.url}
+                                className="text-muted-foreground hover:text-foreground shrink-0"
+                                aria-label={`Ouvrir ${media.name}`}
+                              >
+                                <ExternalLink className="size-4" />
+                              </a>
+                            </figcaption>
+                          </figure>
+                        )
+                      }
+
+                      if (media.type === 'Video') {
+                        return (
+                          <div
+                            key={media.name}
+                            className="bg-card overflow-hidden rounded-lg border"
+                          >
+                            <video
+                              controls
+                              preload="metadata"
+                              poster={media.posterUrl}
+                              className="aspect-video w-full bg-black object-cover"
+                            >
+                              <source src={media.videoUrl} type="video/mp4" />
+                              Ton navigateur ne peut pas lire cette vidéo.
+                            </video>
+                            <div className="flex items-center justify-between gap-3 p-3">
+                              <span>
+                                <span className="block font-medium">
+                                  {media.name}
+                                </span>
+                                <span className="text-muted-foreground text-sm">
+                                  Extrait comparé pendant la vérification
+                                </span>
+                              </span>
+                              <Play className="text-muted-foreground size-4 shrink-0" />
+                            </div>
+                          </div>
+                        )
+                      }
+
+                      return (
                         <a
-                          key={source.label}
-                          href={source.url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="hover:bg-muted/40 flex items-start gap-3 rounded-lg border p-3 transition-colors"
+                          key={media.name}
+                          href={media.url}
+                          className="hover:bg-muted/40 flex items-center gap-3 rounded-lg border p-3 transition-colors"
                         >
-                          <Link2 className="text-muted-foreground mt-0.5 size-4 shrink-0" />
+                          <FileSearch className="text-muted-foreground size-4 shrink-0" />
                           <span className="min-w-0 flex-1">
-                            <span className="block font-medium">
-                              {source.label}
+                            <span className="block truncate font-medium">
+                              {media.name}
                             </span>
-                            <span className="text-muted-foreground mt-1 block text-sm">
-                              {source.description}
+                            <span className="text-muted-foreground text-sm">
+                              {media.type}
                             </span>
                           </span>
                           <ExternalLink className="text-muted-foreground size-4 shrink-0" />
                         </a>
-                      ))
-                    ) : (
-                      <p className="text-muted-foreground rounded-lg border border-dashed p-3 text-sm">
-                        Aucun lien public n'a ete attache a cette publication.
-                      </p>
-                    )}
+                      )
+                    })}
                   </div>
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <div className="rounded-lg border p-4">
-                    <p className="font-medium">Documents finaux</p>
+                ) : (
+                  <div className="rounded-lg border border-dashed p-8 text-center">
+                    <p className="font-medium">Aucun média joint</p>
                     <p className="text-muted-foreground mt-1 text-sm">
-                      Pièces conservées avec la publication finale.
+                      Les médias seront disponibles une fois la publication
+                      complète.
                     </p>
-                    <div className="mt-4 grid gap-3">
-                      {publication.finalDocuments.map((document) => (
-                        <a
-                          key={document.name}
-                          href={document.url}
-                          download
-                          className="hover:bg-muted/40 flex items-center gap-3 rounded-lg border p-3 transition-colors"
-                        >
-                          <FileText className="text-muted-foreground size-4 shrink-0" />
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate font-medium">
-                              {document.name}
-                            </span>
-                            <span className="text-muted-foreground text-sm">
-                              {document.type} / {document.size}
-                            </span>
-                          </span>
-                          <Download className="text-muted-foreground size-4 shrink-0" />
-                        </a>
-                      ))}
-                    </div>
                   </div>
-
-                  <div className="rounded-lg border p-4">
-                    <p className="font-medium">Médias vérifiés</p>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                      Médias retenus ou comparés pendant la vérification.
-                    </p>
-                    <div className="mt-4 grid gap-3">
-                      {publication.verifiedMedia.length ? (
-                        publication.verifiedMedia.map((media) => {
-                          if (media.type === 'Image') {
-                            return (
-                              <figure
-                                key={media.name}
-                                className="bg-card overflow-hidden rounded-lg border"
-                              >
-                                <img
-                                  src={media.imageUrl}
-                                  alt={media.alt ?? media.name}
-                                  className="aspect-video w-full object-cover"
-                                  loading="lazy"
-                                />
-                                <figcaption className="flex items-center justify-between gap-3 p-3">
-                                  <span>
-                                    <span className="block font-medium">
-                                      {media.name}
-                                    </span>
-                                    <span className="text-muted-foreground text-sm">
-                                      Image de reference Unsplash
-                                    </span>
-                                  </span>
-                                  <a
-                                    href={media.url}
-                                    className="text-muted-foreground hover:text-foreground shrink-0"
-                                    aria-label={`Ouvrir ${media.name}`}
-                                  >
-                                    <ExternalLink className="size-4" />
-                                  </a>
-                                </figcaption>
-                              </figure>
-                            )
-                          }
-
-                          if (media.type === 'Video') {
-                            return (
-                              <div
-                                key={media.name}
-                                className="bg-card overflow-hidden rounded-lg border"
-                              >
-                                <video
-                                  controls
-                                  preload="metadata"
-                                  poster={media.posterUrl}
-                                  className="aspect-video w-full bg-black object-cover"
-                                >
-                                  <source
-                                    src={media.videoUrl}
-                                    type="video/mp4"
-                                  />
-                                  Ton navigateur ne peut pas lire cette video.
-                                </video>
-                                <div className="flex items-center justify-between gap-3 p-3">
-                                  <span>
-                                    <span className="block font-medium">
-                                      {media.name}
-                                    </span>
-                                    <span className="text-muted-foreground text-sm">
-                                      Extrait compare pendant la verification
-                                    </span>
-                                  </span>
-                                  <Play className="text-muted-foreground size-4 shrink-0" />
-                                </div>
-                              </div>
-                            )
-                          }
-
-                          return (
-                            <a
-                              key={media.name}
-                              href={media.url}
-                              className="hover:bg-muted/40 flex items-center gap-3 rounded-lg border p-3 transition-colors"
-                            >
-                              <FileSearch className="text-muted-foreground size-4 shrink-0" />
-                              <span className="min-w-0 flex-1">
-                                <span className="block truncate font-medium">
-                                  {media.name}
-                                </span>
-                                <span className="text-muted-foreground text-sm">
-                                  {media.type}
-                                </span>
-                              </span>
-                              <ExternalLink className="text-muted-foreground size-4 shrink-0" />
-                            </a>
-                          )
-                        })
-                      ) : (
-                        <p className="text-muted-foreground rounded-lg border border-dashed p-3 text-sm">
-                          Aucun média final n'a été joint à cette publication.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </>
-            ) : null}
-            {actor === 'citizen' ? (
-              <div className="rounded-lg border p-4">
-                <p className="font-medium">Pour aller plus loin</p>
-                <p className="text-muted-foreground mt-2 text-sm">
-                  Si une information semble incomplete, tu peux creer un nouveau
-                  signalement depuis la page Signalements. La rédaction
-                  l'examinera comme une nouvelle alerte.
-                </p>
-              </div>
-            ) : null}
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      ) : (
+        /* Director/admin: trace éditoriale */
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Trace éditoriale</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              La publication garde le verdict, les sources utilisées et les
+              corrections rattachées pour rester consultable par la rédaction.
+            </p>
+            <Button className="mt-4 w-fit" variant="outline" asChild>
+              <Link to="/publications/list">Retour aux publications</Link>
+            </Button>
           </CardContent>
         </Card>
-        {canManagePublication ? (
-          <Card>
-            <CardHeader>
-              <CardTitle>Actions</CardTitle>
-              <CardDescription>
-                Corriger la publication sans modifier le verdict original.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-3">
-              <Button asChild>
-                <Link
-                  to="/publications/corrections"
-                  search={{ publicationId: publicationId ?? undefined }}
-                >
-                  <RotateCcw />
-                  Créer un correctif
-                </Link>
-              </Button>
-              <Button variant="outline" asChild>
-                <Link to="/publications/list">Retour aux publications</Link>
-              </Button>
-            </CardContent>
-          </Card>
-        ) : null}
-      </div>
+      )}
     </AppLayout>
   )
 }
+
+// ── Corrections form ───────────────────────────────────────────────────────────
 
 export function PublicationCorrectionsWorkspacePage({
   publicationId,
@@ -414,7 +491,7 @@ export function PublicationCorrectionsWorkspacePage({
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
-          {!isPublicationLocked ? (
+          {!isPublicationLocked && (
             <Label className="grid gap-2">
               Publication cible
               <select
@@ -434,17 +511,14 @@ export function PublicationCorrectionsWorkspacePage({
                 })}
               </select>
             </Label>
-          ) : null}
+          )}
           {publication ? (
-            <div className="rounded-lg border p-4">
-              <p className="text-muted-foreground text-xs font-medium uppercase">
-                Publication cible
-              </p>
-              <p className="mt-1 font-medium">{publication.title}</p>
-              <p className="text-muted-foreground mt-2 text-sm">
-                Verdict: {domainLabel(publication.verdict)} /{' '}
-                {publication.evidence}
-              </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <MetaCell label="Publication cible" value={publication.title} />
+              <MetaCell
+                label="Verdict"
+                value={`${domainLabel(publication.verdict)} · ${publication.evidence}`}
+              />
             </div>
           ) : (
             <div className="rounded-lg border border-dashed p-4">

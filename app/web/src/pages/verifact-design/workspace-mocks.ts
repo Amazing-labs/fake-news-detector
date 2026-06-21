@@ -157,6 +157,45 @@ export const investigations = [
   },
 ]
 
+export const notificationItems = [
+  {
+    id: 'publication-disponible',
+    type: 'PUBLICATION',
+    theme: 'Publication disponible',
+    message: 'Le dossier checkpoint est maintenant publié avec son verdict.',
+    isRead: false,
+    publicationId: 'la-video-du-checkpoint-date-de-2022',
+    investigationId: null,
+  },
+  {
+    id: 'correctif-publie',
+    type: 'CORRECTION',
+    theme: 'Correctif publié',
+    message: 'Une publication a été corrigée après nouvelle validation.',
+    isRead: false,
+    publicationId: 'correction-sur-le-prix-du-mil',
+    investigationId: null,
+  },
+  {
+    id: 'dossier-archive',
+    type: 'ARCHIVED_PUBLICATION',
+    theme: 'Dossier archivé',
+    message: 'Une enquête non vérifiable a été archivée par la direction.',
+    isRead: true,
+    publicationId: null,
+    investigationId: 'crise-essence',
+  },
+  {
+    id: 'action-requise',
+    type: 'ALERT',
+    theme: 'Action requise',
+    message: 'Une preuve ou une révision attend ton intervention.',
+    isRead: true,
+    publicationId: null,
+    investigationId: null,
+  },
+] as const
+
 export const publications = [
   {
     title: 'La video du checkpoint date de 2022',

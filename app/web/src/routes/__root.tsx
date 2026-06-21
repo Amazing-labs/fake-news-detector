@@ -3,6 +3,7 @@ import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { AppShell } from '../widgets/app-shell/app-shell'
 import { useAppSession } from '../entities/session/model'
 import { NotFoundPage } from '../pages/verifact-design/verifact-design-page'
+import { RouteProgressBar } from '../shared/ui/loader'
 import { Toaster } from 'sonner'
 
 export const Route = createRootRoute({
@@ -15,6 +16,7 @@ function RootLayout() {
 
   return (
     <>
+      <RouteProgressBar />
       <AppShell session={session} isPending={isPending}>
         <Outlet />
       </AppShell>
