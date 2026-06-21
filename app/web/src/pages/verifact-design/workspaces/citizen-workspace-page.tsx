@@ -1,10 +1,10 @@
 import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
 import { FilePlus2 } from 'lucide-react'
-import { listReports, reportQueryKeys } from '../../../entities/report/api'
-import { CreateReportForm } from '../../../features/reports/create-report-form'
-import { toApiErrorMessage } from '../../../shared/api/http'
-import { Button } from '../../../shared/ui/shadcn/button'
+import { listReports, reportQueryKeys } from '@entities/report/api'
+import { CreateReportForm } from '@features/reports/create-report-form'
+import { toApiErrorMessage } from '@shared/api/http'
+import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
   CardAction,
@@ -12,7 +12,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../shared/ui/shadcn/card'
+} from '@shared/ui/shadcn/card'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { StatusBadge } from '../workspace-ui'

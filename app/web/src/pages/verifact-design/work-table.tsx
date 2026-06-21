@@ -1,8 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import { ExternalLink } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Badge } from '../../shared/ui/shadcn/badge'
-import { Button } from '../../shared/ui/shadcn/button'
+import { Badge } from '@shared/ui/shadcn/badge'
+import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
   CardAction,
@@ -10,7 +10,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../shared/ui/shadcn/card'
+} from '@shared/ui/shadcn/card'
 import {
   Table,
   TableBody,
@@ -18,7 +18,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../shared/ui/shadcn/table'
+} from '@shared/ui/shadcn/table'
 import type { Actor } from './types'
 
 type HistoryItemBase = {

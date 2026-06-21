@@ -103,3 +103,26 @@ Supabase Storage (bucket `fake-news-media`) handles file uploads from the web cl
 - **ESLint + Prettier** are co-configured (prettier runs as an ESLint rule). Run `bun run format` before committing if linting fails on formatting.
 - Domain entities and value objects must remain framework-free. Never import Hono, Prisma, or infrastructure code into `domain/`.
 - New API endpoints follow the pattern: Zod schema in `interfaces/http/schemas/` → route in `interfaces/routes/` → controller method → application service → domain.
+- **Client-side Zod schemas** must mirror server-side schemas for all enum/union fields. Define them in `entities/<name>/schemas.ts` and derive TypeScript types from them (`z.infer<>`). Never use plain `string` for fields that have constrained values on the server (verdicts, statuses, media types, categories, etc.).
+- **Entity layer isolation**: `entities/` must not import from `pages/`. Mock/fixture data used by entity stores belongs in `entities/<name>/fixtures.ts`.
+
+## Git Conventions
+
+All commit messages and PR titles/descriptions must be written in **English**.
+
+Commits follow **Conventional Commits** and must include the current PR number in parentheses:
+
+```
+<type>(<scope>): <description> (#<PR>)
+```
+
+Examples:
+
+```
+feat(ui): add notification popover to app header (#57)
+fix(ui): correct investigation status filter and type gaps (#57)
+docs: keep CLAUDE.md up to date (#58)
+style: apply prettier formatting (#57)
+```
+
+Valid types: `feat`, `fix`, `docs`, `style`, `refactor`, `test`, `chore`.

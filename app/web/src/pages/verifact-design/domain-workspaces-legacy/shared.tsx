@@ -1,8 +1,8 @@
 import { BadgeCheck, FilePlus2 } from 'lucide-react'
 import { useRef, useState, type DragEvent, type ReactNode } from 'react'
-import { cn } from '../../../shared/lib/utils'
-import { Badge } from '../../../shared/ui/shadcn/badge'
-import { Button } from '../../../shared/ui/shadcn/button'
+import { cn } from '@shared/lib/utils'
+import { Badge } from '@shared/ui/shadcn/badge'
+import { Button } from '@shared/ui/shadcn/button'
 import {
   Dialog,
   DialogClose,
@@ -12,10 +12,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '../../../shared/ui/shadcn/dialog'
-import { Input } from '../../../shared/ui/shadcn/input'
-import { Label } from '../../../shared/ui/shadcn/label'
-import { Textarea } from '../../../shared/ui/shadcn/textarea'
+} from '@shared/ui/shadcn/dialog'
+import { Input } from '@shared/ui/shadcn/input'
+import { Label } from '@shared/ui/shadcn/label'
+import { Textarea } from '@shared/ui/shadcn/textarea'
 
 const fieldControlClassName =
   'border-input bg-background ring-offset-background focus-visible:ring-ring h-10 w-full rounded-md border px-3 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none'

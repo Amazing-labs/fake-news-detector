@@ -2,61 +2,31 @@ import { Link } from '@tanstack/react-router'
 import {
   AlertTriangle,
   Archive,
+  CheckCheck,
   ExternalLink,
   Newspaper,
   RotateCcw,
 } from 'lucide-react'
-import { cn } from '../../../shared/lib/utils'
-import { Badge } from '../../../shared/ui/shadcn/badge'
-import { Button } from '../../../shared/ui/shadcn/button'
+import { cn } from '@shared/lib/utils'
+import { useNotificationReadStore } from '@entities/notification/model'
+import { Badge } from '@shared/ui/shadcn/badge'
+import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../shared/ui/shadcn/card'
+} from '@shared/ui/shadcn/card'
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from '@shared/ui/shadcn/tabs'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
-
-const notificationItems = [
-  {
-    id: 'publication-disponible',
-    type: 'PUBLICATION',
-    theme: 'Publication disponible',
-    message: 'Le dossier checkpoint est maintenant publie avec son verdict.',
-    isRead: false,
-    publicationId: 'la-video-du-checkpoint-date-de-2022',
-    investigationId: null,
-  },
-  {
-    id: 'correctif-publie',
-    type: 'CORRECTION',
-    theme: 'Correctif publié',
-    message: 'Une publication a été corrigée après nouvelle validation.',
-    isRead: false,
-    publicationId: 'correction-sur-le-prix-du-mil',
-    investigationId: null,
-  },
-  {
-    id: 'dossier-archive',
-    type: 'ARCHIVED_PUBLICATION',
-    theme: 'Dossier archivé',
-    message: 'Une enquête non vérifiable a été archivée par la direction.',
-    isRead: true,
-    publicationId: null,
-    investigationId: 'crise-essence',
-  },
-  {
-    id: 'action-requise',
-    type: 'ALERT',
-    theme: 'Action requise',
-    message: 'Une preuve ou une révision attend ton intervention.',
-    isRead: true,
-    publicationId: null,
-    investigationId: null,
-  },
-] as const
+import { notificationItems } from '../workspace-mocks'
 
 const notificationTypeConfig = {
   PUBLICATION: {
@@ -85,13 +55,17 @@ const notificationTypeConfig = {
   },
 } as const
 
+type NotifItem = Omit<(typeof notificationItems)[number], 'isRead'> & {
+  isRead: boolean
+}
+
 function getNotificationConfig(
   type: (typeof notificationItems)[number]['type'],
 ) {
   return notificationTypeConfig[type]
 }
 
-function getNotificationTarget(item: (typeof notificationItems)[number]) {
+function getNotificationTarget(item: NotifItem) {
   if (item.publicationId) {
     return {
       kind: 'publication',
@@ -111,66 +85,139 @@ function getNotificationTarget(item: (typeof notificationItems)[number]) {
   return null
 }
 
-export function NotificationsWorkspacePage() {
-  const { actor } = useResolvedActor('journalist')
+function NotificationRow({ item }: { item: NotifItem }) {
+  const config = getNotificationConfig(item.type)
+  const Icon = config.icon
+  const target = getNotificationTarget(item)
 
-  function renderNotificationCard(item: (typeof notificationItems)[number]) {
-    const config = getNotificationConfig(item.type)
-    const Icon = config.icon
-    const target = getNotificationTarget(item)
-    const card = (
-      <Card
+  return (
+    <Link
+      to="/notifications/$notificationId"
+      params={{ notificationId: item.id }}
+      className="block"
+      aria-label={`Voir le détail: ${item.theme}`}
+    >
+      <div
         className={cn(
-          'hover:border-primary/40 hover:bg-muted/40 transition-colors',
-          !item.isRead && 'border-primary/30 bg-primary/5 shadow-primary/10',
+          'hover:bg-muted/40 flex items-start gap-4 rounded-xl border p-4 transition-colors',
+          !item.isRead && 'border-primary/30 bg-primary/5',
         )}
       >
-        <CardContent className="flex items-start gap-4 p-5">
-          <div
-            className={cn(
-              'bg-muted flex size-10 shrink-0 items-center justify-center rounded-full',
-              !item.isRead && 'bg-primary/10 text-primary',
+        <div
+          className={cn(
+            'bg-muted mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full',
+            !item.isRead && 'bg-primary/10 text-primary',
+          )}
+        >
+          <Icon className="size-4" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            {!item.isRead && (
+              <span className="bg-primary size-2 shrink-0 rounded-full" />
             )}
-          >
-            <Icon className="size-4" />
+            <p className="font-semibold">{item.theme}</p>
+            <Badge variant="secondary" className="text-xs">
+              {config.label}
+            </Badge>
           </div>
-          <div className="min-w-0 flex-1">
-            <div className="flex flex-wrap items-center gap-2">
-              {!item.isRead ? (
-                <span className="bg-primary size-2 rounded-full" />
-              ) : null}
-              <p className="font-semibold">{item.theme}</p>
-              <Badge variant="secondary">{config.label}</Badge>
-            </div>
-            <p className="text-muted-foreground mt-1 text-sm">{item.message}</p>
-            <p className="text-muted-foreground mt-3 text-xs font-medium">
-              {config.intent}
-            </p>
-          </div>
-          {target ? (
-            <ExternalLink className="text-muted-foreground mt-1 size-4 shrink-0" />
-          ) : null}
-        </CardContent>
-      </Card>
-    )
+          <p className="text-muted-foreground mt-1 text-sm">{item.message}</p>
+          <p className="text-muted-foreground mt-2 text-xs font-medium">
+            {config.intent}
+          </p>
+        </div>
+        {target && (
+          <ExternalLink className="text-muted-foreground mt-1 size-4 shrink-0" />
+        )}
+      </div>
+    </Link>
+  )
+}
 
-    return (
-      <Link
-        key={item.id}
-        to="/notifications/$notificationId"
-        params={{ notificationId: item.id }}
-        className="block"
-        aria-label={`Voir le détail: ${item.theme}`}
-      >
-        {card}
-      </Link>
-    )
-  }
+function EmptyState({ label }: { label: string }) {
+  return (
+    <div className="rounded-xl border border-dashed p-10 text-center">
+      <p className="font-medium">{label}</p>
+      <p className="text-muted-foreground mt-1 text-sm">
+        Elles apparaîtront ici dès que quelque chose change dans tes dossiers.
+      </p>
+    </div>
+  )
+}
+
+export function NotificationsWorkspacePage() {
+  const { actor } = useResolvedActor('journalist')
+  const { readIds, markAllRead } = useNotificationReadStore()
+
+  const items: NotifItem[] = notificationItems.map((n) => ({
+    ...n,
+    isRead: readIds.has(n.id),
+  }))
+
+  const unread = items.filter((n) => !n.isRead)
+  const read = items.filter((n) => n.isRead)
 
   return (
     <AppLayout actor={actor} page="notifications">
       <div className="grid gap-4">
-        {notificationItems.map(renderNotificationCard)}
+        {/* Header */}
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h1 className="text-lg font-semibold">Notifications</h1>
+            <p className="text-muted-foreground text-sm">
+              {unread.length > 0
+                ? `${unread.length} non lue${unread.length > 1 ? 's' : ''}`
+                : 'Tout est lu'}
+            </p>
+          </div>
+          {unread.length > 0 && (
+            <Button variant="outline" size="sm" onClick={markAllRead}>
+              <CheckCheck className="size-4" />
+              Tout lire
+            </Button>
+          )}
+        </div>
+
+        {/* Tabs */}
+        <Tabs defaultValue="all">
+          <TabsList>
+            <TabsTrigger value="all">Toutes ({items.length})</TabsTrigger>
+            <TabsTrigger value="unread">Non lues ({unread.length})</TabsTrigger>
+            <TabsTrigger value="read">Lues ({read.length})</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="all" className="mt-4">
+            <div className="grid gap-2">
+              {items.map((item) => (
+                <NotificationRow key={item.id} item={item} />
+              ))}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="unread" className="mt-4">
+            {unread.length > 0 ? (
+              <div className="grid gap-2">
+                {unread.map((item) => (
+                  <NotificationRow key={item.id} item={item} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState label="Aucune notification non lue" />
+            )}
+          </TabsContent>
+
+          <TabsContent value="read" className="mt-4">
+            {read.length > 0 ? (
+              <div className="grid gap-2">
+                {read.map((item) => (
+                  <NotificationRow key={item.id} item={item} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState label="Aucune notification lue" />
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </AppLayout>
   )
@@ -191,11 +238,7 @@ export function NotificationDetailWorkspacePage({
 
   return (
     <AppLayout actor={actor} page="notifications">
-      <Card
-        className={cn(
-          !item.isRead && 'border-primary/30 bg-primary/5 shadow-primary/10',
-        )}
-      >
+      <Card className={cn(!item.isRead && 'border-primary/30 bg-primary/5')}>
         <CardHeader>
           <div className="flex flex-wrap items-start gap-4">
             <div
@@ -208,9 +251,9 @@ export function NotificationDetailWorkspacePage({
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
-                {!item.isRead ? (
+                {!item.isRead && (
                   <span className="bg-primary size-2 rounded-full" />
-                ) : null}
+                )}
                 <CardTitle>{item.theme}</CardTitle>
                 <Badge variant="secondary">{config.label}</Badge>
               </div>
@@ -220,7 +263,7 @@ export function NotificationDetailWorkspacePage({
         </CardHeader>
         <CardContent>
           <div className="flex flex-wrap gap-2">
-            {target?.kind === 'publication' ? (
+            {target?.kind === 'publication' && (
               <Button asChild>
                 <Link
                   to="/publications/$publicationId"
@@ -230,8 +273,8 @@ export function NotificationDetailWorkspacePage({
                   {target.label}
                 </Link>
               </Button>
-            ) : null}
-            {target?.kind === 'investigation' ? (
+            )}
+            {target?.kind === 'investigation' && (
               <Button asChild>
                 <Link
                   to="/investigations/$investigationId"
@@ -241,9 +284,9 @@ export function NotificationDetailWorkspacePage({
                   {target.label}
                 </Link>
               </Button>
-            ) : null}
+            )}
             <Button variant="outline" asChild>
-              <Link to="/notifications">Retour aux notifications</Link>
+              <Link to="/notifications">← Retour</Link>
             </Button>
           </div>
         </CardContent>

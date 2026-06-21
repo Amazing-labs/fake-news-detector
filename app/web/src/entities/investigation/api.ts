@@ -1,4 +1,4 @@
-import { apiRequest } from '../../shared/api/http'
+import { apiRequest } from '@shared/api/http'
 import type { InvestigationList } from './model'
 
 export type InvestigationScope =

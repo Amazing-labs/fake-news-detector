@@ -1,15 +1,15 @@
 import { Link } from '@tanstack/react-router'
 import { LogIn, Plus } from 'lucide-react'
-import { cn } from '../../shared/lib/utils'
-import { Badge } from '../../shared/ui/shadcn/badge'
-import { Button } from '../../shared/ui/shadcn/button'
+import { cn } from '@shared/lib/utils'
+import { Badge } from '@shared/ui/shadcn/badge'
+import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../shared/ui/shadcn/card'
+} from '@shared/ui/shadcn/card'
 import { AppLayout } from './app-layout'
 import { roleCards } from './data'
 import { MetricGrid } from './metric-grid'

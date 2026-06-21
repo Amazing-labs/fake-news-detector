@@ -6,15 +6,14 @@ import {
   FileText,
   Trash2,
 } from 'lucide-react'
-import { Button } from '../../../shared/ui/shadcn/button'
+import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../shared/ui/shadcn/card'
+} from '@shared/ui/shadcn/card'
 import {
   Dialog,
   DialogClose,
@@ -24,24 +23,26 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '../../../shared/ui/shadcn/dialog'
-import { Input } from '../../../shared/ui/shadcn/input'
-import { Label } from '../../../shared/ui/shadcn/label'
+} from '@shared/ui/shadcn/dialog'
+import { Input } from '@shared/ui/shadcn/input'
+import { Label } from '@shared/ui/shadcn/label'
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../../../shared/ui/shadcn/tabs'
-import { Textarea } from '../../../shared/ui/shadcn/textarea'
+} from '@shared/ui/shadcn/tabs'
+import { Textarea } from '@shared/ui/shadcn/textarea'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { domainLabel } from '../workspace-labels'
-import { StatusBadge } from '../workspace-ui'
+import { MetaCell, StatusBadge } from '../workspace-ui'
 import { inboxSubjects, reports } from '../workspace-mocks'
 import { CitizenWorkspacePage } from './overview'
 import { MediaDropzone } from './shared'
 import { slugifyLabel } from './utils'
+
+// ── Reports list (director only) ───────────────────────────────────────────────
 
 export function ReportsWorkspacePage() {
   const { actor, isActorPending } = useResolvedActor('guest')
@@ -50,17 +51,41 @@ export function ReportsWorkspacePage() {
   if (actor === 'citizen' || actor === 'watcher')
     return <CitizenWorkspacePage />
 
+  const openItems = reports.filter((r) => r.status === 'OPEN')
+  const archivedItems = reports.filter((r) => r.status !== 'OPEN')
+
   return (
     <AppLayout actor="director" page="reports">
-      <Card>
-        <CardHeader>
-          <CardTitle>Signalements citoyens</CardTitle>
-          <CardDescription>
-            Transformer les alertes utiles en sujets ou archiver les doublons.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-3">
-          {reports.map((item) => (
+      <Tabs defaultValue="open">
+        <TabsList>
+          <TabsTrigger value="open">Ouverts ({openItems.length})</TabsTrigger>
+          <TabsTrigger value="archived">
+            Archivés ({archivedItems.length})
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="open" className="mt-4">
+          <ReportList items={openItems} />
+        </TabsContent>
+        <TabsContent value="archived" className="mt-4">
+          <ReportList items={archivedItems} />
+        </TabsContent>
+      </Tabs>
+    </AppLayout>
+  )
+}
+
+function ReportList({ items }: { items: (typeof reports)[number][] }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Signalements citoyens</CardTitle>
+        <CardDescription>
+          Transformer les alertes utiles en sujets ou archiver les doublons.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="grid gap-3">
+        {items.length ? (
+          items.map((item) => (
             <div
               key={item.title}
               className="grid gap-4 rounded-lg border p-4 lg:grid-cols-[1fr_auto]"
@@ -75,19 +100,28 @@ export function ReportsWorkspacePage() {
                 </p>
                 <p className="mt-3 text-sm">{item.content}</p>
               </div>
-              <div className="flex flex-wrap items-start gap-2">
+              <div className="flex shrink-0 flex-wrap items-start gap-2">
                 <Button size="sm">Créer un sujet</Button>
                 <Button size="sm" variant="outline">
                   Archiver
                 </Button>
               </div>
             </div>
-          ))}
-        </CardContent>
-      </Card>
-    </AppLayout>
+          ))
+        ) : (
+          <div className="rounded-lg border border-dashed p-8 text-center">
+            <p className="font-medium">Aucun signalement ici</p>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Les signalements apparaîtront ici une fois déposés.
+            </p>
+          </div>
+        )}
+      </CardContent>
+    </Card>
   )
 }
+
+// ── Inbox subjects list ────────────────────────────────────────────────────────
 
 export function InboxWorkspacePage({
   defaultTab = 'global',
@@ -103,28 +137,28 @@ export function InboxWorkspacePage({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <TabsList>
             <TabsTrigger value="global">Global</TabsTrigger>
-            {canManageSubjects ? (
+            {canManageSubjects && (
               <TabsTrigger value="director">Création direction</TabsTrigger>
-            ) : null}
+            )}
             <TabsTrigger value="reports">Signalements</TabsTrigger>
           </TabsList>
-          {canManageSubjects ? (
+          {canManageSubjects && (
             <Button asChild>
               <Link to="/inbox-subjects/create">
                 <FilePlus2 />
                 Nouveau sujet
               </Link>
             </Button>
-          ) : null}
+          )}
         </div>
         <TabsContent value="global" className="mt-4">
           <InboxList filter="all" actor={actor} />
         </TabsContent>
-        {canManageSubjects ? (
+        {canManageSubjects && (
           <TabsContent value="director" className="mt-4">
             <InboxList filter="DIRECTOR_INITIATED" actor={actor} />
           </TabsContent>
-        ) : null}
+        )}
         <TabsContent value="reports" className="mt-4">
           <InboxList filter="REPORT" actor={actor} />
         </TabsContent>
@@ -189,128 +223,138 @@ function InboxList(props: {
       <CardHeader>
         <CardTitle>Sujets disponibles</CardTitle>
         <CardDescription>
-          Les sujets ouverts peuvent etre pris par un journaliste actif.
+          Les sujets ouverts peuvent être pris par un journaliste actif.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
-        {rows.map((item) => {
-          const detailId = slugifyLabel(item.theme)
-          const isInInvestigation = item.status === 'IN_PROGRESS'
+        {rows.length ? (
+          rows.map((item) => {
+            const detailId = slugifyLabel(item.theme)
+            const isInInvestigation = item.status === 'IN_PROGRESS'
 
-          return (
-            <div
-              key={item.theme}
-              className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
-            >
-              <div>
-                <p className="font-medium">{item.theme}</p>
-                <p className="text-muted-foreground text-sm">
-                  {item.origin} / {item.owner}
-                </p>
-                <p className="mt-3 text-sm">{item.description}</p>
-              </div>
-              <div className="flex flex-wrap items-center gap-2 self-start justify-self-start md:justify-self-end">
-                <StatusBadge status={item.status} />
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-foreground hover:bg-muted size-8 rounded-full transition-colors"
-                  asChild
-                >
-                  {isInInvestigation ? (
-                    <Link
-                      to="/investigations/$investigationId"
-                      params={{ investigationId: detailId }}
-                      aria-label={`Voir le détail de l'enquête ${item.theme}`}
-                    >
-                      <ExternalLink />
-                    </Link>
-                  ) : (
-                    <Link
-                      to="/inbox-subjects/$subjectId"
-                      params={{ subjectId: detailId }}
-                      aria-label={`Voir le detail du sujet ${item.theme}`}
-                    >
-                      <ExternalLink />
-                    </Link>
-                  )}
-                </Button>
-                {props.actor === 'director' ? (
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-muted-foreground hover:text-destructive h-7 px-2"
+            return (
+              <div
+                key={item.theme}
+                className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
+              >
+                <div>
+                  <p className="font-medium">{item.theme}</p>
+                  <p className="text-muted-foreground text-sm">
+                    {item.origin} / {item.owner}
+                  </p>
+                  <p className="mt-3 text-sm">{item.description}</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 self-start justify-self-start md:justify-self-end">
+                  <StatusBadge status={item.status} />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-muted-foreground hover:text-foreground hover:bg-muted size-8 rounded-full transition-colors"
+                    asChild
+                  >
+                    {isInInvestigation ? (
+                      <Link
+                        to="/investigations/$investigationId"
+                        params={{ investigationId: detailId }}
+                        aria-label={`Voir le détail de l'enquête ${item.theme}`}
                       >
-                        <Trash2 />
-                        Supprimer
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Supprimer le sujet</DialogTitle>
-                        <DialogDescription>
-                          Voulez-vous vraiment supprimer ce sujet ?
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="rounded-lg border p-4">
-                        <p className="font-medium">{item.theme}</p>
-                        <p className="text-muted-foreground mt-1 text-sm">
-                          {item.description}
-                        </p>
-                      </div>
-                      <DialogFooter>
-                        <DialogClose asChild>
-                          <Button variant="outline">Annuler</Button>
-                        </DialogClose>
-                        <Button variant="destructive">
+                        <ExternalLink />
+                      </Link>
+                    ) : (
+                      <Link
+                        to="/inbox-subjects/$subjectId"
+                        params={{ subjectId: detailId }}
+                        aria-label={`Voir le détail du sujet ${item.theme}`}
+                      >
+                        <ExternalLink />
+                      </Link>
+                    )}
+                  </Button>
+                  {props.actor === 'director' && (
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-muted-foreground hover:text-destructive h-7 px-2"
+                        >
                           <Trash2 />
                           Supprimer
                         </Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                ) : null}
-                {props.actor === 'journalist' && item.status === 'OPEN' ? (
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button size="sm" variant="outline">
-                        Prendre
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>Prendre ce sujet ?</DialogTitle>
-                        <DialogDescription>
-                          Ce sujet sera assigne a ton espace de travail. Une
-                          fois pris, tu ne pourras pas revenir en arriere pour
-                          l'abandonner.
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="rounded-lg border p-4">
-                        <p className="font-medium">{item.theme}</p>
-                        <p className="text-muted-foreground mt-1 text-sm">
-                          {item.description}
-                        </p>
-                      </div>
-                      <DialogFooter>
-                        <DialogClose asChild>
-                          <Button variant="outline">Annuler</Button>
-                        </DialogClose>
-                        <Button>Confirmer la prise</Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
-                ) : null}
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Supprimer le sujet</DialogTitle>
+                          <DialogDescription>
+                            Voulez-vous vraiment supprimer ce sujet ?
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="rounded-lg border p-4">
+                          <p className="font-medium">{item.theme}</p>
+                          <p className="text-muted-foreground mt-1 text-sm">
+                            {item.description}
+                          </p>
+                        </div>
+                        <DialogFooter>
+                          <DialogClose asChild>
+                            <Button variant="outline">Annuler</Button>
+                          </DialogClose>
+                          <Button variant="destructive">
+                            <Trash2 />
+                            Supprimer
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+                  {props.actor === 'journalist' && item.status === 'OPEN' && (
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button size="sm" variant="outline">
+                          Prendre
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Prendre ce sujet ?</DialogTitle>
+                          <DialogDescription>
+                            Ce sujet sera assigné à ton espace de travail. Une
+                            fois pris, tu ne pourras pas l'abandonner.
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="rounded-lg border p-4">
+                          <p className="font-medium">{item.theme}</p>
+                          <p className="text-muted-foreground mt-1 text-sm">
+                            {item.description}
+                          </p>
+                        </div>
+                        <DialogFooter>
+                          <DialogClose asChild>
+                            <Button variant="outline">Annuler</Button>
+                          </DialogClose>
+                          <Button>Confirmer la prise</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  )}
+                </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })
+        ) : (
+          <div className="rounded-lg border border-dashed p-8 text-center">
+            <p className="font-medium">Aucun sujet ici</p>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Les sujets apparaîtront ici une fois créés ou reçus.
+            </p>
+          </div>
+        )}
       </CardContent>
     </Card>
   )
 }
+
+// ── Inbox subject detail ───────────────────────────────────────────────────────
 
 export function InboxSubjectDetailWorkspacePage({
   subjectId,
@@ -318,83 +362,117 @@ export function InboxSubjectDetailWorkspacePage({
   subjectId: string
 }) {
   const { actor } = useResolvedActor('journalist')
-  const subject =
-    inboxSubjects.find((item) => slugifyLabel(item.theme) === subjectId) ??
-    inboxSubjects[0]
+  const subject = inboxSubjects.find(
+    (item) => slugifyLabel(item.theme) === subjectId,
+  )
 
-  if (!subject) {
-    return null
-  }
+  if (!subject) return null
+
+  const mediaCount = subject.media?.length ?? 0
+  const canTake = actor === 'journalist' && subject.status === 'OPEN'
 
   return (
     <AppLayout actor={actor} page="subjects">
+      {/* Header card */}
       <Card>
         <CardHeader>
-          <CardTitle>{subject.theme}</CardTitle>
-          <CardDescription>
-            Detail du sujet avant prise en charge journalistique.
-          </CardDescription>
-          <CardAction>
-            <StatusBadge status={subject.status} />
-          </CardAction>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h1 className="text-lg font-semibold">{subject.theme}</h1>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Détail du sujet avant prise en charge journalistique.
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <StatusBadge status={subject.status} />
+              {canTake && (
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button size="sm">Prendre le sujet</Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Prendre ce sujet ?</DialogTitle>
+                      <DialogDescription>
+                        Ce sujet sera assigné à ton espace de travail. Une fois
+                        pris, tu ne pourras pas l'abandonner.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="rounded-lg border p-4">
+                      <p className="font-medium">{subject.theme}</p>
+                      <p className="text-muted-foreground mt-1 text-sm">
+                        {subject.description}
+                      </p>
+                    </div>
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button variant="outline">Annuler</Button>
+                      </DialogClose>
+                      <Button>Confirmer la prise</Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
+          </div>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <MetaCell label="Origine" value={subject.origin} />
+            <MetaCell label="Responsable" value={subject.owner} />
+            <MetaCell label="État" value={domainLabel(subject.status)} />
+          </div>
         </CardHeader>
-        <CardContent className="grid gap-4">
-          <div className="grid gap-3 md:grid-cols-3">
-            <div className="rounded-lg border p-4">
-              <p className="text-muted-foreground text-xs font-medium uppercase">
-                Origine
-              </p>
-              <p className="mt-1 font-medium">{subject.origin}</p>
-            </div>
-            <div className="rounded-lg border p-4">
-              <p className="text-muted-foreground text-xs font-medium uppercase">
-                Responsable
-              </p>
-              <p className="mt-1 font-medium">{subject.owner}</p>
-            </div>
-            <div className="rounded-lg border p-4">
-              <p className="text-muted-foreground text-xs font-medium uppercase">
-                Etat
-              </p>
-              <p className="mt-1 font-medium">{domainLabel(subject.status)}</p>
-            </div>
-          </div>
-
-          <div className="rounded-lg border p-4">
-            <p className="font-medium">Contexte</p>
-            <p className="text-muted-foreground mt-2 text-sm">
-              {subject.description}
-            </p>
-          </div>
-
-          {subject.media && subject.media.length > 0 ? (
-            <div className="grid gap-3">
-              <p className="font-medium">Médias joints</p>
-              <div className="grid gap-4 sm:grid-cols-2">
-                {subject.media.map((item) => (
-                  <SubjectMediaItem
-                    key={item.name}
-                    item={item}
-                    canDownload={actor === 'journalist' || actor === 'director'}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          <div className="flex flex-wrap gap-2">
-            {actor === 'journalist' && subject.status === 'OPEN' ? (
-              <Button>Prendre le sujet</Button>
-            ) : null}
-            <Button variant="outline" asChild>
-              <Link to="/inbox-subjects/global">Retour aux sujets</Link>
-            </Button>
-          </div>
-        </CardContent>
       </Card>
+
+      {/* Tabs */}
+      <Tabs defaultValue="context">
+        <TabsList>
+          <TabsTrigger value="context">Contexte</TabsTrigger>
+          <TabsTrigger value="media">Médias ({mediaCount})</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="context" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Contexte éditorial</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {subject.description}
+              </p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="media" className="mt-4">
+          {mediaCount > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {subject.media!.map((item) => (
+                <SubjectMediaItem
+                  key={item.name}
+                  item={item}
+                  canDownload={actor === 'journalist' || actor === 'director'}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-lg border border-dashed p-8 text-center">
+              <p className="font-medium">Aucun média joint</p>
+              <p className="text-muted-foreground mt-1 text-sm">
+                Le créateur du sujet n'a pas joint de média.
+              </p>
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      <Button variant="outline" className="w-fit" asChild>
+        <Link to="/inbox-subjects/global">← Retour aux sujets</Link>
+      </Button>
     </AppLayout>
   )
 }
+
+// ── Media helpers ──────────────────────────────────────────────────────────────
 
 function triggerBlobDownload(blob: Blob, filename: string) {
   const objectUrl = URL.createObjectURL(blob)
@@ -421,7 +499,7 @@ async function downloadMedia(item: SubjectMedia) {
     if (item.type === 'DOCUMENT') {
       const blob = new Blob(
         [
-          `[Fichier de démonstration]\n\n${item.name}\n\nCe fichier est un placeholder. Il sera remplacé par le document réel une fois les médias connectés au stockage.`,
+          `[Fichier de démonstration]\n\n${item.name}\n\nCe fichier est un placeholder.`,
         ],
         { type: 'text/plain' },
       )
@@ -489,11 +567,11 @@ function SubjectMediaItem({
       <div className="flex items-center justify-between gap-2 px-3 py-2">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium">{item.name}</p>
-          {item.size ? (
+          {item.size && (
             <p className="text-muted-foreground text-xs">{item.size}</p>
-          ) : null}
+          )}
         </div>
-        {canDownload ? (
+        {canDownload && (
           <Button
             variant="ghost"
             size="icon"
@@ -503,7 +581,7 @@ function SubjectMediaItem({
           >
             <Download className="size-4" />
           </Button>
-        ) : null}
+        )}
       </div>
     </div>
   )

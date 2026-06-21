@@ -1,11 +1,11 @@
 import { FilePlus2 } from 'lucide-react'
-import { Button } from '../../shared/ui/shadcn/button'
+import { Button } from '@shared/ui/shadcn/button'
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../../shared/ui/shadcn/tabs'
+} from '@shared/ui/shadcn/tabs'
 import { AppLayout } from './app-layout'
 import { useResolvedActor } from './session-routing'
 import type { Actor, TabConfig } from './types'

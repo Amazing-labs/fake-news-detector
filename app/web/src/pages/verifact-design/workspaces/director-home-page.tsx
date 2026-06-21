@@ -11,13 +11,13 @@ import {
 import {
   investigationQueryKeys,
   listInvestigations,
-} from '../../../entities/investigation/api'
+} from '@entities/investigation/api'
 import {
   listWatcherApplications,
   watcherApplicationQueryKeys,
-} from '../../../entities/watcher-application/api'
-import { toApiErrorMessage } from '../../../shared/api/http'
-import { Button } from '../../../shared/ui/shadcn/button'
+} from '@entities/watcher-application/api'
+import { toApiErrorMessage } from '@shared/api/http'
+import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
   CardAction,
@@ -25,7 +25,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../shared/ui/shadcn/card'
+} from '@shared/ui/shadcn/card'
 import {
   Table,
   TableBody,
@@ -33,7 +33,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '../../../shared/ui/shadcn/table'
+} from '@shared/ui/shadcn/table'
 import { AppLayout } from '../app-layout'
 import { domainLabel } from '../workspace-labels'
 import { StatCard, StatusBadge } from '../workspace-ui'

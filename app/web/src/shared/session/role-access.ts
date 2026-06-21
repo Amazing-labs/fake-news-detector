@@ -1,5 +1,5 @@
-import type { UserRole } from '../../entities/session/model'
-import type { AppSession } from '../../lib/auth-client'
+import type { UserRole } from '@entities/session/model'
+import type { AppSession } from '@lib/auth-client'
 
 export type NavigationItem = {
   to: string

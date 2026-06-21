@@ -1,18 +1,18 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { apiRequest, toApiErrorMessage } from '../../shared/api/http'
+import { apiRequest, toApiErrorMessage } from '@shared/api/http'
 import {
   DarkButton,
   DarkFormCard,
   DarkInput,
   DarkTextArea,
-} from '../../shared/ui/dark-form'
-import { MediaFields } from '../../shared/ui/media-fields'
+} from '@shared/ui/dark-form'
+import { MediaFields } from '@shared/ui/media-fields'
 import {
   normalizeMediaDrafts,
   type MediaDraft,
-} from '../../shared/ui/media-fields.model'
+} from '@shared/ui/media-fields.model'
 
 export function SubmitWatcherEvidenceForm() {
   const queryClient = useQueryClient()

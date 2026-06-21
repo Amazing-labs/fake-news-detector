@@ -157,6 +157,8 @@ export const investigations = [
   },
 ]
 
+export { notificationItems } from '@entities/notification/fixtures'
+
 export const publications = [
   {
     title: 'La video du checkpoint date de 2022',

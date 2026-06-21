@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { toast } from 'sonner'
-import { authClient } from '../../lib/auth-client'
-import { Button, Input, SectionCard } from '../../shared/ui/primitives'
+import { authClient } from '@lib/auth-client'
+import { Button, Input, SectionCard } from '@shared/ui/primitives'
 
 export function AuthForm(props: {
   initialMode?: 'sign-in' | 'sign-up'

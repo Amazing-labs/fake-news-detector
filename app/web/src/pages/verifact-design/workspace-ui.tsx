@@ -1,12 +1,12 @@
 import type { ComponentType } from 'react'
-import { cn } from '../../shared/lib/utils'
-import { Badge } from '../../shared/ui/shadcn/badge'
+import { cn } from '@shared/lib/utils'
+import { Badge } from '@shared/ui/shadcn/badge'
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../shared/ui/shadcn/card'
+} from '@shared/ui/shadcn/card'
 import { domainLabel } from './workspace-labels'
 
 export function StatusBadge({
@@ -57,6 +57,17 @@ export function StatusBadge({
     >
       {domainLabel(status)}
     </Badge>
+  )
+}
+
+export function MetaCell({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-lg border p-3">
+      <p className="text-muted-foreground text-xs font-medium uppercase">
+        {label}
+      </p>
+      <p className="mt-1 font-medium">{value}</p>
+    </div>
   )
 }
 

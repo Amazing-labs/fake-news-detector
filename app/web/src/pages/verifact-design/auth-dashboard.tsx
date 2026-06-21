@@ -5,25 +5,21 @@ import {
   localAuthActors,
   signInLocalActor,
   useAppSession,
-} from '../../entities/session/model'
-import { isBetterAuthDisabled } from '../../lib/auth-config'
-import { authClient, type AppSession } from '../../lib/auth-client'
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '../../shared/ui/shadcn/alert'
-import { Button } from '../../shared/ui/shadcn/button'
+} from '@entities/session/model'
+import { isBetterAuthDisabled } from '@lib/auth-config'
+import { authClient, type AppSession } from '@lib/auth-client'
+import { Alert, AlertDescription, AlertTitle } from '@shared/ui/shadcn/alert'
+import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../shared/ui/shadcn/card'
-import { Input } from '../../shared/ui/shadcn/input'
-import { Label } from '../../shared/ui/shadcn/label'
-import { Tabs, TabsList, TabsTrigger } from '../../shared/ui/shadcn/tabs'
+} from '@shared/ui/shadcn/card'
+import { Input } from '@shared/ui/shadcn/input'
+import { Label } from '@shared/ui/shadcn/label'
+import { Tabs, TabsList, TabsTrigger } from '@shared/ui/shadcn/tabs'
 import { actorLabels } from './data'
 import { actorFromSession, dashboardPathForSession } from './session-routing'
 import { useTheme } from './theme'

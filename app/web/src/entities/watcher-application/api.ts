@@ -1,4 +1,4 @@
-import { apiRequest } from '../../shared/api/http'
+import { apiRequest } from '@shared/api/http'
 import type { WatcherApplicationList } from './model'
 
 export type SubmitWatcherApplicationInput = {

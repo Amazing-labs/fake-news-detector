@@ -1,4 +1,4 @@
-import { apiRequest } from '../../shared/api/http'
+import { apiRequest } from '@shared/api/http'
 import type { ReportList } from './model'
 
 export type MediaInput = {
