@@ -61,6 +61,7 @@ export function trackPendingUpload(url: string) {
 }
 
 export function untrackPendingUploads(urls: string[]) {
+  if (!urls.length) return
   const pending = getPendingUploads()
   localStorage.setItem(
     PENDING_UPLOADS_KEY,
@@ -71,8 +72,8 @@ export function untrackPendingUploads(urls: string[]) {
 export async function flushOrphanedUploads(): Promise<void> {
   const pending = getPendingUploads()
   if (!pending.length) return
-  localStorage.removeItem(PENDING_UPLOADS_KEY)
   await deleteFilesFromSupabase(pending)
+  localStorage.removeItem(PENDING_UPLOADS_KEY)
 }
 
 export async function uploadFileToSupabase(file: File) {

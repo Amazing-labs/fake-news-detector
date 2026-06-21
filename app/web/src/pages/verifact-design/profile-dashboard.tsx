@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import { formatActorStatus } from '@entities/session/model'
 import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/shadcn/avatar'
 import { Badge } from '@shared/ui/shadcn/badge'
@@ -147,11 +148,11 @@ function StatCell({
   sub,
   children,
 }: {
-  icon: React.ReactNode
+  icon: ReactNode
   label: string
   value: string
   sub?: string
-  children?: React.ReactNode
+  children?: ReactNode
 }) {
   return (
     <div className="bg-muted/40 rounded-xl border p-4">

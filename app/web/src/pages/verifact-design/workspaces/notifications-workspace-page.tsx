@@ -260,9 +260,18 @@ export function NotificationDetailWorkspacePage({
 }) {
   const { actor } = useResolvedActor('journalist')
   const { readIds } = useNotificationReadStore()
-  const rawItem =
-    notificationItems.find((candidate) => candidate.id === notificationId) ??
-    notificationItems[0]
+  const rawItem = notificationItems.find(
+    (candidate) => candidate.id === notificationId,
+  )
+  if (!rawItem) {
+    return (
+      <AppLayout actor={actor} page="notifications">
+        <div className="rounded-xl border p-8 text-center">
+          <p className="font-medium">Notification introuvable</p>
+        </div>
+      </AppLayout>
+    )
+  }
   const item: NotifItem = { ...rawItem, isRead: readIds.has(rawItem.id) }
   const config = getNotificationConfig(item.type)
   const target = getNotificationTarget(item)

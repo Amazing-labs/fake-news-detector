@@ -70,36 +70,41 @@ export function MediaFields(props: {
   }, [])
 
   async function handleFiles(files: FileList | null) {
-    if (isUploading || !files?.length) return
+    if (isUploading || !files?.length || !canUpload) return
     const slots = MAX_MEDIA - props.items.length
     if (slots <= 0) return
 
     setIsUploading(true)
     const filesToAdd = Array.from(files).slice(0, slots)
+    const uploaded: MediaDraft[] = []
 
-    try {
-      const uploaded: MediaDraft[] = []
-      for (const file of filesToAdd) {
+    for (const file of filesToAdd) {
+      try {
         const result = await uploadFileToSupabase(file)
         uploaded.push({ url: result.url, type: result.type })
         trackPendingUpload(result.url)
         sessionUploadsRef.current.push(result.url)
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : `Échec : ${file.name}`,
+        )
       }
+    }
+
+    if (uploaded.length > 0) {
       props.onChange([...props.items, ...uploaded])
       toast.success(
         `${uploaded.length} média${uploaded.length > 1 ? 's ajoutés' : ' ajouté'}.`,
       )
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : 'Upload impossible.')
-    } finally {
-      setIsUploading(false)
-      if (fileInputRef.current) fileInputRef.current.value = ''
     }
+
+    setIsUploading(false)
+    if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
   function handleDrop(event: DragEvent<HTMLElement>) {
     event.preventDefault()
-    if (!isUploading && event.dataTransfer) {
+    if (!isUploading && canUpload && event.dataTransfer) {
       void handleFiles(event.dataTransfer.files)
     }
   }
@@ -107,6 +112,9 @@ export function MediaFields(props: {
   function removeItem(index: number) {
     const url = props.items[index]?.url
     if (url) {
+      if (sessionUploadsRef.current.includes(url)) {
+        void deleteFilesFromSupabase([url])
+      }
       untrackPendingUploads([url])
       sessionUploadsRef.current = sessionUploadsRef.current.filter(
         (u) => u !== url,

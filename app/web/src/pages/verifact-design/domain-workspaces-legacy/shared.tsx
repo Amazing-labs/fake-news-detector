@@ -268,8 +268,8 @@ export function MediaDropzone({
   const [isDragging, setIsDragging] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [entries, setEntries] = useState<UploadEntry[]>([])
-  const committedRef = useRef(false)
   const uploadedUrlsRef = useRef<string[]>([])
+  const previewUrlsRef = useRef<string[]>([])
   const canUpload = isSupabaseUploadConfigured()
 
   // Flush orphans from previous sessions on mount
@@ -277,20 +277,14 @@ export function MediaDropzone({
     void flushOrphanedUploads()
   }, [])
 
-  // Cleanup on unmount (navigation within app)
+  // Cleanup on unmount: delete pending uploads + revoke object URLs
   useEffect(() => {
     return () => {
-      if (!committedRef.current && uploadedUrlsRef.current.length > 0) {
+      if (uploadedUrlsRef.current.length > 0) {
         void deleteFilesFromSupabase(uploadedUrlsRef.current)
         untrackPendingUploads(uploadedUrlsRef.current)
       }
-      // Revoke object URLs
-      setEntries((prev) => {
-        prev.forEach((e) => {
-          if (e.previewUrl) URL.revokeObjectURL(e.previewUrl)
-        })
-        return prev
-      })
+      previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
     }
   }, [])
 
@@ -315,6 +309,7 @@ export function MediaDropzone({
             isImage,
             previewUrl,
           }
+          if (previewUrl) previewUrlsRef.current.push(previewUrl)
           setEntries((prev) => [...prev, entry])
           uploadedUrlsRef.current.push(result.url)
           trackPendingUpload(result.url)
@@ -324,10 +319,12 @@ export function MediaDropzone({
           if (previewUrl) URL.revokeObjectURL(previewUrl)
         }
       } else {
+        const localUrl = `#local:${crypto.randomUUID()}`
+        if (previewUrl) previewUrlsRef.current.push(previewUrl)
         setEntries((prev) => [
           ...prev,
           {
-            url: '#local',
+            url: localUrl,
             name: file.name,
             size: file.size,
             isImage,
@@ -345,8 +342,13 @@ export function MediaDropzone({
   function removeEntry(url: string, previewUrl: string | null) {
     setEntries((prev) => prev.filter((e) => e.url !== url))
     uploadedUrlsRef.current = uploadedUrlsRef.current.filter((u) => u !== url)
-    if (previewUrl) URL.revokeObjectURL(previewUrl)
-    if (url !== '#local') {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl)
+      previewUrlsRef.current = previewUrlsRef.current.filter(
+        (u) => u !== previewUrl,
+      )
+    }
+    if (!url.startsWith('#local:')) {
       void deleteFilesFromSupabase([url])
       untrackPendingUploads([url])
     }
