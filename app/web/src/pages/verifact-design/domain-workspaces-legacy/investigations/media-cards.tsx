@@ -1,4 +1,13 @@
 import { ExternalLink } from 'lucide-react'
+
+function safeHref(url: string): string | undefined {
+  try {
+    const { protocol } = new URL(url, window.location.href)
+    return protocol === 'https:' || protocol === 'http:' ? url : undefined
+  } catch {
+    return undefined
+  }
+}
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
 import { Card, CardContent, CardHeader } from '@shared/ui/shadcn/card'
@@ -120,7 +129,7 @@ export function JournalistProofList({
                 <Badge variant="outline">{media.authoritySource}</Badge>
                 {media.url && (
                   <a
-                    href={media.url}
+                    href={safeHref(media.url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-muted-foreground hover:text-foreground transition-colors"
