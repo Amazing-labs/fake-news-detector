@@ -1,9 +1,5 @@
 import { formatActorStatus } from '@entities/session/model'
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@shared/ui/shadcn/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/shadcn/avatar'
 import {
   Card,
   CardContent,

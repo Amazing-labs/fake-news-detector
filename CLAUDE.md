@@ -117,6 +117,7 @@ Commits follow **Conventional Commits** and must include the current PR number i
 ```
 
 Examples:
+
 ```
 feat(ui): add notification popover to app header (#57)
 fix(ui): correct investigation status filter and type gaps (#57)

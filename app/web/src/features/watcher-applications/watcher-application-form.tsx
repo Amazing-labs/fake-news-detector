@@ -7,11 +7,7 @@ import {
   watcherApplicationQueryKeys,
 } from '@entities/watcher-application/api'
 import { toApiErrorMessage } from '@shared/api/http'
-import {
-  DarkButton,
-  DarkFormCard,
-  DarkTextArea,
-} from '@shared/ui/dark-form'
+import { DarkButton, DarkFormCard, DarkTextArea } from '@shared/ui/dark-form'
 
 export function WatcherApplicationForm() {
   const queryClient = useQueryClient()

@@ -1,10 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import {
-  createJournalist,
-  journalistQueryKeys,
-} from '@entities/journalist/api'
+import { createJournalist, journalistQueryKeys } from '@entities/journalist/api'
 import { toApiErrorMessage } from '@shared/api/http'
 import { DarkButton, DarkFormCard, DarkInput } from '@shared/ui/dark-form'
 

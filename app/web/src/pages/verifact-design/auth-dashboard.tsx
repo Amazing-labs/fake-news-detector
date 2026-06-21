@@ -8,11 +8,7 @@ import {
 } from '@entities/session/model'
 import { isBetterAuthDisabled } from '@lib/auth-config'
 import { authClient, type AppSession } from '@lib/auth-client'
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '@shared/ui/shadcn/alert'
+import { Alert, AlertDescription, AlertTitle } from '@shared/ui/shadcn/alert'
 import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,

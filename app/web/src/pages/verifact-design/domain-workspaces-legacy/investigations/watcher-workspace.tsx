@@ -1,10 +1,6 @@
 import { FilePlus2 } from 'lucide-react'
 import { Button } from '@shared/ui/shadcn/button'
-import {
-  Card,
-  CardContent,
-  CardHeader,
-} from '@shared/ui/shadcn/card'
+import { Card, CardContent, CardHeader } from '@shared/ui/shadcn/card'
 import {
   Tabs,
   TabsContent,

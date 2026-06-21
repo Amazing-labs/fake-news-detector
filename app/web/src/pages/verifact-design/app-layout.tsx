@@ -15,11 +15,7 @@ import { useLayoutEffect, useRef } from 'react'
 import { useNotificationReadStore } from '@entities/notification/model'
 import { signOutAppSession, useAppSession } from '@entities/session/model'
 import { cn } from '@shared/lib/utils'
-import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from '@shared/ui/shadcn/avatar'
+import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/shadcn/avatar'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
 import { Input } from '@shared/ui/shadcn/input'
