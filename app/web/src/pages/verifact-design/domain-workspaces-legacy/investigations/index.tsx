@@ -57,7 +57,7 @@ export function InvestigationsWorkspacePage({
           <InvestigationList status="PUBLISHED" />
         </TabsContent>
         <TabsContent value="canceled" className="mt-4">
-          <InvestigationList status="CANCELLED" />
+          <InvestigationList status="CANCELED" />
         </TabsContent>
       </Tabs>
     </AppLayout>

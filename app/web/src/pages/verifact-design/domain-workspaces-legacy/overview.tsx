@@ -164,8 +164,7 @@ export function CitizenReportCreateWorkspacePage() {
 
 export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
   const { actor } = useResolvedActor('citizen')
-  const report =
-    reports.find((item) => slugifyLabel(item.title) === reportId) ?? reports[0]
+  const report = reports.find((item) => slugifyLabel(item.title) === reportId)
 
   if (!report) {
     return null

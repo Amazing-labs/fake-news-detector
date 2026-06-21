@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { notificationItems } from '../../pages/verifact-design/workspace-mocks'
+import { notificationItems } from './fixtures'
 
 export type NotificationItem = {
   id: string

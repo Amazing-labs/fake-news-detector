@@ -159,9 +159,9 @@ export function PublicationDetailWorkspacePage({
 }: {
   publicationId?: string
 }) {
-  const publication =
-    publications.find((item) => slugifyLabel(item.title) === publicationId) ??
-    publications[0]
+  const publication = publications.find(
+    (item) => slugifyLabel(item.title) === publicationId,
+  )
   const { actor } = useResolvedActor('director')
   const canManage = actor === 'director' || actor === 'admin'
 

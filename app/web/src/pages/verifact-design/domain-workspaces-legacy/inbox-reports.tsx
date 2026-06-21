@@ -362,9 +362,9 @@ export function InboxSubjectDetailWorkspacePage({
   subjectId: string
 }) {
   const { actor } = useResolvedActor('journalist')
-  const subject =
-    inboxSubjects.find((item) => slugifyLabel(item.theme) === subjectId) ??
-    inboxSubjects[0]
+  const subject = inboxSubjects.find(
+    (item) => slugifyLabel(item.theme) === subjectId,
+  )
 
   if (!subject) return null
 
