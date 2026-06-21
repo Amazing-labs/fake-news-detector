@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { apiRequest, toApiErrorMessage } from '@shared/api/http'
+import { untrackPendingUploads } from '@shared/lib/supabase'
 import {
   DarkButton,
   DarkFormCard,
@@ -40,6 +41,7 @@ export function CreateDirectorInboxSubjectForm() {
       })
     },
     onSuccess: () => {
+      untrackPendingUploads(media.map((m) => m.url))
       setTheme(defaultVerificationTheme)
       setDescription('')
       setMedia([])

@@ -28,6 +28,49 @@ export function inferMediaType(file: File): MediaDraft['type'] {
   return 'DOCUMENT'
 }
 
+const PENDING_UPLOADS_KEY = 'fnd:pending-uploads'
+
+function extractPath(publicUrl: string): string {
+  const marker = `/object/public/${storageBucket}/`
+  const idx = publicUrl.indexOf(marker)
+  return idx !== -1 ? publicUrl.slice(idx + marker.length) : publicUrl
+}
+
+export async function deleteFilesFromSupabase(
+  publicUrls: string[],
+): Promise<void> {
+  if (!publicUrls.length || !isSupabaseUploadConfigured()) return
+  const client = getSupabaseClient()
+  const paths = publicUrls.map(extractPath)
+  await client.storage.from(storageBucket).remove(paths)
+}
+
+export function trackPendingUpload(url: string) {
+  const pending: string[] = JSON.parse(
+    localStorage.getItem(PENDING_UPLOADS_KEY) ?? '[]',
+  )
+  localStorage.setItem(PENDING_UPLOADS_KEY, JSON.stringify([...pending, url]))
+}
+
+export function untrackPendingUploads(urls: string[]) {
+  const pending: string[] = JSON.parse(
+    localStorage.getItem(PENDING_UPLOADS_KEY) ?? '[]',
+  )
+  localStorage.setItem(
+    PENDING_UPLOADS_KEY,
+    JSON.stringify(pending.filter((u) => !urls.includes(u))),
+  )
+}
+
+export async function flushOrphanedUploads(): Promise<void> {
+  const pending: string[] = JSON.parse(
+    localStorage.getItem(PENDING_UPLOADS_KEY) ?? '[]',
+  )
+  if (!pending.length) return
+  localStorage.removeItem(PENDING_UPLOADS_KEY)
+  await deleteFilesFromSupabase(pending)
+}
+
 export async function uploadFileToSupabase(file: File) {
   const client = getSupabaseClient()
   const extension = file.name.includes('.')
