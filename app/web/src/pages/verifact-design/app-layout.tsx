@@ -12,6 +12,7 @@ import {
 } from 'lucide-react'
 import type { ComponentType, ReactNode } from 'react'
 import { useLayoutEffect, useRef } from 'react'
+import { useNotificationReadStore } from '../../entities/notification/model'
 import { signOutAppSession, useAppSession } from '../../entities/session/model'
 import { cn } from '../../shared/lib/utils'
 import {
@@ -51,7 +52,10 @@ const NOTIF_ICONS: Record<
   ARCHIVED_PUBLICATION: Archive,
 }
 
-function NotificationPopover({ unreadCount }: { unreadCount: number }) {
+function NotificationPopover() {
+  const { readIds } = useNotificationReadStore()
+  const unreadCount = notificationItems.filter((n) => !readIds.has(n.id)).length
+
   return (
     <HoverCard openDelay={150} closeDelay={250}>
       <HoverCardTrigger asChild>
@@ -60,8 +64,8 @@ function NotificationPopover({ unreadCount }: { unreadCount: number }) {
             <Bell className="size-4" />
             {unreadCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 flex size-3">
-                <span className="absolute inline-flex size-full animate-ping rounded-full bg-destructive opacity-60" />
-                <span className="relative inline-flex size-3 items-center justify-center rounded-full bg-destructive text-[8px] font-bold text-white">
+                <span className="bg-destructive absolute inline-flex size-full animate-ping rounded-full opacity-60" />
+                <span className="bg-destructive relative inline-flex size-3 items-center justify-center rounded-full text-[8px] font-bold text-white">
                   {unreadCount}
                 </span>
               </span>
@@ -84,6 +88,7 @@ function NotificationPopover({ unreadCount }: { unreadCount: number }) {
         <div className="max-h-[340px] overflow-y-auto">
           {notificationItems.map((item) => {
             const Icon = NOTIF_ICONS[item.type]
+            const isRead = readIds.has(item.id)
             return (
               <Link
                 key={item.id}
@@ -91,20 +96,20 @@ function NotificationPopover({ unreadCount }: { unreadCount: number }) {
                 params={{ notificationId: item.id }}
                 className={cn(
                   'hover:bg-muted/60 flex items-start gap-3 px-4 py-3 transition-colors',
-                  !item.isRead && 'bg-primary/5',
+                  !isRead && 'bg-primary/5',
                 )}
               >
                 <div
                   className={cn(
                     'bg-muted mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full',
-                    !item.isRead && 'bg-primary/10 text-primary',
+                    !isRead && 'bg-primary/10 text-primary',
                   )}
                 >
                   <Icon className="size-3.5" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-1.5">
-                    {!item.isRead && (
+                    {!isRead && (
                       <span className="bg-primary size-1.5 shrink-0 rounded-full" />
                     )}
                     <p className="truncate text-sm font-medium">{item.theme}</p>
@@ -146,8 +151,6 @@ export function AppLayout(props: {
   const visibleNavItems = navItems.filter((item) =>
     navByActor[actor].includes(item.label),
   )
-  const unreadCount = notificationItems.filter((n) => !n.isRead).length
-
   async function handleSignOut() {
     await signOutAppSession()
     await navigate({ to: '/auth', search: { mode: 'sign-in' } })
@@ -251,7 +254,7 @@ export function AppLayout(props: {
             <Badge variant="outline" className="ml-auto hidden sm:inline-flex">
               {roleLabel}
             </Badge>
-            <NotificationPopover unreadCount={unreadCount} />
+            <NotificationPopover />
             <Button
               variant="ghost"
               size="icon"

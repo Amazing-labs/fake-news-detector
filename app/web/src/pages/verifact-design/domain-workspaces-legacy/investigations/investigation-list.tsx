@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Button } from '../../../../shared/ui/shadcn/button'
+import { slugifyLabel } from '../utils'
 import {
   Card,
   CardContent,
@@ -40,7 +41,7 @@ export function InvestigationList({ status }: { status: string }) {
               <Button size="sm" variant="outline" asChild>
                 <Link
                   to="/investigations/$investigationId"
-                  params={{ investigationId: 'demo' }}
+                  params={{ investigationId: slugifyLabel(item.title) }}
                 >
                   Voir le détail
                 </Link>

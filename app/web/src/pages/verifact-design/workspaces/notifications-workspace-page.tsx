@@ -7,8 +7,8 @@ import {
   Newspaper,
   RotateCcw,
 } from 'lucide-react'
-import { useState } from 'react'
 import { cn } from '../../../shared/lib/utils'
+import { useNotificationReadStore } from '../../../entities/notification/model'
 import { Badge } from '../../../shared/ui/shadcn/badge'
 import { Button } from '../../../shared/ui/shadcn/button'
 import {
@@ -81,7 +81,9 @@ function getNotificationTarget(item: (typeof notificationItems)[number]) {
   return null
 }
 
-type NotifItem = (typeof notificationItems)[number]
+type NotifItem = Omit<(typeof notificationItems)[number], 'isRead'> & {
+  isRead: boolean
+}
 
 function NotificationRow({ item }: { item: NotifItem }) {
   const config = getNotificationConfig(item.type)
@@ -145,23 +147,15 @@ function EmptyState({ label }: { label: string }) {
 
 export function NotificationsWorkspacePage() {
   const { actor } = useResolvedActor('journalist')
-  const [readIds, setReadIds] = useState<Set<string>>(
-    new Set(
-      notificationItems.filter((n) => n.isRead).map((n) => n.id),
-    ),
-  )
+  const { readIds, markAllRead } = useNotificationReadStore()
 
-  const items = notificationItems.map((n) => ({
+  const items: NotifItem[] = notificationItems.map((n) => ({
     ...n,
     isRead: readIds.has(n.id),
   }))
 
   const unread = items.filter((n) => !n.isRead)
   const read = items.filter((n) => n.isRead)
-
-  function markAllRead() {
-    setReadIds(new Set(notificationItems.map((n) => n.id)))
-  }
 
   return (
     <AppLayout actor={actor} page="notifications">
@@ -177,11 +171,7 @@ export function NotificationsWorkspacePage() {
             </p>
           </div>
           {unread.length > 0 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={markAllRead}
-            >
+            <Button variant="outline" size="sm" onClick={markAllRead}>
               <CheckCheck className="size-4" />
               Tout lire
             </Button>
@@ -191,15 +181,9 @@ export function NotificationsWorkspacePage() {
         {/* Tabs */}
         <Tabs defaultValue="all">
           <TabsList>
-            <TabsTrigger value="all">
-              Toutes ({items.length})
-            </TabsTrigger>
-            <TabsTrigger value="unread">
-              Non lues ({unread.length})
-            </TabsTrigger>
-            <TabsTrigger value="read">
-              Lues ({read.length})
-            </TabsTrigger>
+            <TabsTrigger value="all">Toutes ({items.length})</TabsTrigger>
+            <TabsTrigger value="unread">Non lues ({unread.length})</TabsTrigger>
+            <TabsTrigger value="read">Lues ({read.length})</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="mt-4">
@@ -254,11 +238,7 @@ export function NotificationDetailWorkspacePage({
 
   return (
     <AppLayout actor={actor} page="notifications">
-      <Card
-        className={cn(
-          !item.isRead && 'border-primary/30 bg-primary/5',
-        )}
-      >
+      <Card className={cn(!item.isRead && 'border-primary/30 bg-primary/5')}>
         <CardHeader>
           <div className="flex flex-wrap items-start gap-4">
             <div

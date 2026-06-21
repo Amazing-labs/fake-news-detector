@@ -9,11 +9,11 @@ export function RouteProgressBar() {
     <div
       className={cn(
         'fixed inset-x-0 top-0 z-[9999] h-[3px] transition-opacity duration-300',
-        isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none',
+        isLoading ? 'opacity-100' : 'pointer-events-none opacity-0',
       )}
       aria-hidden="true"
     >
-      <Skeleton className="h-full w-full rounded-none bg-primary/70" />
+      <Skeleton className="bg-primary/70 h-full w-full rounded-none" />
     </div>
   )
 }
@@ -34,7 +34,7 @@ export function Spinner({ className }: { className?: string }) {
 export function PageLoader({ label = 'Chargement…' }: { label?: string }) {
   return (
     <div className="flex min-h-[40vh] flex-col items-center justify-center gap-3">
-      <Spinner className="size-8 text-primary" />
+      <Spinner className="text-primary size-8" />
       <p className="text-muted-foreground text-sm">{label}</p>
     </div>
   )

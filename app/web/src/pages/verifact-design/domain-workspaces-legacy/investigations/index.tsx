@@ -30,10 +30,7 @@ export function InvestigationsWorkspacePage({
   if (isActorPending) return null
 
   return (
-    <AppLayout
-      actor={actor === 'guest' ? 'director' : actor}
-      page="investigations"
-    >
+    <AppLayout actor={actor} page="investigations">
       <Tabs defaultValue={defaultTab}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <TabsList>
@@ -60,7 +57,7 @@ export function InvestigationsWorkspacePage({
           <InvestigationList status="PUBLISHED" />
         </TabsContent>
         <TabsContent value="canceled" className="mt-4">
-          <InvestigationList status="NEEDS_REVISION" />
+          <InvestigationList status="CANCELLED" />
         </TabsContent>
       </Tabs>
     </AppLayout>
