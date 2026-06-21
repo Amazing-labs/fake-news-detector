@@ -1,10 +1,4 @@
-import {
-  Archive,
-  BadgeCheck,
-  Ban,
-  PenLine,
-  XCircle,
-} from 'lucide-react'
+import { Archive, BadgeCheck, Ban, PenLine, XCircle } from 'lucide-react'
 import { Button } from '../../../../shared/ui/shadcn/button'
 import {
   Card,
@@ -19,10 +13,7 @@ import {
 } from '../../../../shared/ui/shadcn/tabs'
 import { AppLayout } from '../../app-layout'
 import { domainLabel } from '../../workspace-labels'
-import {
-  ArbitrationReasonDialog,
-  PublishInvestigationDialog,
-} from '../shared'
+import { ArbitrationReasonDialog, PublishInvestigationDialog } from '../shared'
 import {
   JournalistProofList,
   SourceMediaReadRow,

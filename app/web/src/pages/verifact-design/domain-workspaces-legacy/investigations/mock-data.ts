@@ -16,7 +16,7 @@ export const mockDossier: Dossier = {
   attempts: 1,
   updatedAt: '16 mai 2026, 18:40',
   notes:
-    "La séquence est authentique mais ancienne. Elle est republiée comme si elle documentait la situation actuelle.",
+    'La séquence est authentique mais ancienne. Elle est republiée comme si elle documentait la situation actuelle.',
 }
 
 export const mockSourceMedia: SourceMedia[] = [

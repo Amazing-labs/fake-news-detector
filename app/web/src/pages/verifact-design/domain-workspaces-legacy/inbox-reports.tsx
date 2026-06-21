@@ -48,7 +48,8 @@ export function ReportsWorkspacePage() {
   const { actor, isActorPending } = useResolvedActor('guest')
 
   if (isActorPending) return null
-  if (actor === 'citizen' || actor === 'watcher') return <CitizenWorkspacePage />
+  if (actor === 'citizen' || actor === 'watcher')
+    return <CitizenWorkspacePage />
 
   const openItems = reports.filter((r) => r.status === 'OPEN')
   const archivedItems = reports.filter((r) => r.status !== 'OPEN')
@@ -426,9 +427,7 @@ export function InboxSubjectDetailWorkspacePage({
       <Tabs defaultValue="context">
         <TabsList>
           <TabsTrigger value="context">Contexte</TabsTrigger>
-          <TabsTrigger value="media">
-            Médias ({mediaCount})
-          </TabsTrigger>
+          <TabsTrigger value="media">Médias ({mediaCount})</TabsTrigger>
         </TabsList>
 
         <TabsContent value="context" className="mt-4">

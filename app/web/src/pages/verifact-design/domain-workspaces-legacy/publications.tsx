@@ -40,15 +40,15 @@ export function PublicationsWorkspacePage() {
   const canManage = actor === 'director' || actor === 'admin'
 
   const mainItems = publications.filter((item) => item.type !== 'Correctif')
-  const correctionItems = publications.filter((item) => item.type === 'Correctif')
+  const correctionItems = publications.filter(
+    (item) => item.type === 'Correctif',
+  )
 
   return (
     <AppLayout actor={actor} page="publications">
       <Tabs defaultValue="all">
         <TabsList>
-          <TabsTrigger value="all">
-            Toutes ({publications.length})
-          </TabsTrigger>
+          <TabsTrigger value="all">Toutes ({publications.length})</TabsTrigger>
           <TabsTrigger value="publications">
             Publications ({mainItems.length})
           </TabsTrigger>
@@ -98,7 +98,9 @@ function PublicationList({
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-medium">{item.title}</p>
                     <Badge
-                      variant={item.type === 'Correctif' ? 'secondary' : 'outline'}
+                      variant={
+                        item.type === 'Correctif' ? 'secondary' : 'outline'
+                      }
                     >
                       {domainLabel(item.type)}
                     </Badge>
@@ -185,7 +187,9 @@ export function PublicationDetailWorkspacePage({
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <Badge
-                variant={publication.type === 'Correctif' ? 'secondary' : 'outline'}
+                variant={
+                  publication.type === 'Correctif' ? 'secondary' : 'outline'
+                }
               >
                 {domainLabel(publication.type)}
               </Badge>
@@ -203,7 +207,10 @@ export function PublicationDetailWorkspacePage({
             </div>
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <MetaCell label="Verdict" value={domainLabel(publication.verdict)} />
+            <MetaCell
+              label="Verdict"
+              value={domainLabel(publication.verdict)}
+            />
             <MetaCell label="Preuves" value={publication.evidence} />
           </div>
         </CardHeader>
@@ -239,8 +246,8 @@ export function PublicationDetailWorkspacePage({
                   <p className="text-sm font-medium">Pour aller plus loin</p>
                   <p className="text-muted-foreground mt-2 text-sm">
                     Si une information semble incomplète, tu peux créer un
-                    nouveau signalement depuis la page Signalements. La rédaction
-                    l'examinera comme une nouvelle alerte.
+                    nouveau signalement depuis la page Signalements. La
+                    rédaction l'examinera comme une nouvelle alerte.
                   </p>
                   <Button className="mt-4 w-fit" variant="outline" asChild>
                     <Link to="/reports/create">Faire un signalement</Link>
@@ -255,9 +262,7 @@ export function PublicationDetailWorkspacePage({
               {linkCount > 0 && (
                 <Card>
                   <CardHeader>
-                    <CardTitle className="text-base">
-                      Liens vérifiés
-                    </CardTitle>
+                    <CardTitle className="text-base">Liens vérifiés</CardTitle>
                     <CardDescription>
                       Ouvre les sources et compare-les avec le résumé avant de
                       partager la publication.

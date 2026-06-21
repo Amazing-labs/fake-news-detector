@@ -15,7 +15,11 @@ import {
   OriginBadge,
   ReliabilitySelect,
 } from './primitives'
-import type { JournalistProofMedia, SourceMedia, WatcherEvidenceItem } from './types'
+import type {
+  JournalistProofMedia,
+  SourceMedia,
+  WatcherEvidenceItem,
+} from './types'
 
 // ── Source media card (journalist classifies) ──────────────────────────────────
 
@@ -163,9 +167,7 @@ export function WatcherEvidenceCard({
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
             {evidence.category && (
-              <Badge variant="outline">
-                {domainLabel(evidence.category)}
-              </Badge>
+              <Badge variant="outline">{domainLabel(evidence.category)}</Badge>
             )}
             {evidence.reliability && (
               <Badge variant="secondary">
