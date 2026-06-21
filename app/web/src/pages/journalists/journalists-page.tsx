@@ -3,7 +3,7 @@ import {
   UserStatusWorkspacePage,
 } from '../verifact-design/verifact-design-page'
 import { AppLayout } from '../verifact-design/app-layout'
-import { CreateJournalistForm } from '../../features/journalists/create-journalist-form'
+import { CreateJournalistForm } from '@features/journalists/create-journalist-form'
 
 export function JournalistsListPage() {
   return <PeopleManagementPage />

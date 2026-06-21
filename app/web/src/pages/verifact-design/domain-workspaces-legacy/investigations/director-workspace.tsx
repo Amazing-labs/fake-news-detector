@@ -1,16 +1,16 @@
 import { Archive, BadgeCheck, Ban, PenLine, XCircle } from 'lucide-react'
-import { Button } from '../../../../shared/ui/shadcn/button'
+import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
   CardContent,
   CardHeader,
-} from '../../../../shared/ui/shadcn/card'
+} from '@shared/ui/shadcn/card'
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../../../../shared/ui/shadcn/tabs'
+} from '@shared/ui/shadcn/tabs'
 import { AppLayout } from '../../app-layout'
 import { domainLabel } from '../../workspace-labels'
 import { ArbitrationReasonDialog, PublishInvestigationDialog } from '../shared'

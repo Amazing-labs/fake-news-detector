@@ -5,7 +5,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../shared/ui/shadcn/card'
+} from '@shared/ui/shadcn/card'
 import type { Actor } from './types'
 
 export function MetricGrid({ actor }: { actor: Actor }) {

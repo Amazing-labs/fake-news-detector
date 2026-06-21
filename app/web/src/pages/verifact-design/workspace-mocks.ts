@@ -157,7 +157,7 @@ export const investigations = [
   },
 ]
 
-export { notificationItems } from '../../entities/notification/fixtures'
+export { notificationItems } from '@entities/notification/fixtures'
 
 export const publications = [
   {

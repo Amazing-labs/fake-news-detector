@@ -1,12 +1,12 @@
 import { Link } from '@tanstack/react-router'
 import { RotateCcw } from 'lucide-react'
-import { Button } from '../../../../shared/ui/shadcn/button'
+import { Button } from '@shared/ui/shadcn/button'
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../../../../shared/ui/shadcn/tabs'
+} from '@shared/ui/shadcn/tabs'
 import { AppLayout } from '../../app-layout'
 import { useResolvedActor } from '../../session-routing'
 import { DirectorInvestigationWorkspace } from './director-workspace'

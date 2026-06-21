@@ -2,8 +2,8 @@ import {
   formatCitizenType,
   formatUserRole,
   useAppSession,
-} from '../../entities/session/model'
-import type { AppSession } from '../../lib/auth-client'
+} from '@entities/session/model'
+import type { AppSession } from '@lib/auth-client'
 import { actorLabels } from './data'
 import type { Actor } from './types'
 

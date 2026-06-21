@@ -1,13 +1,13 @@
 import { ExternalLink } from 'lucide-react'
-import { Badge } from '../../../../shared/ui/shadcn/badge'
-import { Button } from '../../../../shared/ui/shadcn/button'
+import { Badge } from '@shared/ui/shadcn/badge'
+import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
   CardContent,
   CardHeader,
-} from '../../../../shared/ui/shadcn/card'
-import { Label } from '../../../../shared/ui/shadcn/label'
-import { Textarea } from '../../../../shared/ui/shadcn/textarea'
+} from '@shared/ui/shadcn/card'
+import { Label } from '@shared/ui/shadcn/label'
+import { Textarea } from '@shared/ui/shadcn/textarea'
 import { domainLabel } from '../../workspace-labels'
 import {
   CategorySelect,

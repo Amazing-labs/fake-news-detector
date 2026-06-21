@@ -7,23 +7,23 @@ import {
   disableJournalist,
   journalistQueryKeys,
   listJournalists,
-} from '../../../entities/journalist/api'
-import { CreateJournalistForm } from '../../../features/journalists/create-journalist-form'
-import { toApiErrorMessage } from '../../../shared/api/http'
-import { Button } from '../../../shared/ui/shadcn/button'
+} from '@entities/journalist/api'
+import { CreateJournalistForm } from '@features/journalists/create-journalist-form'
+import { toApiErrorMessage } from '@shared/api/http'
+import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../shared/ui/shadcn/card'
+} from '@shared/ui/shadcn/card'
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../../../shared/ui/shadcn/tabs'
+} from '@shared/ui/shadcn/tabs'
 import { AppLayout } from '../app-layout'
 import { StatusBadge } from '../workspace-ui'
 

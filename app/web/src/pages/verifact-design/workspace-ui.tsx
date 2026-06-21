@@ -1,12 +1,12 @@
 import type { ComponentType } from 'react'
-import { cn } from '../../shared/lib/utils'
-import { Badge } from '../../shared/ui/shadcn/badge'
+import { cn } from '@shared/lib/utils'
+import { Badge } from '@shared/ui/shadcn/badge'
 import {
   Card,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../shared/ui/shadcn/card'
+} from '@shared/ui/shadcn/card'
 import { domainLabel } from './workspace-labels'
 
 export function StatusBadge({

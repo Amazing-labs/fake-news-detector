@@ -1,16 +1,16 @@
-import { formatActorStatus } from '../../entities/session/model'
+import { formatActorStatus } from '@entities/session/model'
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from '../../shared/ui/shadcn/avatar'
+} from '@shared/ui/shadcn/avatar'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../shared/ui/shadcn/card'
+} from '@shared/ui/shadcn/card'
 import { AppLayout } from './app-layout'
 import { initials, sessionRoleLabel, useResolvedActor } from './session-routing'
 import type { Actor } from './types'

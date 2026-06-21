@@ -1,4 +1,4 @@
-import { apiRequest } from '../../shared/api/http'
+import { apiRequest } from '@shared/api/http'
 import type { JournalistList } from './model'
 
 export type CreateJournalistInput = {

@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { Button } from '../../../../shared/ui/shadcn/button'
+import { Button } from '@shared/ui/shadcn/button'
 import { slugifyLabel } from '../utils'
 import {
   Card,
@@ -7,7 +7,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../../shared/ui/shadcn/card'
+} from '@shared/ui/shadcn/card'
 import { investigations } from '../../workspace-mocks'
 import { StatusBadge } from '../../workspace-ui'
 

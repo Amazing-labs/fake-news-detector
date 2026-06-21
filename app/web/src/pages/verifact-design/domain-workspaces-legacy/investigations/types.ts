@@ -5,7 +5,7 @@ import type {
   MediaType,
   SourceType,
   Verdict,
-} from '../../../../../entities/investigation/schemas'
+} from '@entities/investigation/schemas'
 
 export type SourceMedia = {
   title: string

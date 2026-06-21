@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { Ban, ShieldCheck } from 'lucide-react'
-import { Button } from '../../../shared/ui/shadcn/button'
+import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
   CardAction,
@@ -8,9 +8,9 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../shared/ui/shadcn/card'
-import { Label } from '../../../shared/ui/shadcn/label'
-import { Textarea } from '../../../shared/ui/shadcn/textarea'
+} from '@shared/ui/shadcn/card'
+import { Label } from '@shared/ui/shadcn/label'
+import { Textarea } from '@shared/ui/shadcn/textarea'
 import { AppLayout } from '../app-layout'
 import {
   PeopleManagementPage as PeopleManagementWorkspace,

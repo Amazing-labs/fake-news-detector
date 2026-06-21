@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from 'react'
-import { isBetterAuthDisabled } from '../../lib/auth-config'
-import type { AppSession } from '../../lib/auth-client'
-import { authClient } from '../../lib/auth-client'
+import { isBetterAuthDisabled } from '@lib/auth-config'
+import type { AppSession } from '@lib/auth-client'
+import { authClient } from '@lib/auth-client'
 
 export type UserRole = 'CITIZEN' | 'JOURNALIST' | 'EDITORIAL_DIRECTOR'
 export type CitizenType = 'REGULAR' | 'WATCHER'

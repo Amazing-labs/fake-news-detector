@@ -1,6 +1,6 @@
 import { Bell } from 'lucide-react'
-import { Badge } from '../../shared/ui/shadcn/badge'
-import { Card, CardContent } from '../../shared/ui/shadcn/card'
+import { Badge } from '@shared/ui/shadcn/badge'
+import { Card, CardContent } from '@shared/ui/shadcn/card'
 import { AppLayout } from './app-layout'
 import { notifications } from './data'
 import { useResolvedActor } from './session-routing'

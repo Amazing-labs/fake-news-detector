@@ -6,24 +6,24 @@ import {
   listWatcherApplications,
   rejectWatcherApplication,
   watcherApplicationQueryKeys,
-} from '../../../entities/watcher-application/api'
-import { WatcherApplicationForm } from '../../../features/watcher-applications/watcher-application-form'
-import { toApiErrorMessage } from '../../../shared/api/http'
-import { Badge } from '../../../shared/ui/shadcn/badge'
-import { Button } from '../../../shared/ui/shadcn/button'
+} from '@entities/watcher-application/api'
+import { WatcherApplicationForm } from '@features/watcher-applications/watcher-application-form'
+import { toApiErrorMessage } from '@shared/api/http'
+import { Badge } from '@shared/ui/shadcn/badge'
+import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../shared/ui/shadcn/card'
+} from '@shared/ui/shadcn/card'
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../../../shared/ui/shadcn/tabs'
+} from '@shared/ui/shadcn/tabs'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { domainLabel } from '../workspace-labels'

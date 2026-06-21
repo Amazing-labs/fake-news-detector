@@ -12,23 +12,23 @@ import {
 } from 'lucide-react'
 import type { ComponentType, ReactNode } from 'react'
 import { useLayoutEffect, useRef } from 'react'
-import { useNotificationReadStore } from '../../entities/notification/model'
-import { signOutAppSession, useAppSession } from '../../entities/session/model'
-import { cn } from '../../shared/lib/utils'
+import { useNotificationReadStore } from '@entities/notification/model'
+import { signOutAppSession, useAppSession } from '@entities/session/model'
+import { cn } from '@shared/lib/utils'
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from '../../shared/ui/shadcn/avatar'
-import { Badge } from '../../shared/ui/shadcn/badge'
-import { Button } from '../../shared/ui/shadcn/button'
-import { Input } from '../../shared/ui/shadcn/input'
+} from '@shared/ui/shadcn/avatar'
+import { Badge } from '@shared/ui/shadcn/badge'
+import { Button } from '@shared/ui/shadcn/button'
+import { Input } from '@shared/ui/shadcn/input'
 import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from '../../shared/ui/shadcn/hover-card'
-import { Separator } from '../../shared/ui/shadcn/separator'
+} from '@shared/ui/shadcn/hover-card'
+import { Separator } from '@shared/ui/shadcn/separator'
 import { actorLabels, navByActor, navItems } from './data'
 import { notificationItems } from './workspace-mocks'
 import {

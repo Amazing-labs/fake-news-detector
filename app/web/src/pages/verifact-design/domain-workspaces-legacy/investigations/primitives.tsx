@@ -1,16 +1,16 @@
 import { FileText } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { cn } from '../../../../shared/lib/utils'
-import { Badge } from '../../../../shared/ui/shadcn/badge'
-import { Button } from '../../../../shared/ui/shadcn/button'
+import { cn } from '@shared/lib/utils'
+import { Badge } from '@shared/ui/shadcn/badge'
+import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../../shared/ui/shadcn/card'
-import { Textarea } from '../../../../shared/ui/shadcn/textarea'
+} from '@shared/ui/shadcn/card'
+import { Textarea } from '@shared/ui/shadcn/textarea'
 import { domainLabel } from '../../workspace-labels'
 import { StatusBadge } from '../../workspace-ui'
 import {

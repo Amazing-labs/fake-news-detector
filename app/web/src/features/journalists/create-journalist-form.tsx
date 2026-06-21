@@ -4,9 +4,9 @@ import { toast } from 'sonner'
 import {
   createJournalist,
   journalistQueryKeys,
-} from '../../entities/journalist/api'
-import { toApiErrorMessage } from '../../shared/api/http'
-import { DarkButton, DarkFormCard, DarkInput } from '../../shared/ui/dark-form'
+} from '@entities/journalist/api'
+import { toApiErrorMessage } from '@shared/api/http'
+import { DarkButton, DarkFormCard, DarkInput } from '@shared/ui/dark-form'
 
 export function CreateJournalistForm() {
   const queryClient = useQueryClient()

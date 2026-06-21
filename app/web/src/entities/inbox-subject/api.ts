@@ -1,4 +1,4 @@
-import { apiRequest } from '../../shared/api/http'
+import { apiRequest } from '@shared/api/http'
 import type { InboxSubjectList } from './model'
 
 export type InboxSubjectStatus = 'OPEN' | 'IN_PROGRESS' | 'ARCHIVED'

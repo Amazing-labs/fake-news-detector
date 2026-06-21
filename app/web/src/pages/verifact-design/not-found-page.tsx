@@ -1,13 +1,13 @@
 import { Link } from '@tanstack/react-router'
 import { CircleHelp } from 'lucide-react'
-import { Button } from '../../shared/ui/shadcn/button'
+import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../shared/ui/shadcn/card'
+} from '@shared/ui/shadcn/card'
 import { useTheme } from './theme'
 
 export function NotFoundPage() {

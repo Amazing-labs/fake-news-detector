@@ -7,23 +7,23 @@ import {
   Newspaper,
   RotateCcw,
 } from 'lucide-react'
-import { cn } from '../../../shared/lib/utils'
-import { useNotificationReadStore } from '../../../entities/notification/model'
-import { Badge } from '../../../shared/ui/shadcn/badge'
-import { Button } from '../../../shared/ui/shadcn/button'
+import { cn } from '@shared/lib/utils'
+import { useNotificationReadStore } from '@entities/notification/model'
+import { Badge } from '@shared/ui/shadcn/badge'
+import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../../shared/ui/shadcn/card'
+} from '@shared/ui/shadcn/card'
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
-} from '../../../shared/ui/shadcn/tabs'
+} from '@shared/ui/shadcn/tabs'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { notificationItems } from '../workspace-mocks'
@@ -55,13 +55,17 @@ const notificationTypeConfig = {
   },
 } as const
 
+type NotifItem = Omit<(typeof notificationItems)[number], 'isRead'> & {
+  isRead: boolean
+}
+
 function getNotificationConfig(
   type: (typeof notificationItems)[number]['type'],
 ) {
   return notificationTypeConfig[type]
 }
 
-function getNotificationTarget(item: (typeof notificationItems)[number]) {
+function getNotificationTarget(item: NotifItem) {
   if (item.publicationId) {
     return {
       kind: 'publication',
@@ -79,10 +83,6 @@ function getNotificationTarget(item: (typeof notificationItems)[number]) {
   }
 
   return null
-}
-
-type NotifItem = Omit<(typeof notificationItems)[number], 'isRead'> & {
-  isRead: boolean
 }
 
 function NotificationRow({ item }: { item: NotifItem }) {
