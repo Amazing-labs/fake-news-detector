@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import {
   deleteFilesFromSupabase,
   flushOrphanedUploads,
+  getPendingUploads,
   isSupabaseUploadConfigured,
   trackPendingUpload,
   untrackPendingUploads,
@@ -57,9 +58,7 @@ export function MediaFields(props: {
   // On unmount: delete session uploads still pending (form not submitted)
   useEffect(() => {
     return () => {
-      const pending: string[] = JSON.parse(
-        localStorage.getItem('fnd:pending-uploads') ?? '[]',
-      )
+      const pending = getPendingUploads()
       const toDelete = sessionUploadsRef.current.filter((url) =>
         pending.includes(url),
       )

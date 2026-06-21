@@ -45,17 +45,23 @@ export async function deleteFilesFromSupabase(
   await client.storage.from(storageBucket).remove(paths)
 }
 
+export function getPendingUploads(): string[] {
+  try {
+    const raw = localStorage.getItem(PENDING_UPLOADS_KEY)
+    const parsed: unknown = raw ? JSON.parse(raw) : []
+    return Array.isArray(parsed) ? (parsed as string[]) : []
+  } catch {
+    return []
+  }
+}
+
 export function trackPendingUpload(url: string) {
-  const pending: string[] = JSON.parse(
-    localStorage.getItem(PENDING_UPLOADS_KEY) ?? '[]',
-  )
+  const pending = getPendingUploads()
   localStorage.setItem(PENDING_UPLOADS_KEY, JSON.stringify([...pending, url]))
 }
 
 export function untrackPendingUploads(urls: string[]) {
-  const pending: string[] = JSON.parse(
-    localStorage.getItem(PENDING_UPLOADS_KEY) ?? '[]',
-  )
+  const pending = getPendingUploads()
   localStorage.setItem(
     PENDING_UPLOADS_KEY,
     JSON.stringify(pending.filter((u) => !urls.includes(u))),
@@ -63,9 +69,7 @@ export function untrackPendingUploads(urls: string[]) {
 }
 
 export async function flushOrphanedUploads(): Promise<void> {
-  const pending: string[] = JSON.parse(
-    localStorage.getItem(PENDING_UPLOADS_KEY) ?? '[]',
-  )
+  const pending = getPendingUploads()
   if (!pending.length) return
   localStorage.removeItem(PENDING_UPLOADS_KEY)
   await deleteFilesFromSupabase(pending)
