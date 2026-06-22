@@ -24,22 +24,19 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@shared/ui/shadcn/dialog'
-import { Input } from '@shared/ui/shadcn/input'
-import { Label } from '@shared/ui/shadcn/label'
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '@shared/ui/shadcn/tabs'
-import { Textarea } from '@shared/ui/shadcn/textarea'
+import { CreateDirectorInboxSubjectForm } from '@features/inbox-subjects/create-director-inbox-subject-form'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { domainLabel } from '../workspace-labels'
 import { MetaCell, StatusBadge } from '../workspace-ui'
 import { inboxSubjects, reports } from '../workspace-mocks'
 import { CitizenWorkspacePage } from './overview'
-import { MediaDropzone } from './shared'
 import { slugifyLabel } from './utils'
 
 // ── Reports list (director only) ───────────────────────────────────────────────
@@ -173,31 +170,7 @@ export function InboxCreateWorkspacePage() {
   return (
     <AppLayout actor="director" page="subjects">
       {actor === 'director' ? (
-        <div className="grid gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Nouveau sujet direction</CardTitle>
-              <CardDescription>
-                Un sujet créé par la direction entre directement dans l'inbox.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-4">
-              <Label className="grid gap-2">
-                Theme
-                <Input placeholder="Thème éditorial" />
-              </Label>
-              <Label className="grid gap-2">
-                Contexte
-                <Textarea placeholder="Pourquoi le desk doit ouvrir ce sujet" />
-              </Label>
-              <MediaDropzone
-                inputId="director-subject-media"
-                description="Images, videos, audio, PDF ou documents utiles au desk."
-              />
-              <Button className="w-fit">Créer le sujet</Button>
-            </CardContent>
-          </Card>
-        </div>
+        <CreateDirectorInboxSubjectForm />
       ) : (
         <InboxList filter="all" actor={actor} />
       )}

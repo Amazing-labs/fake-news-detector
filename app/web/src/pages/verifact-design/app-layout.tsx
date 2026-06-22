@@ -229,7 +229,7 @@ export function AppLayout(props: {
         </div>
       </aside>
 
-      <div className="lg:pl-72">
+      <div className="overflow-x-hidden lg:pl-72">
         <header className="bg-background/90 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-20 border-b backdrop-blur">
           <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
             <div className="flex items-center gap-2 lg:hidden">

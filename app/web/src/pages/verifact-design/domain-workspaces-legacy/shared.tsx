@@ -1,7 +1,21 @@
-import { BadgeCheck, FilePlus2 } from 'lucide-react'
-import { useRef, useState, type DragEvent, type ReactNode } from 'react'
+import { BadgeCheck, FilePlus2, Loader2, X } from 'lucide-react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type DragEvent,
+  type ReactNode,
+} from 'react'
+import { toast } from 'sonner'
+import {
+  deleteFilesFromSupabase,
+  flushOrphanedUploads,
+  isSupabaseUploadConfigured,
+  trackPendingUpload,
+  untrackPendingUploads,
+  uploadFileToSupabase,
+} from '@shared/lib/supabase'
 import { cn } from '@shared/lib/utils'
-import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
 import {
   Dialog,
@@ -233,90 +247,208 @@ export function WatcherContributeDialog({ children }: { children: ReactNode }) {
   )
 }
 
+const MAX_MEDIA = 6
+
+type UploadEntry = {
+  url: string
+  name: string
+  size: number
+  isImage: boolean
+  previewUrl: string | null
+}
+
 export function MediaDropzone({
   inputId = 'media-upload',
-  description = 'Images, videos, audio, PDF ou documents utiles au desk.',
+  description = 'Images, vidéos, audio, PDF ou documents utiles au desk.',
 }: {
   inputId?: string
   description?: string
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
-  const [files, setFiles] = useState<File[]>([])
+  const [isUploading, setIsUploading] = useState(false)
+  const [entries, setEntries] = useState<UploadEntry[]>([])
+  const uploadedUrlsRef = useRef<string[]>([])
+  const previewUrlsRef = useRef<string[]>([])
+  const canUpload = isSupabaseUploadConfigured()
 
-  const addFiles = (fileList: FileList | null) => {
-    if (!fileList?.length) return
-    setFiles((currentFiles) => [...currentFiles, ...Array.from(fileList)])
+  // Flush orphans from previous sessions on mount
+  useEffect(() => {
+    void flushOrphanedUploads()
+  }, [])
+
+  // Cleanup on unmount: delete pending uploads + revoke object URLs
+  useEffect(() => {
+    return () => {
+      if (uploadedUrlsRef.current.length > 0) {
+        void deleteFilesFromSupabase(uploadedUrlsRef.current)
+        untrackPendingUploads(uploadedUrlsRef.current)
+      }
+      previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
+    }
+  }, [])
+
+  async function addFiles(fileList: FileList | null) {
+    if (!fileList?.length || isUploading) return
+    const slots = MAX_MEDIA - entries.length
+    if (slots <= 0) return
+    const files = Array.from(fileList).slice(0, slots)
+    setIsUploading(true)
+
+    for (const file of files) {
+      const isImage = file.type.startsWith('image/')
+      const previewUrl = isImage ? URL.createObjectURL(file) : null
+
+      if (canUpload) {
+        try {
+          const result = await uploadFileToSupabase(file)
+          const entry: UploadEntry = {
+            url: result.url,
+            name: file.name,
+            size: file.size,
+            isImage,
+            previewUrl,
+          }
+          if (previewUrl) previewUrlsRef.current.push(previewUrl)
+          setEntries((prev) => [...prev, entry])
+          uploadedUrlsRef.current.push(result.url)
+          trackPendingUpload(result.url)
+          toast.success(`${file.name} uploadé.`)
+        } catch {
+          toast.error(`Échec upload : ${file.name}`)
+          if (previewUrl) URL.revokeObjectURL(previewUrl)
+        }
+      } else {
+        const localUrl = `#local:${crypto.randomUUID()}`
+        if (previewUrl) previewUrlsRef.current.push(previewUrl)
+        setEntries((prev) => [
+          ...prev,
+          {
+            url: localUrl,
+            name: file.name,
+            size: file.size,
+            isImage,
+            previewUrl,
+          },
+        ])
+        toast.success(`${file.name} ajouté (aperçu local).`)
+      }
+    }
+
+    setIsUploading(false)
     if (inputRef.current) inputRef.current.value = ''
   }
 
-  const handleDrop = (event: DragEvent<HTMLLabelElement>) => {
-    event.preventDefault()
-    setIsDragging(false)
-    addFiles(event.dataTransfer.files)
+  function removeEntry(url: string, previewUrl: string | null) {
+    setEntries((prev) => prev.filter((e) => e.url !== url))
+    uploadedUrlsRef.current = uploadedUrlsRef.current.filter((u) => u !== url)
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl)
+      previewUrlsRef.current = previewUrlsRef.current.filter(
+        (u) => u !== previewUrl,
+      )
+    }
+    if (!url.startsWith('#local:')) {
+      void deleteFilesFromSupabase([url])
+      untrackPendingUploads([url])
+    }
   }
+
+  const isFull = entries.length >= MAX_MEDIA
 
   return (
     <div className="grid gap-3">
-      <div className="flex items-center justify-between gap-3">
+      {/* Header */}
+      <div className="flex items-center justify-between gap-2">
         <p className="text-muted-foreground text-sm">{description}</p>
-        {files.length ? (
-          <Badge variant="secondary" className="shrink-0 rounded-full">
-            {files.length} fichier{files.length > 1 ? 's' : ''}
-          </Badge>
-        ) : null}
+        <span className="text-muted-foreground shrink-0 text-xs">
+          {entries.length} / {MAX_MEDIA}
+        </span>
       </div>
 
-      <Label
-        htmlFor={inputId}
-        onDragEnter={(event: DragEvent<HTMLLabelElement>) => {
-          event.preventDefault()
-          setIsDragging(true)
-        }}
-        onDragOver={(event: DragEvent<HTMLLabelElement>) => {
-          event.preventDefault()
-          setIsDragging(true)
-        }}
-        onDragLeave={() => setIsDragging(false)}
-        onDrop={handleDrop}
-        className={cn(
-          'border-border bg-background/40 hover:bg-muted/40 flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 py-5 text-center transition-colors',
-          isDragging && 'border-primary bg-primary/10',
-        )}
-      >
-        <FilePlus2 className="text-muted-foreground pointer-events-none size-6" />
-        <span className="pointer-events-none mt-3 text-sm font-medium">
-          Glisse les medias ici
-        </span>
-        <span className="text-muted-foreground pointer-events-none mt-1 text-sm">
-          ou clique pour les selectionner
-        </span>
-        <Input
-          ref={inputRef}
-          id={inputId}
-          type="file"
-          multiple
-          accept="image/*,video/*,audio/*,application/pdf,text/plain"
-          className="sr-only"
-          onChange={(event) => addFiles(event.target.files)}
-        />
-      </Label>
-
-      {files.length ? (
-        <div className="grid gap-2">
-          {files.map((file, index) => (
-            <div
-              key={`${file.name}-${file.size}-${index}`}
-              className="bg-muted/30 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm"
-            >
-              <span className="truncate">{file.name}</span>
-              <span className="text-muted-foreground shrink-0">
-                {Math.max(1, Math.round(file.size / 1024))} Ko
-              </span>
+      {/* Uploaded entries */}
+      {entries.length > 0 && (
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
+          {entries.map((entry) => (
+            <div key={entry.url} className="group relative">
+              {entry.isImage && entry.previewUrl ? (
+                <div className="bg-muted aspect-square overflow-hidden rounded-lg border">
+                  <img
+                    src={entry.previewUrl}
+                    alt={entry.name}
+                    className="size-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="bg-muted/50 flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border px-2 text-center">
+                  <FilePlus2 className="text-muted-foreground size-5 shrink-0" />
+                  <span className="text-muted-foreground line-clamp-2 text-[10px]">
+                    {entry.name}
+                  </span>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => removeEntry(entry.url, entry.previewUrl)}
+                className="bg-background/80 absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
+                aria-label={`Retirer ${entry.name}`}
+              >
+                <X className="size-3" />
+              </button>
             </div>
           ))}
         </div>
-      ) : null}
+      )}
+
+      {/* Dropzone */}
+      {!isFull && (
+        <Label
+          htmlFor={inputId}
+          onDragEnter={(e: DragEvent<HTMLLabelElement>) => {
+            e.preventDefault()
+            setIsDragging(true)
+          }}
+          onDragOver={(e: DragEvent<HTMLLabelElement>) => {
+            e.preventDefault()
+            setIsDragging(true)
+          }}
+          onDragLeave={() => setIsDragging(false)}
+          onDrop={(e: DragEvent<HTMLLabelElement>) => {
+            e.preventDefault()
+            setIsDragging(false)
+            void addFiles(e.dataTransfer.files)
+          }}
+          className={cn(
+            'border-border bg-background/40 hover:bg-muted/40 flex cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 py-5 text-center transition-colors',
+            isDragging && 'border-primary bg-primary/10',
+            isUploading && 'pointer-events-none opacity-60',
+          )}
+        >
+          {isUploading ? (
+            <Loader2 className="text-muted-foreground pointer-events-none size-5 animate-spin" />
+          ) : (
+            <FilePlus2 className="text-muted-foreground pointer-events-none size-5" />
+          )}
+          <span className="pointer-events-none mt-2 text-sm font-medium">
+            {isUploading ? 'Upload en cours…' : 'Glisse les médias ici'}
+          </span>
+          <span className="text-muted-foreground pointer-events-none mt-1 text-xs">
+            {canUpload
+              ? `ou clique · max ${MAX_MEDIA} fichiers`
+              : 'Supabase non configuré'}
+          </span>
+          <Input
+            ref={inputRef}
+            id={inputId}
+            type="file"
+            multiple
+            accept="image/*,video/*,audio/*,application/pdf,text/plain"
+            className="sr-only"
+            disabled={isUploading}
+            onChange={(event) => void addFiles(event.target.files)}
+          />
+        </Label>
+      )}
     </div>
   )
 }

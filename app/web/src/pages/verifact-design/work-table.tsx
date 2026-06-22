@@ -1,7 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { ExternalLink } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { Badge } from '@shared/ui/shadcn/badge'
+import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
@@ -178,6 +178,31 @@ function historyCopy(actor: Actor) {
   }
 }
 
+const STATUS_STYLE: Record<string, string> = {
+  Publiee: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  Corrigee: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  'Revue direction': 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  Relecture: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+  'En enquête': 'bg-violet-500/10 text-violet-400 border-violet-500/20',
+  'En cours': 'bg-violet-500/10 text-violet-400 border-violet-500/20',
+  Ouvert: 'bg-sky-500/10 text-sky-400 border-sky-500/20',
+  Archive: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
+}
+
+function StatusBadge({ status }: { status: string }) {
+  const style = STATUS_STYLE[status]
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium',
+        style ?? 'bg-muted text-muted-foreground border-transparent',
+      )}
+    >
+      {status}
+    </span>
+  )
+}
+
 function HistoryCard(props: {
   title: string
   description: string
@@ -233,7 +258,7 @@ function HistoryCard(props: {
                   {item.context}
                 </TableCell>
                 <TableCell>
-                  <Badge variant="secondary">{item.status}</Badge>
+                  <StatusBadge status={item.status} />
                 </TableCell>
                 <TableCell className="text-muted-foreground">
                   {item.date}

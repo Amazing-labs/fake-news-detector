@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { createReport, reportQueryKeys } from '@entities/report/api'
 import { toApiErrorMessage } from '@shared/api/http'
+import { untrackPendingUploads } from '@shared/lib/supabase'
 import {
   DarkButton,
   DarkFormCard,
@@ -41,6 +42,7 @@ export function CreateReportForm() {
       })
     },
     onSuccess: () => {
+      untrackPendingUploads(media.map((m) => m.url))
       setTheme(defaultVerificationTheme)
       setTitle('')
       setContent('')
