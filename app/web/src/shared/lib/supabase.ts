@@ -49,7 +49,9 @@ export function getPendingUploads(): string[] {
   try {
     const raw = localStorage.getItem(PENDING_UPLOADS_KEY)
     const parsed: unknown = raw ? JSON.parse(raw) : []
-    return Array.isArray(parsed) ? (parsed as string[]) : []
+    return Array.isArray(parsed)
+      ? parsed.filter((v): v is string => typeof v === 'string')
+      : []
   } catch {
     return []
   }
@@ -57,6 +59,7 @@ export function getPendingUploads(): string[] {
 
 export function trackPendingUpload(url: string) {
   const pending = getPendingUploads()
+  if (pending.includes(url)) return
   localStorage.setItem(PENDING_UPLOADS_KEY, JSON.stringify([...pending, url]))
 }
 
