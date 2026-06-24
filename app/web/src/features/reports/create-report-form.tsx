@@ -59,7 +59,7 @@ export function CreateReportForm() {
     const normalizedMedia = normalizeMediaDrafts(media)
 
     if (normalizedMedia.length === 0) {
-      toast.error('Au moins un media est requis pour envoyer un signalement.')
+      toast.error('Au moins un média est requis pour envoyer un signalement.')
       return
     }
 
@@ -107,9 +107,9 @@ export function CreateReportForm() {
           onChange={setMedia}
           variant="dark"
         />
-        {media.length === 0 && (
+        {normalizeMediaDrafts(media).length === 0 && (
           <p className="text-xs text-red-400">
-            Au moins un media est requis pour envoyer un signalement.
+            Au moins un média est requis pour envoyer un signalement.
           </p>
         )}
 

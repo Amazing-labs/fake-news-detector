@@ -23,8 +23,14 @@ import type {
 
 function DownloadButton({ href, label }: { href: string; label: string }) {
   const [loading, setLoading] = useState(false)
-  const ext = href.split('.').pop()?.split('?')[0] ?? ''
-  const filename = ext ? `media.${ext}` : 'media'
+  const filename = (() => {
+    try {
+      const ext = new URL(href).pathname.split('.').pop() ?? ''
+      return ext && ext.length <= 6 ? `media.${ext}` : 'media'
+    } catch {
+      return 'media'
+    }
+  })()
 
   return (
     <Button
@@ -436,7 +442,8 @@ export function WatcherEvidenceCard({
           ) : (
             <div className="grid gap-3">
               {evidence.media.map((m, i) => {
-                const classified = m.category && m.reliability
+                const classified =
+                  m.category && m.reliability && m.justification
                 return (
                   <div key={i} className="grid gap-2 rounded-lg border p-3">
                     <div className="flex flex-wrap items-center justify-between gap-2">

@@ -106,7 +106,7 @@ export function SubmitWatcherEvidenceForm() {
           onChange={setMedia}
           variant="dark"
         />
-        {media.length === 0 && (
+        {validMedia.length === 0 && (
           <p className="text-xs text-red-400">
             Au moins un média est requis pour soumettre une preuve.
           </p>

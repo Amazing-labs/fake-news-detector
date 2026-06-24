@@ -4,9 +4,13 @@ export function triggerBlobDownload(blob: Blob, filename: string) {
   anchor.href = objectUrl
   anchor.download = filename
   document.body.appendChild(anchor)
-  anchor.click()
-  document.body.removeChild(anchor)
-  URL.revokeObjectURL(objectUrl)
+  try {
+    anchor.click()
+  } finally {
+    anchor.remove()
+    // Defer revocation so the browser has time to start the download
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 0)
+  }
 }
 
 export async function downloadFromUrl(url: string, filename: string) {

@@ -34,6 +34,11 @@ import {
 } from './media-cards'
 import { DossierHeader, MetaCell, OriginBadge } from './primitives'
 import type {
+  MediaCategory,
+  MediaType,
+  Verdict,
+} from '@entities/investigation/schemas'
+import type {
   Dossier,
   JournalistProofMedia,
   SourceGroup,
@@ -51,17 +56,19 @@ export function JournalistInvestigationWorkspace({
   journalistProofMedia: JournalistProofMedia[]
   watcherEvidence: WatcherEvidenceItem[]
 }) {
-  const [proofType, setProofType] = useState('LINK')
-  const [mediaCategory, setMediaCategory] = useState<string>(
+  const [proofType, setProofType] = useState<MediaType>('LINK')
+  const [mediaCategory, setMediaCategory] = useState<MediaCategory | ''>(
     dossier.category ?? '',
   )
-  const [draftVerdict, setDraftVerdict] = useState<string>(
+  const [draftVerdict, setDraftVerdict] = useState<Verdict>(
     dossier.verdict ?? 'UNVERIFIABLE',
   )
+  const [notes, setNotes] = useState<string>(dossier.notes ?? '')
 
-  // Snapshot at mount — checked only in the submit handler (not during render)
+  // Snapshots at mount — checked only in the submit handler (not during render)
   const initialCategory = useRef(dossier.category ?? '')
   const initialVerdict = useRef(dossier.verdict ?? 'UNVERIFIABLE')
+  const initialNotes = useRef(dossier.notes ?? '')
 
   const allSourceMedia = sourceGroups.flatMap((g) => g.media)
   const allEvidenceMedia = watcherEvidence.flatMap((e) => e.media)
@@ -69,7 +76,8 @@ export function JournalistInvestigationWorkspace({
   function handleSubmitForReview() {
     const isDirty =
       mediaCategory !== initialCategory.current ||
-      draftVerdict !== initialVerdict.current
+      draftVerdict !== initialVerdict.current ||
+      notes !== initialNotes.current
 
     if (!isDirty) {
       toast.error(
@@ -194,7 +202,9 @@ export function JournalistInvestigationWorkspace({
                       Type
                       <select
                         value={proofType}
-                        onChange={(e) => setProofType(e.target.value)}
+                        onChange={(e) =>
+                          setProofType(e.target.value as MediaType)
+                        }
                         className={SELECT_CLASS}
                       >
                         {MEDIA_TYPE_OPTIONS.map(([v, l]) => (
@@ -270,7 +280,9 @@ export function JournalistInvestigationWorkspace({
                     Catégorie dominante
                     <select
                       value={mediaCategory}
-                      onChange={(e) => setMediaCategory(e.target.value)}
+                      onChange={(e) =>
+                        setMediaCategory(e.target.value as MediaCategory)
+                      }
                       className={SELECT_CLASS}
                     >
                       <option value="" disabled>
@@ -287,7 +299,9 @@ export function JournalistInvestigationWorkspace({
                     Verdict brouillon
                     <select
                       value={draftVerdict}
-                      onChange={(e) => setDraftVerdict(e.target.value)}
+                      onChange={(e) =>
+                        setDraftVerdict(e.target.value as Verdict)
+                      }
                       className={SELECT_CLASS}
                     >
                       {RELIABILITY_OPTIONS.map(([v, l]) => (
@@ -301,7 +315,8 @@ export function JournalistInvestigationWorkspace({
                 <Label className="grid gap-1.5 text-sm">
                   Notes d&apos;enquête
                   <Textarea
-                    defaultValue={dossier.notes}
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
                     rows={5}
                     className="resize-none"
                     placeholder="Vos observations de travail — visibles par la direction lors de la revue."
