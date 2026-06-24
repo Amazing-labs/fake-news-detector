@@ -54,10 +54,12 @@ export function CreateDirectorInboxSubjectForm() {
   })
 
   function handleSubmit() {
-    if (!description.trim() && normalizeMediaDrafts(media).length === 0) {
-      toast.error(
-        'Ajoute une description ou au moins un média avant de créer le sujet.',
-      )
+    if (!description.trim()) {
+      toast.error('La description est obligatoire.')
+      return
+    }
+    if (normalizeMediaDrafts(media).length === 0) {
+      toast.error('Au moins un média est requis.')
       return
     }
 
@@ -96,8 +98,16 @@ export function CreateDirectorInboxSubjectForm() {
           onChange={setMedia}
           variant="dark"
         />
+        {media.length === 0 && (
+          <p className="text-xs text-red-400">
+            Au moins un média est requis pour créer un sujet.
+          </p>
+        )}
         <div>
-          <DarkButton type="submit" disabled={mutation.isPending}>
+          <DarkButton
+            type="submit"
+            disabled={mutation.isPending || !description.trim() || normalizeMediaDrafts(media).length === 0}
+          >
             {mutation.isPending ? 'Création...' : 'Créer le sujet'}
           </DarkButton>
         </div>

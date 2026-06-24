@@ -70,7 +70,12 @@ export function PublishCorrectionForm(props: {
           onChange={(event) => setContent(event.target.value)}
         />
         <div>
-          <DarkButton type="submit" disabled={mutation.isPending}>
+          <DarkButton
+            type="submit"
+            disabled={
+              mutation.isPending || !title.trim() || !content.trim()
+            }
+          >
             {mutation.isPending ? 'Publication...' : 'Publier la correction'}
           </DarkButton>
         </div>

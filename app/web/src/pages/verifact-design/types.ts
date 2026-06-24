@@ -32,7 +32,7 @@ export type RoleCard = {
   actor: Actor
   title: string
   description: string
-  metric: string
+  metric?: string
   icon: LucideIcon
 }
 

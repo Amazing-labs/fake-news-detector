@@ -136,6 +136,14 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
               toast.error("La référence d'enquête est obligatoire.")
               return
             }
+            if (verifiedLink.trim()) {
+              try {
+                new URL(verifiedLink.trim())
+              } catch {
+                toast.error('Le lien vérifié doit être une URL valide (ex: https://…).')
+                return
+              }
+            }
             publishMutation.mutate()
           }}
         >

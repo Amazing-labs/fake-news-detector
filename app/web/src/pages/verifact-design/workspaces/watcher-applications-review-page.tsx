@@ -88,14 +88,6 @@ export function WatcherApplicationsReviewPage() {
 
   return (
     <AppLayout actor="director" page="people">
-      <Card>
-        <CardHeader>
-          <CardTitle>Espace vigie</CardTitle>
-          <CardDescription>
-            Valider les candidatures et garder une trace des decisions.
-          </CardDescription>
-        </CardHeader>
-      </Card>
       <Tabs defaultValue="pending">
         <TabsList>
           <TabsTrigger value="pending">Candidatures</TabsTrigger>

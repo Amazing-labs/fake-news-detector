@@ -23,13 +23,13 @@ export const actorLabels: Record<Actor, string> = {
 
 export const navItems: NavItem[] = [
   { label: 'Tableau de bord', to: '/dashboard', icon: LayoutDashboard },
-  { label: 'Sujets', to: '/inbox-subjects/global', icon: Inbox, badge: '24' },
-  { label: 'Signalements', to: '/reports', icon: FileSearch, badge: '8' },
-  { label: 'Enquêtes', to: '/investigations', icon: ShieldCheck, badge: '5' },
+  { label: 'Sujets', to: '/inbox-subjects/global', icon: Inbox },
+  { label: 'Signalements', to: '/reports', icon: FileSearch },
+  { label: 'Enquêtes', to: '/investigations', icon: ShieldCheck },
   { label: 'Vigies', to: '/watcher-applications', icon: BookOpenCheck },
   { label: 'Publications', to: '/publications/list', icon: Newspaper },
   { label: 'Utilisateurs', to: '/journalists/list', icon: Users },
-  { label: 'Notifications', to: '/notifications', icon: Bell, badge: '12' },
+  { label: 'Notifications', to: '/notifications', icon: Bell },
   { label: 'Profil', to: '/profile', icon: UserCog },
 ]
 
@@ -78,7 +78,6 @@ export const roleCards: RoleCard[] = [
     title: 'Citoyen',
     description:
       'Déposer un signalement, suivre son état et recevoir les corrections.',
-    metric: '8 retours',
     icon: FilePlus2,
   },
   {
@@ -86,7 +85,6 @@ export const roleCards: RoleCard[] = [
     title: 'Vigie',
     description:
       'Qualifier les sujets entrants et documenter les premières preuves.',
-    metric: '16 sujets',
     icon: FileSearch,
   },
   {
@@ -94,7 +92,6 @@ export const roleCards: RoleCard[] = [
     title: 'Journaliste',
     description:
       'Conduire les enquêtes, recouper les sources et préparer la note.',
-    metric: '5 enquêtes',
     icon: BookOpenCheck,
   },
   {
@@ -102,29 +99,7 @@ export const roleCards: RoleCard[] = [
     title: 'Directeur',
     description:
       'Arbitrer, publier, demander un correctif ou archiver un dossier.',
-    metric: '3 arbitrages',
     icon: ShieldCheck,
-  },
-]
-
-export const workItems = [
-  {
-    title: "Crise d'essence",
-    source: 'Signalement citoyen',
-    status: 'En attente',
-    priority: 'Haute',
-  },
-  {
-    title: 'Vidéo sortie de contexte',
-    source: 'Réseaux sociaux',
-    status: 'Enquête',
-    priority: 'Critique',
-  },
-  {
-    title: 'Chiffre économique contesté',
-    source: 'Publication locale',
-    status: 'Relecture',
-    priority: 'Normale',
   },
 ]
 

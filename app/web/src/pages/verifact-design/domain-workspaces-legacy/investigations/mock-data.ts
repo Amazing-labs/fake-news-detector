@@ -1,7 +1,7 @@
 import type {
   Dossier,
   JournalistProofMedia,
-  SourceMedia,
+  SourceGroup,
   WatcherEvidenceItem,
 } from './types'
 
@@ -19,24 +19,40 @@ export const mockDossier: Dossier = {
     'La séquence est authentique mais ancienne. Elle est republiée comme si elle documentait la situation actuelle.',
 }
 
-export const mockSourceMedia: SourceMedia[] = [
+export const mockSourceGroups: SourceGroup[] = [
   {
-    title: 'Séquence vidéo du signalement citoyen',
-    type: 'VIDEO',
     origin: 'CITIZEN_REPORT',
-    reliability: 'MISLEADING',
-    category: 'CONTEXT_COLLAPSE',
-    justification:
-      "Les uniformes et le décor correspondent à une patrouille archivée, pas à l'événement actuel.",
+    submitterNote:
+      "J'ai vu cette vidéo partagée sur plusieurs groupes WhatsApp ce matin avec la légende « opération en cours ». Elle semble ancienne mais circule comme si c'était aujourd'hui.",
+    media: [
+      {
+        title: 'Séquence vidéo du signalement citoyen',
+        type: 'VIDEO',
+        url: 'https://www.w3schools.com/html/mov_bbb.mp4',
+        origin: 'CITIZEN_REPORT',
+        reliability: 'MISLEADING',
+        category: 'CONTEXT_COLLAPSE',
+        justification:
+          "Les uniformes et le décor correspondent à une patrouille archivée, pas à l'événement actuel.",
+      },
+    ],
   },
   {
-    title: 'Capture publiée par la direction éditoriale',
-    type: 'IMAGE',
     origin: 'DIRECTOR_INITIATED',
-    reliability: 'UNVERIFIABLE',
-    category: 'OTHER',
-    justification:
-      "La capture seule ne permet pas d'établir la date ni le lieu.",
+    submitterNote:
+      "Capture extraite d'un fil Twitter signalé par notre veille automatique. La date de publication ne correspond pas au contexte allégué.",
+    media: [
+      {
+        title: 'Capture publiée par la direction éditoriale',
+        type: 'IMAGE',
+        url: 'https://picsum.photos/seed/mockdirector/1200/675',
+        origin: 'DIRECTOR_INITIATED',
+        reliability: 'UNVERIFIABLE',
+        category: 'OTHER',
+        justification:
+          "La capture seule ne permet pas d'établir la date ni le lieu.",
+      },
+    ],
   },
 ]
 
@@ -62,17 +78,34 @@ export const mockWatcherEvidence: WatcherEvidenceItem[] = [
   {
     title: 'Comparaison du décor filmé',
     watcher: 'Awa Diarra',
-    media: '2 images',
-    category: 'CONTEXT_COLLAPSE',
-    reliability: 'TRUE',
+    media: [
+      {
+        url: 'https://picsum.photos/seed/awa1/800/600',
+        type: 'IMAGE',
+        category: 'CONTEXT_COLLAPSE',
+        reliability: 'TRUE',
+        justification:
+          "Le panneau dans l'image correspond exactement au checkpoint archive de 2022.",
+      },
+      {
+        url: 'https://picsum.photos/seed/awa2/800/600',
+        type: 'IMAGE',
+      },
+    ],
     note: "Le panneau visible dans la vidéo correspond à l'ancien checkpoint.",
   },
   {
     title: 'Recherche de publication antérieure',
     watcher: 'Malik Sissoko',
-    media: '1 lien',
-    category: 'MISLEADING',
-    reliability: 'TRUE',
+    media: [
+      {
+        url: 'https://example.com/archive-2022-extrait',
+        type: 'LINK',
+        category: 'MISLEADING',
+        reliability: 'TRUE',
+        justification: 'Archive accessible, date de publication confirmee.',
+      },
+    ],
     note: 'Le même extrait circule déjà dans une archive de 2022.',
   },
 ]

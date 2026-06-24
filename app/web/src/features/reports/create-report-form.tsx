@@ -56,13 +56,10 @@ export function CreateReportForm() {
   })
 
   function handleSubmit() {
-    const hasText = title.trim().length > 0 || content.trim().length > 0
     const normalizedMedia = normalizeMediaDrafts(media)
 
-    if (!hasText && normalizedMedia.length === 0) {
-      toast.error(
-        'Ajoute une rumeur, un message reçu ou au moins un média avant d’envoyer.',
-      )
+    if (normalizedMedia.length === 0) {
+      toast.error("Au moins un media est requis pour envoyer un signalement.")
       return
     }
 
@@ -110,9 +107,17 @@ export function CreateReportForm() {
           onChange={setMedia}
           variant="dark"
         />
+        {media.length === 0 && (
+          <p className="text-xs text-red-400">
+            Au moins un media est requis pour envoyer un signalement.
+          </p>
+        )}
 
         <div className="flex flex-wrap gap-2">
-          <DarkButton type="submit" disabled={mutation.isPending}>
+          <DarkButton
+            type="submit"
+            disabled={mutation.isPending || normalizeMediaDrafts(media).length === 0}
+          >
             {mutation.isPending ? 'Envoi...' : 'Envoyer le signalement'}
           </DarkButton>
           <Link

@@ -319,7 +319,7 @@ export function AppLayout(props: {
           </nav>
         </header>
 
-        <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 sm:p-6">
+        <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 overflow-x-hidden p-4 sm:p-6">
           {props.children}
         </main>
       </div>

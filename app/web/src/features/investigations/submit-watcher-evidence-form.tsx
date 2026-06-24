@@ -49,6 +49,13 @@ export function SubmitWatcherEvidenceForm() {
     },
   })
 
+  const validMedia = normalizeMediaDrafts(media)
+  const canSubmit =
+    investigationId.trim() !== '' &&
+    title.trim() !== '' &&
+    content.trim() !== '' &&
+    validMedia.length > 0
+
   return (
     <DarkFormCard
       title="Soumettre une preuve vigie"
@@ -58,6 +65,22 @@ export function SubmitWatcherEvidenceForm() {
         className="mt-6 grid gap-4"
         onSubmit={(event) => {
           event.preventDefault()
+          if (!investigationId.trim()) {
+            toast.error("La référence d'enquête est obligatoire.")
+            return
+          }
+          if (!title.trim()) {
+            toast.error('Le titre est obligatoire.')
+            return
+          }
+          if (!content.trim()) {
+            toast.error('Le contenu est obligatoire.')
+            return
+          }
+          if (validMedia.length === 0) {
+            toast.error('Au moins un média est requis.')
+            return
+          }
           mutation.mutate()
         }}
       >
@@ -83,8 +106,13 @@ export function SubmitWatcherEvidenceForm() {
           onChange={setMedia}
           variant="dark"
         />
+        {media.length === 0 && (
+          <p className="text-xs text-red-400">
+            Au moins un média est requis pour soumettre une preuve.
+          </p>
+        )}
         <div>
-          <DarkButton type="submit" disabled={mutation.isPending}>
+          <DarkButton type="submit" disabled={mutation.isPending || !canSubmit}>
             {mutation.isPending ? 'Envoi...' : 'Envoyer la preuve'}
           </DarkButton>
         </div>

@@ -15,20 +15,10 @@ import {
   TabsList,
   TabsTrigger,
 } from '@shared/ui/shadcn/tabs'
-import { CheckCircle2, ShieldCheck, Trophy } from 'lucide-react'
+import { CheckCircle2, ShieldCheck } from 'lucide-react'
 import { AppLayout } from './app-layout'
 import { initials, sessionRoleLabel, useResolvedActor } from './session-routing'
-import type { Actor } from './types'
 import { WorkTable } from './work-table'
-
-const contributionScores: Record<Actor, { score: number; detail: string }> = {
-  guest: { score: 0, detail: 'session invitée' },
-  citizen: { score: 42, detail: 'signalements utiles' },
-  watcher: { score: 68, detail: 'preuves relues' },
-  journalist: { score: 81, detail: 'dossiers documentés' },
-  director: { score: 89, detail: 'arbitrages finalisés' },
-  admin: { score: 74, detail: 'comptes maintenus' },
-}
 
 export function ProfileDashboard() {
   const { session, actor, isActorPending } = useResolvedActor('journalist')
@@ -56,7 +46,6 @@ export function ProfileDashboard() {
   const email = session?.user.email ?? 'Session invitée'
   const roleLabel = sessionRoleLabel(session, actor)
   const statusLabel = formatActorStatus(session?.user.actorStatus)
-  const contribution = contributionScores[actor]
 
   return (
     <AppLayout actor={actor} page="profile">
@@ -85,7 +74,7 @@ export function ProfileDashboard() {
             </div>
 
             {/* Stats row */}
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
+            <div className="mt-5 grid gap-3 sm:grid-cols-2">
               <StatCell
                 icon={<ShieldCheck className="size-4" />}
                 label="Rôle"
@@ -95,12 +84,6 @@ export function ProfileDashboard() {
                 icon={<CheckCircle2 className="size-4" />}
                 label="Statut"
                 value={statusLabel}
-              />
-              <StatCell
-                icon={<Trophy className="size-4" />}
-                label="Score contribution"
-                value={String(contribution.score)}
-                sub={contribution.detail}
               />
             </div>
           </CardContent>

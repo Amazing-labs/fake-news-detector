@@ -15,7 +15,7 @@ import { JournalistInvestigationWorkspace } from './journalist-workspace'
 import {
   mockDossier,
   mockJournalistProofMedia,
-  mockSourceMedia,
+  mockSourceGroups,
   mockWatcherEvidence,
 } from './mock-data'
 import { WatcherInvestigationWorkspace } from './watcher-workspace'
@@ -79,7 +79,7 @@ export function InvestigationDetailWorkspacePage({
     return (
       <JournalistInvestigationWorkspace
         dossier={dossier}
-        sourceMedia={mockSourceMedia}
+        sourceGroups={mockSourceGroups}
         journalistProofMedia={mockJournalistProofMedia}
         watcherEvidence={mockWatcherEvidence}
       />
@@ -90,6 +90,8 @@ export function InvestigationDetailWorkspacePage({
     return (
       <WatcherInvestigationWorkspace
         dossier={dossier}
+        sourceGroups={mockSourceGroups}
+        journalistProofMedia={mockJournalistProofMedia}
         watcherEvidence={mockWatcherEvidence}
       />
     )
@@ -98,7 +100,7 @@ export function InvestigationDetailWorkspacePage({
   return (
     <DirectorInvestigationWorkspace
       dossier={dossier}
-      sourceMedia={mockSourceMedia}
+      sourceGroups={mockSourceGroups}
       journalistProofMedia={mockJournalistProofMedia}
       watcherEvidence={mockWatcherEvidence}
     />
