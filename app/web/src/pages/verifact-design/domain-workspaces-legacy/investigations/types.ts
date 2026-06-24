@@ -10,10 +10,17 @@ import type {
 export type SourceMedia = {
   title: string
   type: MediaType
+  url?: string
   origin: Extract<MediaOrigin, 'CITIZEN_REPORT' | 'DIRECTOR_INITIATED'>
   reliability: Verdict
   category: MediaCategory
   justification: string
+}
+
+export type SourceGroup = {
+  origin: Extract<MediaOrigin, 'CITIZEN_REPORT' | 'DIRECTOR_INITIATED'>
+  submitterNote?: string
+  media: SourceMedia[]
 }
 
 export type JournalistProofMedia = {
@@ -25,12 +32,18 @@ export type JournalistProofMedia = {
   url?: string
 }
 
+export type WatcherEvidenceMedia = {
+  url: string
+  type: MediaType
+  category?: MediaCategory
+  reliability?: Verdict
+  justification?: string
+}
+
 export type WatcherEvidenceItem = {
   title: string
   watcher: string
-  media: string
-  category?: MediaCategory
-  reliability?: Verdict
+  media: WatcherEvidenceMedia[]
   note: string
 }
 

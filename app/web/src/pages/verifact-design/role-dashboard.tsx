@@ -12,7 +12,6 @@ import {
 } from '@shared/ui/shadcn/card'
 import { AppLayout } from './app-layout'
 import { roleCards } from './data'
-import { MetricGrid } from './metric-grid'
 import { useResolvedActor } from './session-routing'
 import type { Actor } from './types'
 import { WorkTable } from './work-table'
@@ -37,7 +36,6 @@ export function RoleDashboard({ actor: fallbackActor }: { actor?: Actor }) {
 
   return (
     <AppLayout actor={actor} page="dashboard">
-      <MetricGrid actor={actor} />
       <div className="grid gap-6 xl:grid-cols-[1.3fr_0.7fr]">
         <WorkTable
           action={
@@ -75,9 +73,6 @@ export function RoleDashboard({ actor: fallbackActor }: { actor?: Actor }) {
                     <RoleIcon className="text-muted-foreground size-4" />
                     <div className="min-w-0 flex-1">
                       <p className="font-medium">{role.title}</p>
-                      <p className="text-muted-foreground text-xs">
-                        {role.metric}
-                      </p>
                     </div>
                     {role.actor === actor ? <Badge>Actif</Badge> : null}
                   </div>

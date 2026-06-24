@@ -16,7 +16,9 @@ export function PublishCorrectionForm(props: {
   const [publicationId, setPublicationId] = useState('')
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const currentPublicationId = props.initialPublicationId ?? publicationId
+  const currentPublicationId = (
+    props.initialPublicationId ?? publicationId
+  ).trim()
 
   const mutation = useMutation({
     mutationFn: () =>
@@ -50,6 +52,10 @@ export function PublishCorrectionForm(props: {
         className="mt-6 grid gap-4"
         onSubmit={(event) => {
           event.preventDefault()
+          if (!currentPublicationId.trim()) {
+            toast.error('La référence de publication est obligatoire.')
+            return
+          }
           mutation.mutate()
         }}
       >
@@ -70,7 +76,15 @@ export function PublishCorrectionForm(props: {
           onChange={(event) => setContent(event.target.value)}
         />
         <div>
-          <DarkButton type="submit" disabled={mutation.isPending}>
+          <DarkButton
+            type="submit"
+            disabled={
+              mutation.isPending ||
+              !currentPublicationId.trim() ||
+              !title.trim() ||
+              !content.trim()
+            }
+          >
             {mutation.isPending ? 'Publication...' : 'Publier la correction'}
           </DarkButton>
         </div>

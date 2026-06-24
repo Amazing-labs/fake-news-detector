@@ -33,6 +33,7 @@ import {
 import { CreateDirectorInboxSubjectForm } from '@features/inbox-subjects/create-director-inbox-subject-form'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
+import { downloadFromUrl, triggerBlobDownload } from '@shared/lib/download'
 import { domainLabel } from '../workspace-labels'
 import { MetaCell, StatusBadge } from '../workspace-ui'
 import { inboxSubjects, reports } from '../workspace-mocks'
@@ -447,17 +448,6 @@ export function InboxSubjectDetailWorkspacePage({
 
 // ── Media helpers ──────────────────────────────────────────────────────────────
 
-function triggerBlobDownload(blob: Blob, filename: string) {
-  const objectUrl = URL.createObjectURL(blob)
-  const anchor = document.createElement('a')
-  anchor.href = objectUrl
-  anchor.download = filename
-  document.body.appendChild(anchor)
-  anchor.click()
-  document.body.removeChild(anchor)
-  URL.revokeObjectURL(objectUrl)
-}
-
 async function downloadMedia(item: SubjectMedia) {
   const contentUrl =
     item.type === 'IMAGE'
@@ -481,14 +471,7 @@ async function downloadMedia(item: SubjectMedia) {
     return
   }
 
-  try {
-    const response = await fetch(contentUrl)
-    if (!response.ok) throw new Error(`Download failed: ${response.status}`)
-    const blob = await response.blob()
-    triggerBlobDownload(blob, item.name)
-  } catch {
-    window.open(contentUrl, '_blank', 'noopener,noreferrer')
-  }
+  await downloadFromUrl(contentUrl, item.name)
 }
 
 type SubjectMedia = {

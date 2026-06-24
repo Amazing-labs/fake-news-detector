@@ -19,27 +19,23 @@ import { DossierHeader, MetaCell, NotesBlock, OriginBadge } from './primitives'
 import type {
   Dossier,
   JournalistProofMedia,
-  SourceMedia,
+  SourceGroup,
   WatcherEvidenceItem,
 } from './types'
 
 export function DirectorInvestigationWorkspace({
   dossier,
-  sourceMedia,
+  sourceGroups,
   journalistProofMedia,
   watcherEvidence,
 }: {
   dossier: Dossier
-  sourceMedia: SourceMedia[]
+  sourceGroups: SourceGroup[]
   journalistProofMedia: JournalistProofMedia[]
   watcherEvidence: WatcherEvidenceItem[]
 }) {
   const canPublish = ['TRUE', 'FALSE', 'MISLEADING'].includes(dossier.verdict)
   const canArchive = dossier.verdict === 'UNVERIFIABLE'
-  const citizenMedia = sourceMedia.filter((m) => m.origin === 'CITIZEN_REPORT')
-  const directorMedia = sourceMedia.filter(
-    (m) => m.origin === 'DIRECTOR_INITIATED',
-  )
 
   return (
     <AppLayout actor="director" page="investigations">
@@ -120,37 +116,44 @@ export function DirectorInvestigationWorkspace({
 
         {/* Tabbed review — read-only */}
         <Tabs defaultValue="source">
-          <TabsList>
-            <TabsTrigger value="source">
-              Médias source ({sourceMedia.length})
-            </TabsTrigger>
-            <TabsTrigger value="proof">
-              Preuves journaliste ({journalistProofMedia.length})
-            </TabsTrigger>
-            <TabsTrigger value="watchers">
-              Vigies ({watcherEvidence.length})
-            </TabsTrigger>
-            <TabsTrigger value="notes">Notes</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto pb-px">
+            <TabsList>
+              <TabsTrigger value="source">
+                Médias source ({sourceGroups.flatMap((g) => g.media).length})
+              </TabsTrigger>
+              <TabsTrigger value="proof">
+                Preuves journaliste ({journalistProofMedia.length})
+              </TabsTrigger>
+              <TabsTrigger value="watchers">
+                Vigies ({watcherEvidence.length})
+              </TabsTrigger>
+              <TabsTrigger value="notes">Notes</TabsTrigger>
+            </TabsList>
+          </div>
 
           {/* SOURCE — classified, read-only, grouped by origin */}
           <TabsContent value="source" className="mt-4">
             <div className="grid gap-6">
-              {[
-                { origin: 'CITIZEN_REPORT', items: citizenMedia },
-                { origin: 'DIRECTOR_INITIATED', items: directorMedia },
-              ]
-                .filter((g) => g.items.length > 0)
+              {sourceGroups
+                .filter((g) => g.media.length > 0)
                 .map((group) => (
                   <div key={group.origin} className="grid gap-3">
                     <div className="flex items-center gap-2">
                       <OriginBadge origin={group.origin} />
                       <span className="text-muted-foreground text-sm">
-                        {group.items.length} média
-                        {group.items.length > 1 ? 's' : ''}
+                        {group.media.length} média
+                        {group.media.length > 1 ? 's' : ''}
                       </span>
                     </div>
-                    {group.items.map((media) => (
+                    {group.submitterNote && (
+                      <div className="border-l-2 pl-3">
+                        <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
+                          Note du signalant
+                        </p>
+                        <p className="text-sm">{group.submitterNote}</p>
+                      </div>
+                    )}
+                    {group.media.map((media) => (
                       <SourceMediaReadRow key={media.title} media={media} />
                     ))}
                   </div>
