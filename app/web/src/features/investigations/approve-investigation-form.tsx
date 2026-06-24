@@ -140,7 +140,9 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
               try {
                 new URL(verifiedLink.trim())
               } catch {
-                toast.error('Le lien vérifié doit être une URL valide (ex: https://…).')
+                toast.error(
+                  'Le lien vérifié doit être une URL valide (ex: https://…).',
+                )
                 return
               }
             }

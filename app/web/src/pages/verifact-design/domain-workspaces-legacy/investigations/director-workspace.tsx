@@ -134,27 +134,30 @@ export function DirectorInvestigationWorkspace({
           {/* SOURCE — classified, read-only, grouped by origin */}
           <TabsContent value="source" className="mt-4">
             <div className="grid gap-6">
-              {sourceGroups.filter((g) => g.media.length > 0).map((group) => (
-                <div key={group.origin} className="grid gap-3">
-                  <div className="flex items-center gap-2">
-                    <OriginBadge origin={group.origin} />
-                    <span className="text-muted-foreground text-sm">
-                      {group.media.length} média{group.media.length > 1 ? 's' : ''}
-                    </span>
-                  </div>
-                  {group.submitterNote && (
-                    <div className="border-l-2 pl-3">
-                      <p className="text-muted-foreground mb-1 text-xs font-medium uppercase tracking-wide">
-                        Note du signalant
-                      </p>
-                      <p className="text-sm">{group.submitterNote}</p>
+              {sourceGroups
+                .filter((g) => g.media.length > 0)
+                .map((group) => (
+                  <div key={group.origin} className="grid gap-3">
+                    <div className="flex items-center gap-2">
+                      <OriginBadge origin={group.origin} />
+                      <span className="text-muted-foreground text-sm">
+                        {group.media.length} média
+                        {group.media.length > 1 ? 's' : ''}
+                      </span>
                     </div>
-                  )}
-                  {group.media.map((media) => (
-                    <SourceMediaReadRow key={media.title} media={media} />
-                  ))}
-                </div>
-              ))}
+                    {group.submitterNote && (
+                      <div className="border-l-2 pl-3">
+                        <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
+                          Note du signalant
+                        </p>
+                        <p className="text-sm">{group.submitterNote}</p>
+                      </div>
+                    )}
+                    {group.media.map((media) => (
+                      <SourceMediaReadRow key={media.title} media={media} />
+                    ))}
+                  </div>
+                ))}
             </div>
           </TabsContent>
 

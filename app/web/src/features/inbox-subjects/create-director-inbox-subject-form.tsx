@@ -106,7 +106,11 @@ export function CreateDirectorInboxSubjectForm() {
         <div>
           <DarkButton
             type="submit"
-            disabled={mutation.isPending || !description.trim() || normalizeMediaDrafts(media).length === 0}
+            disabled={
+              mutation.isPending ||
+              !description.trim() ||
+              normalizeMediaDrafts(media).length === 0
+            }
           >
             {mutation.isPending ? 'Création...' : 'Créer le sujet'}
           </DarkButton>

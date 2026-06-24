@@ -59,7 +59,7 @@ export function CreateReportForm() {
     const normalizedMedia = normalizeMediaDrafts(media)
 
     if (normalizedMedia.length === 0) {
-      toast.error("Au moins un media est requis pour envoyer un signalement.")
+      toast.error('Au moins un media est requis pour envoyer un signalement.')
       return
     }
 
@@ -116,7 +116,9 @@ export function CreateReportForm() {
         <div className="flex flex-wrap gap-2">
           <DarkButton
             type="submit"
-            disabled={mutation.isPending || normalizeMediaDrafts(media).length === 0}
+            disabled={
+              mutation.isPending || normalizeMediaDrafts(media).length === 0
+            }
           >
             {mutation.isPending ? 'Envoi...' : 'Envoyer le signalement'}
           </DarkButton>

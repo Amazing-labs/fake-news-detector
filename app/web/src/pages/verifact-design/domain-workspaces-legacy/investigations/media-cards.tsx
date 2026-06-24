@@ -89,7 +89,11 @@ function MediaArtifact({
           className="block overflow-hidden rounded-lg border"
           title="Ouvrir en plein ecran"
         >
-          <img src={href} alt={title} className="max-h-56 w-full object-cover" />
+          <img
+            src={href}
+            alt={title}
+            className="max-h-56 w-full object-cover"
+          />
         </a>
         <DownloadButton href={href} label="Telecharger l'image" />
       </div>
@@ -168,7 +172,11 @@ export function SourceMediaCard({ media }: { media: SourceMedia }) {
       </CardHeader>
       <CardContent className="grid gap-4">
         {media.url && (
-          <MediaArtifact url={media.url} type={media.type} title={media.title} />
+          <MediaArtifact
+            url={media.url}
+            type={media.type}
+            title={media.title}
+          />
         )}
         <div className="grid gap-3 md:grid-cols-2">
           <Label className="grid gap-1.5 text-sm">
@@ -196,8 +204,10 @@ export function SourceMediaCard({ media }: { media: SourceMedia }) {
 // ── Source media read-only row (director / watcher view) ───────────────────────
 
 export function SourceMediaReadRow({ media }: { media: SourceMedia }) {
-  const showInline = media.url && (media.type === 'IMAGE' || media.type === 'VIDEO')
-  const showButton = media.url && media.type !== 'IMAGE' && media.type !== 'VIDEO'
+  const showInline =
+    media.url && (media.type === 'IMAGE' || media.type === 'VIDEO')
+  const showButton =
+    media.url && media.type !== 'IMAGE' && media.type !== 'VIDEO'
 
   return (
     <Card className="overflow-hidden">
@@ -211,12 +221,21 @@ export function SourceMediaReadRow({ media }: { media: SourceMedia }) {
             <Badge variant="outline">{domainLabel(media.category)}</Badge>
             <Badge variant="secondary">{domainLabel(media.reliability)}</Badge>
             {showButton && (
-              <MediaArtifact url={media.url!} type={media.type} title={media.title} size="sm" />
+              <MediaArtifact
+                url={media.url!}
+                type={media.type}
+                title={media.title}
+                size="sm"
+              />
             )}
           </div>
         </div>
         {showInline && (
-          <MediaArtifact url={media.url!} type={media.type} title={media.title} />
+          <MediaArtifact
+            url={media.url!}
+            type={media.type}
+            title={media.title}
+          />
         )}
         <p className="text-muted-foreground text-sm">{media.justification}</p>
       </CardContent>
@@ -247,7 +266,9 @@ export function JournalistProofList({
                 <div className="flex min-w-0 items-center gap-2">
                   <MediaTypeIcon type={media.type} />
                   <div className="min-w-0">
-                    <p className="min-w-0 truncate font-medium">{media.title}</p>
+                    <p className="min-w-0 truncate font-medium">
+                      {media.title}
+                    </p>
                     <p className="text-muted-foreground text-xs">
                       {domainLabel(media.sourceType)}
                     </p>
@@ -306,7 +327,11 @@ function EvidenceMediaClassificationRow({
           </Badge>
         )}
       </div>
-      <MediaArtifact url={media.url} type={media.type} title={`Media ${index + 1}`} />
+      <MediaArtifact
+        url={media.url}
+        type={media.type}
+        title={`Media ${index + 1}`}
+      />
       <div className="grid gap-3 md:grid-cols-2">
         <Label className="grid gap-1.5 text-sm">
           Categorie
@@ -358,13 +383,17 @@ export function WatcherEvidenceCard({
             <div className="grid min-w-0 gap-1">
               <div className="flex items-center gap-2">
                 <OriginBadge origin="WATCHER" />
-                <span className="text-muted-foreground text-xs">{evidence.watcher}</span>
+                <span className="text-muted-foreground text-xs">
+                  {evidence.watcher}
+                </span>
               </div>
-              <p className="text-base font-semibold leading-snug">{evidence.title}</p>
+              <p className="text-base leading-snug font-semibold">
+                {evidence.title}
+              </p>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              {withClassification && (
-                allClassified ? (
+              {withClassification &&
+                (allClassified ? (
                   <Badge className="border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300">
                     Tous classés
                   </Badge>
@@ -373,8 +402,7 @@ export function WatcherEvidenceCard({
                     {classifiedCount}/{evidence.media.length} classé
                     {classifiedCount > 1 ? 's' : ''}
                   </Badge>
-                )
-              )}
+                ))}
               <ChevronDown
                 className={cn(
                   'text-muted-foreground size-4 shrink-0 transition-transform duration-200',
@@ -390,14 +418,14 @@ export function WatcherEvidenceCard({
         <CardContent className="grid gap-4 pt-0">
           {evidence.note && (
             <div className="border-l-2 pl-3">
-              <p className="text-muted-foreground mb-1 text-xs font-medium uppercase tracking-wide">
+              <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
                 Observation
               </p>
               <p className="text-sm">{evidence.note}</p>
             </div>
           )}
 
-          <p className="text-muted-foreground text-xs font-medium uppercase tracking-wide">
+          <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
             Médias ({evidence.media.length})
           </p>
 
@@ -414,7 +442,9 @@ export function WatcherEvidenceCard({
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div className="flex items-center gap-2">
                         <MediaTypeIcon type={m.type} />
-                        <span className="text-sm font-medium">Media {i + 1}</span>
+                        <span className="text-sm font-medium">
+                          Media {i + 1}
+                        </span>
                       </div>
                       {classified && (
                         <div className="flex flex-wrap gap-1">
@@ -427,7 +457,11 @@ export function WatcherEvidenceCard({
                         </div>
                       )}
                     </div>
-                    <MediaArtifact url={m.url} type={m.type} title={`Media ${i + 1}`} />
+                    <MediaArtifact
+                      url={m.url}
+                      type={m.type}
+                      title={`Media ${i + 1}`}
+                    />
                   </div>
                 )
               })}
