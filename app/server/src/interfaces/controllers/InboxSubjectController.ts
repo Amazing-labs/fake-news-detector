@@ -13,9 +13,13 @@ import {
   deleteInboxSubjectSchema,
   pickInboxSubjectSchema,
 } from '../http/schemas/inboxSubjectSchemas'
-import { presentInboxSubjectList } from '../presenters/inboxSubjectPresenter'
+import {
+  presentInboxSubject,
+  presentInboxSubjectList,
+} from '../presenters/inboxSubjectPresenter'
 import { presentInvestigation } from '../presenters/investigationPresenter'
 import { presentReportList } from '../presenters/reportPresenter'
+import { NotFoundError } from '../../shared/errors'
 import { z } from 'zod'
 
 const inboxSubjectStatusQuerySchema = z.enum([
@@ -30,6 +34,13 @@ export class InboxSubjectController {
     private readonly inboxSubjectRepository: IInboxSubjectRepository,
     private readonly reportRepository: IReportRepository,
   ) {}
+
+  getById = async (c: Context<{ Variables: AppVariables }>) => {
+    const id = requiredParam(c, 'inboxSubjectId')
+    const subject = await this.inboxSubjectRepository.findById(id)
+    if (!subject) throw new NotFoundError('InboxSubject', id)
+    return ok(c, presentInboxSubject(subject))
+  }
 
   list = async (c: Context<{ Variables: AppVariables }>) => {
     const rawStatus = c.req.query('status')

@@ -1,6 +1,7 @@
 import type { Context } from 'hono'
 import { FactCheckingService } from '../../application/services/FactCheckingService'
 import type { IWatcherApplicationRepository } from '../../domain/repositories'
+import { NotFoundError } from '../../shared/errors'
 import { created, noContent, ok } from '../http/responses'
 import type { AppVariables } from '../http/types'
 import { requiredParam } from '../http/request'
@@ -8,7 +9,10 @@ import {
   submitWatcherApplicationSchema,
   watcherDecisionSchema,
 } from '../http/schemas/watcherApplicationSchemas'
-import { presentWatcherApplicationList } from '../presenters/watcherApplicationPresenter'
+import {
+  presentWatcherApplication,
+  presentWatcherApplicationList,
+} from '../presenters/watcherApplicationPresenter'
 
 export class WatcherApplicationController {
   constructor(
@@ -25,6 +29,14 @@ export class WatcherApplicationController {
         body.motivation,
       )
     return created(c, { id: applicationId }, 'Candidature watcher envoyee')
+  }
+
+  getById = async (c: Context<{ Variables: AppVariables }>) => {
+    const id = requiredParam(c, 'applicationId')
+    const application =
+      await this.watcherApplicationRepository.findWatcherApplicationById(id)
+    if (!application) throw new NotFoundError('WatcherApplication', id)
+    return ok(c, presentWatcherApplication(application))
   }
 
   list = async (c: Context<{ Variables: AppVariables }>) => {

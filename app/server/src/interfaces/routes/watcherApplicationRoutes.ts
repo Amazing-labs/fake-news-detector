@@ -21,6 +21,11 @@ export function createWatcherApplicationRoutes(
     createPermissionMiddleware(securityService, 'watcherApplication.decide'),
     watcherApplicationController.list,
   )
+  routes.get(
+    '/:applicationId',
+    createPermissionMiddleware(securityService, 'watcherApplication.decide'),
+    watcherApplicationController.getById,
+  )
   routes.post(
     '/',
     createPermissionMiddleware(securityService, 'watcher.apply'),

@@ -17,6 +17,7 @@ export function createReportRoutes(
   reportRoutes.use('*', auth)
 
   reportRoutes.get('/', reportController.listReports)
+  reportRoutes.get('/:reportId', reportController.getById)
 
   reportRoutes.post(
     '/',

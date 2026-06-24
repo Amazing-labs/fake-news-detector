@@ -17,6 +17,12 @@ export function createInvestigationRoutes(
   routes.use('*', auth)
 
   routes.get('/', investigationController.list)
+  routes.get('/:investigationId', investigationController.getById)
+  routes.get(
+    '/:investigationId/source-media',
+    investigationController.listSourceMedia,
+  )
+  routes.get('/:investigationId/evidence', investigationController.listEvidence)
   routes.post(
     '/:investigationId/review',
     createPermissionMiddleware(

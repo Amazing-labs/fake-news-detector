@@ -1,6 +1,11 @@
 import type { Context } from 'hono'
 import { FactCheckingService } from '../../application/services/FactCheckingService'
-import type { IInvestigationRepository } from '../../domain/repositories'
+import type {
+  IEvidenceRepository,
+  IInvestigationMediaRepository,
+  IInvestigationRepository,
+} from '../../domain/repositories'
+import { NotFoundError } from '../../shared/errors'
 import { created, noContent, ok } from '../http/responses'
 import type { AppVariables } from '../http/types'
 import { requiredNumericParam, requiredParam } from '../http/request'
@@ -13,12 +18,19 @@ import {
   submitWatcherEvidenceSchema,
   updateMediaSchema,
 } from '../http/schemas/investigationSchemas'
-import { presentInvestigationList } from '../presenters/investigationPresenter'
+import {
+  presentEvidence,
+  presentInvestigation,
+  presentInvestigationList,
+  presentInvestigationMedia,
+} from '../presenters/investigationPresenter'
 
 export class InvestigationController {
   constructor(
     private readonly factCheckingService: FactCheckingService,
     private readonly investigationRepository: IInvestigationRepository,
+    private readonly investigationMediaRepository: IInvestigationMediaRepository,
+    private readonly evidenceRepository: IEvidenceRepository,
   ) {}
 
   list = async (c: Context<{ Variables: AppVariables }>) => {
@@ -53,6 +65,46 @@ export class InvestigationController {
 
     const items = await this.investigationRepository.findPendingReviews()
     return ok(c, presentInvestigationList(items))
+  }
+
+  getById = async (c: Context<{ Variables: AppVariables }>) => {
+    const id = requiredParam(c, 'investigationId')
+    const investigation = await this.investigationRepository.findById(id)
+    if (!investigation) throw new NotFoundError('Investigation', id)
+    return ok(c, presentInvestigation(investigation))
+  }
+
+  listSourceMedia = async (c: Context<{ Variables: AppVariables }>) => {
+    const id = requiredParam(c, 'investigationId')
+    const media =
+      await this.investigationMediaRepository.findByInvestigationId(id)
+    return ok(c, {
+      items: media.map(presentInvestigationMedia),
+      total: media.length,
+    })
+  }
+
+  listEvidence = async (c: Context<{ Variables: AppVariables }>) => {
+    const id = requiredParam(c, 'investigationId')
+    const evidences =
+      await this.evidenceRepository.findWithMediaByInvestigationId(id)
+    const items = evidences.map(({ evidence, media }) => ({
+      ...presentEvidence(evidence),
+      media: media.map((m) => ({
+        id: m.id,
+        url: m.url,
+        type: m.type,
+        order: m.order,
+        evidenceId: m.evidenceId,
+        uploadedById: m.uploadedById,
+        category: m.category ?? null,
+        reliability: m.reliability ?? null,
+        justification: m.justification ?? null,
+        createdAt: m.createdAt.toISOString(),
+        updatedAt: m.updatedAt.toISOString(),
+      })),
+    }))
+    return ok(c, { items, total: items.length })
   }
 
   submitForReview = async (c: Context<{ Variables: AppVariables }>) => {

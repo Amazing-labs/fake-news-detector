@@ -28,5 +28,23 @@ export function createDirectorRoutes(
     directorController.listCitizens,
   )
 
+  routes.post(
+    '/citizens/:citizenId/ban',
+    createPermissionMiddleware(securityService, 'journalist.manage'),
+    directorController.banCitizen,
+  )
+
+  routes.post(
+    '/citizens/:citizenId/disable',
+    createPermissionMiddleware(securityService, 'journalist.manage'),
+    directorController.disableCitizen,
+  )
+
+  routes.post(
+    '/citizens/:citizenId/activate',
+    createPermissionMiddleware(securityService, 'journalist.manage'),
+    directorController.activateCitizen,
+  )
+
   return routes
 }

@@ -22,6 +22,7 @@ import { DirectorController } from './controllers/DirectorController'
 import { InboxSubjectController } from './controllers/InboxSubjectController'
 import { InvestigationController } from './controllers/InvestigationController'
 import { JournalistManagementController } from './controllers/JournalistManagementController'
+import { MeController } from './controllers/MeController'
 import { NotificationController } from './controllers/NotificationController'
 import { PublicationController } from './controllers/PublicationController'
 import { ReportController } from './controllers/ReportController'
@@ -37,6 +38,7 @@ export interface AppDependencies {
   journalistManagementController: JournalistManagementController
   directorController: DirectorController
   notificationController: NotificationController
+  meController: MeController
 }
 
 export function createAppDependencies(): AppDependencies {
@@ -79,6 +81,7 @@ export function createAppDependencies(): AppDependencies {
   const actorManagementService = new ActorManagementService(
     directorRepository,
     journalistRepository,
+    citizenRepository,
   )
   const securityService = new SecurityService(
     new BetterAuthRequestAuthenticator(),
@@ -98,10 +101,13 @@ export function createAppDependencies(): AppDependencies {
     investigationController: new InvestigationController(
       factCheckingService,
       investigationRepository,
+      investigationMediaRepository,
+      evidenceRepository,
     ),
     publicationController: new PublicationController(
       factCheckingService,
       publicationRepository,
+      correctionRepository,
     ),
     watcherApplicationController: new WatcherApplicationController(
       factCheckingService,
@@ -116,7 +122,13 @@ export function createAppDependencies(): AppDependencies {
       publicationRepository,
       notificationRepository,
       citizenRepository,
+      actorManagementService,
     ),
     notificationController: new NotificationController(notificationRepository),
+    meController: new MeController(
+      citizenRepository,
+      journalistRepository,
+      directorRepository,
+    ),
   }
 }

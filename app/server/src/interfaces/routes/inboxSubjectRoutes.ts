@@ -17,6 +17,7 @@ export function createInboxSubjectRoutes(
   routes.use('*', auth)
 
   routes.get('/', inboxSubjectController.list)
+  routes.get('/:inboxSubjectId', inboxSubjectController.getById)
   routes.get(
     '/report-inbox',
     createPermissionMiddleware(securityService, 'report.pick'),

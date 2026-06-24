@@ -17,6 +17,11 @@ export function createPublicationRoutes(
   routes.use('*', auth)
 
   routes.get('/', publicationController.list)
+  routes.get('/:publicationId', publicationController.getById)
+  routes.get(
+    '/:publicationId/corrections',
+    publicationController.listCorrections,
+  )
   routes.post(
     '/:publicationId/corrections',
     createPermissionMiddleware(securityService, 'publication.correct'),
