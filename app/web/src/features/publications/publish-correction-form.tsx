@@ -16,7 +16,9 @@ export function PublishCorrectionForm(props: {
   const [publicationId, setPublicationId] = useState('')
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
-  const currentPublicationId = props.initialPublicationId ?? publicationId
+  const currentPublicationId = (
+    props.initialPublicationId ?? publicationId
+  ).trim()
 
   const mutation = useMutation({
     mutationFn: () =>
