@@ -1,26 +1,17 @@
 import type { Context } from 'hono'
-import type {
-  ICitizenRepository,
-  IDirectorRepository,
-  IJournalistRepository,
-} from '../../domain/repositories'
-import { NotFoundError } from '../../shared/errors'
+import { FactCheckingQueryService } from '../../application/services/FactCheckingQueryService'
+import { BusinessRuleError } from '../../shared/errors'
 import { ok } from '../http/responses'
 import type { AppVariables } from '../http/types'
 
 export class MeController {
-  constructor(
-    private readonly citizenRepository: ICitizenRepository,
-    private readonly journalistRepository: IJournalistRepository,
-    private readonly directorRepository: IDirectorRepository,
-  ) {}
+  constructor(private readonly queryService: FactCheckingQueryService) {}
 
   getMe = async (c: Context<{ Variables: AppVariables }>) => {
     const actor = c.get('actor')
 
     if (actor.actorRole === 'CITIZEN') {
-      const citizen = await this.citizenRepository.findById(actor.actorId)
-      if (!citizen) throw new NotFoundError('Citizen', actor.actorId)
+      const citizen = await this.queryService.getCitizen(actor.actorId)
       return ok(c, {
         id: citizen.id,
         role: 'CITIZEN' as const,
@@ -38,8 +29,7 @@ export class MeController {
     }
 
     if (actor.actorRole === 'JOURNALIST') {
-      const journalist = await this.journalistRepository.findById(actor.actorId)
-      if (!journalist) throw new NotFoundError('Journalist', actor.actorId)
+      const journalist = await this.queryService.getJournalist(actor.actorId)
       return ok(c, {
         id: journalist.id,
         role: 'JOURNALIST' as const,
@@ -55,16 +45,21 @@ export class MeController {
       })
     }
 
-    const director = await this.directorRepository.findById(actor.actorId)
-    if (!director) throw new NotFoundError('Director', actor.actorId)
-    return ok(c, {
-      id: director.id,
-      role: 'EDITORIAL_DIRECTOR' as const,
-      name: director.name,
-      email: director.email,
-      status: director.status,
-      createdAt: director.createdAt.toISOString(),
-      updatedAt: director.updatedAt.toISOString(),
-    })
+    if (actor.actorRole === 'EDITORIAL_DIRECTOR') {
+      const director = await this.queryService.getDirector(actor.actorId)
+      return ok(c, {
+        id: director.id,
+        role: 'EDITORIAL_DIRECTOR' as const,
+        name: director.name,
+        email: director.email,
+        status: director.status,
+        createdAt: director.createdAt.toISOString(),
+        updatedAt: director.updatedAt.toISOString(),
+      })
+    }
+
+    throw new BusinessRuleError(
+      `Unsupported actor role: ${actor.actorRole as string}`,
+    )
   }
 }

@@ -1,54 +1,31 @@
 import type { Context } from 'hono'
 import { ActorManagementService } from '../../application/services/ActorManagementService'
-import type {
-  ICitizenRepository,
-  IInvestigationRepository,
-  INotificationRepository,
-  IPublicationRepository,
-} from '../../domain/repositories'
+import { FactCheckingQueryService } from '../../application/services/FactCheckingQueryService'
 import { noContent, ok } from '../http/responses'
 import type { AppVariables } from '../http/types'
-import { requiredParam } from '../http/request'
-import { journalistActionSchema } from '../http/schemas/journalistSchemas'
-import { ValidationError } from '../../shared/errors'
+import { requiredParam, validatedJson } from '../http/request'
+import type { citizenManagementSchema } from '../http/schemas/common'
 import { presentDirectorDashboard } from '../presenters/directorPresenter'
+import type { z } from 'zod'
 
 export class DirectorController {
   constructor(
-    private readonly investigationRepository: IInvestigationRepository,
-    private readonly publicationRepository: IPublicationRepository,
-    private readonly notificationRepository: INotificationRepository,
-    private readonly citizenRepository: ICitizenRepository,
+    private readonly queryService: FactCheckingQueryService,
     private readonly actorManagementService: ActorManagementService,
   ) {}
 
   getDashboard = async (c: Context<{ Variables: AppVariables }>) => {
-    const [pendingReviews, publishedCount, totalNotifications] =
-      await Promise.all([
-        this.investigationRepository.findPendingReviews(),
-        this.publicationRepository.count(),
-        this.notificationRepository.count(),
-      ])
-
-    return ok(
-      c,
-      presentDirectorDashboard({
-        pendingReviews,
-        publishedCount,
-        totalNotifications,
-      }),
-    )
+    const dashboard = await this.queryService.getDirectorDashboard()
+    return ok(c, presentDirectorDashboard(dashboard))
   }
 
   banCitizen = async (c: Context<{ Variables: AppVariables }>) => {
     const actor = c.get('actor')
-    const body = journalistActionSchema.parse(await c.req.json())
-    if (!body.reason)
-      throw new ValidationError('reason is required to ban a citizen')
+    const body = validatedJson<z.infer<typeof citizenManagementSchema>>(c)
     await this.actorManagementService.banCitizen(
       actor.actorId,
       requiredParam(c, 'citizenId'),
-      body.reason,
+      body.reason ?? 'OTHER',
       body.details,
     )
     return noContent(c)
@@ -56,13 +33,11 @@ export class DirectorController {
 
   disableCitizen = async (c: Context<{ Variables: AppVariables }>) => {
     const actor = c.get('actor')
-    const body = journalistActionSchema.parse(await c.req.json())
-    if (!body.reason)
-      throw new ValidationError('reason is required to disable a citizen')
+    const body = validatedJson<z.infer<typeof citizenManagementSchema>>(c)
     await this.actorManagementService.disableCitizen(
       actor.actorId,
       requiredParam(c, 'citizenId'),
-      body.reason,
+      body.reason ?? 'OTHER',
       body.details,
     )
     return noContent(c)
@@ -78,7 +53,7 @@ export class DirectorController {
   }
 
   listCitizens = async (c: Context<{ Variables: AppVariables }>) => {
-    const citizens = await this.citizenRepository.findAll()
+    const citizens = await this.actorManagementService.listCitizens()
 
     return ok(c, {
       items: citizens.map((citizen) => ({

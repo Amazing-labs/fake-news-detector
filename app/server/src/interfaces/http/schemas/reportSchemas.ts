@@ -1,5 +1,9 @@
 import { z } from 'zod'
-import { mediaInputSchema, verificationThemeSchema } from './common'
+import { idSchema, mediaInputSchema, verificationThemeSchema } from './common'
+
+export const reportIdParamSchema = z.object({
+  reportId: idSchema,
+})
 
 export const submitReportSchema = z.object({
   theme: verificationThemeSchema,

@@ -68,3 +68,12 @@ export const authoritySourceInputSchema = z.object({
   name: z.string().min(1),
   type: sourceTypeSchema,
 })
+
+export const citizenIdParamSchema = z.object({
+  citizenId: idSchema,
+})
+
+export const citizenManagementSchema = z.object({
+  reason: journalistStatusReasonSchema.optional(),
+  details: z.string().min(1).optional(),
+})

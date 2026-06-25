@@ -104,6 +104,7 @@ function buildApp() {
     journalistManagementController: journalistManagementController as any,
     directorController: directorController as any,
     notificationController: notificationController as any,
+    meController: { getMe: vi.fn() } as any,
   })
 
   return { app, reportController }
@@ -168,7 +169,7 @@ describe('createApp', () => {
       securityService,
       reportController: new ReportController(
         { submitReport } as any,
-        { findByCitizenId: vi.fn(), findAll: vi.fn() } as any,
+        {} as any,
       ),
       inboxSubjectController: {
         list: vi.fn(),
@@ -213,6 +214,7 @@ describe('createApp', () => {
         markAsRead: vi.fn(),
         markAllAsRead: vi.fn(),
       } as any,
+      meController: { getMe: vi.fn() } as any,
     })
 
     const response = await app.request('/api/reports', {
@@ -250,7 +252,7 @@ describe('createApp', () => {
       securityService,
       reportController: new ReportController(
         { submitReport } as any,
-        { findByCitizenId: vi.fn(), findAll: vi.fn() } as any,
+        {} as any,
       ),
       inboxSubjectController: {
         list: vi.fn(),
@@ -295,6 +297,7 @@ describe('createApp', () => {
         markAsRead: vi.fn(),
         markAllAsRead: vi.fn(),
       } as any,
+      meController: { getMe: vi.fn() } as any,
     })
 
     const response = await app.request('/api/reports', {
@@ -327,7 +330,7 @@ describe('createApp', () => {
       securityService,
       reportController: new ReportController(
         { submitReport } as any,
-        { findByCitizenId: vi.fn(), findAll: vi.fn() } as any,
+        {} as any,
       ),
       inboxSubjectController: {
         list: vi.fn(),
@@ -372,6 +375,7 @@ describe('createApp', () => {
         markAsRead: vi.fn(),
         markAllAsRead: vi.fn(),
       } as any,
+      meController: { getMe: vi.fn() } as any,
     })
 
     const response = await app.request('/api/reports', {
@@ -416,8 +420,11 @@ describe('createApp', () => {
       } as any,
       inboxSubjectController: new InboxSubjectController(
         {} as any,
-        { findByStatus, findAll } as any,
-        { listInbox: vi.fn() } as any,
+        {
+          listInboxSubjects: vi.fn(async (status?: string) =>
+            status ? findByStatus(status) : findAll(),
+          ),
+        } as any,
       ),
       investigationController: {
         list: vi.fn(),
@@ -455,6 +462,7 @@ describe('createApp', () => {
         markAsRead: vi.fn(),
         markAllAsRead: vi.fn(),
       } as any,
+      meController: { getMe: vi.fn() } as any,
     })
 
     const response = await app.request('/api/inbox-subjects?status=INVALID', {
@@ -530,6 +538,7 @@ describe('createApp', () => {
         markAsRead: vi.fn(),
         markAllAsRead: vi.fn(),
       } as any,
+      meController: { getMe: vi.fn() } as any,
     })
 
     const response = await app.request('/api/publications/pub-1/corrections', {
@@ -608,6 +617,7 @@ describe('createApp', () => {
         markAsRead: vi.fn(),
         markAllAsRead: vi.fn(),
       } as any,
+      meController: { getMe: vi.fn() } as any,
     })
 
     const response = await app.request('/api/investigations/inv-1/approve', {
@@ -673,6 +683,7 @@ describe('createApp', () => {
         markAsRead: vi.fn(),
         markAllAsRead: vi.fn(),
       } as any,
+      meController: { getMe: vi.fn() } as any,
     })
 
     const response = await app.request(

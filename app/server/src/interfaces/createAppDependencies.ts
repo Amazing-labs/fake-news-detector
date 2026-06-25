@@ -1,4 +1,6 @@
 import { ActorManagementService } from '../application/services/ActorManagementService'
+import { FactCheckingQueryService } from '../application/services/FactCheckingQueryService'
+import { NotificationService } from '../application/services/NotificationService'
 import { SecurityService } from '../application/services/SecurityService'
 import { createTransactionalFactCheckingService } from '../application/services/createTransactionalFactCheckingService'
 import { PrismaAuthoritySourceRepository } from '../infrastructure/repositories/persistence/PrismaAuthoritySourceRepository'
@@ -83,52 +85,52 @@ export function createAppDependencies(): AppDependencies {
     journalistRepository,
     citizenRepository,
   )
+  const queryService = new FactCheckingQueryService(
+    reportRepository,
+    inboxSubjectRepository,
+    investigationRepository,
+    investigationMediaRepository,
+    evidenceRepository,
+    publicationRepository,
+    correctionRepository,
+    watcherApplicationRepository,
+    citizenRepository,
+    journalistRepository,
+    directorRepository,
+    notificationRepository,
+  )
+  const notificationService = new NotificationService(notificationRepository)
   const securityService = new SecurityService(
     new BetterAuthRequestAuthenticator(),
   )
 
   return {
     securityService,
-    reportController: new ReportController(
-      factCheckingService,
-      reportRepository,
-    ),
+    reportController: new ReportController(factCheckingService, queryService),
     inboxSubjectController: new InboxSubjectController(
       factCheckingService,
-      inboxSubjectRepository,
-      reportRepository,
+      queryService,
     ),
     investigationController: new InvestigationController(
       factCheckingService,
-      investigationRepository,
-      investigationMediaRepository,
-      evidenceRepository,
+      queryService,
     ),
     publicationController: new PublicationController(
       factCheckingService,
-      publicationRepository,
-      correctionRepository,
+      queryService,
     ),
     watcherApplicationController: new WatcherApplicationController(
       factCheckingService,
-      watcherApplicationRepository,
+      queryService,
     ),
     journalistManagementController: new JournalistManagementController(
       actorManagementService,
-      journalistRepository,
     ),
     directorController: new DirectorController(
-      investigationRepository,
-      publicationRepository,
-      notificationRepository,
-      citizenRepository,
+      queryService,
       actorManagementService,
     ),
-    notificationController: new NotificationController(notificationRepository),
-    meController: new MeController(
-      citizenRepository,
-      journalistRepository,
-      directorRepository,
-    ),
+    notificationController: new NotificationController(notificationService),
+    meController: new MeController(queryService),
   }
 }

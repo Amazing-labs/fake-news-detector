@@ -1,83 +1,53 @@
 import type { Context } from 'hono'
 import { FactCheckingService } from '../../application/services/FactCheckingService'
-import type {
-  IEvidenceRepository,
-  IInvestigationMediaRepository,
-  IInvestigationRepository,
-} from '../../domain/repositories'
-import { NotFoundError } from '../../shared/errors'
+import { FactCheckingQueryService } from '../../application/services/FactCheckingQueryService'
 import { created, noContent, ok } from '../http/responses'
 import type { AppVariables } from '../http/types'
-import { requiredNumericParam, requiredParam } from '../http/request'
 import {
+  requiredNumericParam,
+  requiredParam,
+  validatedJson,
+} from '../http/request'
+import type {
   approveInvestigationSchema,
   archiveSchema,
   directorReasonSchema,
-  journalistActionSchema,
   proofMediaSchema,
   submitWatcherEvidenceSchema,
   updateMediaSchema,
 } from '../http/schemas/investigationSchemas'
 import {
   presentEvidence,
+  presentEvidenceMedia,
   presentInvestigation,
   presentInvestigationList,
   presentInvestigationMedia,
 } from '../presenters/investigationPresenter'
+import type { z } from 'zod'
 
 export class InvestigationController {
   constructor(
     private readonly factCheckingService: FactCheckingService,
-    private readonly investigationRepository: IInvestigationRepository,
-    private readonly investigationMediaRepository: IInvestigationMediaRepository,
-    private readonly evidenceRepository: IEvidenceRepository,
+    private readonly queryService: FactCheckingQueryService,
   ) {}
 
   list = async (c: Context<{ Variables: AppVariables }>) => {
-    const scope = c.req.query('scope')
-    const journalistId = c.req.query('journalistId')
-
-    if (scope === 'in-progress') {
-      const items = await this.investigationRepository.findInProgress()
-      return ok(c, presentInvestigationList(items))
-    }
-
-    if (scope === 'pending-review') {
-      const items = await this.investigationRepository.findPendingReviews()
-      return ok(c, presentInvestigationList(items))
-    }
-
-    if (scope === 'published') {
-      const items = await this.investigationRepository.findPublished()
-      return ok(c, presentInvestigationList(items))
-    }
-
-    if (scope === 'canceled') {
-      const items = await this.investigationRepository.findCanceled()
-      return ok(c, presentInvestigationList(items))
-    }
-
-    if (journalistId) {
-      const items =
-        await this.investigationRepository.findByJournalistId(journalistId)
-      return ok(c, presentInvestigationList(items))
-    }
-
-    const items = await this.investigationRepository.findPendingReviews()
+    const items = await this.queryService.listInvestigations({
+      scope: c.req.query('scope'),
+      journalistId: c.req.query('journalistId'),
+    })
     return ok(c, presentInvestigationList(items))
   }
 
   getById = async (c: Context<{ Variables: AppVariables }>) => {
     const id = requiredParam(c, 'investigationId')
-    const investigation = await this.investigationRepository.findById(id)
-    if (!investigation) throw new NotFoundError('Investigation', id)
+    const investigation = await this.queryService.getInvestigation(id)
     return ok(c, presentInvestigation(investigation))
   }
 
   listSourceMedia = async (c: Context<{ Variables: AppVariables }>) => {
     const id = requiredParam(c, 'investigationId')
-    const media =
-      await this.investigationMediaRepository.findByInvestigationId(id)
+    const media = await this.queryService.getInvestigationSourceMedia(id)
     return ok(c, {
       items: media.map(presentInvestigationMedia),
       total: media.length,
@@ -86,30 +56,16 @@ export class InvestigationController {
 
   listEvidence = async (c: Context<{ Variables: AppVariables }>) => {
     const id = requiredParam(c, 'investigationId')
-    const evidences =
-      await this.evidenceRepository.findWithMediaByInvestigationId(id)
+    const evidences = await this.queryService.getInvestigationEvidence(id)
     const items = evidences.map(({ evidence, media }) => ({
       ...presentEvidence(evidence),
-      media: media.map((m) => ({
-        id: m.id,
-        url: m.url,
-        type: m.type,
-        order: m.order,
-        evidenceId: m.evidenceId,
-        uploadedById: m.uploadedById,
-        category: m.category ?? null,
-        reliability: m.reliability ?? null,
-        justification: m.justification ?? null,
-        createdAt: m.createdAt.toISOString(),
-        updatedAt: m.updatedAt.toISOString(),
-      })),
+      media: media.map(presentEvidenceMedia),
     }))
     return ok(c, { items, total: items.length })
   }
 
   submitForReview = async (c: Context<{ Variables: AppVariables }>) => {
     const actor = c.get('actor')
-    journalistActionSchema.parse(await c.req.json())
     await this.factCheckingService.submitInvestigationForReview(
       actor.actorId,
       requiredParam(c, 'investigationId'),
@@ -119,7 +75,7 @@ export class InvestigationController {
 
   updateSourceMedia = async (c: Context<{ Variables: AppVariables }>) => {
     const actor = c.get('actor')
-    const body = updateMediaSchema.parse(await c.req.json())
+    const body = validatedJson<z.infer<typeof updateMediaSchema>>(c)
     await this.factCheckingService.updateInvestigationSourceMediaItem(
       actor.actorId,
       requiredParam(c, 'investigationId'),
@@ -137,7 +93,7 @@ export class InvestigationController {
     c: Context<{ Variables: AppVariables }>,
   ) => {
     const actor = c.get('actor')
-    const body = updateMediaSchema.parse(await c.req.json())
+    const body = validatedJson<z.infer<typeof updateMediaSchema>>(c)
     await this.factCheckingService.updateWatcherEvidenceMediaItem(
       actor.actorId,
       requiredParam(c, 'investigationId'),
@@ -154,7 +110,7 @@ export class InvestigationController {
 
   addProofMedia = async (c: Context<{ Variables: AppVariables }>) => {
     const actor = c.get('actor')
-    const body = proofMediaSchema.parse(await c.req.json())
+    const body = validatedJson<z.infer<typeof proofMediaSchema>>(c)
     await this.factCheckingService.addJournalistProofMedia(
       actor.actorId,
       requiredParam(c, 'investigationId'),
@@ -171,7 +127,7 @@ export class InvestigationController {
 
   approve = async (c: Context<{ Variables: AppVariables }>) => {
     const actor = c.get('actor')
-    const body = approveInvestigationSchema.parse(await c.req.json())
+    const body = validatedJson<z.infer<typeof approveInvestigationSchema>>(c)
     const publicationId = await this.factCheckingService.approveInvestigation(
       actor.actorId,
       requiredParam(c, 'investigationId'),
@@ -185,7 +141,7 @@ export class InvestigationController {
 
   reject = async (c: Context<{ Variables: AppVariables }>) => {
     const actor = c.get('actor')
-    const body = directorReasonSchema.parse(await c.req.json())
+    const body = validatedJson<z.infer<typeof directorReasonSchema>>(c)
     await this.factCheckingService.rejectInvestigation(
       actor.actorId,
       requiredParam(c, 'investigationId'),
@@ -196,7 +152,7 @@ export class InvestigationController {
 
   archive = async (c: Context<{ Variables: AppVariables }>) => {
     const actor = c.get('actor')
-    const body = archiveSchema.parse(await c.req.json())
+    const body = validatedJson<z.infer<typeof archiveSchema>>(c)
     await this.factCheckingService.archiveUnverifiableInvestigation(
       actor.actorId,
       requiredParam(c, 'investigationId'),
@@ -207,7 +163,7 @@ export class InvestigationController {
 
   cancel = async (c: Context<{ Variables: AppVariables }>) => {
     const actor = c.get('actor')
-    const body = directorReasonSchema.parse(await c.req.json())
+    const body = validatedJson<z.infer<typeof directorReasonSchema>>(c)
     await this.factCheckingService.cancelInvestigation(
       actor.actorId,
       requiredParam(c, 'investigationId'),
@@ -218,7 +174,7 @@ export class InvestigationController {
 
   submitWatcherEvidence = async (c: Context<{ Variables: AppVariables }>) => {
     const actor = c.get('actor')
-    const body = submitWatcherEvidenceSchema.parse(await c.req.json())
+    const body = validatedJson<z.infer<typeof submitWatcherEvidenceSchema>>(c)
     const evidenceId = await this.factCheckingService.submitWatcherEvidence({
       citizenId: actor.actorId,
       investigationId: requiredParam(c, 'investigationId'),

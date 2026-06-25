@@ -1,23 +1,21 @@
 import type { Context } from 'hono'
 import { ActorManagementService } from '../../application/services/ActorManagementService'
-import type { IJournalistRepository } from '../../domain/repositories'
 import { created, noContent, ok } from '../http/responses'
 import type { AppVariables } from '../http/types'
-import { requiredParam } from '../http/request'
-import {
-  activateJournalistSchema,
+import { requiredParam, validatedJson } from '../http/request'
+import type {
   createJournalistSchema,
   journalistActionSchema,
 } from '../http/schemas/journalistSchemas'
+import type { z } from 'zod'
 
 export class JournalistManagementController {
   constructor(
     private readonly actorManagementService: ActorManagementService,
-    private readonly journalistRepository: IJournalistRepository,
   ) {}
 
   list = async (c: Context<{ Variables: AppVariables }>) => {
-    const journalists = await this.journalistRepository.findAll()
+    const journalists = await this.actorManagementService.listJournalists()
     return ok(c, {
       items: journalists.map((journalist) => ({
         id: journalist.id,
@@ -37,7 +35,7 @@ export class JournalistManagementController {
 
   create = async (c: Context<{ Variables: AppVariables }>) => {
     const actor = c.get('actor')
-    const body = createJournalistSchema.parse(await c.req.json())
+    const body = validatedJson<z.infer<typeof createJournalistSchema>>(c)
     const journalistId = await this.actorManagementService.createJournalist(
       actor.actorId,
       body.name,
@@ -48,7 +46,7 @@ export class JournalistManagementController {
 
   ban = async (c: Context<{ Variables: AppVariables }>) => {
     const actor = c.get('actor')
-    const body = journalistActionSchema.parse(await c.req.json())
+    const body = validatedJson<z.infer<typeof journalistActionSchema>>(c)
     await this.actorManagementService.banJournalist(
       actor.actorId,
       requiredParam(c, 'journalistId'),
@@ -60,7 +58,7 @@ export class JournalistManagementController {
 
   disable = async (c: Context<{ Variables: AppVariables }>) => {
     const actor = c.get('actor')
-    const body = journalistActionSchema.parse(await c.req.json())
+    const body = validatedJson<z.infer<typeof journalistActionSchema>>(c)
     await this.actorManagementService.disableJournalist(
       actor.actorId,
       requiredParam(c, 'journalistId'),
@@ -72,7 +70,6 @@ export class JournalistManagementController {
 
   activate = async (c: Context<{ Variables: AppVariables }>) => {
     const actor = c.get('actor')
-    activateJournalistSchema.parse(await c.req.json())
     await this.actorManagementService.activateJournalist(
       actor.actorId,
       requiredParam(c, 'journalistId'),

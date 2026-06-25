@@ -25,8 +25,16 @@ export class ActorManagementService {
   constructor(
     private readonly directorRepository: IDirectorRepository,
     private readonly journalistRepository: IJournalistRepository,
-    private readonly citizenRepository: ICitizenRepository | null = null,
+    private readonly citizenRepository: ICitizenRepository,
   ) {}
+
+  async listJournalists(): Promise<Journalist[]> {
+    return this.journalistRepository.findAll()
+  }
+
+  async listCitizens(): Promise<Citizen[]> {
+    return this.citizenRepository.findAll()
+  }
 
   async createJournalist(
     directorId: string,
@@ -96,7 +104,7 @@ export class ActorManagementService {
     const director = await this.getActiveDirector(directorId)
     const citizen = await this.getCitizen(citizenId)
     director.banCitizen(citizen, reason, details)
-    await this.requireCitizenRepository().update(citizen)
+    await this.citizenRepository.update(citizen)
   }
 
   async disableCitizen(
@@ -108,14 +116,14 @@ export class ActorManagementService {
     const director = await this.getActiveDirector(directorId)
     const citizen = await this.getCitizen(citizenId)
     director.disableCitizen(citizen, reason, details)
-    await this.requireCitizenRepository().update(citizen)
+    await this.citizenRepository.update(citizen)
   }
 
   async activateCitizen(directorId: string, citizenId: string): Promise<void> {
     const director = await this.getActiveDirector(directorId)
     const citizen = await this.getCitizen(citizenId)
     director.activateCitizen(citizen)
-    await this.requireCitizenRepository().update(citizen)
+    await this.citizenRepository.update(citizen)
   }
 
   // ---------------------------------------------------------------------------
@@ -137,15 +145,8 @@ export class ActorManagementService {
     return journalist
   }
 
-  private requireCitizenRepository(): ICitizenRepository {
-    if (!this.citizenRepository) {
-      throw new Error('CitizenRepository not injected')
-    }
-    return this.citizenRepository
-  }
-
   private async getCitizen(citizenId: string): Promise<Citizen> {
-    const citizen = await this.requireCitizenRepository().findById(citizenId)
+    const citizen = await this.citizenRepository.findById(citizenId)
     if (!citizen) throw new NotFoundError('Citizen', citizenId)
     return citizen
   }

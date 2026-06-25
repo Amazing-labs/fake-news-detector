@@ -1,48 +1,96 @@
-import { Hono } from 'hono'
+import { createRoute } from '@hono/zod-openapi'
 import type { SecurityService } from '../../application/services/SecurityService'
 import { DirectorController } from '../controllers/DirectorController'
-import type { AppVariables } from '../http/types'
 import {
   createAuthMiddleware,
   createPermissionMiddleware,
 } from '../middlewares/authMiddleware'
+import {
+  createOpenAPIRoutes,
+  noContentResponse,
+  okResponse,
+} from '../http/openapi'
+import {
+  citizenIdParamSchema,
+  citizenManagementSchema,
+} from '../http/schemas/common'
 
 export function createDirectorRoutes(
   directorController: DirectorController,
   securityService: SecurityService,
 ) {
-  const routes = new Hono<{ Variables: AppVariables }>()
+  const routes = createOpenAPIRoutes()
   const auth = createAuthMiddleware(securityService)
+  const manageCitizen = createPermissionMiddleware(
+    securityService,
+    'citizen.manage',
+  )
 
   routes.use('*', auth)
 
-  routes.get(
-    '/dashboard',
-    createPermissionMiddleware(securityService, 'director.dashboard.read'),
+  routes.openapi(
+    createRoute({
+      method: 'get',
+      path: '/dashboard',
+      middleware: createPermissionMiddleware(
+        securityService,
+        'director.dashboard.read',
+      ),
+      responses: okResponse('Director dashboard'),
+    }),
     directorController.getDashboard,
   )
 
-  routes.get(
-    '/citizens',
-    createPermissionMiddleware(securityService, 'journalist.manage'),
+  routes.openapi(
+    createRoute({
+      method: 'get',
+      path: '/citizens',
+      middleware: manageCitizen,
+      responses: okResponse('List of citizens'),
+    }),
     directorController.listCitizens,
   )
 
-  routes.post(
-    '/citizens/:citizenId/ban',
-    createPermissionMiddleware(securityService, 'journalist.manage'),
+  routes.openapi(
+    createRoute({
+      method: 'post',
+      path: '/citizens/{citizenId}/ban',
+      middleware: manageCitizen,
+      request: {
+        params: citizenIdParamSchema,
+        body: {
+          content: { 'application/json': { schema: citizenManagementSchema } },
+        },
+      },
+      responses: noContentResponse('Citizen banned'),
+    }),
     directorController.banCitizen,
   )
 
-  routes.post(
-    '/citizens/:citizenId/disable',
-    createPermissionMiddleware(securityService, 'journalist.manage'),
+  routes.openapi(
+    createRoute({
+      method: 'post',
+      path: '/citizens/{citizenId}/disable',
+      middleware: manageCitizen,
+      request: {
+        params: citizenIdParamSchema,
+        body: {
+          content: { 'application/json': { schema: citizenManagementSchema } },
+        },
+      },
+      responses: noContentResponse('Citizen disabled'),
+    }),
     directorController.disableCitizen,
   )
 
-  routes.post(
-    '/citizens/:citizenId/activate',
-    createPermissionMiddleware(securityService, 'journalist.manage'),
+  routes.openapi(
+    createRoute({
+      method: 'post',
+      path: '/citizens/{citizenId}/activate',
+      middleware: manageCitizen,
+      request: { params: citizenIdParamSchema },
+      responses: noContentResponse('Citizen activated'),
+    }),
     directorController.activateCitizen,
   )
 

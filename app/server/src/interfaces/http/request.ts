@@ -23,3 +23,9 @@ export function requiredNumericParam(
   }
   return value
 }
+
+// Reads the JSON body already validated at the route layer (@hono/zod-openapi).
+// Controllers stay transport-only and never re-parse the request.
+export function validatedJson<T>(c: Context<{ Variables: AppVariables }>): T {
+  return c.req.valid('json' as never) as T
+}

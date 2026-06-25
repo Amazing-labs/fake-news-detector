@@ -1,13 +1,27 @@
 import { z } from 'zod'
 import {
   authoritySourceInputSchema,
+  idSchema,
   mediaCategorySchema,
   mediaTypeSchema,
   sourceTypeSchema,
   verdictSchema,
 } from './common'
 
-export const journalistActionSchema = z.object({})
+export const investigationIdParamSchema = z.object({
+  investigationId: idSchema,
+})
+
+export const investigationSourceMediaParamSchema = z.object({
+  investigationId: idSchema,
+  mediaId: idSchema,
+})
+
+export const investigationEvidenceMediaParamSchema = z.object({
+  investigationId: idSchema,
+  evidenceId: idSchema,
+  mediaId: idSchema,
+})
 
 export const updateMediaSchema = z.object({
   category: mediaCategorySchema,
