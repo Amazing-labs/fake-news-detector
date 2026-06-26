@@ -17,10 +17,10 @@ import type {
   updateMediaSchema,
 } from '../http/schemas/investigationSchemas'
 import {
+  presentEnrichedInvestigation,
+  presentEnrichedInvestigationList,
   presentEvidence,
   presentEvidenceMedia,
-  presentInvestigation,
-  presentInvestigationList,
   presentInvestigationMedia,
 } from '../presenters/investigationPresenter'
 import type { z } from 'zod'
@@ -32,17 +32,17 @@ export class InvestigationController {
   ) {}
 
   list = async (c: Context<{ Variables: AppVariables }>) => {
-    const items = await this.queryService.listInvestigations({
+    const items = await this.queryService.listInvestigationsEnriched({
       scope: c.req.query('scope'),
       journalistId: c.req.query('journalistId'),
     })
-    return ok(c, presentInvestigationList(items))
+    return ok(c, presentEnrichedInvestigationList(items))
   }
 
   getById = async (c: Context<{ Variables: AppVariables }>) => {
     const id = requiredParam(c, 'investigationId')
-    const investigation = await this.queryService.getInvestigation(id)
-    return ok(c, presentInvestigation(investigation))
+    const investigation = await this.queryService.getInvestigationEnriched(id)
+    return ok(c, presentEnrichedInvestigation(investigation))
   }
 
   listSourceMedia = async (c: Context<{ Variables: AppVariables }>) => {

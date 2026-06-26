@@ -1,5 +1,6 @@
 import type { Publication } from '../../domain/entities/Publication'
 import type { Correction } from '../../domain/entities/Correction'
+import type { EnrichedPublication } from '../../application/services/FactCheckingQueryService'
 
 export function presentCorrection(correction: Correction) {
   return {
@@ -58,5 +59,22 @@ export function presentPublicationList(publications: Publication[]) {
   return {
     items: publications.map(presentPublication),
     total: publications.length,
+  }
+}
+
+export function presentEnrichedPublication({
+  publication,
+  title,
+}: EnrichedPublication) {
+  return {
+    ...presentPublication(publication),
+    title,
+  }
+}
+
+export function presentEnrichedPublicationList(items: EnrichedPublication[]) {
+  return {
+    items: items.map(presentEnrichedPublication),
+    total: items.length,
   }
 }

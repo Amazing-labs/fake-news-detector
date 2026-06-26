@@ -52,6 +52,29 @@ export interface DirectorDashboardData {
   totalNotifications: number
 }
 
+// Read-model wrappers: the domain entity plus the display names/titles joined
+// from related aggregates, resolved on the read side so the UI gets one shape.
+export interface EnrichedReport {
+  report: Report
+  reporterName: string | null
+}
+
+export interface EnrichedInboxSubject {
+  subject: InboxSubject
+  ownerName: string | null
+}
+
+export interface EnrichedInvestigation {
+  investigation: Investigation
+  title: string | null
+  journalistName: string | null
+}
+
+export interface EnrichedPublication {
+  publication: Publication
+  title: string | null
+}
+
 export class FactCheckingQueryService {
   constructor(
     private readonly reportRepository: IReportRepository,
@@ -139,6 +162,175 @@ export class FactCheckingQueryService {
         this.notificationRepository.count(),
       ])
     return { pendingReviews, publishedCount, totalNotifications }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Enriched collection reads (display-ready: names/titles joined)
+  // ---------------------------------------------------------------------------
+
+  async listReportsForReaderEnriched(
+    reader: ReaderContext,
+    citizenId?: string,
+  ): Promise<EnrichedReport[]> {
+    const reports = await this.listReportsForReader(reader, citizenId)
+    const citizenNames = await this.citizenNameMap()
+    return reports.map((report) => ({
+      report,
+      reporterName: citizenNames.get(report.citizenId) ?? null,
+    }))
+  }
+
+  async listOpenReportsInboxEnriched(): Promise<EnrichedReport[]> {
+    const reports = await this.listOpenReportsInbox()
+    const citizenNames = await this.citizenNameMap()
+    return reports.map((report) => ({
+      report,
+      reporterName: citizenNames.get(report.citizenId) ?? null,
+    }))
+  }
+
+  async listInboxSubjectsEnriched(
+    status?: InboxSubjectStatus,
+  ): Promise<EnrichedInboxSubject[]> {
+    const subjects = await this.listInboxSubjects(status)
+    const [investigationsByInbox, journalistNames] = await Promise.all([
+      this.investigationByInboxMap(),
+      this.journalistNameMap(),
+    ])
+    return subjects.map((subject) => {
+      const investigation = investigationsByInbox.get(subject.id)
+      return {
+        subject,
+        ownerName: investigation
+          ? (journalistNames.get(investigation.journalistId) ?? null)
+          : null,
+      }
+    })
+  }
+
+  async listInvestigationsEnriched(
+    filter: InvestigationListFilter = {},
+  ): Promise<EnrichedInvestigation[]> {
+    const investigations = await this.listInvestigations(filter)
+    const [inboxThemes, journalistNames] = await Promise.all([
+      this.inboxThemeMap(),
+      this.journalistNameMap(),
+    ])
+    return investigations.map((investigation) => ({
+      investigation,
+      title: inboxThemes.get(investigation.inboxSubjectId) ?? null,
+      journalistName: journalistNames.get(investigation.journalistId) ?? null,
+    }))
+  }
+
+  async listPublicationsEnriched(
+    scope?: string,
+  ): Promise<EnrichedPublication[]> {
+    const publications = await this.listPublications(scope)
+    const [investigationsById, inboxThemes] = await Promise.all([
+      this.investigationByIdMap(),
+      this.inboxThemeMap(),
+    ])
+    return publications.map((publication) => {
+      const investigation = investigationsById.get(publication.investigationId)
+      return {
+        publication,
+        title: investigation
+          ? (inboxThemes.get(investigation.inboxSubjectId) ?? null)
+          : null,
+      }
+    })
+  }
+
+  // ---------------------------------------------------------------------------
+  // Enriched single-resource reads
+  // ---------------------------------------------------------------------------
+
+  async getReportForReaderEnriched(
+    reportId: string,
+    reader: ReaderContext,
+  ): Promise<EnrichedReport> {
+    const report = await this.getReportForReader(reportId, reader)
+    const citizen = await this.citizenRepository.findById(report.citizenId)
+    return { report, reporterName: citizen?.name ?? null }
+  }
+
+  async getInboxSubjectEnriched(
+    inboxSubjectId: string,
+  ): Promise<EnrichedInboxSubject> {
+    const subject = await this.getInboxSubject(inboxSubjectId)
+    const investigation =
+      await this.investigationRepository.findByInboxSubjectId(subject.id)
+    const journalist = investigation
+      ? await this.journalistRepository.findById(investigation.journalistId)
+      : null
+    return { subject, ownerName: journalist?.name ?? null }
+  }
+
+  async getInvestigationEnriched(
+    investigationId: string,
+  ): Promise<EnrichedInvestigation> {
+    const investigation = await this.getInvestigation(investigationId)
+    const [inboxSubject, journalist] = await Promise.all([
+      this.inboxSubjectRepository.findById(investigation.inboxSubjectId),
+      this.journalistRepository.findById(investigation.journalistId),
+    ])
+    return {
+      investigation,
+      title: inboxSubject?.theme ?? null,
+      journalistName: journalist?.name ?? null,
+    }
+  }
+
+  async getPublicationEnriched(
+    publicationId: string,
+  ): Promise<EnrichedPublication> {
+    const publication = await this.getPublication(publicationId)
+    const investigation = await this.investigationRepository.findById(
+      publication.investigationId,
+    )
+    const inboxSubject = investigation
+      ? await this.inboxSubjectRepository.findById(investigation.inboxSubjectId)
+      : null
+    return { publication, title: inboxSubject?.theme ?? null }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Lookup maps (id -> display value) used to enrich collections in one pass
+  // ---------------------------------------------------------------------------
+
+  private async citizenNameMap(): Promise<Map<string, string>> {
+    const citizens = await this.citizenRepository.findAll()
+    return new Map(citizens.map((citizen) => [citizen.id, citizen.name]))
+  }
+
+  private async journalistNameMap(): Promise<Map<string, string>> {
+    const journalists = await this.journalistRepository.findAll()
+    return new Map(
+      journalists.map((journalist) => [journalist.id, journalist.name]),
+    )
+  }
+
+  private async inboxThemeMap(): Promise<Map<string, string>> {
+    const subjects = await this.inboxSubjectRepository.findAll()
+    return new Map(subjects.map((subject) => [subject.id, subject.theme]))
+  }
+
+  private async investigationByIdMap(): Promise<Map<string, Investigation>> {
+    const investigations = await this.investigationRepository.findAll()
+    return new Map(
+      investigations.map((investigation) => [investigation.id, investigation]),
+    )
+  }
+
+  private async investigationByInboxMap(): Promise<Map<string, Investigation>> {
+    const investigations = await this.investigationRepository.findAll()
+    return new Map(
+      investigations.map((investigation) => [
+        investigation.inboxSubjectId,
+        investigation,
+      ]),
+    )
   }
 
   // ---------------------------------------------------------------------------

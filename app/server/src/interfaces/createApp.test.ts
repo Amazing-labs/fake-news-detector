@@ -739,6 +739,13 @@ describe('report access authorization', () => {
       })),
     })
 
+    // Citizen repo is consulted to resolve reporter names on the enriched read
+    // path; an empty map is enough for these authorization-focused assertions.
+    const citizenRepository = {
+      findAll: vi.fn(async () => []),
+      findById: vi.fn(async () => null),
+    }
+
     const queryService = new FactCheckingQueryService(
       params.reportRepository as any,
       {} as any,
@@ -748,7 +755,7 @@ describe('report access authorization', () => {
       {} as any,
       {} as any,
       {} as any,
-      {} as any,
+      citizenRepository as any,
       {} as any,
       {} as any,
       {} as any,

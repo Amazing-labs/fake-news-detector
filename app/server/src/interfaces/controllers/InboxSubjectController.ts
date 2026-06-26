@@ -10,11 +10,11 @@ import type {
   inboxSubjectListQuerySchema,
 } from '../http/schemas/inboxSubjectSchemas'
 import {
-  presentInboxSubject,
-  presentInboxSubjectList,
+  presentEnrichedInboxSubject,
+  presentEnrichedInboxSubjectList,
 } from '../presenters/inboxSubjectPresenter'
 import { presentInvestigation } from '../presenters/investigationPresenter'
-import { presentReportList } from '../presenters/reportPresenter'
+import { presentEnrichedReportList } from '../presenters/reportPresenter'
 import type { z } from 'zod'
 
 export class InboxSubjectController {
@@ -25,15 +25,15 @@ export class InboxSubjectController {
 
   getById = async (c: Context<{ Variables: AppVariables }>) => {
     const id = requiredParam(c, 'inboxSubjectId')
-    const subject = await this.queryService.getInboxSubject(id)
-    return ok(c, presentInboxSubject(subject))
+    const subject = await this.queryService.getInboxSubjectEnriched(id)
+    return ok(c, presentEnrichedInboxSubject(subject))
   }
 
   list = async (c: Context<{ Variables: AppVariables }>) => {
     const { status } =
       validatedQuery<z.infer<typeof inboxSubjectListQuerySchema>>(c)
-    const items = await this.queryService.listInboxSubjects(status)
-    return ok(c, presentInboxSubjectList(items))
+    const items = await this.queryService.listInboxSubjectsEnriched(status)
+    return ok(c, presentEnrichedInboxSubjectList(items))
   }
 
   createDirectorSubject = async (c: Context<{ Variables: AppVariables }>) => {
@@ -74,7 +74,7 @@ export class InboxSubjectController {
   }
 
   listOpenReports = async (c: Context<{ Variables: AppVariables }>) => {
-    const items = await this.queryService.listOpenReportsInbox()
-    return ok(c, presentReportList(items))
+    const items = await this.queryService.listOpenReportsInboxEnriched()
+    return ok(c, presentEnrichedReportList(items))
   }
 }

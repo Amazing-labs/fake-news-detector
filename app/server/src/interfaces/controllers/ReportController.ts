@@ -8,7 +8,10 @@ import type {
   reportListQuerySchema,
   submitReportSchema,
 } from '../http/schemas/reportSchemas'
-import { presentReport, presentReportList } from '../presenters/reportPresenter'
+import {
+  presentEnrichedReport,
+  presentEnrichedReportList,
+} from '../presenters/reportPresenter'
 import type { z } from 'zod'
 
 export class ReportController {
@@ -29,21 +32,21 @@ export class ReportController {
 
   getById = async (c: Context<{ Variables: AppVariables }>) => {
     const actor = c.get('actor')
-    const report = await this.queryService.getReportForReader(
+    const report = await this.queryService.getReportForReaderEnriched(
       requiredParam(c, 'reportId'),
       actor,
     )
-    return ok(c, presentReport(report))
+    return ok(c, presentEnrichedReport(report))
   }
 
   listReports = async (c: Context<{ Variables: AppVariables }>) => {
     const actor = c.get('actor')
     const { citizenId } =
       validatedQuery<z.infer<typeof reportListQuerySchema>>(c)
-    const reports = await this.queryService.listReportsForReader(
+    const reports = await this.queryService.listReportsForReaderEnriched(
       actor,
       citizenId,
     )
-    return ok(c, presentReportList(reports))
+    return ok(c, presentEnrichedReportList(reports))
   }
 }

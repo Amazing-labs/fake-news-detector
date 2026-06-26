@@ -57,6 +57,11 @@ export class PrismaInvestigationRepository implements IInvestigationRepository {
     return rows.map((row) => this.toDomain(row))
   }
 
+  async findAll(): Promise<Investigation[]> {
+    const rows = await prisma.investigation.findMany()
+    return rows.map((row) => this.toDomain(row))
+  }
+
   async findInProgress(): Promise<Investigation[]> {
     const rows = await prisma.investigation.findMany({
       where: { status: 'IN_PROGRESS' },

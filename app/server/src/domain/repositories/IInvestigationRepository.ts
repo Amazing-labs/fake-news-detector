@@ -8,6 +8,7 @@ export interface IInvestigationRepository {
   findByReportId(reportId: string): Promise<Investigation | null>
   findByInboxSubjectId(inboxSubjectId: string): Promise<Investigation | null>
   findByJournalistId(journalistId: string): Promise<Investigation[]>
+  findAll(): Promise<Investigation[]>
   findInProgress(): Promise<Investigation[]>
   findPendingReviews(): Promise<Investigation[]>
   findPublished(): Promise<Investigation[]>

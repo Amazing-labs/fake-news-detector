@@ -7,8 +7,8 @@ import { requiredParam, validatedJson } from '../http/request'
 import type { correctionSchema } from '../http/schemas/publicationSchemas'
 import {
   presentCorrectionList,
-  presentPublication,
-  presentPublicationList,
+  presentEnrichedPublication,
+  presentEnrichedPublicationList,
 } from '../presenters/publicationPresenter'
 import type { z } from 'zod'
 
@@ -19,14 +19,16 @@ export class PublicationController {
   ) {}
 
   list = async (c: Context<{ Variables: AppVariables }>) => {
-    const items = await this.queryService.listPublications(c.req.query('scope'))
-    return ok(c, presentPublicationList(items))
+    const items = await this.queryService.listPublicationsEnriched(
+      c.req.query('scope'),
+    )
+    return ok(c, presentEnrichedPublicationList(items))
   }
 
   getById = async (c: Context<{ Variables: AppVariables }>) => {
     const id = requiredParam(c, 'publicationId')
-    const publication = await this.queryService.getPublication(id)
-    return ok(c, presentPublication(publication))
+    const publication = await this.queryService.getPublicationEnriched(id)
+    return ok(c, presentEnrichedPublication(publication))
   }
 
   listCorrections = async (c: Context<{ Variables: AppVariables }>) => {

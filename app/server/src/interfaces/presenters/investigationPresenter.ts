@@ -4,6 +4,7 @@ import type {
   InvestigationMedia,
   EvidenceMedia,
 } from '../../domain/value-objects/Media'
+import type { EnrichedInvestigation } from '../../application/services/FactCheckingQueryService'
 
 export function presentInvestigationMedia(media: InvestigationMedia) {
   return {
@@ -71,5 +72,26 @@ export function presentInvestigationList(investigations: Investigation[]) {
   return {
     items: investigations.map(presentInvestigation),
     total: investigations.length,
+  }
+}
+
+export function presentEnrichedInvestigation({
+  investigation,
+  title,
+  journalistName,
+}: EnrichedInvestigation) {
+  return {
+    ...presentInvestigation(investigation),
+    title,
+    journalistName,
+  }
+}
+
+export function presentEnrichedInvestigationList(
+  items: EnrichedInvestigation[],
+) {
+  return {
+    items: items.map(presentEnrichedInvestigation),
+    total: items.length,
   }
 }
