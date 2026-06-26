@@ -8,6 +8,7 @@ import {
 import {
   createOpenAPIRoutes,
   createdResponse,
+  jsonBody,
   noContentResponse,
   okResponse,
 } from '../http/openapi'
@@ -45,11 +46,7 @@ export function createJournalistRoutes(
       method: 'post',
       path: '/',
       middleware: manage,
-      request: {
-        body: {
-          content: { 'application/json': { schema: createJournalistSchema } },
-        },
-      },
+      request: { body: jsonBody(createJournalistSchema) },
       responses: createdResponse('Journalist created'),
     }),
     journalistManagementController.create,
@@ -62,9 +59,7 @@ export function createJournalistRoutes(
       middleware: manage,
       request: {
         params: journalistIdParamSchema,
-        body: {
-          content: { 'application/json': { schema: journalistActionSchema } },
-        },
+        body: jsonBody(journalistActionSchema),
       },
       responses: noContentResponse('Journalist banned'),
     }),
@@ -78,9 +73,7 @@ export function createJournalistRoutes(
       middleware: manage,
       request: {
         params: journalistIdParamSchema,
-        body: {
-          content: { 'application/json': { schema: journalistActionSchema } },
-        },
+        body: jsonBody(journalistActionSchema),
       },
       responses: noContentResponse('Journalist disabled'),
     }),

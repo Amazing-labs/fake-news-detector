@@ -8,10 +8,12 @@ import {
 import {
   createOpenAPIRoutes,
   createdResponse,
+  jsonBody,
   okResponse,
 } from '../http/openapi'
 import {
   reportIdParamSchema,
+  reportListQuerySchema,
   submitReportSchema,
 } from '../http/schemas/reportSchemas'
 
@@ -28,6 +30,7 @@ export function createReportRoutes(
     createRoute({
       method: 'get',
       path: '/',
+      request: { query: reportListQuerySchema },
       responses: okResponse('List of reports'),
     }),
     reportController.listReports,
@@ -48,11 +51,7 @@ export function createReportRoutes(
       method: 'post',
       path: '/',
       middleware: createPermissionMiddleware(securityService, 'report.submit'),
-      request: {
-        body: {
-          content: { 'application/json': { schema: submitReportSchema } },
-        },
-      },
+      request: { body: jsonBody(submitReportSchema) },
       responses: createdResponse('Report created'),
     }),
     reportController.createReport,

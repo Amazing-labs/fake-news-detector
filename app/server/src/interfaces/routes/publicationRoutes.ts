@@ -8,6 +8,7 @@ import {
 import {
   createOpenAPIRoutes,
   createdResponse,
+  jsonBody,
   okResponse,
 } from '../http/openapi'
 import {
@@ -63,9 +64,7 @@ export function createPublicationRoutes(
       ),
       request: {
         params: publicationIdParamSchema,
-        body: {
-          content: { 'application/json': { schema: correctionSchema } },
-        },
+        body: jsonBody(correctionSchema),
       },
       responses: createdResponse('Correction published'),
     }),

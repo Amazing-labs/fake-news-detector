@@ -36,3 +36,8 @@ export const createdResponse = (description = 'Created') => ({
 export const noContentResponse = (description = 'No Content') => ({
   204: { description },
 })
+
+// Shared JSON request-body declaration for createRoute({ request: { body } }).
+export const jsonBody = <T>(schema: T) => ({
+  content: { 'application/json': { schema } },
+})

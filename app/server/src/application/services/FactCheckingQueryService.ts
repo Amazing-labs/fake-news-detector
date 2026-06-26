@@ -33,7 +33,13 @@ import type { Report } from '../../domain/entities/Report'
 import type { WatcherApplication } from '../../domain/entities/WatcherApplication'
 import type { InvestigationMedia } from '../../domain/value-objects/Media'
 import type { EvidenceWithMedia } from '../../domain/processes/investigationReviewReadiness'
+import type { ActorRole } from '../../shared/types'
 import { NotFoundError } from '../../shared/errors'
+
+export interface ReaderContext {
+  actorId: string
+  actorRole: ActorRole
+}
 
 export interface InvestigationListFilter {
   scope?: string
@@ -66,7 +72,15 @@ export class FactCheckingQueryService {
   // Collection reads
   // ---------------------------------------------------------------------------
 
-  async listReports(citizenId?: string): Promise<Report[]> {
+  // A citizen may only ever read their own reports; staff (journalist /
+  // director) may read any citizen's reports or the full list.
+  async listReportsForReader(
+    reader: ReaderContext,
+    citizenId?: string,
+  ): Promise<Report[]> {
+    if (reader.actorRole === 'CITIZEN') {
+      return this.reportRepository.findByCitizenId(reader.actorId)
+    }
     return citizenId
       ? this.reportRepository.findByCitizenId(citizenId)
       : this.reportRepository.findAll()
@@ -134,6 +148,19 @@ export class FactCheckingQueryService {
   async getReport(reportId: string): Promise<Report> {
     const report = await this.reportRepository.findById(reportId)
     if (!report) throw new NotFoundError('Report', reportId)
+    return report
+  }
+
+  // A citizen may only read their own report; staff may read any. Unauthorized
+  // access is reported as "not found" so a report's existence is not leaked.
+  async getReportForReader(
+    reportId: string,
+    reader: ReaderContext,
+  ): Promise<Report> {
+    const report = await this.getReport(reportId)
+    if (reader.actorRole === 'CITIZEN' && report.citizenId !== reader.actorId) {
+      throw new NotFoundError('Report', reportId)
+    }
     return report
   }
 

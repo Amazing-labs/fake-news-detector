@@ -5,6 +5,10 @@ export const inboxSubjectIdParamSchema = z.object({
   inboxSubjectId: idSchema,
 })
 
+export const inboxSubjectListQuerySchema = z.object({
+  status: z.enum(['OPEN', 'IN_PROGRESS', 'ARCHIVED']).optional(),
+})
+
 export const createDirectorInboxSubjectSchema = z.object({
   theme: verificationThemeSchema,
   description: z.string().min(1),

@@ -3,10 +3,11 @@ import { FactCheckingService } from '../../application/services/FactCheckingServ
 import { FactCheckingQueryService } from '../../application/services/FactCheckingQueryService'
 import { created, noContent, ok } from '../http/responses'
 import type { AppVariables } from '../http/types'
-import { requiredParam, validatedJson } from '../http/request'
+import { requiredParam, validatedJson, validatedQuery } from '../http/request'
 import type {
   createDirectorInboxSubjectSchema,
   deleteInboxSubjectSchema,
+  inboxSubjectListQuerySchema,
 } from '../http/schemas/inboxSubjectSchemas'
 import {
   presentInboxSubject,
@@ -14,13 +15,7 @@ import {
 } from '../presenters/inboxSubjectPresenter'
 import { presentInvestigation } from '../presenters/investigationPresenter'
 import { presentReportList } from '../presenters/reportPresenter'
-import { z } from 'zod'
-
-const inboxSubjectStatusQuerySchema = z.enum([
-  'OPEN',
-  'IN_PROGRESS',
-  'ARCHIVED',
-])
+import type { z } from 'zod'
 
 export class InboxSubjectController {
   constructor(
@@ -35,10 +30,8 @@ export class InboxSubjectController {
   }
 
   list = async (c: Context<{ Variables: AppVariables }>) => {
-    const rawStatus = c.req.query('status')
-    const status = rawStatus
-      ? inboxSubjectStatusQuerySchema.parse(rawStatus)
-      : undefined
+    const { status } =
+      validatedQuery<z.infer<typeof inboxSubjectListQuerySchema>>(c)
     const items = await this.queryService.listInboxSubjects(status)
     return ok(c, presentInboxSubjectList(items))
   }

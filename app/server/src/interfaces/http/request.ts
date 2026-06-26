@@ -29,3 +29,8 @@ export function requiredNumericParam(
 export function validatedJson<T>(c: Context<{ Variables: AppVariables }>): T {
   return c.req.valid('json' as never) as T
 }
+
+// Reads the query already validated at the route layer (@hono/zod-openapi).
+export function validatedQuery<T>(c: Context<{ Variables: AppVariables }>): T {
+  return c.req.valid('query' as never) as T
+}

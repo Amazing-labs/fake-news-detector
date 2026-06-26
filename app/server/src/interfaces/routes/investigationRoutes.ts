@@ -8,6 +8,7 @@ import {
 import {
   createOpenAPIRoutes,
   createdResponse,
+  jsonBody,
   noContentResponse,
   okResponse,
 } from '../http/openapi'
@@ -22,10 +23,6 @@ import {
   submitWatcherEvidenceSchema,
   updateMediaSchema,
 } from '../http/schemas/investigationSchemas'
-
-const jsonBody = <T>(schema: T) => ({
-  content: { 'application/json': { schema } },
-})
 
 export function createInvestigationRoutes(
   investigationController: InvestigationController,

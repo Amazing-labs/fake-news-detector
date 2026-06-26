@@ -3,8 +3,11 @@ import { FactCheckingQueryService } from '../../application/services/FactCheckin
 import { created, ok } from '../http/responses'
 import type { AppVariables } from '../http/types'
 import type { Context } from 'hono'
-import { requiredParam, validatedJson } from '../http/request'
-import type { submitReportSchema } from '../http/schemas/reportSchemas'
+import { requiredParam, validatedJson, validatedQuery } from '../http/request'
+import type {
+  reportListQuerySchema,
+  submitReportSchema,
+} from '../http/schemas/reportSchemas'
 import { presentReport, presentReportList } from '../presenters/reportPresenter'
 import type { z } from 'zod'
 
@@ -25,14 +28,22 @@ export class ReportController {
   }
 
   getById = async (c: Context<{ Variables: AppVariables }>) => {
-    const id = requiredParam(c, 'reportId')
-    const report = await this.queryService.getReport(id)
+    const actor = c.get('actor')
+    const report = await this.queryService.getReportForReader(
+      requiredParam(c, 'reportId'),
+      actor,
+    )
     return ok(c, presentReport(report))
   }
 
   listReports = async (c: Context<{ Variables: AppVariables }>) => {
-    const citizenId = c.req.query('citizenId')
-    const reports = await this.queryService.listReports(citizenId)
+    const actor = c.get('actor')
+    const { citizenId } =
+      validatedQuery<z.infer<typeof reportListQuerySchema>>(c)
+    const reports = await this.queryService.listReportsForReader(
+      actor,
+      citizenId,
+    )
     return ok(c, presentReportList(reports))
   }
 }

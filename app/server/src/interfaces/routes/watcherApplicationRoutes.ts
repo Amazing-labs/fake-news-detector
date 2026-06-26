@@ -8,6 +8,7 @@ import {
 import {
   createOpenAPIRoutes,
   createdResponse,
+  jsonBody,
   noContentResponse,
   okResponse,
 } from '../http/openapi'
@@ -57,13 +58,7 @@ export function createWatcherApplicationRoutes(
       method: 'post',
       path: '/',
       middleware: createPermissionMiddleware(securityService, 'watcher.apply'),
-      request: {
-        body: {
-          content: {
-            'application/json': { schema: submitWatcherApplicationSchema },
-          },
-        },
-      },
+      request: { body: jsonBody(submitWatcherApplicationSchema) },
       responses: createdResponse('Watcher application submitted'),
     }),
     watcherApplicationController.submit,

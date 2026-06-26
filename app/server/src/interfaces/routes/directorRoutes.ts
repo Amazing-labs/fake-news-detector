@@ -7,6 +7,7 @@ import {
 } from '../middlewares/authMiddleware'
 import {
   createOpenAPIRoutes,
+  jsonBody,
   noContentResponse,
   okResponse,
 } from '../http/openapi'
@@ -58,9 +59,7 @@ export function createDirectorRoutes(
       middleware: manageCitizen,
       request: {
         params: citizenIdParamSchema,
-        body: {
-          content: { 'application/json': { schema: citizenManagementSchema } },
-        },
+        body: jsonBody(citizenManagementSchema),
       },
       responses: noContentResponse('Citizen banned'),
     }),
@@ -74,9 +73,7 @@ export function createDirectorRoutes(
       middleware: manageCitizen,
       request: {
         params: citizenIdParamSchema,
-        body: {
-          content: { 'application/json': { schema: citizenManagementSchema } },
-        },
+        body: jsonBody(citizenManagementSchema),
       },
       responses: noContentResponse('Citizen disabled'),
     }),

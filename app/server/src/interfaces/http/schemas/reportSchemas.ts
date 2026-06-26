@@ -5,6 +5,10 @@ export const reportIdParamSchema = z.object({
   reportId: idSchema,
 })
 
+export const reportListQuerySchema = z.object({
+  citizenId: idSchema.optional(),
+})
+
 export const submitReportSchema = z.object({
   theme: verificationThemeSchema,
   title: z

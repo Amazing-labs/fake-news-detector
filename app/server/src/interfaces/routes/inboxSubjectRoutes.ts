@@ -8,6 +8,7 @@ import {
 import {
   createOpenAPIRoutes,
   createdResponse,
+  jsonBody,
   noContentResponse,
   okResponse,
 } from '../http/openapi'
@@ -15,6 +16,7 @@ import {
   createDirectorInboxSubjectSchema,
   deleteInboxSubjectSchema,
   inboxSubjectIdParamSchema,
+  inboxSubjectListQuerySchema,
 } from '../http/schemas/inboxSubjectSchemas'
 
 export function createInboxSubjectRoutes(
@@ -30,6 +32,7 @@ export function createInboxSubjectRoutes(
     createRoute({
       method: 'get',
       path: '/',
+      request: { query: inboxSubjectListQuerySchema },
       responses: okResponse('List of inbox subjects'),
     }),
     inboxSubjectController.list,
@@ -60,13 +63,7 @@ export function createInboxSubjectRoutes(
       method: 'post',
       path: '/',
       middleware: createPermissionMiddleware(securityService, 'inbox.manage'),
-      request: {
-        body: {
-          content: {
-            'application/json': { schema: createDirectorInboxSubjectSchema },
-          },
-        },
-      },
+      request: { body: jsonBody(createDirectorInboxSubjectSchema) },
       responses: createdResponse('Inbox subject created'),
     }),
     inboxSubjectController.createDirectorSubject,
@@ -90,11 +87,7 @@ export function createInboxSubjectRoutes(
       middleware: createPermissionMiddleware(securityService, 'inbox.manage'),
       request: {
         params: inboxSubjectIdParamSchema,
-        body: {
-          content: {
-            'application/json': { schema: deleteInboxSubjectSchema },
-          },
-        },
+        body: jsonBody(deleteInboxSubjectSchema),
       },
       responses: noContentResponse('Inbox subject deleted'),
     }),
