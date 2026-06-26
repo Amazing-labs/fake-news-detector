@@ -8,9 +8,11 @@ export type PublicationItem = {
   /** Linked investigation's inbox subject theme, resolved server-side. */
   title: string | null
   verifiedLinks: Array<{
-    id: string
+    id: number
     url: string
     authoritySourceId: string | null
+    /** Authority source name, resolved server-side. */
+    authoritySourceName: string | null
   }>
   verifiedMedia: Array<{
     id: number
@@ -18,6 +20,8 @@ export type PublicationItem = {
     type: string
     order: number
     authoritySourceId: string | null
+    /** Authority source name, resolved server-side. */
+    authoritySourceName: string | null
   }>
   createdAt: string
   updatedAt: string
@@ -25,5 +29,21 @@ export type PublicationItem = {
 
 export type PublicationList = {
   items: PublicationItem[]
+  total: number
+}
+
+export type CorrectionItem = {
+  id: string
+  publicationId: string
+  notificationId: string | null
+  title: string
+  content: string
+  correctedById: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type CorrectionList = {
+  items: CorrectionItem[]
   total: number
 }

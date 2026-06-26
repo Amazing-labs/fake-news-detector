@@ -1,5 +1,9 @@
 import { apiRequest } from '@shared/api/http'
-import type { PublicationItem, PublicationList } from './model'
+import type {
+  CorrectionList,
+  PublicationItem,
+  PublicationList,
+} from './model'
 
 export type PublicationScope = 'corrections'
 
@@ -9,6 +13,8 @@ export const publicationQueryKeys = {
     ['publications', 'list', params ?? {}] as const,
   detail: (publicationId: string) =>
     ['publications', 'detail', publicationId] as const,
+  corrections: (publicationId: string) =>
+    ['publications', 'corrections', publicationId] as const,
 }
 
 export function listPublications(params?: { scope?: PublicationScope }) {
@@ -27,4 +33,10 @@ export function listPublications(params?: { scope?: PublicationScope }) {
 
 export function getPublication(publicationId: string) {
   return apiRequest<PublicationItem>(`/api/publications/${publicationId}`)
+}
+
+export function getPublicationCorrections(publicationId: string) {
+  return apiRequest<CorrectionList>(
+    `/api/publications/${publicationId}/corrections`,
+  )
 }

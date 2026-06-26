@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
 import {
   AlertTriangle,
   CheckCircle2,
@@ -8,6 +9,11 @@ import {
   PenLine,
   RotateCcw,
 } from 'lucide-react'
+import {
+  dashboardQueryKeys,
+  getDashboardMetrics,
+} from '@entities/dashboard/api'
+import type { ActorMetrics } from '@entities/dashboard/model'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
 import {
@@ -39,6 +45,26 @@ import { investigations, publications, reports } from '../workspace-mocks'
 import { GuestHomePage } from './admin'
 import { slugifyLabel } from './utils'
 
+function useActorMetrics() {
+  return useQuery({
+    queryKey: dashboardQueryKeys.metrics(),
+    queryFn: getDashboardMetrics,
+  })
+}
+
+function metricsFor<P extends ActorMetrics['profile']>(
+  data: ActorMetrics | null | undefined,
+  profile: P,
+): Extract<ActorMetrics, { profile: P }> | undefined {
+  return data?.profile === profile
+    ? (data as Extract<ActorMetrics, { profile: P }>)
+    : undefined
+}
+
+function statValue(value: number | undefined) {
+  return value == null ? '—' : String(value)
+}
+
 export function RoleAwareDashboardPage() {
   const { actor } = useResolvedActor('guest')
 
@@ -55,6 +81,8 @@ export function DirectorHomePage() {
 }
 
 export function JournalistWorkspacePage() {
+  const { data } = useActorMetrics()
+  const metrics = metricsFor(data, 'journalist')
   const currentInvestigation = investigations.find(
     (item) => item.status === 'PENDING_REVIEW',
   )
@@ -64,19 +92,19 @@ export function JournalistWorkspacePage() {
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
           title="Dossier courant"
-          value="1"
+          value={statValue(metrics?.currentDossiers)}
           hint="en responsabilite"
           icon={FileSearch}
         />
         <StatCard
           title="Etat du dossier"
-          value="1"
+          value={statValue(metrics?.pendingReviews)}
           hint="revue direction"
           icon={ClipboardCheck}
         />
         <StatCard
           title="Retours direction"
-          value="1"
+          value={statValue(metrics?.directorReturns)}
           hint="correction"
           icon={PenLine}
         />
@@ -252,30 +280,33 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
 }
 
 export function CitizenDashboardPage() {
+  const { data } = useActorMetrics()
+  const metrics = metricsFor(data, 'citizen')
+
   return (
     <AppLayout actor="citizen" page="dashboard">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Signalements actifs"
-          value="2"
+          value={statValue(metrics?.activeReports)}
           hint="en suivi"
           icon={FileSearch}
         />
         <StatCard
           title="En attente de retour"
-          value="1"
+          value={statValue(metrics?.awaitingReply)}
           hint="a clarifier"
           icon={AlertTriangle}
         />
         <StatCard
           title="Retours recus"
-          value="4"
+          value={statValue(metrics?.repliesReceived)}
           hint="depuis la rédaction"
           icon={CheckCircle2}
         />
         <StatCard
           title="Corrections utiles"
-          value="3"
+          value={statValue(metrics?.corrections)}
           hint="publiees"
           icon={RotateCcw}
         />
@@ -329,24 +360,27 @@ export function CitizenDashboardPage() {
 }
 
 export function WatcherWorkspacePage() {
+  const { data } = useActorMetrics()
+  const metrics = metricsFor(data, 'watcher')
+
   return (
     <AppLayout actor="watcher" page="dashboard">
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
           title="Enquêtes suivies"
-          value="3"
+          value={statValue(metrics?.followedInvestigations)}
           hint="actives"
           icon={FileSearch}
         />
         <StatCard
           title="Preuves soumises"
-          value="7"
+          value={statValue(metrics?.evidenceThisMonth)}
           hint="ce mois"
           icon={ClipboardCheck}
         />
         <StatCard
           title="Contributions acceptées"
-          value="5"
+          value={statValue(metrics?.acceptedContributions)}
           hint="validées"
           icon={CheckCircle2}
         />

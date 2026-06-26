@@ -16,3 +16,19 @@ export type InboxSubjectList = {
   items: InboxSubjectItem[]
   total: number
 }
+
+export type InboxSubjectMediaItem = {
+  id: number
+  url: string
+  type: string
+  order: number
+  origin: string
+  uploadedById: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type InboxSubjectMediaList = {
+  items: InboxSubjectMediaItem[]
+  total: number
+}
