@@ -5,6 +5,7 @@ import { createDirectorRoutes } from './routes/directorRoutes'
 import { createInboxSubjectRoutes } from './routes/inboxSubjectRoutes'
 import { createInvestigationRoutes } from './routes/investigationRoutes'
 import { createJournalistRoutes } from './routes/journalistRoutes'
+import { createMeRoutes } from './routes/meRoutes'
 import { createNotificationRoutes } from './routes/notificationRoutes'
 import { createPublicationRoutes } from './routes/publicationRoutes'
 import { createReportRoutes } from './routes/reportRoutes'
@@ -92,6 +93,11 @@ export function createApp(dependencies: AppDependencies) {
       dependencies.directorController,
       dependencies.securityService,
     ),
+  )
+
+  app.route(
+    '/api/me',
+    createMeRoutes(dependencies.meController, dependencies.securityService),
   )
 
   app.get('/health', (c) =>

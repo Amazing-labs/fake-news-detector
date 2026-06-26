@@ -1,42 +1,59 @@
 import type { Context } from 'hono'
-import type {
-  ICitizenRepository,
-  IInvestigationRepository,
-  INotificationRepository,
-  IPublicationRepository,
-} from '../../domain/repositories'
-import { ok } from '../http/responses'
+import { ActorManagementService } from '../../application/services/ActorManagementService'
+import { FactCheckingQueryService } from '../../application/services/FactCheckingQueryService'
+import { noContent, ok } from '../http/responses'
 import type { AppVariables } from '../http/types'
+import { requiredParam, validatedJson } from '../http/request'
+import type { citizenManagementSchema } from '../http/schemas/common'
 import { presentDirectorDashboard } from '../presenters/directorPresenter'
+import type { z } from 'zod'
 
 export class DirectorController {
   constructor(
-    private readonly investigationRepository: IInvestigationRepository,
-    private readonly publicationRepository: IPublicationRepository,
-    private readonly notificationRepository: INotificationRepository,
-    private readonly citizenRepository: ICitizenRepository,
+    private readonly queryService: FactCheckingQueryService,
+    private readonly actorManagementService: ActorManagementService,
   ) {}
 
   getDashboard = async (c: Context<{ Variables: AppVariables }>) => {
-    const [pendingReviews, publishedCount, totalNotifications] =
-      await Promise.all([
-        this.investigationRepository.findPendingReviews(),
-        this.publicationRepository.count(),
-        this.notificationRepository.count(),
-      ])
+    const dashboard = await this.queryService.getDirectorDashboard()
+    return ok(c, presentDirectorDashboard(dashboard))
+  }
 
-    return ok(
-      c,
-      presentDirectorDashboard({
-        pendingReviews,
-        publishedCount,
-        totalNotifications,
-      }),
+  banCitizen = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
+    const body = validatedJson<z.infer<typeof citizenManagementSchema>>(c)
+    await this.actorManagementService.banCitizen(
+      actor.actorId,
+      requiredParam(c, 'citizenId'),
+      body.reason ?? 'OTHER',
+      body.details,
     )
+    return noContent(c)
+  }
+
+  disableCitizen = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
+    const body = validatedJson<z.infer<typeof citizenManagementSchema>>(c)
+    await this.actorManagementService.disableCitizen(
+      actor.actorId,
+      requiredParam(c, 'citizenId'),
+      body.reason ?? 'OTHER',
+      body.details,
+    )
+    return noContent(c)
+  }
+
+  activateCitizen = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
+    await this.actorManagementService.activateCitizen(
+      actor.actorId,
+      requiredParam(c, 'citizenId'),
+    )
+    return noContent(c)
   }
 
   listCitizens = async (c: Context<{ Variables: AppVariables }>) => {
-    const citizens = await this.citizenRepository.findAll()
+    const citizens = await this.actorManagementService.listCitizens()
 
     return ok(c, {
       items: citizens.map((citizen) => ({

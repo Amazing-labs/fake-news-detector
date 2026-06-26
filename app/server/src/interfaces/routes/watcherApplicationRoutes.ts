@@ -1,39 +1,94 @@
-import { Hono } from 'hono'
+import { createRoute } from '@hono/zod-openapi'
 import type { SecurityService } from '../../application/services/SecurityService'
 import { WatcherApplicationController } from '../controllers/WatcherApplicationController'
-import type { AppVariables } from '../http/types'
 import {
   createAuthMiddleware,
   createPermissionMiddleware,
 } from '../middlewares/authMiddleware'
+import {
+  createOpenAPIRoutes,
+  createdResponse,
+  jsonBody,
+  noContentResponse,
+  okResponse,
+} from '../http/openapi'
+import {
+  applicationIdParamSchema,
+  submitWatcherApplicationSchema,
+} from '../http/schemas/watcherApplicationSchemas'
 
 export function createWatcherApplicationRoutes(
   watcherApplicationController: WatcherApplicationController,
   securityService: SecurityService,
 ) {
-  const routes = new Hono<{ Variables: AppVariables }>()
+  const routes = createOpenAPIRoutes()
   const auth = createAuthMiddleware(securityService)
 
   routes.use('*', auth)
 
-  routes.get(
-    '/',
-    createPermissionMiddleware(securityService, 'watcherApplication.decide'),
+  routes.openapi(
+    createRoute({
+      method: 'get',
+      path: '/',
+      middleware: createPermissionMiddleware(
+        securityService,
+        'watcherApplication.decide',
+      ),
+      responses: okResponse('List of watcher applications'),
+    }),
     watcherApplicationController.list,
   )
-  routes.post(
-    '/',
-    createPermissionMiddleware(securityService, 'watcher.apply'),
+
+  routes.openapi(
+    createRoute({
+      method: 'get',
+      path: '/{applicationId}',
+      middleware: createPermissionMiddleware(
+        securityService,
+        'watcherApplication.decide',
+      ),
+      request: { params: applicationIdParamSchema },
+      responses: okResponse('Watcher application detail'),
+    }),
+    watcherApplicationController.getById,
+  )
+
+  routes.openapi(
+    createRoute({
+      method: 'post',
+      path: '/',
+      middleware: createPermissionMiddleware(securityService, 'watcher.apply'),
+      request: { body: jsonBody(submitWatcherApplicationSchema) },
+      responses: createdResponse('Watcher application submitted'),
+    }),
     watcherApplicationController.submit,
   )
-  routes.post(
-    '/:applicationId/approve',
-    createPermissionMiddleware(securityService, 'watcherApplication.decide'),
+
+  routes.openapi(
+    createRoute({
+      method: 'post',
+      path: '/{applicationId}/approve',
+      middleware: createPermissionMiddleware(
+        securityService,
+        'watcherApplication.decide',
+      ),
+      request: { params: applicationIdParamSchema },
+      responses: noContentResponse('Watcher application approved'),
+    }),
     watcherApplicationController.approve,
   )
-  routes.post(
-    '/:applicationId/reject',
-    createPermissionMiddleware(securityService, 'watcherApplication.decide'),
+
+  routes.openapi(
+    createRoute({
+      method: 'post',
+      path: '/{applicationId}/reject',
+      middleware: createPermissionMiddleware(
+        securityService,
+        'watcherApplication.decide',
+      ),
+      request: { params: applicationIdParamSchema },
+      responses: noContentResponse('Watcher application rejected'),
+    }),
     watcherApplicationController.reject,
   )
 

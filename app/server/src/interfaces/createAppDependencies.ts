@@ -1,4 +1,6 @@
 import { ActorManagementService } from '../application/services/ActorManagementService'
+import { FactCheckingQueryService } from '../application/services/FactCheckingQueryService'
+import { NotificationService } from '../application/services/NotificationService'
 import { SecurityService } from '../application/services/SecurityService'
 import { createTransactionalFactCheckingService } from '../application/services/createTransactionalFactCheckingService'
 import { PrismaAuthoritySourceRepository } from '../infrastructure/repositories/persistence/PrismaAuthoritySourceRepository'
@@ -22,6 +24,7 @@ import { DirectorController } from './controllers/DirectorController'
 import { InboxSubjectController } from './controllers/InboxSubjectController'
 import { InvestigationController } from './controllers/InvestigationController'
 import { JournalistManagementController } from './controllers/JournalistManagementController'
+import { MeController } from './controllers/MeController'
 import { NotificationController } from './controllers/NotificationController'
 import { PublicationController } from './controllers/PublicationController'
 import { ReportController } from './controllers/ReportController'
@@ -37,6 +40,7 @@ export interface AppDependencies {
   journalistManagementController: JournalistManagementController
   directorController: DirectorController
   notificationController: NotificationController
+  meController: MeController
 }
 
 export function createAppDependencies(): AppDependencies {
@@ -79,44 +83,54 @@ export function createAppDependencies(): AppDependencies {
   const actorManagementService = new ActorManagementService(
     directorRepository,
     journalistRepository,
+    citizenRepository,
   )
+  const queryService = new FactCheckingQueryService(
+    reportRepository,
+    inboxSubjectRepository,
+    investigationRepository,
+    investigationMediaRepository,
+    evidenceRepository,
+    publicationRepository,
+    correctionRepository,
+    watcherApplicationRepository,
+    citizenRepository,
+    journalistRepository,
+    directorRepository,
+    notificationRepository,
+  )
+  const notificationService = new NotificationService(notificationRepository)
   const securityService = new SecurityService(
     new BetterAuthRequestAuthenticator(),
   )
 
   return {
     securityService,
-    reportController: new ReportController(
-      factCheckingService,
-      reportRepository,
-    ),
+    reportController: new ReportController(factCheckingService, queryService),
     inboxSubjectController: new InboxSubjectController(
       factCheckingService,
-      inboxSubjectRepository,
-      reportRepository,
+      queryService,
     ),
     investigationController: new InvestigationController(
       factCheckingService,
-      investigationRepository,
+      queryService,
     ),
     publicationController: new PublicationController(
       factCheckingService,
-      publicationRepository,
+      queryService,
     ),
     watcherApplicationController: new WatcherApplicationController(
       factCheckingService,
-      watcherApplicationRepository,
+      queryService,
     ),
     journalistManagementController: new JournalistManagementController(
       actorManagementService,
-      journalistRepository,
     ),
     directorController: new DirectorController(
-      investigationRepository,
-      publicationRepository,
-      notificationRepository,
-      citizenRepository,
+      queryService,
+      actorManagementService,
     ),
-    notificationController: new NotificationController(notificationRepository),
+    notificationController: new NotificationController(notificationService),
+    meController: new MeController(queryService),
   }
 }

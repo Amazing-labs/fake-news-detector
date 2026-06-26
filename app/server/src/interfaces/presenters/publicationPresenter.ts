@@ -1,4 +1,25 @@
 import type { Publication } from '../../domain/entities/Publication'
+import type { Correction } from '../../domain/entities/Correction'
+
+export function presentCorrection(correction: Correction) {
+  return {
+    id: correction.id,
+    publicationId: correction.publicationId,
+    notificationId: correction.notificationId,
+    title: correction.title,
+    content: correction.content,
+    correctedById: correction.correctedById,
+    createdAt: correction.createdAt.toISOString(),
+    updatedAt: correction.updatedAt.toISOString(),
+  }
+}
+
+export function presentCorrectionList(corrections: Correction[]) {
+  return {
+    items: corrections.map(presentCorrection),
+    total: corrections.length,
+  }
+}
 
 export function presentPublication(publication: Publication) {
   return {

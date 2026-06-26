@@ -35,6 +35,7 @@ export type Permission =
   | 'investigation.archive'
   | 'watcherApplication.decide'
   | 'journalist.manage'
+  | 'citizen.manage'
   | 'inbox.manage'
   | 'director.dashboard.read'
   // Shared
@@ -61,6 +62,7 @@ const ROLE_PERMISSIONS: Record<ActorRole, ReadonlySet<Permission>> = {
     'investigation.archive',
     'watcherApplication.decide',
     'journalist.manage',
+    'citizen.manage',
     'inbox.manage',
     'director.dashboard.read',
     'notifications.read',

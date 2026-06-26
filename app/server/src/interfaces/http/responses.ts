@@ -1,4 +1,5 @@
 import type { Context } from 'hono'
+import { HTTPException } from 'hono/http-exception'
 import { ZodError } from 'zod'
 import {
   BusinessRuleError,
@@ -36,6 +37,12 @@ export function noContent(c: Context) {
 export function toErrorResponse(c: Context, error: unknown) {
   if (error instanceof NotFoundError) {
     return c.json({ success: false, error: error.message }, 404)
+  }
+
+  // Route-layer (@hono/zod-openapi) failures such as malformed JSON surface as
+  // HTTPException; honor their status instead of masking them as 500.
+  if (error instanceof HTTPException) {
+    return c.json({ success: false, error: error.message }, error.status)
   }
 
   if (error instanceof ValidationError) {
