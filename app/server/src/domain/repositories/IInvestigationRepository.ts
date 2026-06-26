@@ -13,6 +13,7 @@ export interface IInvestigationRepository {
   findPendingReviews(): Promise<Investigation[]>
   findPublished(): Promise<Investigation[]>
   findCanceled(): Promise<Investigation[]>
+  findContributable(): Promise<Investigation[]>
   update(investigation: Investigation): Promise<void>
   addEvidence(investigationId: string, evidence: Evidence): Promise<void>
 }

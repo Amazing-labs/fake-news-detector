@@ -1,6 +1,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import type { AppDependencies } from './createAppDependencies'
+import { createDashboardRoutes } from './routes/dashboardRoutes'
 import { createDirectorRoutes } from './routes/directorRoutes'
 import { createInboxSubjectRoutes } from './routes/inboxSubjectRoutes'
 import { createInvestigationRoutes } from './routes/investigationRoutes'
@@ -98,6 +99,14 @@ export function createApp(dependencies: AppDependencies) {
   app.route(
     '/api/me',
     createMeRoutes(dependencies.meController, dependencies.securityService),
+  )
+
+  app.route(
+    '/api/dashboard',
+    createDashboardRoutes(
+      dependencies.dashboardController,
+      dependencies.securityService,
+    ),
   )
 
   app.get('/health', (c) =>

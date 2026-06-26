@@ -65,10 +65,35 @@ export function presentPublicationList(publications: Publication[]) {
 export function presentEnrichedPublication({
   publication,
   title,
+  authoritySourceNames,
 }: EnrichedPublication) {
+  const resolveName = (authoritySourceId: string | null) =>
+    authoritySourceId ? (authoritySourceNames.get(authoritySourceId) ?? null) : null
   return {
     ...presentPublication(publication),
     title,
+    verifiedLinks: publication.verifiedLinks.map((link) => ({
+      id: link.id,
+      url: link.url,
+      publicationId: link.publicationId,
+      addedById: link.addedById,
+      authoritySourceId: link.authoritySourceId ?? null,
+      authoritySourceName: resolveName(link.authoritySourceId ?? null),
+      createdAt: link.createdAt.toISOString(),
+      updatedAt: link.updatedAt.toISOString(),
+    })),
+    verifiedMedia: publication.verifiedMedia.map((media) => ({
+      id: media.id,
+      url: media.url,
+      type: media.type,
+      order: media.order,
+      publicationId: media.publicationId,
+      addedById: media.addedById,
+      authoritySourceId: media.authoritySourceId ?? null,
+      authoritySourceName: resolveName(media.authoritySourceId ?? null),
+      createdAt: media.createdAt.toISOString(),
+      updatedAt: media.updatedAt.toISOString(),
+    })),
   }
 }
 

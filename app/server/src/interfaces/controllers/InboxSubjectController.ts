@@ -12,6 +12,7 @@ import type {
 import {
   presentEnrichedInboxSubject,
   presentEnrichedInboxSubjectList,
+  presentInboxSubjectMediaList,
 } from '../presenters/inboxSubjectPresenter'
 import { presentInvestigation } from '../presenters/investigationPresenter'
 import { presentEnrichedReportList } from '../presenters/reportPresenter'
@@ -76,5 +77,11 @@ export class InboxSubjectController {
   listOpenReports = async (c: Context<{ Variables: AppVariables }>) => {
     const items = await this.queryService.listOpenReportsInboxEnriched()
     return ok(c, presentEnrichedReportList(items))
+  }
+
+  listMedia = async (c: Context<{ Variables: AppVariables }>) => {
+    const id = requiredParam(c, 'inboxSubjectId')
+    const media = await this.queryService.getInboxSubjectMedia(id)
+    return ok(c, presentInboxSubjectMediaList(media))
   }
 }

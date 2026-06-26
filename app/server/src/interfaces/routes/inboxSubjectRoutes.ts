@@ -60,6 +60,16 @@ export function createInboxSubjectRoutes(
 
   routes.openapi(
     createRoute({
+      method: 'get',
+      path: '/{inboxSubjectId}/media',
+      request: { params: inboxSubjectIdParamSchema },
+      responses: okResponse('Inbox subject media'),
+    }),
+    inboxSubjectController.listMedia,
+  )
+
+  routes.openapi(
+    createRoute({
       method: 'post',
       path: '/',
       middleware: createPermissionMiddleware(securityService, 'inbox.manage'),

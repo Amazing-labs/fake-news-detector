@@ -108,6 +108,7 @@ function buildApp() {
     directorController: directorController as any,
     notificationController: notificationController as any,
     meController: { getMe: vi.fn() } as any,
+    dashboardController: { metrics: vi.fn() } as any,
   })
 
   return { app, reportController }
@@ -218,6 +219,7 @@ describe('createApp', () => {
         markAllAsRead: vi.fn(),
       } as any,
       meController: { getMe: vi.fn() } as any,
+      dashboardController: { metrics: vi.fn() } as any,
     })
 
     const response = await app.request('/api/reports', {
@@ -301,6 +303,7 @@ describe('createApp', () => {
         markAllAsRead: vi.fn(),
       } as any,
       meController: { getMe: vi.fn() } as any,
+      dashboardController: { metrics: vi.fn() } as any,
     })
 
     const response = await app.request('/api/reports', {
@@ -379,6 +382,7 @@ describe('createApp', () => {
         markAllAsRead: vi.fn(),
       } as any,
       meController: { getMe: vi.fn() } as any,
+      dashboardController: { metrics: vi.fn() } as any,
     })
 
     const response = await app.request('/api/reports', {
@@ -466,6 +470,7 @@ describe('createApp', () => {
         markAllAsRead: vi.fn(),
       } as any,
       meController: { getMe: vi.fn() } as any,
+      dashboardController: { metrics: vi.fn() } as any,
     })
 
     const response = await app.request('/api/inbox-subjects?status=INVALID', {
@@ -542,6 +547,7 @@ describe('createApp', () => {
         markAllAsRead: vi.fn(),
       } as any,
       meController: { getMe: vi.fn() } as any,
+      dashboardController: { metrics: vi.fn() } as any,
     })
 
     const response = await app.request('/api/publications/pub-1/corrections', {
@@ -621,6 +627,7 @@ describe('createApp', () => {
         markAllAsRead: vi.fn(),
       } as any,
       meController: { getMe: vi.fn() } as any,
+      dashboardController: { metrics: vi.fn() } as any,
     })
 
     const response = await app.request('/api/investigations/inv-1/approve', {
@@ -687,6 +694,7 @@ describe('createApp', () => {
         markAllAsRead: vi.fn(),
       } as any,
       meController: { getMe: vi.fn() } as any,
+      dashboardController: { metrics: vi.fn() } as any,
     })
 
     const response = await app.request(
@@ -759,6 +767,9 @@ describe('report access authorization', () => {
       {} as any,
       {} as any,
       {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
     )
 
     const reportController = new ReportController({} as any, queryService)
@@ -774,6 +785,7 @@ describe('report access authorization', () => {
       directorController: stubController(),
       notificationController: stubController(),
       meController: stubController(),
+      dashboardController: stubController(),
     })
   }
 

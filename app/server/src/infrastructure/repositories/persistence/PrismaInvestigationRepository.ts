@@ -90,6 +90,13 @@ export class PrismaInvestigationRepository implements IInvestigationRepository {
     return rows.map((row) => this.toDomain(row))
   }
 
+  async findContributable(): Promise<Investigation[]> {
+    const rows = await prisma.investigation.findMany({
+      where: { status: { in: ['OPEN', 'NEEDS_REVISION'] } },
+    })
+    return rows.map((row) => this.toDomain(row))
+  }
+
   async update(investigation: Investigation): Promise<void> {
     await prisma.investigation.update({
       where: { id: investigation.id },
