@@ -1,9 +1,12 @@
 import { describe, expect, test, vi } from 'vitest'
 import { createApp } from './createApp'
 import { SecurityService } from '../application/services/SecurityService'
+import { FactCheckingQueryService } from '../application/services/FactCheckingQueryService'
 import { ReportController } from './controllers/ReportController'
 import { InboxSubjectController } from './controllers/InboxSubjectController'
 import { InvestigationController } from './controllers/InvestigationController'
+import { Report } from '../domain/entities/Report'
+import type { ActorRole } from '../shared/types'
 
 function buildApp() {
   const reportController = {
@@ -704,5 +707,180 @@ describe('createApp', () => {
 
     expect(response.status).toBe(400)
     expect(updateInvestigationSourceMediaItem).not.toHaveBeenCalled()
+  })
+})
+
+describe('report access authorization', () => {
+  // Any controller whose routes are registered must expose its handler methods;
+  // routes other than /api/reports are never hit here, so a Proxy of vi.fn()s is
+  // enough to satisfy route registration.
+  const stubController = () =>
+    new Proxy(
+      {},
+      {
+        get: () => vi.fn(async (c: any) => c.json({ success: true, data: {} })),
+      },
+    ) as any
+
+  function buildReportApp(params: {
+    actorId: string
+    role: ActorRole
+    reportRepository: {
+      findById?: ReturnType<typeof vi.fn>
+      findByCitizenId?: ReturnType<typeof vi.fn>
+      findAll?: ReturnType<typeof vi.fn>
+    }
+  }) {
+    const securityService = new SecurityService({
+      authenticate: vi.fn(async () => ({
+        isValid: true,
+        actorId: params.actorId,
+        role: params.role,
+      })),
+    })
+
+    const queryService = new FactCheckingQueryService(
+      params.reportRepository as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+    )
+
+    const reportController = new ReportController({} as any, queryService)
+
+    return createApp({
+      securityService,
+      reportController: reportController as any,
+      inboxSubjectController: stubController(),
+      investigationController: stubController(),
+      publicationController: stubController(),
+      watcherApplicationController: stubController(),
+      journalistManagementController: stubController(),
+      directorController: stubController(),
+      notificationController: stubController(),
+      meController: stubController(),
+    })
+  }
+
+  const makeReport = (id: string, citizenId: string) =>
+    new Report(id, citizenId, 'Santé', 'Title', 'Body')
+
+  test('scopes a citizen list to their own reports, ignoring the citizenId filter', async () => {
+    const findByCitizenId = vi.fn(async () => [makeReport('r1', 'citizen-1')])
+    const findAll = vi.fn(async () => [])
+    const app = buildReportApp({
+      actorId: 'citizen-1',
+      role: 'CITIZEN',
+      reportRepository: { findByCitizenId, findAll },
+    })
+
+    const response = await app.request('/api/reports?citizenId=citizen-2', {
+      headers: { Authorization: 'Bearer citizen-1:CITIZEN' },
+    })
+    const json = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(findByCitizenId).toHaveBeenCalledWith('citizen-1')
+    expect(findAll).not.toHaveBeenCalled()
+    expect(json.data.items).toHaveLength(1)
+    expect(json.data.items[0].citizenId).toBe('citizen-1')
+  })
+
+  test('lets a director list every report when no citizenId is given', async () => {
+    const findByCitizenId = vi.fn(async () => [])
+    const findAll = vi.fn(async () => [
+      makeReport('r1', 'citizen-1'),
+      makeReport('r2', 'citizen-2'),
+    ])
+    const app = buildReportApp({
+      actorId: 'director-1',
+      role: 'EDITORIAL_DIRECTOR',
+      reportRepository: { findByCitizenId, findAll },
+    })
+
+    const response = await app.request('/api/reports', {
+      headers: { Authorization: 'Bearer director-1:EDITORIAL_DIRECTOR' },
+    })
+    const json = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(findAll).toHaveBeenCalledOnce()
+    expect(findByCitizenId).not.toHaveBeenCalled()
+    expect(json.data.items).toHaveLength(2)
+  })
+
+  test('lets a director filter reports by citizenId', async () => {
+    const findByCitizenId = vi.fn(async () => [makeReport('r1', 'citizen-2')])
+    const findAll = vi.fn(async () => [])
+    const app = buildReportApp({
+      actorId: 'director-1',
+      role: 'EDITORIAL_DIRECTOR',
+      reportRepository: { findByCitizenId, findAll },
+    })
+
+    const response = await app.request('/api/reports?citizenId=citizen-2', {
+      headers: { Authorization: 'Bearer director-1:EDITORIAL_DIRECTOR' },
+    })
+
+    expect(response.status).toBe(200)
+    expect(findByCitizenId).toHaveBeenCalledWith('citizen-2')
+    expect(findAll).not.toHaveBeenCalled()
+  })
+
+  test('lets a citizen read their own report by id', async () => {
+    const findById = vi.fn(async () => makeReport('r1', 'citizen-1'))
+    const app = buildReportApp({
+      actorId: 'citizen-1',
+      role: 'CITIZEN',
+      reportRepository: { findById },
+    })
+
+    const response = await app.request('/api/reports/r1', {
+      headers: { Authorization: 'Bearer citizen-1:CITIZEN' },
+    })
+    const json = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(json.data.id).toBe('r1')
+  })
+
+  test("returns 404 when a citizen reads another citizen's report by id", async () => {
+    const findById = vi.fn(async () => makeReport('r1', 'citizen-2'))
+    const app = buildReportApp({
+      actorId: 'citizen-1',
+      role: 'CITIZEN',
+      reportRepository: { findById },
+    })
+
+    const response = await app.request('/api/reports/r1', {
+      headers: { Authorization: 'Bearer citizen-1:CITIZEN' },
+    })
+
+    expect(response.status).toBe(404)
+  })
+
+  test('lets a director read any report by id', async () => {
+    const findById = vi.fn(async () => makeReport('r1', 'citizen-2'))
+    const app = buildReportApp({
+      actorId: 'director-1',
+      role: 'EDITORIAL_DIRECTOR',
+      reportRepository: { findById },
+    })
+
+    const response = await app.request('/api/reports/r1', {
+      headers: { Authorization: 'Bearer director-1:EDITORIAL_DIRECTOR' },
+    })
+    const json = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(json.data.id).toBe('r1')
   })
 })
