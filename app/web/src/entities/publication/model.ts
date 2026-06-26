@@ -5,6 +5,8 @@ export type PublicationItem = {
   finalVerdict: string
   publishedAt: string
   isCorrection: boolean
+  /** Linked investigation's inbox subject theme, resolved server-side. */
+  title: string | null
   verifiedLinks: Array<{
     id: string
     url: string

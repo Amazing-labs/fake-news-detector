@@ -5,6 +5,8 @@ export type ReportItem = {
   title: string
   content: string
   status: string
+  /** Reporting citizen name, resolved server-side. */
+  reporterName: string | null
   createdAt: string
   updatedAt: string
 }

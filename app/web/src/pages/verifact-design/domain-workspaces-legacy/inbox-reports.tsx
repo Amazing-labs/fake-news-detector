@@ -30,27 +30,44 @@ import {
   TabsList,
   TabsTrigger,
 } from '@shared/ui/shadcn/tabs'
+import { useQuery } from '@tanstack/react-query'
 import { CreateDirectorInboxSubjectForm } from '@features/inbox-subjects/create-director-inbox-subject-form'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { downloadFromUrl, triggerBlobDownload } from '@shared/lib/download'
 import { domainLabel } from '../workspace-labels'
 import { MetaCell, StatusBadge } from '../workspace-ui'
-import { inboxSubjects, reports } from '../workspace-mocks'
+import { listReports, reportQueryKeys } from '@entities/report/api'
+import type { ReportItem } from '@entities/report/model'
+import {
+  getInboxSubject,
+  inboxSubjectQueryKeys,
+  listInboxSubjects,
+} from '@entities/inbox-subject/api'
+import type { InboxSubjectItem } from '@entities/inbox-subject/model'
 import { CitizenWorkspacePage } from './overview'
-import { slugifyLabel } from './utils'
+
+const ORIGIN_LABELS: Record<string, string> = {
+  REPORT: 'Signalement citoyen',
+  DIRECTOR_INITIATED: 'Création direction',
+}
 
 // ── Reports list (director only) ───────────────────────────────────────────────
 
 export function ReportsWorkspacePage() {
   const { actor, isActorPending } = useResolvedActor('guest')
+  const reportsQuery = useQuery({
+    queryKey: reportQueryKeys.list(),
+    queryFn: () => listReports(),
+  })
 
   if (isActorPending) return null
   if (actor === 'citizen' || actor === 'watcher')
     return <CitizenWorkspacePage />
 
-  const openItems = reports.filter((r) => r.status === 'OPEN')
-  const archivedItems = reports.filter((r) => r.status !== 'OPEN')
+  const items = reportsQuery.data?.items ?? []
+  const openItems = items.filter((r) => r.status === 'OPEN')
+  const archivedItems = items.filter((r) => r.status !== 'OPEN')
 
   return (
     <AppLayout actor="director" page="reports">
@@ -72,7 +89,7 @@ export function ReportsWorkspacePage() {
   )
 }
 
-function ReportList({ items }: { items: (typeof reports)[number][] }) {
+function ReportList({ items }: { items: ReportItem[] }) {
   return (
     <Card>
       <CardHeader>
@@ -85,7 +102,7 @@ function ReportList({ items }: { items: (typeof reports)[number][] }) {
         {items.length ? (
           items.map((item) => (
             <div
-              key={item.title}
+              key={item.id}
               className="grid gap-4 rounded-lg border p-4 lg:grid-cols-[1fr_auto]"
             >
               <div>
@@ -94,7 +111,8 @@ function ReportList({ items }: { items: (typeof reports)[number][] }) {
                   <StatusBadge status={item.status} />
                 </div>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  {item.theme} / {item.reporter}
+                  {item.theme}
+                  {item.reporterName ? ` / ${item.reporterName}` : ''}
                 </p>
                 <p className="mt-3 text-sm">{item.content}</p>
               </div>
@@ -183,14 +201,15 @@ function InboxList(props: {
   filter: 'all' | 'REPORT' | 'DIRECTOR_INITIATED'
   actor: 'guest' | 'citizen' | 'watcher' | 'journalist' | 'director' | 'admin'
 }) {
-  const rows =
+  const inboxSubjectsQuery = useQuery({
+    queryKey: inboxSubjectQueryKeys.list(),
+    queryFn: () => listInboxSubjects(),
+  })
+  const allRows = inboxSubjectsQuery.data?.items ?? []
+  const rows: InboxSubjectItem[] =
     props.filter === 'all'
-      ? inboxSubjects
-      : inboxSubjects.filter((item) =>
-          props.filter === 'REPORT'
-            ? item.origin === 'Signalement citoyen'
-            : item.origin === 'Création direction',
-        )
+      ? allRows
+      : allRows.filter((item) => item.origin === props.filter)
 
   return (
     <Card>
@@ -203,18 +222,16 @@ function InboxList(props: {
       <CardContent className="grid gap-3">
         {rows.length ? (
           rows.map((item) => {
-            const detailId = slugifyLabel(item.theme)
-            const isInInvestigation = item.status === 'IN_PROGRESS'
-
             return (
               <div
-                key={item.theme}
+                key={item.id}
                 className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
               >
                 <div>
                   <p className="font-medium">{item.theme}</p>
                   <p className="text-muted-foreground text-sm">
-                    {item.origin} / {item.owner}
+                    {ORIGIN_LABELS[item.origin] ?? item.origin}
+                    {item.ownerName ? ` / ${item.ownerName}` : ''}
                   </p>
                   <p className="mt-3 text-sm">{item.description}</p>
                 </div>
@@ -226,23 +243,13 @@ function InboxList(props: {
                     className="text-muted-foreground hover:text-foreground hover:bg-muted size-8 rounded-full transition-colors"
                     asChild
                   >
-                    {isInInvestigation ? (
-                      <Link
-                        to="/investigations/$investigationId"
-                        params={{ investigationId: detailId }}
-                        aria-label={`Voir le détail de l'enquête ${item.theme}`}
-                      >
-                        <ExternalLink />
-                      </Link>
-                    ) : (
-                      <Link
-                        to="/inbox-subjects/$subjectId"
-                        params={{ subjectId: detailId }}
-                        aria-label={`Voir le détail du sujet ${item.theme}`}
-                      >
-                        <ExternalLink />
-                      </Link>
-                    )}
+                    <Link
+                      to="/inbox-subjects/$subjectId"
+                      params={{ subjectId: item.id }}
+                      aria-label={`Voir le détail du sujet ${item.theme}`}
+                    >
+                      <ExternalLink />
+                    </Link>
                   </Button>
                   {props.actor === 'director' && (
                     <Dialog>
@@ -336,13 +343,17 @@ export function InboxSubjectDetailWorkspacePage({
   subjectId: string
 }) {
   const { actor } = useResolvedActor('journalist')
-  const subject = inboxSubjects.find(
-    (item) => slugifyLabel(item.theme) === subjectId,
-  )
+  const subjectQuery = useQuery({
+    queryKey: inboxSubjectQueryKeys.detail(subjectId),
+    queryFn: () => getInboxSubject(subjectId),
+  })
+  const subject = subjectQuery.data
 
   if (!subject) return null
 
-  const mediaCount = subject.media?.length ?? 0
+  // The inbox-subject read model does not carry media yet.
+  const media: SubjectMedia[] = []
+  const mediaCount = media.length
   const canTake = actor === 'journalist' && subject.status === 'OPEN'
 
   return (
@@ -390,8 +401,14 @@ export function InboxSubjectDetailWorkspacePage({
             </div>
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
-            <MetaCell label="Origine" value={subject.origin} />
-            <MetaCell label="Responsable" value={subject.owner} />
+            <MetaCell
+              label="Origine"
+              value={ORIGIN_LABELS[subject.origin] ?? subject.origin}
+            />
+            <MetaCell
+              label="Responsable"
+              value={subject.ownerName ?? 'Non assigné'}
+            />
             <MetaCell label="État" value={domainLabel(subject.status)} />
           </div>
         </CardHeader>
@@ -420,7 +437,7 @@ export function InboxSubjectDetailWorkspacePage({
         <TabsContent value="media" className="mt-4">
           {mediaCount > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2">
-              {subject.media!.map((item) => (
+              {media.map((item) => (
                 <SubjectMediaItem
                   key={item.name}
                   item={item}

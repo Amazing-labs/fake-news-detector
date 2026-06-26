@@ -26,11 +26,17 @@ import {
   TabsList,
   TabsTrigger,
 } from '@shared/ui/shadcn/tabs'
+import { useQuery } from '@tanstack/react-query'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { domainLabel } from '../workspace-labels'
 import { MetaCell } from '../workspace-ui'
 import { publications } from '../workspace-mocks'
+import {
+  listPublications,
+  publicationQueryKeys,
+} from '@entities/publication/api'
+import type { PublicationItem } from '@entities/publication/model'
 import { slugifyLabel } from './utils'
 
 // ── Publications list ──────────────────────────────────────────────────────────
@@ -39,16 +45,19 @@ export function PublicationsWorkspacePage() {
   const { actor } = useResolvedActor('director')
   const canManage = actor === 'director' || actor === 'admin'
 
-  const mainItems = publications.filter((item) => item.type !== 'Correctif')
-  const correctionItems = publications.filter(
-    (item) => item.type === 'Correctif',
-  )
+  const publicationsQuery = useQuery({
+    queryKey: publicationQueryKeys.list(),
+    queryFn: () => listPublications(),
+  })
+  const items = publicationsQuery.data?.items ?? []
+  const mainItems = items.filter((item) => !item.isCorrection)
+  const correctionItems = items.filter((item) => item.isCorrection)
 
   return (
     <AppLayout actor={actor} page="publications">
       <Tabs defaultValue="all">
         <TabsList>
-          <TabsTrigger value="all">Toutes ({publications.length})</TabsTrigger>
+          <TabsTrigger value="all">Toutes ({items.length})</TabsTrigger>
           <TabsTrigger value="publications">
             Publications ({mainItems.length})
           </TabsTrigger>
@@ -57,7 +66,7 @@ export function PublicationsWorkspacePage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="all" className="mt-4">
-          <PublicationList items={publications} canManage={canManage} />
+          <PublicationList items={items} canManage={canManage} />
         </TabsContent>
         <TabsContent value="publications" className="mt-4">
           <PublicationList items={mainItems} canManage={canManage} />
@@ -74,7 +83,7 @@ function PublicationList({
   items,
   canManage,
 }: {
-  items: (typeof publications)[number][]
+  items: PublicationItem[]
   canManage: boolean
 }) {
   return (
@@ -88,25 +97,25 @@ function PublicationList({
       <CardContent className="grid gap-3">
         {items.length ? (
           items.map((item) => {
-            const publicationId = slugifyLabel(item.title)
+            const publicationId = item.id
             return (
               <div
-                key={item.title}
+                key={item.id}
                 className="grid gap-3 rounded-lg border p-4 sm:grid-cols-[1fr_auto] sm:items-start"
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium">{item.title}</p>
+                    <p className="font-medium">
+                      {item.title ?? 'Publication sans titre'}
+                    </p>
                     <Badge
-                      variant={
-                        item.type === 'Correctif' ? 'secondary' : 'outline'
-                      }
+                      variant={item.isCorrection ? 'secondary' : 'outline'}
                     >
-                      {domainLabel(item.type)}
+                      {item.isCorrection ? 'Correctif' : 'Publication'}
                     </Badge>
                   </div>
                   <p className="text-muted-foreground mt-2 text-sm">
-                    Verdict : {domainLabel(item.verdict)} · {item.evidence}
+                    Verdict : {domainLabel(item.finalVerdict)}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 sm:justify-end">
@@ -130,7 +139,7 @@ function PublicationList({
                     <Link
                       to="/publications/$publicationId"
                       params={{ publicationId }}
-                      aria-label={`Voir le détail de ${item.title}`}
+                      aria-label={`Voir le détail de ${item.title ?? publicationId}`}
                     >
                       <ExternalLink />
                     </Link>
