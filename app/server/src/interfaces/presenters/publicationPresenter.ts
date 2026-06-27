@@ -68,7 +68,9 @@ export function presentEnrichedPublication({
   authoritySourceNames,
 }: EnrichedPublication) {
   const resolveName = (authoritySourceId: string | null) =>
-    authoritySourceId ? (authoritySourceNames.get(authoritySourceId) ?? null) : null
+    authoritySourceId
+      ? (authoritySourceNames.get(authoritySourceId) ?? null)
+      : null
   return {
     ...presentPublication(publication),
     title,

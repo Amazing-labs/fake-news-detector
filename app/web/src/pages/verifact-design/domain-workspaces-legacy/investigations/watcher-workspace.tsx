@@ -57,10 +57,7 @@ export function WatcherInvestigationWorkspace({
                 label="Catégorie"
                 value={dossier.category ? domainLabel(dossier.category) : '—'}
               />
-              <MetaCell
-                label="Journaliste"
-                value={dossier.journalist ?? '—'}
-              />
+              <MetaCell label="Journaliste" value={dossier.journalist ?? '—'} />
               <MetaCell
                 label="Révision"
                 value={`Tentative ${dossier.attempts}`}

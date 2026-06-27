@@ -186,7 +186,9 @@ export function PublicationDetailWorkspacePage({
     return (
       <AppLayout actor={actor} page="publications">
         <Card>
-          <CardContent className="pt-6">Chargement de la publication...</CardContent>
+          <CardContent className="pt-6">
+            Chargement de la publication...
+          </CardContent>
         </Card>
       </AppLayout>
     )

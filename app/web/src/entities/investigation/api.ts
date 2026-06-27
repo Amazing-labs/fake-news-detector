@@ -47,9 +47,7 @@ export function listInvestigations(params?: {
 }
 
 export function getInvestigation(investigationId: string) {
-  return apiRequest<InvestigationItem>(
-    `/api/investigations/${investigationId}`,
-  )
+  return apiRequest<InvestigationItem>(`/api/investigations/${investigationId}`)
 }
 
 export function getInvestigationSourceMedia(investigationId: string) {

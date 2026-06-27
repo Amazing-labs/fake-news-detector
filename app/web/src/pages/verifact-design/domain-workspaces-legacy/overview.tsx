@@ -218,7 +218,9 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
     return (
       <AppLayout actor={actor} page="reports">
         <Card>
-          <CardContent className="pt-6">Chargement du signalement...</CardContent>
+          <CardContent className="pt-6">
+            Chargement du signalement...
+          </CardContent>
         </Card>
       </AppLayout>
     )
@@ -461,7 +463,9 @@ export function WatcherWorkspacePage() {
             {enrichable.map((item) => (
               <div key={item.id} className="rounded-lg border p-4">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="font-medium">{item.title ?? 'Sujet sans titre'}</p>
+                  <p className="font-medium">
+                    {item.title ?? 'Sujet sans titre'}
+                  </p>
                   <Badge variant="outline">{domainLabel(item.status)}</Badge>
                 </div>
                 <p className="text-muted-foreground mt-2 text-sm">

@@ -13,8 +13,7 @@ export const inboxSubjectQueryKeys = {
     ['inbox-subjects', 'list', params ?? {}] as const,
   detail: (subjectId: string) =>
     ['inbox-subjects', 'detail', subjectId] as const,
-  media: (subjectId: string) =>
-    ['inbox-subjects', 'media', subjectId] as const,
+  media: (subjectId: string) => ['inbox-subjects', 'media', subjectId] as const,
 }
 
 export function getInboxSubject(subjectId: string) {

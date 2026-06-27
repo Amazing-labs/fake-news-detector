@@ -1,9 +1,5 @@
 import { apiRequest } from '@shared/api/http'
-import type {
-  CorrectionList,
-  PublicationItem,
-  PublicationList,
-} from './model'
+import type { CorrectionList, PublicationItem, PublicationList } from './model'
 import type { PublicationScope } from './schemas'
 
 export type { PublicationScope }

@@ -31,7 +31,8 @@ export class WatcherApplicationController {
 
   getById = async (c: Context<{ Variables: AppVariables }>) => {
     const id = requiredParam(c, 'applicationId')
-    const application = await this.queryService.getWatcherApplicationEnriched(id)
+    const application =
+      await this.queryService.getWatcherApplicationEnriched(id)
     return ok(c, presentEnrichedWatcherApplication(application))
   }
 

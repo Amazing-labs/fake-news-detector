@@ -314,9 +314,14 @@ export class FactCheckingQueryService {
         if (!publication) {
           return { replied: false, corrections: 0, status: report.status }
         }
-        const corrections =
-          await this.correctionRepository.findByPublicationId(publication.id)
-        return { replied: true, corrections: corrections.length, status: report.status }
+        const corrections = await this.correctionRepository.findByPublicationId(
+          publication.id,
+        )
+        return {
+          replied: true,
+          corrections: corrections.length,
+          status: report.status,
+        }
       }),
     )
 
@@ -533,8 +538,9 @@ export class FactCheckingQueryService {
   ): Promise<InboxSubjectMediaView[]> {
     const subject = await this.getInboxSubject(inboxSubjectId)
     if (subject.origin === 'DIRECTOR_INITIATED') {
-      const media =
-        await this.inboxSubjectMediaRepository.findByInboxSubjectId(subject.id)
+      const media = await this.inboxSubjectMediaRepository.findByInboxSubjectId(
+        subject.id,
+      )
       return media.map((item) => ({
         id: item.id,
         url: item.url,

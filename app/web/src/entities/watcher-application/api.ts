@@ -1,8 +1,5 @@
 import { apiRequest } from '@shared/api/http'
-import type {
-  WatcherApplicationItem,
-  WatcherApplicationList,
-} from './model'
+import type { WatcherApplicationItem, WatcherApplicationList } from './model'
 
 export type SubmitWatcherApplicationInput = {
   motivation: string

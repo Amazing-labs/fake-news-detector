@@ -210,7 +210,8 @@ function WatcherContributionWorkspacePage() {
               {toApiErrorMessage(investigationsQuery.error)}
             </p>
           ) : null}
-          {!investigationsQuery.isPending && activeInvestigations.length === 0 ? (
+          {!investigationsQuery.isPending &&
+          activeInvestigations.length === 0 ? (
             <p className="text-muted-foreground text-sm">
               Aucune enquête à enrichir pour le moment.
             </p>
