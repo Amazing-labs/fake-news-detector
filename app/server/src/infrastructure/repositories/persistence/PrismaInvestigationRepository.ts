@@ -91,8 +91,11 @@ export class PrismaInvestigationRepository implements IInvestigationRepository {
   }
 
   async findContributable(): Promise<Investigation[]> {
+    // Contributable == editable per Investigation.canBeEdited(): a watcher can
+    // enrich an investigation while it is OPEN, actively worked (IN_PROGRESS),
+    // or sent back for revision (NEEDS_REVISION).
     const rows = await prisma.investigation.findMany({
-      where: { status: { in: ['OPEN', 'NEEDS_REVISION'] } },
+      where: { status: { in: ['OPEN', 'IN_PROGRESS', 'NEEDS_REVISION'] } },
     })
     return rows.map((row) => this.toDomain(row))
   }
