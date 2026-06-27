@@ -32,6 +32,7 @@ export function createInboxSubjectRoutes(
     createRoute({
       method: 'get',
       path: '/',
+      middleware: createPermissionMiddleware(securityService, 'inbox.read'),
       request: { query: inboxSubjectListQuerySchema },
       responses: okResponse('List of inbox subjects'),
     }),
@@ -52,6 +53,7 @@ export function createInboxSubjectRoutes(
     createRoute({
       method: 'get',
       path: '/{inboxSubjectId}',
+      middleware: createPermissionMiddleware(securityService, 'inbox.read'),
       request: { params: inboxSubjectIdParamSchema },
       responses: okResponse('Inbox subject detail'),
     }),
@@ -62,6 +64,7 @@ export function createInboxSubjectRoutes(
     createRoute({
       method: 'get',
       path: '/{inboxSubjectId}/media',
+      middleware: createPermissionMiddleware(securityService, 'inbox.read'),
       request: { params: inboxSubjectIdParamSchema },
       responses: okResponse('Inbox subject media'),
     }),
