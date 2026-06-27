@@ -20,6 +20,7 @@ import { PrismaReportRepository } from '../infrastructure/repositories/persisten
 import { PrismaWatcherApplicationRepository } from '../infrastructure/repositories/persistence/PrismaWatcherApplicationRepository'
 import { PrismaWorkflowAuditRepository } from '../infrastructure/repositories/persistence/PrismaWorkflowAuditRepository'
 import { BetterAuthRequestAuthenticator } from './auth/BetterAuthRequestAuthenticator'
+import { DashboardController } from './controllers/DashboardController'
 import { DirectorController } from './controllers/DirectorController'
 import { InboxSubjectController } from './controllers/InboxSubjectController'
 import { InvestigationController } from './controllers/InvestigationController'
@@ -41,6 +42,7 @@ export interface AppDependencies {
   directorController: DirectorController
   notificationController: NotificationController
   meController: MeController
+  dashboardController: DashboardController
 }
 
 export function createAppDependencies(): AppDependencies {
@@ -98,6 +100,9 @@ export function createAppDependencies(): AppDependencies {
     journalistRepository,
     directorRepository,
     notificationRepository,
+    inboxSubjectMediaRepository,
+    reportMediaRepository,
+    authoritySourceRepository,
   )
   const notificationService = new NotificationService(notificationRepository)
   const securityService = new SecurityService(
@@ -132,5 +137,6 @@ export function createAppDependencies(): AppDependencies {
     ),
     notificationController: new NotificationController(notificationService),
     meController: new MeController(queryService),
+    dashboardController: new DashboardController(queryService),
   }
 }

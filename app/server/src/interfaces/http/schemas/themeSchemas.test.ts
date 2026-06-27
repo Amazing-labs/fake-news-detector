@@ -16,6 +16,7 @@ describe('verification theme schemas', () => {
       createDirectorInboxSubjectSchema.parse({
         theme: 'Économie',
         description: 'Sujet ouvert par la rédaction',
+        media: [{ url: 'https://example.com/proof.jpg', type: 'IMAGE' }],
       }).theme,
     ).toBe('Économie')
   })
@@ -32,6 +33,24 @@ describe('verification theme schemas', () => {
     expect(() =>
       createDirectorInboxSubjectSchema.parse({
         theme: 'Rumeur libre',
+        description: 'Sujet ouvert par la rédaction',
+        media: [{ url: 'https://example.com/proof.jpg', type: 'IMAGE' }],
+      }),
+    ).toThrow()
+  })
+
+  test('reject director subjects without at least one media', () => {
+    expect(() =>
+      createDirectorInboxSubjectSchema.parse({
+        theme: 'Économie',
+        description: 'Sujet ouvert par la rédaction',
+        media: [],
+      }),
+    ).toThrow()
+
+    expect(() =>
+      createDirectorInboxSubjectSchema.parse({
+        theme: 'Économie',
         description: 'Sujet ouvert par la rédaction',
       }),
     ).toThrow()

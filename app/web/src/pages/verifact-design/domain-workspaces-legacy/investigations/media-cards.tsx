@@ -164,7 +164,9 @@ export function SourceMediaCard({ media }: { media: SourceMedia }) {
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <MediaTypeIcon type={media.type} />
-            <span className="min-w-0 truncate font-medium">{media.title}</span>
+            <span className="min-w-0 truncate font-medium">
+              {domainLabel(media.type)}
+            </span>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             <OriginBadge origin={media.origin} />
@@ -181,23 +183,23 @@ export function SourceMediaCard({ media }: { media: SourceMedia }) {
           <MediaArtifact
             url={media.url}
             type={media.type}
-            title={media.title}
+            title={domainLabel(media.type)}
           />
         )}
         <div className="grid gap-3 md:grid-cols-2">
           <Label className="grid gap-1.5 text-sm">
             Categorie
-            <CategorySelect defaultValue={media.category} />
+            <CategorySelect defaultValue={media.category ?? undefined} />
           </Label>
           <Label className="grid gap-1.5 text-sm">
             Fiabilite
-            <ReliabilitySelect defaultValue={media.reliability} />
+            <ReliabilitySelect defaultValue={media.reliability ?? undefined} />
           </Label>
         </div>
         <Label className="grid gap-1.5 text-sm">
           Justification
           <Textarea
-            defaultValue={media.justification}
+            defaultValue={media.justification ?? ''}
             rows={2}
             className="resize-none"
           />
@@ -221,16 +223,24 @@ export function SourceMediaReadRow({ media }: { media: SourceMedia }) {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex min-w-0 items-center gap-2">
             <MediaTypeIcon type={media.type} />
-            <p className="min-w-0 truncate font-medium">{media.title}</p>
+            <p className="min-w-0 truncate font-medium">
+              {domainLabel(media.type)}
+            </p>
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2">
-            <Badge variant="outline">{domainLabel(media.category)}</Badge>
-            <Badge variant="secondary">{domainLabel(media.reliability)}</Badge>
+            {media.category && (
+              <Badge variant="outline">{domainLabel(media.category)}</Badge>
+            )}
+            {media.reliability && (
+              <Badge variant="secondary">
+                {domainLabel(media.reliability)}
+              </Badge>
+            )}
             {showButton && (
               <MediaArtifact
                 url={media.url!}
                 type={media.type}
-                title={media.title}
+                title={domainLabel(media.type)}
                 size="sm"
               />
             )}
@@ -240,10 +250,12 @@ export function SourceMediaReadRow({ media }: { media: SourceMedia }) {
           <MediaArtifact
             url={media.url!}
             type={media.type}
-            title={media.title}
+            title={domainLabel(media.type)}
           />
         )}
-        <p className="text-muted-foreground text-sm">{media.justification}</p>
+        {media.justification && (
+          <p className="text-muted-foreground text-sm">{media.justification}</p>
+        )}
       </CardContent>
     </Card>
   )
@@ -265,29 +277,33 @@ export function JournalistProofList({
         const showInline = media.url && showInlineTypes.includes(media.type)
         const showButton = media.url && !showInlineTypes.includes(media.type)
 
+        const label = media.authoritySource ?? domainLabel(media.type)
+
         return (
-          <Card key={media.title} className="overflow-hidden">
+          <Card key={media.id} className="overflow-hidden">
             <CardContent className="grid gap-3 pt-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex min-w-0 items-center gap-2">
                   <MediaTypeIcon type={media.type} />
                   <div className="min-w-0">
-                    <p className="min-w-0 truncate font-medium">
-                      {media.title}
-                    </p>
-                    <p className="text-muted-foreground text-xs">
-                      {domainLabel(media.sourceType)}
-                    </p>
+                    <p className="min-w-0 truncate font-medium">{label}</p>
+                    {media.sourceType && (
+                      <p className="text-muted-foreground text-xs">
+                        {domainLabel(media.sourceType)}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="flex shrink-0 flex-wrap items-center gap-2">
                   <OriginBadge origin="JOURNALIST_PROOF" />
-                  <Badge variant="outline">{media.authoritySource}</Badge>
+                  {media.authoritySource && (
+                    <Badge variant="outline">{media.authoritySource}</Badge>
+                  )}
                   {showButton && (
                     <MediaArtifact
                       url={media.url!}
                       type={media.type}
-                      title={media.title}
+                      title={label}
                       size="sm"
                     />
                   )}
@@ -297,7 +313,7 @@ export function JournalistProofList({
                 <MediaArtifact
                   url={media.url!}
                   type={media.type}
-                  title={media.title}
+                  title={label}
                 />
               )}
             </CardContent>
@@ -341,17 +357,17 @@ function EvidenceMediaClassificationRow({
       <div className="grid gap-3 md:grid-cols-2">
         <Label className="grid gap-1.5 text-sm">
           Categorie
-          <CategorySelect defaultValue={media.category} />
+          <CategorySelect defaultValue={media.category ?? undefined} />
         </Label>
         <Label className="grid gap-1.5 text-sm">
           Fiabilite
-          <ReliabilitySelect defaultValue={media.reliability} />
+          <ReliabilitySelect defaultValue={media.reliability ?? undefined} />
         </Label>
       </div>
       <Label className="grid gap-1.5 text-sm">
         Justification
         <Textarea
-          defaultValue={media.justification}
+          defaultValue={media.justification ?? ''}
           rows={2}
           className="resize-none"
           placeholder="Pourquoi ce media est-il fiable ou non ?"
@@ -390,7 +406,7 @@ export function WatcherEvidenceCard({
               <div className="flex items-center gap-2">
                 <OriginBadge origin="WATCHER" />
                 <span className="text-muted-foreground text-xs">
-                  {evidence.watcher}
+                  {evidence.watcher ?? 'Vigie'}
                 </span>
               </div>
               <p className="text-base leading-snug font-semibold">

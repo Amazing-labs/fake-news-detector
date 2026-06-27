@@ -4,10 +4,14 @@ import {
   FilePlus2,
   Gavel,
   Inbox,
-  RotateCcw,
+  Loader2,
   UserCheck,
   Users,
 } from 'lucide-react'
+import {
+  dashboardQueryKeys,
+  getDashboardMetrics,
+} from '@entities/dashboard/api'
 import {
   investigationQueryKeys,
   listInvestigations,
@@ -47,11 +51,19 @@ export function DirectorHomePage() {
     queryKey: watcherApplicationQueryKeys.list(),
     queryFn: listWatcherApplications,
   })
+  const metricsQuery = useQuery({
+    queryKey: dashboardQueryKeys.metrics(),
+    queryFn: getDashboardMetrics,
+  })
+  const metrics =
+    metricsQuery.data?.profile === 'director' ? metricsQuery.data : undefined
   const pendingInvestigations = pendingReviewsQuery.data?.items ?? []
   const watcherApplications = watcherApplicationsQuery.data?.items ?? []
   const pendingWatcherApplications = watcherApplications.filter(
     (application) => application.status === 'PENDING',
   )
+  const statValue = (value: number | undefined) =>
+    value == null ? '—' : String(value)
 
   return (
     <AppLayout actor="director" page="dashboard">
@@ -69,12 +81,17 @@ export function DirectorHomePage() {
           icon={UserCheck}
         />
         <StatCard
-          title="Correctifs"
-          value="3"
-          hint="à préparer"
-          icon={RotateCcw}
+          title="Enquêtes en cours"
+          value={statValue(metrics?.inProgressInvestigations)}
+          hint="actives"
+          icon={Loader2}
         />
-        <StatCard title="Sujets ouverts" value="24" hint="inbox" icon={Inbox} />
+        <StatCard
+          title="Sujets ouverts"
+          value={statValue(metrics?.openSubjects)}
+          hint="inbox"
+          icon={Inbox}
+        />
       </div>
 
       <Card>

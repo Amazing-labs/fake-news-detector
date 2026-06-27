@@ -12,7 +12,11 @@ import {
 } from 'lucide-react'
 import type { ComponentType, ReactNode } from 'react'
 import { useLayoutEffect, useRef } from 'react'
-import { useNotificationReadStore } from '@entities/notification/model'
+import { useQuery } from '@tanstack/react-query'
+import {
+  listNotifications,
+  notificationQueryKeys,
+} from '@entities/notification/api'
 import { signOutAppSession, useAppSession } from '@entities/session/model'
 import { cn } from '@shared/lib/utils'
 import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/shadcn/avatar'
@@ -26,7 +30,6 @@ import {
 } from '@shared/ui/shadcn/hover-card'
 import { Separator } from '@shared/ui/shadcn/separator'
 import { actorLabels, navByActor, navItems } from './data'
-import { notificationItems } from './workspace-mocks'
 import {
   actorFromSession,
   inferActor,
@@ -38,10 +41,7 @@ import type { Actor, PageKind } from './types'
 
 let tabletNavScrollLeft = 0
 
-const NOTIF_ICONS: Record<
-  (typeof notificationItems)[number]['type'],
-  ComponentType<{ className?: string }>
-> = {
+const NOTIF_ICONS: Record<string, ComponentType<{ className?: string }>> = {
   PUBLICATION: Newspaper,
   CORRECTION: RotateCcw,
   ALERT: AlertTriangle,
@@ -49,8 +49,12 @@ const NOTIF_ICONS: Record<
 }
 
 function NotificationPopover() {
-  const { readIds } = useNotificationReadStore()
-  const unreadCount = notificationItems.filter((n) => !readIds.has(n.id)).length
+  const notificationsQuery = useQuery({
+    queryKey: notificationQueryKeys.list(),
+    queryFn: () => listNotifications(),
+  })
+  const notifications = notificationsQuery.data?.items ?? []
+  const unreadCount = notifications.filter((n) => !n.isRead).length
 
   return (
     <HoverCard openDelay={150} closeDelay={250}>
@@ -82,9 +86,9 @@ function NotificationPopover() {
         <Separator />
         {/* Notification rows */}
         <div className="max-h-[340px] overflow-y-auto">
-          {notificationItems.map((item) => {
-            const Icon = NOTIF_ICONS[item.type]
-            const isRead = readIds.has(item.id)
+          {notifications.map((item) => {
+            const Icon = NOTIF_ICONS[item.type] ?? Bell
+            const isRead = item.isRead
             return (
               <Link
                 key={item.id}

@@ -17,11 +17,10 @@ import type {
   updateMediaSchema,
 } from '../http/schemas/investigationSchemas'
 import {
-  presentEvidence,
-  presentEvidenceMedia,
-  presentInvestigation,
-  presentInvestigationList,
-  presentInvestigationMedia,
+  presentEnrichedEvidenceList,
+  presentEnrichedInvestigation,
+  presentEnrichedInvestigationList,
+  presentEnrichedInvestigationMediaList,
 } from '../presenters/investigationPresenter'
 import type { z } from 'zod'
 
@@ -32,36 +31,31 @@ export class InvestigationController {
   ) {}
 
   list = async (c: Context<{ Variables: AppVariables }>) => {
-    const items = await this.queryService.listInvestigations({
+    const items = await this.queryService.listInvestigationsEnriched({
       scope: c.req.query('scope'),
       journalistId: c.req.query('journalistId'),
     })
-    return ok(c, presentInvestigationList(items))
+    return ok(c, presentEnrichedInvestigationList(items))
   }
 
   getById = async (c: Context<{ Variables: AppVariables }>) => {
     const id = requiredParam(c, 'investigationId')
-    const investigation = await this.queryService.getInvestigation(id)
-    return ok(c, presentInvestigation(investigation))
+    const investigation = await this.queryService.getInvestigationEnriched(id)
+    return ok(c, presentEnrichedInvestigation(investigation))
   }
 
   listSourceMedia = async (c: Context<{ Variables: AppVariables }>) => {
     const id = requiredParam(c, 'investigationId')
-    const media = await this.queryService.getInvestigationSourceMedia(id)
-    return ok(c, {
-      items: media.map(presentInvestigationMedia),
-      total: media.length,
-    })
+    const media =
+      await this.queryService.getInvestigationSourceMediaEnriched(id)
+    return ok(c, presentEnrichedInvestigationMediaList(media))
   }
 
   listEvidence = async (c: Context<{ Variables: AppVariables }>) => {
     const id = requiredParam(c, 'investigationId')
-    const evidences = await this.queryService.getInvestigationEvidence(id)
-    const items = evidences.map(({ evidence, media }) => ({
-      ...presentEvidence(evidence),
-      media: media.map(presentEvidenceMedia),
-    }))
-    return ok(c, { items, total: items.length })
+    const evidences =
+      await this.queryService.getInvestigationEvidenceEnriched(id)
+    return ok(c, presentEnrichedEvidenceList(evidences))
   }
 
   submitForReview = async (c: Context<{ Variables: AppVariables }>) => {

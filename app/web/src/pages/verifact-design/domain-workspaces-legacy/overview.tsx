@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
 import {
   AlertTriangle,
   CheckCircle2,
@@ -8,6 +9,11 @@ import {
   PenLine,
   RotateCcw,
 } from 'lucide-react'
+import {
+  dashboardQueryKeys,
+  getDashboardMetrics,
+} from '@entities/dashboard/api'
+import type { ActorMetrics } from '@entities/dashboard/model'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
 import {
@@ -35,9 +41,37 @@ import {
   CitizenWorkspacePage as CitizenWorkspace,
 } from '../workspaces/citizen-workspace-page'
 import { DirectorHomePage as DirectorHomeWorkspace } from '../workspaces/director-home-page'
-import { investigations, publications, reports } from '../workspace-mocks'
+import {
+  investigationQueryKeys,
+  listInvestigations,
+} from '@entities/investigation/api'
+import {
+  listPublications,
+  publicationQueryKeys,
+} from '@entities/publication/api'
+import { getReport, reportQueryKeys } from '@entities/report/api'
+import { toApiErrorMessage } from '@shared/api/http'
 import { GuestHomePage } from './admin'
-import { slugifyLabel } from './utils'
+
+function useActorMetrics() {
+  return useQuery({
+    queryKey: dashboardQueryKeys.metrics(),
+    queryFn: getDashboardMetrics,
+  })
+}
+
+function metricsFor<P extends ActorMetrics['profile']>(
+  data: ActorMetrics | null | undefined,
+  profile: P,
+): Extract<ActorMetrics, { profile: P }> | undefined {
+  return data?.profile === profile
+    ? (data as Extract<ActorMetrics, { profile: P }>)
+    : undefined
+}
+
+function statValue(value: number | undefined) {
+  return value == null ? '—' : String(value)
+}
 
 export function RoleAwareDashboardPage() {
   const { actor } = useResolvedActor('guest')
@@ -55,28 +89,32 @@ export function DirectorHomePage() {
 }
 
 export function JournalistWorkspacePage() {
-  const currentInvestigation = investigations.find(
-    (item) => item.status === 'PENDING_REVIEW',
-  )
+  const { data } = useActorMetrics()
+  const metrics = metricsFor(data, 'journalist')
+  const inProgressQuery = useQuery({
+    queryKey: investigationQueryKeys.list({ scope: 'in-progress' }),
+    queryFn: () => listInvestigations({ scope: 'in-progress' }),
+  })
+  const currentInvestigation = inProgressQuery.data?.items[0]
 
   return (
     <AppLayout actor="journalist" page="dashboard">
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
           title="Dossier courant"
-          value="1"
+          value={statValue(metrics?.currentDossiers)}
           hint="en responsabilite"
           icon={FileSearch}
         />
         <StatCard
           title="Etat du dossier"
-          value="1"
+          value={statValue(metrics?.pendingReviews)}
           hint="revue direction"
           icon={ClipboardCheck}
         />
         <StatCard
           title="Retours direction"
-          value="1"
+          value={statValue(metrics?.directorReturns)}
           hint="correction"
           icon={PenLine}
         />
@@ -96,23 +134,22 @@ export function JournalistWorkspacePage() {
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium">{currentInvestigation.title}</p>
+                    <p className="font-medium">
+                      {currentInvestigation.title ?? 'Sujet sans titre'}
+                    </p>
                     <StatusBadge status={currentInvestigation.status} />
                   </div>
-                  <p className="text-muted-foreground mt-2 text-sm">
-                    {currentInvestigation.category} /{' '}
-                    {currentInvestigation.evidence}
-                  </p>
+                  {currentInvestigation.subject && (
+                    <p className="text-muted-foreground mt-2 line-clamp-2 text-sm">
+                      {currentInvestigation.subject}
+                    </p>
+                  )}
                 </div>
                 <div className="grid gap-2 sm:grid-cols-2 lg:w-80">
                   <Button size="sm" asChild>
                     <Link
                       to="/investigations/$investigationId"
-                      params={{
-                        investigationId: slugifyLabel(
-                          currentInvestigation.title,
-                        ),
-                      }}
+                      params={{ investigationId: currentInvestigation.id }}
                     >
                       Ouvrir le brouillon
                     </Link>
@@ -128,22 +165,28 @@ export function JournalistWorkspacePage() {
                     Verdict brouillon
                   </p>
                   <p className="mt-1 font-medium">
-                    {domainLabel(currentInvestigation.verdict)}
+                    {currentInvestigation.draftVerdict
+                      ? domainLabel(currentInvestigation.draftVerdict)
+                      : '—'}
                   </p>
                 </div>
                 <div className="bg-muted rounded-lg p-3">
                   <p className="text-muted-foreground text-xs uppercase">
-                    Sources
+                    Catégorie
                   </p>
                   <p className="mt-1 font-medium">
-                    {currentInvestigation.evidence}
+                    {currentInvestigation.mediaCategory
+                      ? domainLabel(currentInvestigation.mediaCategory)
+                      : '—'}
                   </p>
                 </div>
                 <div className="bg-muted rounded-lg p-3">
                   <p className="text-muted-foreground text-xs uppercase">
-                    Prochaine etape
+                    Tentatives
                   </p>
-                  <p className="mt-1 font-medium">Revue direction</p>
+                  <p className="mt-1 font-medium">
+                    {currentInvestigation.attemptCount}
+                  </p>
                 </div>
               </div>
             </div>
@@ -164,7 +207,36 @@ export function CitizenReportCreateWorkspacePage() {
 
 export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
   const { actor } = useResolvedActor('citizen')
-  const report = reports.find((item) => slugifyLabel(item.title) === reportId)
+  const reportQuery = useQuery({
+    queryKey: reportQueryKeys.detail(reportId),
+    queryFn: () => getReport(reportId),
+    enabled: Boolean(reportId),
+  })
+  const report = reportQuery.data
+
+  if (reportQuery.isPending) {
+    return (
+      <AppLayout actor={actor} page="reports">
+        <Card>
+          <CardContent className="pt-6">
+            Chargement du signalement...
+          </CardContent>
+        </Card>
+      </AppLayout>
+    )
+  }
+
+  if (reportQuery.isError) {
+    return (
+      <AppLayout actor={actor} page="reports">
+        <Card>
+          <CardContent className="text-destructive pt-6">
+            {toApiErrorMessage(reportQuery.error)}
+          </CardContent>
+        </Card>
+      </AppLayout>
+    )
+  }
 
   if (!report) {
     return null
@@ -186,8 +258,11 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             <MetaCell label="Thème" value={report.theme} />
-            <MetaCell label="Source" value={report.reporter} />
-            <MetaCell label="Dernière mise à jour" value="16 mai 2026" />
+            <MetaCell label="Source" value={report.reporterName ?? '—'} />
+            <MetaCell
+              label="Dernière mise à jour"
+              value={new Date(report.updatedAt).toLocaleDateString('fr-FR')}
+            />
           </div>
         </CardHeader>
       </Card>
@@ -252,30 +327,38 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
 }
 
 export function CitizenDashboardPage() {
+  const { data } = useActorMetrics()
+  const metrics = metricsFor(data, 'citizen')
+  const publicationsQuery = useQuery({
+    queryKey: publicationQueryKeys.list(),
+    queryFn: () => listPublications(),
+  })
+  const recentPublications = publicationsQuery.data?.items.slice(0, 3) ?? []
+
   return (
     <AppLayout actor="citizen" page="dashboard">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Signalements actifs"
-          value="2"
+          value={statValue(metrics?.activeReports)}
           hint="en suivi"
           icon={FileSearch}
         />
         <StatCard
           title="En attente de retour"
-          value="1"
+          value={statValue(metrics?.awaitingReply)}
           hint="a clarifier"
           icon={AlertTriangle}
         />
         <StatCard
           title="Retours recus"
-          value="4"
+          value={statValue(metrics?.repliesReceived)}
           hint="depuis la rédaction"
           icon={CheckCircle2}
         />
         <StatCard
           title="Corrections utiles"
-          value="3"
+          value={statValue(metrics?.corrections)}
           hint="publiees"
           icon={RotateCcw}
         />
@@ -290,37 +373,40 @@ export function CitizenDashboardPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="grid gap-3">
-            {publications.slice(0, 3).map((item) => {
-              const publicationId = slugifyLabel(item.title)
-
-              return (
-                <div
-                  key={item.title}
-                  className="flex items-start justify-between gap-3 rounded-lg border p-4"
-                >
-                  <div className="min-w-0">
-                    <p className="truncate font-medium">{item.title}</p>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                      Verdict: {domainLabel(item.verdict)}
-                    </p>
-                  </div>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-foreground size-8 shrink-0 rounded-full"
-                    asChild
-                    aria-label={`Voir ${item.title}`}
-                  >
-                    <Link
-                      to="/publications/$publicationId"
-                      params={{ publicationId }}
-                    >
-                      <ExternalLink className="size-4" />
-                    </Link>
-                  </Button>
+            {recentPublications.length === 0 ? (
+              <p className="text-muted-foreground text-sm">
+                Aucun retour public pour le moment.
+              </p>
+            ) : null}
+            {recentPublications.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-start justify-between gap-3 rounded-lg border p-4"
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-medium">
+                    {item.title ?? 'Publication sans titre'}
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-sm">
+                    Verdict: {domainLabel(item.finalVerdict)}
+                  </p>
                 </div>
-              )
-            })}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="text-muted-foreground hover:text-foreground size-8 shrink-0 rounded-full"
+                  asChild
+                  aria-label={`Voir ${item.title ?? item.id}`}
+                >
+                  <Link
+                    to="/publications/$publicationId"
+                    params={{ publicationId: item.id }}
+                  >
+                    <ExternalLink className="size-4" />
+                  </Link>
+                </Button>
+              </div>
+            ))}
           </CardContent>
         </Card>
       </div>
@@ -329,24 +415,32 @@ export function CitizenDashboardPage() {
 }
 
 export function WatcherWorkspacePage() {
+  const { data } = useActorMetrics()
+  const metrics = metricsFor(data, 'watcher')
+  const investigationsQuery = useQuery({
+    queryKey: investigationQueryKeys.list({ scope: 'contributable' }),
+    queryFn: () => listInvestigations({ scope: 'contributable' }),
+  })
+  const enrichable = investigationsQuery.data?.items.slice(0, 3) ?? []
+
   return (
     <AppLayout actor="watcher" page="dashboard">
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
           title="Enquêtes suivies"
-          value="3"
+          value={statValue(metrics?.followedInvestigations)}
           hint="actives"
           icon={FileSearch}
         />
         <StatCard
           title="Preuves soumises"
-          value="7"
+          value={statValue(metrics?.evidenceThisMonth)}
           hint="ce mois"
           icon={ClipboardCheck}
         />
         <StatCard
           title="Contributions acceptées"
-          value="5"
+          value={statValue(metrics?.acceptedContributions)}
           hint="validées"
           icon={CheckCircle2}
         />
@@ -361,11 +455,18 @@ export function WatcherWorkspacePage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            {investigations.slice(0, 3).map((item) => (
-              <div key={item.title} className="rounded-lg border p-4">
+            {enrichable.length === 0 ? (
+              <p className="text-muted-foreground text-sm">
+                Aucune enquête à enrichir pour le moment.
+              </p>
+            ) : null}
+            {enrichable.map((item) => (
+              <div key={item.id} className="rounded-lg border p-4">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="font-medium">{item.title}</p>
-                  <Badge variant="outline">{domainLabel(item.category)}</Badge>
+                  <p className="font-medium">
+                    {item.title ?? 'Sujet sans titre'}
+                  </p>
+                  <Badge variant="outline">{domainLabel(item.status)}</Badge>
                 </div>
                 <p className="text-muted-foreground mt-2 text-sm">
                   Ajouter média, contexte terrain et justification.

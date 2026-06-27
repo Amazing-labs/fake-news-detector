@@ -1,4 +1,5 @@
 import type { WatcherApplication } from '../../domain/entities/WatcherApplication'
+import type { EnrichedWatcherApplication } from '../../application/services/FactCheckingQueryService'
 
 export function presentWatcherApplication(application: WatcherApplication) {
   return {
@@ -17,5 +18,24 @@ export function presentWatcherApplicationList(
   return {
     items: applications.map(presentWatcherApplication),
     total: applications.length,
+  }
+}
+
+export function presentEnrichedWatcherApplication({
+  application,
+  applicantName,
+}: EnrichedWatcherApplication) {
+  return {
+    ...presentWatcherApplication(application),
+    applicantName,
+  }
+}
+
+export function presentEnrichedWatcherApplicationList(
+  items: EnrichedWatcherApplication[],
+) {
+  return {
+    items: items.map(presentEnrichedWatcherApplication),
+    total: items.length,
   }
 }

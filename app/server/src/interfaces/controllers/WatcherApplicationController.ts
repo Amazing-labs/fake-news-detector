@@ -6,8 +6,8 @@ import type { AppVariables } from '../http/types'
 import { requiredParam, validatedJson } from '../http/request'
 import type { submitWatcherApplicationSchema } from '../http/schemas/watcherApplicationSchemas'
 import {
-  presentWatcherApplication,
-  presentWatcherApplicationList,
+  presentEnrichedWatcherApplication,
+  presentEnrichedWatcherApplicationList,
 } from '../presenters/watcherApplicationPresenter'
 import type { z } from 'zod'
 
@@ -31,13 +31,14 @@ export class WatcherApplicationController {
 
   getById = async (c: Context<{ Variables: AppVariables }>) => {
     const id = requiredParam(c, 'applicationId')
-    const application = await this.queryService.getWatcherApplication(id)
-    return ok(c, presentWatcherApplication(application))
+    const application =
+      await this.queryService.getWatcherApplicationEnriched(id)
+    return ok(c, presentEnrichedWatcherApplication(application))
   }
 
   list = async (c: Context<{ Variables: AppVariables }>) => {
-    const items = await this.queryService.listWatcherApplications()
-    return ok(c, presentWatcherApplicationList(items))
+    const items = await this.queryService.listWatcherApplicationsEnriched()
+    return ok(c, presentEnrichedWatcherApplicationList(items))
   }
 
   approve = async (c: Context<{ Variables: AppVariables }>) => {

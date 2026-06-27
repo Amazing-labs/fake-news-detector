@@ -108,6 +108,7 @@ function buildApp() {
     directorController: directorController as any,
     notificationController: notificationController as any,
     meController: { getMe: vi.fn() } as any,
+    dashboardController: { metrics: vi.fn() } as any,
   })
 
   return { app, reportController }
@@ -218,6 +219,7 @@ describe('createApp', () => {
         markAllAsRead: vi.fn(),
       } as any,
       meController: { getMe: vi.fn() } as any,
+      dashboardController: { metrics: vi.fn() } as any,
     })
 
     const response = await app.request('/api/reports', {
@@ -301,6 +303,7 @@ describe('createApp', () => {
         markAllAsRead: vi.fn(),
       } as any,
       meController: { getMe: vi.fn() } as any,
+      dashboardController: { metrics: vi.fn() } as any,
     })
 
     const response = await app.request('/api/reports', {
@@ -379,6 +382,7 @@ describe('createApp', () => {
         markAllAsRead: vi.fn(),
       } as any,
       meController: { getMe: vi.fn() } as any,
+      dashboardController: { metrics: vi.fn() } as any,
     })
 
     const response = await app.request('/api/reports', {
@@ -466,6 +470,7 @@ describe('createApp', () => {
         markAllAsRead: vi.fn(),
       } as any,
       meController: { getMe: vi.fn() } as any,
+      dashboardController: { metrics: vi.fn() } as any,
     })
 
     const response = await app.request('/api/inbox-subjects?status=INVALID', {
@@ -542,6 +547,7 @@ describe('createApp', () => {
         markAllAsRead: vi.fn(),
       } as any,
       meController: { getMe: vi.fn() } as any,
+      dashboardController: { metrics: vi.fn() } as any,
     })
 
     const response = await app.request('/api/publications/pub-1/corrections', {
@@ -621,6 +627,7 @@ describe('createApp', () => {
         markAllAsRead: vi.fn(),
       } as any,
       meController: { getMe: vi.fn() } as any,
+      dashboardController: { metrics: vi.fn() } as any,
     })
 
     const response = await app.request('/api/investigations/inv-1/approve', {
@@ -687,6 +694,7 @@ describe('createApp', () => {
         markAllAsRead: vi.fn(),
       } as any,
       meController: { getMe: vi.fn() } as any,
+      dashboardController: { metrics: vi.fn() } as any,
     })
 
     const response = await app.request(
@@ -739,6 +747,13 @@ describe('report access authorization', () => {
       })),
     })
 
+    // Citizen repo is consulted to resolve reporter names on the enriched read
+    // path; an empty map is enough for these authorization-focused assertions.
+    const citizenRepository = {
+      findAll: vi.fn(async () => []),
+      findById: vi.fn(async () => null),
+    }
+
     const queryService = new FactCheckingQueryService(
       params.reportRepository as any,
       {} as any,
@@ -746,6 +761,9 @@ describe('report access authorization', () => {
       {} as any,
       {} as any,
       {} as any,
+      {} as any,
+      {} as any,
+      citizenRepository as any,
       {} as any,
       {} as any,
       {} as any,
@@ -767,6 +785,7 @@ describe('report access authorization', () => {
       directorController: stubController(),
       notificationController: stubController(),
       meController: stubController(),
+      dashboardController: stubController(),
     })
   }
 

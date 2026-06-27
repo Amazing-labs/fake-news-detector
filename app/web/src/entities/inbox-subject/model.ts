@@ -6,11 +6,29 @@ export type InboxSubjectItem = {
   reportId: string | null
   status: string
   origin: string
+  /** Name of the journalist handling the linked investigation, if any. */
+  ownerName: string | null
   createdAt: string
   updatedAt: string
 }
 
 export type InboxSubjectList = {
   items: InboxSubjectItem[]
+  total: number
+}
+
+export type InboxSubjectMediaItem = {
+  id: number
+  url: string
+  type: string
+  order: number
+  origin: string
+  uploadedById: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type InboxSubjectMediaList = {
+  items: InboxSubjectMediaItem[]
   total: number
 }

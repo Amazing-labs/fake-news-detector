@@ -1,12 +1,10 @@
 import { Link } from '@tanstack/react-router'
 import {
-  Download,
   ExternalLink,
   FileSearch,
-  FileText,
   Link2,
-  Play,
   RotateCcw,
+  ShieldCheck,
 } from 'lucide-react'
 import { useState } from 'react'
 import { Badge } from '@shared/ui/shadcn/badge'
@@ -26,12 +24,18 @@ import {
   TabsList,
   TabsTrigger,
 } from '@shared/ui/shadcn/tabs'
+import { useQuery } from '@tanstack/react-query'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { domainLabel } from '../workspace-labels'
 import { MetaCell } from '../workspace-ui'
-import { publications } from '../workspace-mocks'
-import { slugifyLabel } from './utils'
+import {
+  getPublication,
+  listPublications,
+  publicationQueryKeys,
+} from '@entities/publication/api'
+import { toApiErrorMessage } from '@shared/api/http'
+import type { PublicationItem } from '@entities/publication/model'
 
 // ── Publications list ──────────────────────────────────────────────────────────
 
@@ -39,16 +43,19 @@ export function PublicationsWorkspacePage() {
   const { actor } = useResolvedActor('director')
   const canManage = actor === 'director' || actor === 'admin'
 
-  const mainItems = publications.filter((item) => item.type !== 'Correctif')
-  const correctionItems = publications.filter(
-    (item) => item.type === 'Correctif',
-  )
+  const publicationsQuery = useQuery({
+    queryKey: publicationQueryKeys.list(),
+    queryFn: () => listPublications(),
+  })
+  const items = publicationsQuery.data?.items ?? []
+  const mainItems = items.filter((item) => !item.isCorrection)
+  const correctionItems = items.filter((item) => item.isCorrection)
 
   return (
     <AppLayout actor={actor} page="publications">
       <Tabs defaultValue="all">
         <TabsList>
-          <TabsTrigger value="all">Toutes ({publications.length})</TabsTrigger>
+          <TabsTrigger value="all">Toutes ({items.length})</TabsTrigger>
           <TabsTrigger value="publications">
             Publications ({mainItems.length})
           </TabsTrigger>
@@ -57,7 +64,7 @@ export function PublicationsWorkspacePage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="all" className="mt-4">
-          <PublicationList items={publications} canManage={canManage} />
+          <PublicationList items={items} canManage={canManage} />
         </TabsContent>
         <TabsContent value="publications" className="mt-4">
           <PublicationList items={mainItems} canManage={canManage} />
@@ -74,7 +81,7 @@ function PublicationList({
   items,
   canManage,
 }: {
-  items: (typeof publications)[number][]
+  items: PublicationItem[]
   canManage: boolean
 }) {
   return (
@@ -88,25 +95,25 @@ function PublicationList({
       <CardContent className="grid gap-3">
         {items.length ? (
           items.map((item) => {
-            const publicationId = slugifyLabel(item.title)
+            const publicationId = item.id
             return (
               <div
-                key={item.title}
+                key={item.id}
                 className="grid gap-3 rounded-lg border p-4 sm:grid-cols-[1fr_auto] sm:items-start"
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <p className="font-medium">{item.title}</p>
+                    <p className="font-medium">
+                      {item.title ?? 'Publication sans titre'}
+                    </p>
                     <Badge
-                      variant={
-                        item.type === 'Correctif' ? 'secondary' : 'outline'
-                      }
+                      variant={item.isCorrection ? 'secondary' : 'outline'}
                     >
-                      {domainLabel(item.type)}
+                      {item.isCorrection ? 'Correctif' : 'Publication'}
                     </Badge>
                   </div>
                   <p className="text-muted-foreground mt-2 text-sm">
-                    Verdict : {domainLabel(item.verdict)} · {item.evidence}
+                    Verdict : {domainLabel(item.finalVerdict)}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 sm:justify-end">
@@ -130,7 +137,7 @@ function PublicationList({
                     <Link
                       to="/publications/$publicationId"
                       params={{ publicationId }}
-                      aria-label={`Voir le détail de ${item.title}`}
+                      aria-label={`Voir le détail de ${item.title ?? publicationId}`}
                     >
                       <ExternalLink />
                     </Link>
@@ -154,22 +161,55 @@ function PublicationList({
 
 // ── Publication detail ─────────────────────────────────────────────────────────
 
+function evidenceSummary(publication: PublicationItem) {
+  const linkCount = publication.verifiedLinks.length
+  const mediaCount = publication.verifiedMedia.length
+  return `${linkCount} lien(s) · ${mediaCount} média(s)`
+}
+
 export function PublicationDetailWorkspacePage({
   publicationId,
 }: {
   publicationId?: string
 }) {
-  const publication = publications.find(
-    (item) => slugifyLabel(item.title) === publicationId,
-  )
   const { actor } = useResolvedActor('director')
   const canManage = actor === 'director' || actor === 'admin'
+
+  const publicationQuery = useQuery({
+    queryKey: publicationQueryKeys.detail(publicationId ?? ''),
+    queryFn: () => getPublication(publicationId as string),
+    enabled: Boolean(publicationId),
+  })
+  const publication = publicationQuery.data
+
+  if (publicationQuery.isPending) {
+    return (
+      <AppLayout actor={actor} page="publications">
+        <Card>
+          <CardContent className="pt-6">
+            Chargement de la publication...
+          </CardContent>
+        </Card>
+      </AppLayout>
+    )
+  }
+
+  if (publicationQuery.isError) {
+    return (
+      <AppLayout actor={actor} page="publications">
+        <Card>
+          <CardContent className="text-destructive pt-6">
+            {toApiErrorMessage(publicationQuery.error)}
+          </CardContent>
+        </Card>
+      </AppLayout>
+    )
+  }
 
   if (!publication) return null
 
   const linkCount = publication.verifiedLinks.length
   const mediaCount = publication.verifiedMedia.length
-  const docCount = publication.finalDocuments.length
 
   return (
     <AppLayout actor={actor} page="publications">
@@ -178,7 +218,9 @@ export function PublicationDetailWorkspacePage({
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <h1 className="text-lg font-semibold">{publication.title}</h1>
+              <h1 className="text-lg font-semibold">
+                {publication.title ?? 'Publication sans titre'}
+              </h1>
               <p className="text-muted-foreground mt-1 text-sm">
                 {actor === 'citizen'
                   ? 'Synthèse publique du verdict et des preuves disponibles.'
@@ -187,17 +229,15 @@ export function PublicationDetailWorkspacePage({
             </div>
             <div className="flex shrink-0 items-center gap-2">
               <Badge
-                variant={
-                  publication.type === 'Correctif' ? 'secondary' : 'outline'
-                }
+                variant={publication.isCorrection ? 'secondary' : 'outline'}
               >
-                {domainLabel(publication.type)}
+                {publication.isCorrection ? 'Correctif' : 'Publication'}
               </Badge>
               {canManage && (
                 <Button size="sm" asChild>
                   <Link
                     to="/publications/corrections"
-                    search={{ publicationId: publicationId ?? undefined }}
+                    search={{ publicationId: publication.id }}
                   >
                     <RotateCcw />
                     Créer un correctif
@@ -209,242 +249,86 @@ export function PublicationDetailWorkspacePage({
           <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <MetaCell
               label="Verdict"
-              value={domainLabel(publication.verdict)}
+              value={domainLabel(publication.finalVerdict)}
             />
-            <MetaCell label="Preuves" value={publication.evidence} />
+            <MetaCell label="Preuves" value={evidenceSummary(publication)} />
           </div>
         </CardHeader>
       </Card>
 
-      {/* Citizen: rich tabbed view */}
+      {/* Citizen: tabbed view over verified sources/media */}
       {actor === 'citizen' ? (
-        <Tabs defaultValue="summary">
+        <Tabs defaultValue="sources">
           <TabsList>
-            <TabsTrigger value="summary">Synthèse</TabsTrigger>
-            <TabsTrigger value="sources">
-              Sources ({linkCount + docCount})
-            </TabsTrigger>
+            <TabsTrigger value="sources">Sources ({linkCount})</TabsTrigger>
             <TabsTrigger value="media">Médias ({mediaCount})</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="summary" className="mt-4">
-            <div className="grid gap-4">
+          <TabsContent value="sources" className="mt-4">
+            {linkCount > 0 ? (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-base">
-                    Résumé de l'enquête
-                  </CardTitle>
+                  <CardTitle className="text-base">Liens vérifiés</CardTitle>
+                  <CardDescription>
+                    Ouvre les sources et compare-les avec le verdict avant de
+                    partager la publication.
+                  </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground text-sm leading-relaxed">
-                    {publication.summary}
-                  </p>
+                <CardContent className="grid gap-3">
+                  {publication.verifiedLinks.map((source) => (
+                    <a
+                      key={source.id}
+                      href={source.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="hover:bg-muted/40 flex items-start gap-3 rounded-lg border p-3 transition-colors"
+                    >
+                      <Link2 className="text-muted-foreground mt-0.5 size-4 shrink-0" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-medium">
+                          {source.url}
+                        </span>
+                        {source.authoritySourceName && (
+                          <span className="text-muted-foreground mt-1 flex items-center gap-1 text-sm">
+                            <ShieldCheck className="size-3.5" />
+                            {source.authoritySourceName}
+                          </span>
+                        )}
+                      </span>
+                      <ExternalLink className="text-muted-foreground size-4 shrink-0" />
+                    </a>
+                  ))}
                 </CardContent>
               </Card>
-              <Card>
-                <CardContent className="pt-4">
-                  <p className="text-sm font-medium">Pour aller plus loin</p>
-                  <p className="text-muted-foreground mt-2 text-sm">
-                    Si une information semble incomplète, tu peux créer un
-                    nouveau signalement depuis la page Signalements. La
-                    rédaction l'examinera comme une nouvelle alerte.
-                  </p>
-                  <Button className="mt-4 w-fit" variant="outline" asChild>
-                    <Link to="/reports/create">Faire un signalement</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="sources" className="mt-4">
-            <div className="grid gap-4">
-              {linkCount > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">Liens vérifiés</CardTitle>
-                    <CardDescription>
-                      Ouvre les sources et compare-les avec le résumé avant de
-                      partager la publication.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="grid gap-3">
-                    {publication.verifiedLinks.map((source) => (
-                      <a
-                        key={source.label}
-                        href={source.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="hover:bg-muted/40 flex items-start gap-3 rounded-lg border p-3 transition-colors"
-                      >
-                        <Link2 className="text-muted-foreground mt-0.5 size-4 shrink-0" />
-                        <span className="min-w-0 flex-1">
-                          <span className="block font-medium">
-                            {source.label}
-                          </span>
-                          <span className="text-muted-foreground mt-1 block text-sm">
-                            {source.description}
-                          </span>
-                        </span>
-                        <ExternalLink className="text-muted-foreground size-4 shrink-0" />
-                      </a>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
-
-              {docCount > 0 && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-base">
-                      Documents finaux
-                    </CardTitle>
-                    <CardDescription>
-                      Pièces conservées avec la publication finale.
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="grid gap-3">
-                    {publication.finalDocuments.map((document) => (
-                      <a
-                        key={document.name}
-                        href={document.url}
-                        download
-                        className="hover:bg-muted/40 flex items-center gap-3 rounded-lg border p-3 transition-colors"
-                      >
-                        <FileText className="text-muted-foreground size-4 shrink-0" />
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate font-medium">
-                            {document.name}
-                          </span>
-                          <span className="text-muted-foreground text-sm">
-                            {document.type} / {document.size}
-                          </span>
-                        </span>
-                        <Download className="text-muted-foreground size-4 shrink-0" />
-                      </a>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
-
-              {linkCount === 0 && docCount === 0 && (
-                <div className="rounded-lg border border-dashed p-8 text-center">
-                  <p className="font-medium">Aucune source attachée</p>
-                  <p className="text-muted-foreground mt-1 text-sm">
-                    Les sources seront disponibles une fois la publication
-                    complète.
-                  </p>
-                </div>
-              )}
-            </div>
+            ) : (
+              <EmptyPanel
+                title="Aucune source attachée"
+                hint="Les sources seront disponibles une fois la publication complète."
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="media" className="mt-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Médias vérifiés</CardTitle>
-                <CardDescription>
-                  Médias retenus ou comparés pendant la vérification.
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {mediaCount > 0 ? (
-                  <div className="grid gap-4 lg:grid-cols-2">
-                    {publication.verifiedMedia.map((media) => {
-                      if (media.type === 'Image') {
-                        return (
-                          <figure
-                            key={media.name}
-                            className="bg-card overflow-hidden rounded-lg border"
-                          >
-                            <img
-                              src={media.imageUrl}
-                              alt={media.alt ?? media.name}
-                              className="aspect-video w-full object-cover"
-                              loading="lazy"
-                            />
-                            <figcaption className="flex items-center justify-between gap-3 p-3">
-                              <span>
-                                <span className="block font-medium">
-                                  {media.name}
-                                </span>
-                                <span className="text-muted-foreground text-sm">
-                                  Image de référence Unsplash
-                                </span>
-                              </span>
-                              <a
-                                href={media.url}
-                                className="text-muted-foreground hover:text-foreground shrink-0"
-                                aria-label={`Ouvrir ${media.name}`}
-                              >
-                                <ExternalLink className="size-4" />
-                              </a>
-                            </figcaption>
-                          </figure>
-                        )
-                      }
-
-                      if (media.type === 'Video') {
-                        return (
-                          <div
-                            key={media.name}
-                            className="bg-card overflow-hidden rounded-lg border"
-                          >
-                            <video
-                              controls
-                              preload="metadata"
-                              poster={media.posterUrl}
-                              className="aspect-video w-full bg-black object-cover"
-                            >
-                              <source src={media.videoUrl} type="video/mp4" />
-                              Ton navigateur ne peut pas lire cette vidéo.
-                            </video>
-                            <div className="flex items-center justify-between gap-3 p-3">
-                              <span>
-                                <span className="block font-medium">
-                                  {media.name}
-                                </span>
-                                <span className="text-muted-foreground text-sm">
-                                  Extrait comparé pendant la vérification
-                                </span>
-                              </span>
-                              <Play className="text-muted-foreground size-4 shrink-0" />
-                            </div>
-                          </div>
-                        )
-                      }
-
-                      return (
-                        <a
-                          key={media.name}
-                          href={media.url}
-                          className="hover:bg-muted/40 flex items-center gap-3 rounded-lg border p-3 transition-colors"
-                        >
-                          <FileSearch className="text-muted-foreground size-4 shrink-0" />
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate font-medium">
-                              {media.name}
-                            </span>
-                            <span className="text-muted-foreground text-sm">
-                              {media.type}
-                            </span>
-                          </span>
-                          <ExternalLink className="text-muted-foreground size-4 shrink-0" />
-                        </a>
-                      )
-                    })}
-                  </div>
-                ) : (
-                  <div className="rounded-lg border border-dashed p-8 text-center">
-                    <p className="font-medium">Aucun média joint</p>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                      Les médias seront disponibles une fois la publication
-                      complète.
-                    </p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+            {mediaCount > 0 ? (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Médias vérifiés</CardTitle>
+                  <CardDescription>
+                    Médias retenus ou comparés pendant la vérification.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-4 lg:grid-cols-2">
+                  {publication.verifiedMedia.map((media) => (
+                    <VerifiedMediaCard key={media.id} media={media} />
+                  ))}
+                </CardContent>
+              </Card>
+            ) : (
+              <EmptyPanel
+                title="Aucun média joint"
+                hint="Les médias seront disponibles une fois la publication complète."
+              />
+            )}
           </TabsContent>
         </Tabs>
       ) : (
@@ -452,6 +336,9 @@ export function PublicationDetailWorkspacePage({
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Trace éditoriale</CardTitle>
+            <CardDescription>
+              {linkCount} lien(s) et {mediaCount} média(s) vérifié(s) rattachés.
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <p className="text-muted-foreground text-sm leading-relaxed">
@@ -468,6 +355,84 @@ export function PublicationDetailWorkspacePage({
   )
 }
 
+function EmptyPanel({ title, hint }: { title: string; hint: string }) {
+  return (
+    <div className="rounded-lg border border-dashed p-8 text-center">
+      <p className="font-medium">{title}</p>
+      <p className="text-muted-foreground mt-1 text-sm">{hint}</p>
+    </div>
+  )
+}
+
+function VerifiedMediaCard({
+  media,
+}: {
+  media: PublicationItem['verifiedMedia'][number]
+}) {
+  const caption = media.authoritySourceName ?? domainLabel(media.type)
+
+  if (media.type === 'IMAGE') {
+    return (
+      <figure className="bg-card overflow-hidden rounded-lg border">
+        <img
+          src={media.url}
+          alt={caption}
+          className="aspect-video w-full object-cover"
+          loading="lazy"
+        />
+        <figcaption className="flex items-center justify-between gap-3 p-3">
+          <span className="min-w-0">
+            <span className="text-muted-foreground block text-sm">
+              {caption}
+            </span>
+          </span>
+          <a
+            href={media.url}
+            target="_blank"
+            rel="noreferrer"
+            className="text-muted-foreground hover:text-foreground shrink-0"
+            aria-label="Ouvrir le média"
+          >
+            <ExternalLink className="size-4" />
+          </a>
+        </figcaption>
+      </figure>
+    )
+  }
+
+  if (media.type === 'VIDEO') {
+    return (
+      <div className="bg-card overflow-hidden rounded-lg border">
+        <video
+          controls
+          preload="metadata"
+          className="aspect-video w-full bg-black object-cover"
+        >
+          <source src={media.url} />
+          Ton navigateur ne peut pas lire cette vidéo.
+        </video>
+        <div className="text-muted-foreground p-3 text-sm">{caption}</div>
+      </div>
+    )
+  }
+
+  return (
+    <a
+      href={media.url}
+      target="_blank"
+      rel="noreferrer"
+      className="hover:bg-muted/40 flex items-center gap-3 rounded-lg border p-3 transition-colors"
+    >
+      <FileSearch className="text-muted-foreground size-4 shrink-0" />
+      <span className="min-w-0 flex-1">
+        <span className="block truncate font-medium">{media.url}</span>
+        <span className="text-muted-foreground text-sm">{caption}</span>
+      </span>
+      <ExternalLink className="text-muted-foreground size-4 shrink-0" />
+    </a>
+  )
+}
+
 // ── Corrections form ───────────────────────────────────────────────────────────
 
 export function PublicationCorrectionsWorkspacePage({
@@ -475,14 +440,26 @@ export function PublicationCorrectionsWorkspacePage({
 }: {
   publicationId?: string
 }) {
-  const [selectedPublicationId, setSelectedPublicationId] = useState(
-    publicationId ?? slugifyLabel(publications[0]?.title ?? ''),
-  )
-  const activePublicationId = publicationId ?? selectedPublicationId
-  const publication = publications.find(
-    (item) => slugifyLabel(item.title) === activePublicationId,
-  )
   const isPublicationLocked = Boolean(publicationId)
+
+  const listQuery = useQuery({
+    queryKey: publicationQueryKeys.list(),
+    queryFn: () => listPublications(),
+    enabled: !isPublicationLocked,
+  })
+  const options = listQuery.data?.items ?? []
+
+  const [selectedPublicationId, setSelectedPublicationId] = useState('')
+  // No implicit first-option default: keep the select in sync with the actual
+  // state so the placeholder shows until the director explicitly picks one.
+  const activePublicationId = publicationId ?? selectedPublicationId
+
+  const targetQuery = useQuery({
+    queryKey: publicationQueryKeys.detail(activePublicationId),
+    queryFn: () => getPublication(activePublicationId),
+    enabled: Boolean(activePublicationId),
+  })
+  const publication = targetQuery.data
 
   return (
     <AppLayout actor="director" page="publications">
@@ -506,23 +483,24 @@ export function PublicationCorrectionsWorkspacePage({
                   setSelectedPublicationId(event.target.value)
                 }
               >
-                {publications.map((item) => {
-                  const id = slugifyLabel(item.title)
-                  return (
-                    <option key={id} value={id}>
-                      {item.title}
-                    </option>
-                  )
-                })}
+                <option value="">Sélectionnez une publication…</option>
+                {options.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.title ?? item.id}
+                  </option>
+                ))}
               </select>
             </Label>
           )}
           {publication ? (
             <div className="grid gap-3 sm:grid-cols-2">
-              <MetaCell label="Publication cible" value={publication.title} />
+              <MetaCell
+                label="Publication cible"
+                value={publication.title ?? publication.id}
+              />
               <MetaCell
                 label="Verdict"
-                value={`${domainLabel(publication.verdict)} · ${publication.evidence}`}
+                value={`${domainLabel(publication.finalVerdict)} · ${evidenceSummary(publication)}`}
               />
             </div>
           ) : (

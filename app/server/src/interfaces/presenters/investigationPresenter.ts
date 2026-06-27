@@ -4,6 +4,11 @@ import type {
   InvestigationMedia,
   EvidenceMedia,
 } from '../../domain/value-objects/Media'
+import type {
+  EnrichedEvidence,
+  EnrichedInvestigation,
+  EnrichedInvestigationMedia,
+} from '../../application/services/FactCheckingQueryService'
 
 export function presentInvestigationMedia(media: InvestigationMedia) {
   return {
@@ -39,6 +44,27 @@ export function presentEvidenceMedia(media: EvidenceMedia) {
   }
 }
 
+export function presentEnrichedInvestigationMedia({
+  media,
+  authoritySourceName,
+  authoritySourceType,
+}: EnrichedInvestigationMedia) {
+  return {
+    ...presentInvestigationMedia(media),
+    authoritySourceName,
+    authoritySourceType,
+  }
+}
+
+export function presentEnrichedInvestigationMediaList(
+  items: EnrichedInvestigationMedia[],
+) {
+  return {
+    items: items.map(presentEnrichedInvestigationMedia),
+    total: items.length,
+  }
+}
+
 export function presentEvidence(evidence: Evidence) {
   return {
     id: evidence.id,
@@ -49,6 +75,25 @@ export function presentEvidence(evidence: Evidence) {
     media: evidence.media.map(presentEvidenceMedia),
     createdAt: evidence.createdAt.toISOString(),
     updatedAt: evidence.updatedAt.toISOString(),
+  }
+}
+
+export function presentEnrichedEvidence({
+  evidence,
+  media,
+  watcherName,
+}: EnrichedEvidence) {
+  return {
+    ...presentEvidence(evidence),
+    media: media.map(presentEvidenceMedia),
+    watcherName,
+  }
+}
+
+export function presentEnrichedEvidenceList(items: EnrichedEvidence[]) {
+  return {
+    items: items.map(presentEnrichedEvidence),
+    total: items.length,
   }
 }
 
@@ -71,5 +116,28 @@ export function presentInvestigationList(investigations: Investigation[]) {
   return {
     items: investigations.map(presentInvestigation),
     total: investigations.length,
+  }
+}
+
+export function presentEnrichedInvestigation({
+  investigation,
+  title,
+  subject,
+  journalistName,
+}: EnrichedInvestigation) {
+  return {
+    ...presentInvestigation(investigation),
+    title,
+    subject,
+    journalistName,
+  }
+}
+
+export function presentEnrichedInvestigationList(
+  items: EnrichedInvestigation[],
+) {
+  return {
+    items: items.map(presentEnrichedInvestigation),
+    total: items.length,
   }
 }

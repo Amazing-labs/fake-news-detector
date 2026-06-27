@@ -57,6 +57,11 @@ export class PrismaInvestigationRepository implements IInvestigationRepository {
     return rows.map((row) => this.toDomain(row))
   }
 
+  async findAll(): Promise<Investigation[]> {
+    const rows = await prisma.investigation.findMany()
+    return rows.map((row) => this.toDomain(row))
+  }
+
   async findInProgress(): Promise<Investigation[]> {
     const rows = await prisma.investigation.findMany({
       where: { status: 'IN_PROGRESS' },
@@ -81,6 +86,16 @@ export class PrismaInvestigationRepository implements IInvestigationRepository {
   async findCanceled(): Promise<Investigation[]> {
     const rows = await prisma.investigation.findMany({
       where: { status: 'CANCELED' },
+    })
+    return rows.map((row) => this.toDomain(row))
+  }
+
+  async findContributable(): Promise<Investigation[]> {
+    // Contributable == editable per Investigation.canBeEdited(): a watcher can
+    // enrich an investigation while it is OPEN, actively worked (IN_PROGRESS),
+    // or sent back for revision (NEEDS_REVISION).
+    const rows = await prisma.investigation.findMany({
+      where: { status: { in: ['OPEN', 'IN_PROGRESS', 'NEEDS_REVISION'] } },
     })
     return rows.map((row) => this.toDomain(row))
   }

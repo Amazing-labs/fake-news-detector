@@ -1,4 +1,5 @@
 import type { Report } from '../../domain/entities/Report'
+import type { EnrichedReport } from '../../application/services/FactCheckingQueryService'
 
 export function presentReport(report: Report) {
   return {
@@ -17,5 +18,22 @@ export function presentReportList(reports: Report[]) {
   return {
     items: reports.map(presentReport),
     total: reports.length,
+  }
+}
+
+export function presentEnrichedReport({
+  report,
+  reporterName,
+}: EnrichedReport) {
+  return {
+    ...presentReport(report),
+    reporterName,
+  }
+}
+
+export function presentEnrichedReportList(items: EnrichedReport[]) {
+  return {
+    items: items.map(presentEnrichedReport),
+    total: items.length,
   }
 }

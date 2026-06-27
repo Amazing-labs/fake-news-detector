@@ -1,5 +1,5 @@
 import { apiRequest } from '@shared/api/http'
-import type { WatcherApplicationList } from './model'
+import type { WatcherApplicationItem, WatcherApplicationList } from './model'
 
 export type SubmitWatcherApplicationInput = {
   motivation: string
@@ -8,10 +8,18 @@ export type SubmitWatcherApplicationInput = {
 export const watcherApplicationQueryKeys = {
   all: ['watcher-applications'] as const,
   list: () => ['watcher-applications', 'list'] as const,
+  detail: (applicationId: string) =>
+    ['watcher-applications', 'detail', applicationId] as const,
 }
 
 export function listWatcherApplications() {
   return apiRequest<WatcherApplicationList>('/api/watcher-applications')
+}
+
+export function getWatcherApplication(applicationId: string) {
+  return apiRequest<WatcherApplicationItem>(
+    `/api/watcher-applications/${applicationId}`,
+  )
 }
 
 export function submitWatcherApplication(input: SubmitWatcherApplicationInput) {

@@ -1,4 +1,6 @@
+import { useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   AlertTriangle,
   Archive,
@@ -8,8 +10,15 @@ import {
   Newspaper,
   RotateCcw,
 } from 'lucide-react'
+import { toApiErrorMessage } from '@shared/api/http'
 import { cn } from '@shared/lib/utils'
-import { useNotificationReadStore } from '@entities/notification/model'
+import type { NotificationItem } from '@entities/notification/model'
+import {
+  listNotifications,
+  markAllNotificationsRead,
+  markNotificationRead,
+  notificationQueryKeys,
+} from '@entities/notification/api'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
 
@@ -21,7 +30,6 @@ import {
 } from '@shared/ui/shadcn/tabs'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
-import { notificationItems } from '../workspace-mocks'
 
 const notificationTypeConfig = {
   PUBLICATION: {
@@ -85,14 +93,13 @@ const colorMap = {
   },
 }
 
-type NotifItem = Omit<(typeof notificationItems)[number], 'isRead'> & {
-  isRead: boolean
-}
+type NotifItem = NotificationItem
 
-function getNotificationConfig(
-  type: (typeof notificationItems)[number]['type'],
-) {
-  return notificationTypeConfig[type]
+function getNotificationConfig(type: string) {
+  return (
+    notificationTypeConfig[type as keyof typeof notificationTypeConfig] ??
+    notificationTypeConfig.ALERT
+  )
 }
 
 function getNotificationTarget(item: NotifItem) {
@@ -177,13 +184,18 @@ function EmptyState({ label }: { label: string }) {
 
 export function NotificationsWorkspacePage() {
   const { actor } = useResolvedActor('journalist')
-  const { readIds, markAllRead } = useNotificationReadStore()
+  const queryClient = useQueryClient()
+  const notificationsQuery = useQuery({
+    queryKey: notificationQueryKeys.list(),
+    queryFn: () => listNotifications(),
+  })
+  const markAll = useMutation({
+    mutationFn: markAllNotificationsRead,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: notificationQueryKeys.all }),
+  })
 
-  const items: NotifItem[] = notificationItems.map((n) => ({
-    ...n,
-    isRead: readIds.has(n.id),
-  }))
-
+  const items: NotifItem[] = notificationsQuery.data?.items ?? []
   const unread = items.filter((n) => !n.isRead)
   const read = items.filter((n) => n.isRead)
 
@@ -201,7 +213,12 @@ export function NotificationsWorkspacePage() {
             </p>
           </div>
           {unread.length > 0 && (
-            <Button variant="outline" size="sm" onClick={markAllRead}>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => markAll.mutate()}
+              disabled={markAll.isPending}
+            >
               <CheckCheck className="size-4" />
               Tout lire
             </Button>
@@ -259,20 +276,46 @@ export function NotificationDetailWorkspacePage({
   notificationId: string
 }) {
   const { actor } = useResolvedActor('journalist')
-  const { readIds } = useNotificationReadStore()
-  const rawItem = notificationItems.find(
+  const queryClient = useQueryClient()
+  const notificationsQuery = useQuery({
+    queryKey: notificationQueryKeys.list(),
+    queryFn: () => listNotifications(),
+  })
+  const item = notificationsQuery.data?.items.find(
     (candidate) => candidate.id === notificationId,
   )
-  if (!rawItem) {
+
+  const markRead = useMutation({
+    mutationFn: () => markNotificationRead(notificationId),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: notificationQueryKeys.all }),
+  })
+  const shouldMarkRead = Boolean(item && !item.isRead)
+  useEffect(() => {
+    if (shouldMarkRead) markRead.mutate()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldMarkRead, notificationId])
+
+  if (!item) {
     return (
       <AppLayout actor={actor} page="notifications">
         <div className="rounded-xl border p-8 text-center">
-          <p className="font-medium">Notification introuvable</p>
+          <p
+            className={cn(
+              'font-medium',
+              notificationsQuery.isError && 'text-destructive',
+            )}
+          >
+            {notificationsQuery.isPending
+              ? 'Chargement…'
+              : notificationsQuery.isError
+                ? toApiErrorMessage(notificationsQuery.error)
+                : 'Notification introuvable'}
+          </p>
         </div>
       </AppLayout>
     )
   }
-  const item: NotifItem = { ...rawItem, isRead: readIds.has(rawItem.id) }
   const config = getNotificationConfig(item.type)
   const target = getNotificationTarget(item)
   const Icon = config.icon

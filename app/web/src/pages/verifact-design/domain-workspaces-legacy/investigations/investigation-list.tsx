@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
 import { Button } from '@shared/ui/shadcn/button'
-import { slugifyLabel } from '../utils'
 import {
   Card,
   CardContent,
@@ -8,11 +8,29 @@ import {
   CardHeader,
   CardTitle,
 } from '@shared/ui/shadcn/card'
-import { investigations } from '../../workspace-mocks'
+import {
+  investigationQueryKeys,
+  listInvestigations,
+  type InvestigationScope,
+} from '@entities/investigation/api'
+import { toApiErrorMessage } from '@shared/api/http'
 import { StatusBadge } from '../../workspace-ui'
 
+const STATUS_TO_SCOPE: Record<string, InvestigationScope> = {
+  PENDING_REVIEW: 'pending-review',
+  PUBLISHED: 'published',
+  CANCELED: 'canceled',
+  IN_PROGRESS: 'in-progress',
+}
+
 export function InvestigationList({ status }: { status: string }) {
-  const rows = investigations.filter((item) => item.status === status)
+  const scope = STATUS_TO_SCOPE[status]
+  const investigationsQuery = useQuery({
+    queryKey: investigationQueryKeys.list({ scope }),
+    queryFn: () => listInvestigations({ scope }),
+    enabled: !!scope,
+  })
+  const rows = investigationsQuery.data?.items ?? []
 
   return (
     <Card>
@@ -26,31 +44,45 @@ export function InvestigationList({ status }: { status: string }) {
         {rows.length ? (
           rows.map((item) => (
             <div
-              key={item.title}
+              key={item.id}
               className="grid gap-4 rounded-lg border p-4 lg:grid-cols-[1fr_auto]"
             >
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-medium">{item.title}</p>
+                  <p className="font-medium">
+                    {item.title ?? 'Sujet sans titre'}
+                  </p>
                   <StatusBadge status={item.status} />
                 </div>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  {item.journalist} · {item.category} · {item.evidence}
+                  {item.journalistName ?? 'Non assigné'}
+                  {item.mediaCategory ? ` · ${item.mediaCategory}` : ''}
+                  {item.draftVerdict ? ` · ${item.draftVerdict}` : ''}
                 </p>
               </div>
               <Button size="sm" variant="outline" asChild>
                 <Link
                   to="/investigations/$investigationId"
-                  params={{ investigationId: slugifyLabel(item.title) }}
+                  params={{ investigationId: item.id }}
                 >
                   Voir le détail
                 </Link>
               </Button>
             </div>
           ))
+        ) : investigationsQuery.isError ? (
+          <div className="rounded-lg border border-dashed p-8 text-center">
+            <p className="text-destructive font-medium">
+              {toApiErrorMessage(investigationsQuery.error)}
+            </p>
+          </div>
         ) : (
           <div className="rounded-lg border border-dashed p-8 text-center">
-            <p className="font-medium">Aucun dossier pour ce filtre</p>
+            <p className="font-medium">
+              {investigationsQuery.isPending
+                ? 'Chargement des enquêtes…'
+                : 'Aucun dossier pour ce filtre'}
+            </p>
             <p className="text-muted-foreground mt-1 text-sm">
               Les enquêtes apparaîtront ici quand leur statut changera.
             </p>

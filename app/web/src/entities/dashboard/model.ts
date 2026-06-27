@@ -1,3 +1,5 @@
+export type { ActorMetrics } from './schemas'
+
 export type DirectorDashboard = {
   pendingReviews: Array<{
     id: string

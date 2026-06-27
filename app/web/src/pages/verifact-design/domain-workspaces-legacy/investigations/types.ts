@@ -8,41 +8,41 @@ import type {
 } from '@entities/investigation/schemas'
 
 export type SourceMedia = {
-  title: string
+  id: number
   type: MediaType
   url?: string
   origin: Extract<MediaOrigin, 'CITIZEN_REPORT' | 'DIRECTOR_INITIATED'>
-  reliability: Verdict
-  category: MediaCategory
-  justification: string
+  reliability: Verdict | null
+  category: MediaCategory | null
+  justification: string | null
 }
 
 export type SourceGroup = {
   origin: Extract<MediaOrigin, 'CITIZEN_REPORT' | 'DIRECTOR_INITIATED'>
-  submitterNote?: string
   media: SourceMedia[]
 }
 
 export type JournalistProofMedia = {
-  title: string
+  id: number
   type: MediaType
   origin: Extract<MediaOrigin, 'JOURNALIST_PROOF'>
-  authoritySource: string
-  sourceType: SourceType
+  authoritySource: string | null
+  sourceType: SourceType | null
   url?: string
 }
 
 export type WatcherEvidenceMedia = {
   url: string
   type: MediaType
-  category?: MediaCategory
-  reliability?: Verdict
-  justification?: string
+  category?: MediaCategory | null
+  reliability?: Verdict | null
+  justification?: string | null
 }
 
 export type WatcherEvidenceItem = {
+  id: string
   title: string
-  watcher: string
+  watcher: string | null
   media: WatcherEvidenceMedia[]
   note: string
 }
@@ -51,9 +51,9 @@ export type Dossier = {
   id: string
   title: string
   subject: string
-  journalist: string
+  journalist: string | null
   status: InvestigationStatus
-  category: MediaCategory
+  category: MediaCategory | null
   verdict: Verdict
   attempts: number
   updatedAt: string

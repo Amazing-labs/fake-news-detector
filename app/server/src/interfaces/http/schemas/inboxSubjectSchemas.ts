@@ -12,7 +12,7 @@ export const inboxSubjectListQuerySchema = z.object({
 export const createDirectorInboxSubjectSchema = z.object({
   theme: verificationThemeSchema,
   description: z.string().min(1),
-  media: z.array(mediaInputSchema).optional(),
+  media: z.array(mediaInputSchema).min(1),
 })
 
 export const deleteInboxSubjectSchema = z.object({

@@ -55,9 +55,9 @@ export function WatcherInvestigationWorkspace({
             <div className="grid gap-3 sm:grid-cols-3">
               <MetaCell
                 label="Catégorie"
-                value={domainLabel(dossier.category)}
+                value={dossier.category ? domainLabel(dossier.category) : '—'}
               />
-              <MetaCell label="Journaliste" value={dossier.journalist} />
+              <MetaCell label="Journaliste" value={dossier.journalist ?? '—'} />
               <MetaCell
                 label="Révision"
                 value={`Tentative ${dossier.attempts}`}
@@ -96,16 +96,8 @@ export function WatcherInvestigationWorkspace({
                         {group.media.length > 1 ? 's' : ''}
                       </span>
                     </div>
-                    {group.submitterNote && (
-                      <div className="border-l-2 pl-3">
-                        <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
-                          Note du signalant
-                        </p>
-                        <p className="text-sm">{group.submitterNote}</p>
-                      </div>
-                    )}
                     {group.media.map((media) => (
-                      <SourceMediaReadRow key={media.title} media={media} />
+                      <SourceMediaReadRow key={media.id} media={media} />
                     ))}
                   </div>
                 ))}
@@ -127,7 +119,7 @@ export function WatcherInvestigationWorkspace({
             <div className="grid gap-3">
               {watcherEvidence.map((e) => (
                 <WatcherEvidenceCard
-                  key={e.title}
+                  key={e.id}
                   evidence={e}
                   withClassification={false}
                 />
