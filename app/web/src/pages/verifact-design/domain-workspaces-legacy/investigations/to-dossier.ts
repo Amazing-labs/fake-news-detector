@@ -1,18 +1,18 @@
 // Adapts the enriched investigation read models into the dossier view props.
-// Enum fields arrive as plain strings from the API but are backend-guaranteed
-// Prisma enum values, so they are narrowed to the schema enum types here, at the
-// single transformation boundary.
+// Enum-like fields arrive as plain strings from the API, so they are validated
+// against the entity schemas here, at the single API→UI boundary, rather than
+// force-cast. Unknown values fall back to a benign default (or null).
 import type {
   EvidenceList,
   InvestigationItem,
   InvestigationMediaList,
 } from '@entities/investigation/model'
-import type {
-  InvestigationStatus,
-  MediaCategory,
-  MediaType,
-  SourceType,
-  Verdict,
+import {
+  investigationStatusSchema,
+  mediaCategorySchema,
+  mediaTypeSchema,
+  sourceTypeSchema,
+  verdictSchema,
 } from '@entities/investigation/schemas'
 import type {
   Dossier,
@@ -24,15 +24,22 @@ import type {
 
 const SOURCE_ORIGINS = ['CITIZEN_REPORT', 'DIRECTOR_INITIATED'] as const
 
+const mediaType = mediaTypeSchema.catch('TEXT')
+const status = investigationStatusSchema.catch('OPEN')
+const verdict = verdictSchema.catch('UNVERIFIABLE')
+const nullableVerdict = verdictSchema.nullable().catch(null)
+const nullableCategory = mediaCategorySchema.nullable().catch(null)
+const nullableSourceType = sourceTypeSchema.nullable().catch(null)
+
 export function toDossier(investigation: InvestigationItem): Dossier {
   return {
     id: investigation.id,
     title: investigation.title ?? 'Dossier sans titre',
     subject: investigation.subject ?? '',
     journalist: investigation.journalistName,
-    status: investigation.status as InvestigationStatus,
-    category: investigation.mediaCategory as MediaCategory | null,
-    verdict: (investigation.draftVerdict ?? 'UNVERIFIABLE') as Verdict,
+    status: status.parse(investigation.status),
+    category: nullableCategory.parse(investigation.mediaCategory),
+    verdict: verdict.parse(investigation.draftVerdict),
     attempts: investigation.attemptCount,
     updatedAt: new Date(investigation.updatedAt).toLocaleDateString('fr-FR'),
     notes: investigation.investigationNotes ?? '',
@@ -47,11 +54,11 @@ export function toSourceGroups(media: InvestigationMediaList): SourceGroup[] {
       .map(
         (item): SourceMedia => ({
           id: item.id,
-          type: item.type as MediaType,
+          type: mediaType.parse(item.type),
           url: item.url,
           origin,
-          reliability: item.reliability as Verdict | null,
-          category: item.category as MediaCategory | null,
+          reliability: nullableVerdict.parse(item.reliability),
+          category: nullableCategory.parse(item.category),
           justification: item.justification,
         }),
       ),
@@ -65,10 +72,10 @@ export function toJournalistProof(
     .filter((item) => item.origin === 'JOURNALIST_PROOF')
     .map((item) => ({
       id: item.id,
-      type: item.type as MediaType,
+      type: mediaType.parse(item.type),
       origin: 'JOURNALIST_PROOF',
       authoritySource: item.authoritySourceName,
-      sourceType: item.authoritySourceType as SourceType | null,
+      sourceType: nullableSourceType.parse(item.authoritySourceType),
       url: item.url,
     }))
 }
@@ -83,9 +90,9 @@ export function toWatcherEvidence(
     note: item.content,
     media: item.media.map((m) => ({
       url: m.url,
-      type: m.type as MediaType,
-      category: m.category as MediaCategory | null,
-      reliability: m.reliability as Verdict | null,
+      type: mediaType.parse(m.type),
+      category: nullableCategory.parse(m.category),
+      reliability: nullableVerdict.parse(m.reliability),
       justification: m.justification,
     })),
   }))

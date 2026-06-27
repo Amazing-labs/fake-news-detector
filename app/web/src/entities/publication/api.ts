@@ -4,8 +4,9 @@ import type {
   PublicationItem,
   PublicationList,
 } from './model'
+import type { PublicationScope } from './schemas'
 
-export type PublicationScope = 'corrections'
+export type { PublicationScope }
 
 export const publicationQueryKeys = {
   all: ['publications'] as const,

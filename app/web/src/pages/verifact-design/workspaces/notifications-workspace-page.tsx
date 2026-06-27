@@ -10,6 +10,7 @@ import {
   Newspaper,
   RotateCcw,
 } from 'lucide-react'
+import { toApiErrorMessage } from '@shared/api/http'
 import { cn } from '@shared/lib/utils'
 import type { NotificationItem } from '@entities/notification/model'
 import {
@@ -299,10 +300,17 @@ export function NotificationDetailWorkspacePage({
     return (
       <AppLayout actor={actor} page="notifications">
         <div className="rounded-xl border p-8 text-center">
-          <p className="font-medium">
+          <p
+            className={cn(
+              'font-medium',
+              notificationsQuery.isError && 'text-destructive',
+            )}
+          >
             {notificationsQuery.isPending
               ? 'Chargement…'
-              : 'Notification introuvable'}
+              : notificationsQuery.isError
+                ? toApiErrorMessage(notificationsQuery.error)
+                : 'Notification introuvable'}
           </p>
         </div>
       </AppLayout>

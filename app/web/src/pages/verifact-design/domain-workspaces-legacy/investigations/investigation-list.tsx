@@ -13,6 +13,7 @@ import {
   listInvestigations,
   type InvestigationScope,
 } from '@entities/investigation/api'
+import { toApiErrorMessage } from '@shared/api/http'
 import { StatusBadge } from '../../workspace-ui'
 
 const STATUS_TO_SCOPE: Record<string, InvestigationScope> = {
@@ -69,6 +70,12 @@ export function InvestigationList({ status }: { status: string }) {
               </Button>
             </div>
           ))
+        ) : investigationsQuery.isError ? (
+          <div className="rounded-lg border border-dashed p-8 text-center">
+            <p className="text-destructive font-medium">
+              {toApiErrorMessage(investigationsQuery.error)}
+            </p>
+          </div>
         ) : (
           <div className="rounded-lg border border-dashed p-8 text-center">
             <p className="font-medium">

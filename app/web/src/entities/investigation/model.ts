@@ -1,3 +1,5 @@
+import type { SourceType } from './schemas'
+
 export type InvestigationItem = {
   id: string
   inboxSubjectId: string
@@ -36,8 +38,8 @@ export type InvestigationMediaItem = {
   authoritySourceId: string | null
   /** Authority source name, resolved server-side. */
   authoritySourceName: string | null
-  /** Authority source type (SourceType), resolved server-side. */
-  authoritySourceType: string | null
+  /** Authority source type, resolved server-side. */
+  authoritySourceType: SourceType | null
   createdAt: string
   updatedAt: string
 }

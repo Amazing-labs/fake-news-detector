@@ -448,8 +448,9 @@ export function PublicationCorrectionsWorkspacePage({
   const options = listQuery.data?.items ?? []
 
   const [selectedPublicationId, setSelectedPublicationId] = useState('')
-  const activePublicationId =
-    publicationId ?? (selectedPublicationId || options[0]?.id || '')
+  // No implicit first-option default: keep the select in sync with the actual
+  // state so the placeholder shows until the director explicitly picks one.
+  const activePublicationId = publicationId ?? selectedPublicationId
 
   const targetQuery = useQuery({
     queryKey: publicationQueryKeys.detail(activePublicationId),
@@ -480,6 +481,7 @@ export function PublicationCorrectionsWorkspacePage({
                   setSelectedPublicationId(event.target.value)
                 }
               >
+                <option value="">Sélectionnez une publication…</option>
                 {options.map((item) => (
                   <option key={item.id} value={item.id}>
                     {item.title ?? item.id}

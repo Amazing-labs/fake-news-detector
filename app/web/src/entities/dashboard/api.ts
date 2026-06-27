@@ -1,11 +1,12 @@
 import { apiRequest } from '@shared/api/http'
-import type { ActorMetrics } from './model'
+import { actorMetricsSchema } from './schemas'
 
 export const dashboardQueryKeys = {
   all: ['dashboard'] as const,
   metrics: () => ['dashboard', 'metrics'] as const,
 }
 
-export function getDashboardMetrics() {
-  return apiRequest<ActorMetrics>('/api/dashboard/metrics')
+export async function getDashboardMetrics() {
+  const data = await apiRequest<unknown>('/api/dashboard/metrics')
+  return actorMetricsSchema.parse(data)
 }

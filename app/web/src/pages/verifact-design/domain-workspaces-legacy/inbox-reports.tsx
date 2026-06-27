@@ -41,10 +41,14 @@ import { listReports, reportQueryKeys } from '@entities/report/api'
 import type { ReportItem } from '@entities/report/model'
 import {
   getInboxSubject,
+  getInboxSubjectMedia,
   inboxSubjectQueryKeys,
   listInboxSubjects,
 } from '@entities/inbox-subject/api'
-import type { InboxSubjectItem } from '@entities/inbox-subject/model'
+import type {
+  InboxSubjectItem,
+  InboxSubjectMediaItem,
+} from '@entities/inbox-subject/model'
 import { CitizenWorkspacePage } from './overview'
 
 const ORIGIN_LABELS: Record<string, string> = {
@@ -347,12 +351,17 @@ export function InboxSubjectDetailWorkspacePage({
     queryKey: inboxSubjectQueryKeys.detail(subjectId),
     queryFn: () => getInboxSubject(subjectId),
   })
+  const mediaQuery = useQuery({
+    queryKey: inboxSubjectQueryKeys.media(subjectId),
+    queryFn: () => getInboxSubjectMedia(subjectId),
+  })
   const subject = subjectQuery.data
 
   if (!subject) return null
 
-  // The inbox-subject read model does not carry media yet.
-  const media: SubjectMedia[] = []
+  const media: SubjectMedia[] = (mediaQuery.data?.items ?? []).map(
+    toSubjectMedia,
+  )
   const mediaCount = media.length
   const canTake = actor === 'journalist' && subject.status === 'OPEN'
 
@@ -493,7 +502,7 @@ async function downloadMedia(item: SubjectMedia) {
 
 type SubjectMedia = {
   name: string
-  type: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'DOCUMENT'
+  type: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'DOCUMENT' | 'LINK' | 'TEXT'
   url: string
   imageUrl?: string
   alt?: string
@@ -501,6 +510,28 @@ type SubjectMedia = {
   posterUrl?: string
   audioUrl?: string
   size?: string
+}
+
+function mediaName(url: string, type: string): string {
+  try {
+    const last = new URL(url).pathname.split('/').pop()
+    if (last) return decodeURIComponent(last)
+  } catch {
+    // not a parseable URL — fall back to the type label
+  }
+  return domainLabel(type)
+}
+
+function toSubjectMedia(item: InboxSubjectMediaItem): SubjectMedia {
+  const type = item.type as SubjectMedia['type']
+  return {
+    name: mediaName(item.url, item.type),
+    type,
+    url: item.url,
+    imageUrl: type === 'IMAGE' ? item.url : undefined,
+    videoUrl: type === 'VIDEO' ? item.url : undefined,
+    audioUrl: type === 'AUDIO' ? item.url : undefined,
+  }
 }
 
 function SubjectMediaItem({

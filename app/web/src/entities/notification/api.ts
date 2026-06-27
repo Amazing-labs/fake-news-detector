@@ -3,8 +3,10 @@ import type { NotificationList } from './model'
 
 export const notificationQueryKeys = {
   all: ['notifications'] as const,
+  // Normalize from the effective request: `activeOnly` only changes the URL
+  // when true, so list() and list({ activeOnly: false }) must share a key.
   list: (params?: { activeOnly?: boolean }) =>
-    ['notifications', 'list', params ?? {}] as const,
+    ['notifications', 'list', params?.activeOnly ? { activeOnly: true } : {}] as const,
 }
 
 export function listNotifications(params?: { activeOnly?: boolean }) {

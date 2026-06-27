@@ -99,6 +99,18 @@ export function InvestigationDetailWorkspacePage({
 
   if (isActorPending) return null
 
+  if (!id) {
+    return (
+      <AppLayout actor={actor} page="investigations">
+        <Card>
+          <CardContent className="text-muted-foreground pt-6">
+            Aucun dossier sélectionné.
+          </CardContent>
+        </Card>
+      </AppLayout>
+    )
+  }
+
   const isPending =
     investigationQuery.isPending ||
     sourceMediaQuery.isPending ||
