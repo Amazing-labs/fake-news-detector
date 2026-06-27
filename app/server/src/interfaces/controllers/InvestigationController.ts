@@ -14,6 +14,7 @@ import type {
   directorReasonSchema,
   proofMediaSchema,
   submitWatcherEvidenceSchema,
+  updateInvestigationDraftSchema,
   updateMediaSchema,
 } from '../http/schemas/investigationSchemas'
 import {
@@ -63,6 +64,22 @@ export class InvestigationController {
     await this.factCheckingService.submitInvestigationForReview(
       actor.actorId,
       requiredParam(c, 'investigationId'),
+    )
+    return noContent(c)
+  }
+
+  updateDraft = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
+    const body =
+      validatedJson<z.infer<typeof updateInvestigationDraftSchema>>(c)
+    await this.factCheckingService.updateInvestigationDraft(
+      actor.actorId,
+      requiredParam(c, 'investigationId'),
+      {
+        mediaCategory: body.mediaCategory,
+        draftVerdict: body.draftVerdict,
+        investigationNotes: body.investigationNotes,
+      },
     )
     return noContent(c)
   }

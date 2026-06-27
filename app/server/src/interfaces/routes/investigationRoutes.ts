@@ -21,6 +21,7 @@ import {
   investigationSourceMediaParamSchema,
   proofMediaSchema,
   submitWatcherEvidenceSchema,
+  updateInvestigationDraftSchema,
   updateMediaSchema,
 } from '../http/schemas/investigationSchemas'
 
@@ -84,6 +85,23 @@ export function createInvestigationRoutes(
       responses: noContentResponse('Investigation submitted for review'),
     }),
     investigationController.submitForReview,
+  )
+
+  routes.openapi(
+    createRoute({
+      method: 'post',
+      path: '/{investigationId}/draft',
+      middleware: createPermissionMiddleware(
+        securityService,
+        'investigation.update',
+      ),
+      request: {
+        params: investigationIdParamSchema,
+        body: jsonBody(updateInvestigationDraftSchema),
+      },
+      responses: noContentResponse('Investigation draft saved'),
+    }),
+    investigationController.updateDraft,
   )
 
   routes.openapi(
