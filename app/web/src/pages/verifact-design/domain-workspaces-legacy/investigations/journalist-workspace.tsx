@@ -166,16 +166,8 @@ export function JournalistInvestigationWorkspace({
                         {group.media.length > 1 ? 's' : ''}
                       </span>
                     </div>
-                    {group.submitterNote && (
-                      <div className="border-l-2 pl-3">
-                        <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
-                          Note du signalant
-                        </p>
-                        <p className="text-sm">{group.submitterNote}</p>
-                      </div>
-                    )}
                     {group.media.map((m) => (
-                      <SourceMediaCard key={m.title} media={m} />
+                      <SourceMediaCard key={m.id} media={m} />
                     ))}
                   </div>
                 ))}
@@ -254,7 +246,7 @@ export function JournalistInvestigationWorkspace({
             <div className="grid gap-3">
               {watcherEvidence.map((e) => (
                 <WatcherEvidenceCard
-                  key={e.title}
+                  key={e.id}
                   evidence={e}
                   withClassification
                 />

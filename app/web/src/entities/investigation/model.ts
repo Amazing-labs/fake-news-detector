@@ -36,6 +36,8 @@ export type InvestigationMediaItem = {
   authoritySourceId: string | null
   /** Authority source name, resolved server-side. */
   authoritySourceName: string | null
+  /** Authority source type (SourceType), resolved server-side. */
+  authoritySourceType: string | null
   createdAt: string
   updatedAt: string
 }
