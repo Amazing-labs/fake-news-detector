@@ -2,6 +2,10 @@ import { Link } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, ExternalLink, FilePlus2 } from 'lucide-react'
 import {
+  investigationQueryKeys,
+  listInvestigations,
+} from '@entities/investigation/api'
+import {
   approveWatcherApplication,
   listWatcherApplications,
   rejectWatcherApplication,
@@ -27,17 +31,7 @@ import {
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { domainLabel } from '../workspace-labels'
-import { investigations } from '../workspace-mocks'
 import { StatusBadge } from '../workspace-ui'
-
-function slugifyLabel(label: string) {
-  return label
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-}
 
 export function WatcherApplicationsReviewPage() {
   const { actor, isActorPending } = useResolvedActor('citizen')
@@ -118,7 +112,9 @@ export function WatcherApplicationsReviewPage() {
                   className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
                 >
                   <div>
-                    <p className="font-medium">Candidature #{item.id}</p>
+                    <p className="font-medium">
+                      {item.applicantName ?? `Candidature #${item.id}`}
+                    </p>
                     <p className="text-muted-foreground text-sm">
                       {item.motivation}
                     </p>
@@ -187,9 +183,11 @@ function WatcherApplicationWorkspacePage() {
 }
 
 function WatcherContributionWorkspacePage() {
-  const activeInvestigations = investigations.filter((item) =>
-    ['IN_PROGRESS', 'NEEDS_REVISION'].includes(item.status),
-  )
+  const investigationsQuery = useQuery({
+    queryKey: investigationQueryKeys.list({ scope: 'contributable' }),
+    queryFn: () => listInvestigations({ scope: 'contributable' }),
+  })
+  const activeInvestigations = investigationsQuery.data?.items ?? []
 
   return (
     <AppLayout actor="watcher" page="reports">
@@ -197,24 +195,43 @@ function WatcherContributionWorkspacePage() {
         <CardHeader>
           <CardTitle>Espace vigie</CardTitle>
           <CardDescription>
-            Contribue aux enquetes en cours avec des preuves, liens et
-            observations terrain.
+            Contribue aux enquetes ouvertes ou en révision avec des preuves,
+            liens et observations terrain.
           </CardDescription>
         </CardHeader>
         <CardContent className="grid gap-3">
+          {investigationsQuery.isPending ? (
+            <p className="text-muted-foreground text-sm">
+              Chargement des enquêtes...
+            </p>
+          ) : null}
+          {investigationsQuery.isError ? (
+            <p className="text-destructive text-sm">
+              {toApiErrorMessage(investigationsQuery.error)}
+            </p>
+          ) : null}
+          {!investigationsQuery.isPending && activeInvestigations.length === 0 ? (
+            <p className="text-muted-foreground text-sm">
+              Aucune enquête à enrichir pour le moment.
+            </p>
+          ) : null}
           {activeInvestigations.map((item) => (
             <div
-              key={item.title}
+              key={item.id}
               className="grid gap-4 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
             >
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-medium">{item.title}</p>
+                  <p className="font-medium">
+                    {item.title ?? 'Sujet sans titre'}
+                  </p>
                   <Badge variant="secondary">{domainLabel(item.status)}</Badge>
                 </div>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  {item.category} / {item.evidence}
-                </p>
+                {item.subject && (
+                  <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">
+                    {item.subject}
+                  </p>
+                )}
                 <p className="text-muted-foreground mt-3 text-sm">
                   Ajoute un contexte local, une source, un média ou une note qui
                   aide le journaliste a consolider le dossier.
@@ -224,7 +241,7 @@ function WatcherContributionWorkspacePage() {
                 <Button size="sm" variant="outline" asChild>
                   <Link
                     to="/investigations/$investigationId"
-                    params={{ investigationId: slugifyLabel(item.title) }}
+                    params={{ investigationId: item.id }}
                   >
                     <ExternalLink />
                     Voir le dossier
