@@ -47,10 +47,12 @@ export function presentEvidenceMedia(media: EvidenceMedia) {
 export function presentEnrichedInvestigationMedia({
   media,
   authoritySourceName,
+  authoritySourceType,
 }: EnrichedInvestigationMedia) {
   return {
     ...presentInvestigationMedia(media),
     authoritySourceName,
+    authoritySourceType,
   }
 }
 

@@ -35,6 +35,10 @@ import type { Publication } from '../../domain/entities/Publication'
 import type { Report } from '../../domain/entities/Report'
 import type { WatcherApplication } from '../../domain/entities/WatcherApplication'
 import type {
+  AuthoritySource,
+  SourceType,
+} from '../../domain/entities/AuthoritySource'
+import type {
   EvidenceMedia,
   InvestigationMedia,
   MediaOrigin,
@@ -123,6 +127,7 @@ export interface EnrichedPublication {
 export interface EnrichedInvestigationMedia {
   media: InvestigationMedia
   authoritySourceName: string | null
+  authoritySourceType: SourceType | null
 }
 
 export interface EnrichedEvidence {
@@ -496,13 +501,17 @@ export class FactCheckingQueryService {
     investigationId: string,
   ): Promise<EnrichedInvestigationMedia[]> {
     const media = await this.getInvestigationSourceMedia(investigationId)
-    const authoritySourceNames = await this.authoritySourceNameMap()
-    return media.map((item) => ({
-      media: item,
-      authoritySourceName: item.authoritySourceId
-        ? (authoritySourceNames.get(item.authoritySourceId) ?? null)
-        : null,
-    }))
+    const authoritySources = await this.authoritySourceMap()
+    return media.map((item) => {
+      const source = item.authoritySourceId
+        ? (authoritySources.get(item.authoritySourceId) ?? null)
+        : null
+      return {
+        media: item,
+        authoritySourceName: source?.name ?? null,
+        authoritySourceType: source?.type ?? null,
+      }
+    })
   }
 
   async getInvestigationEvidenceEnriched(
@@ -596,6 +605,11 @@ export class FactCheckingQueryService {
   private async authoritySourceNameMap(): Promise<Map<string, string>> {
     const sources = await this.authoritySourceRepository.findAll()
     return new Map(sources.map((source) => [source.id, source.name]))
+  }
+
+  private async authoritySourceMap(): Promise<Map<string, AuthoritySource>> {
+    const sources = await this.authoritySourceRepository.findAll()
+    return new Map(sources.map((source) => [source.id, source]))
   }
 
   private async investigationByIdMap(): Promise<Map<string, Investigation>> {
