@@ -6,6 +6,7 @@ export interface IPublicationRepository {
   markAsCorrected(publicationId: string, updatedAt: Date): Promise<void>
   findById(id: string): Promise<Publication | null>
   findByInvestigationId(investigationId: string): Promise<Publication | null>
+  findByInvestigationIds(investigationIds: string[]): Promise<Publication[]>
   findAll(options?: {
     skip?: number
     take?: number

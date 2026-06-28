@@ -751,6 +751,7 @@ describe('report access authorization', () => {
     // path; an empty map is enough for these authorization-focused assertions.
     const citizenRepository = {
       findAll: vi.fn(async () => []),
+      findByIds: vi.fn(async () => []),
       findById: vi.fn(async () => null),
     }
 

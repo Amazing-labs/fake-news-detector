@@ -48,6 +48,13 @@ import type { EvidenceWithMedia } from '../../domain/processes/investigationRevi
 import type { ActorRole } from '../../shared/types'
 import { NotFoundError } from '../../shared/errors'
 
+// Collapse a list of (possibly repeated, possibly null/undefined) foreign keys
+// into the distinct ids actually worth resolving, so the batched `findByIds`
+// reads stay minimal instead of loading whole tables.
+const uniqueIds = (ids: ReadonlyArray<string | null | undefined>): string[] => [
+  ...new Set(ids.filter((id): id is string => Boolean(id))),
+]
+
 export interface ReaderContext {
   actorId: string
   actorRole: ActorRole
@@ -296,34 +303,68 @@ export class FactCheckingQueryService {
     const reports = await this.reportRepository.findByCitizenId(citizenId)
     const activeReports = reports.filter((r) => r.status === 'OPEN').length
 
-    // For each report, follow report -> subject -> investigation -> publication
-    // to tell whether the desk has replied, and count attached corrections.
-    const trails = await Promise.all(
-      reports.map(async (report) => {
-        const subject = await this.inboxSubjectRepository.findByReportId(
-          report.id,
-        )
-        const investigation = subject
-          ? await this.investigationRepository.findByInboxSubjectId(subject.id)
-          : null
-        const publication = investigation
-          ? await this.publicationRepository.findByInvestigationId(
-              investigation.id,
-            )
-          : null
-        if (!publication) {
-          return { replied: false, corrections: 0, status: report.status }
-        }
-        const corrections = await this.correctionRepository.findByPublicationId(
-          publication.id,
-        )
-        return {
-          replied: true,
-          corrections: corrections.length,
-          status: report.status,
-        }
-      }),
+    // Walk the report trail (report -> subject -> investigation -> publication
+    // -> corrections) one batched query per hop instead of four reads per
+    // report, then assemble each report's outcome from the lookup maps. This
+    // keeps the dashboard flat as a citizen's report history grows.
+    const subjects = await this.inboxSubjectRepository.findByReportIds(
+      reports.map((report) => report.id),
     )
+    const subjectByReportId = new Map<string, InboxSubject>()
+    for (const subject of subjects) {
+      if (subject.reportId) subjectByReportId.set(subject.reportId, subject)
+    }
+
+    const investigations =
+      await this.investigationRepository.findByInboxSubjectIds(
+        subjects.map((subject) => subject.id),
+      )
+    const investigationByInboxId = new Map(
+      investigations.map((investigation) => [
+        investigation.inboxSubjectId,
+        investigation,
+      ]),
+    )
+
+    const publications =
+      await this.publicationRepository.findByInvestigationIds(
+        investigations.map((investigation) => investigation.id),
+      )
+    const publicationByInvestigationId = new Map(
+      publications.map((publication) => [
+        publication.investigationId,
+        publication,
+      ]),
+    )
+
+    const corrections = await this.correctionRepository.findByPublicationIds(
+      publications.map((publication) => publication.id),
+    )
+    const correctionCountByPublicationId = new Map<string, number>()
+    for (const correction of corrections) {
+      correctionCountByPublicationId.set(
+        correction.publicationId,
+        (correctionCountByPublicationId.get(correction.publicationId) ?? 0) + 1,
+      )
+    }
+
+    const trails = reports.map((report) => {
+      const subject = subjectByReportId.get(report.id)
+      const investigation = subject
+        ? investigationByInboxId.get(subject.id)
+        : undefined
+      const publication = investigation
+        ? publicationByInvestigationId.get(investigation.id)
+        : undefined
+      if (!publication) {
+        return { replied: false, corrections: 0, status: report.status }
+      }
+      return {
+        replied: true,
+        corrections: correctionCountByPublicationId.get(publication.id) ?? 0,
+        status: report.status,
+      }
+    })
 
     return {
       profile: 'citizen',
@@ -364,7 +405,9 @@ export class FactCheckingQueryService {
     citizenId?: string,
   ): Promise<EnrichedReport[]> {
     const reports = await this.listReportsForReader(reader, citizenId)
-    const citizenNames = await this.citizenNameMap()
+    const citizenNames = await this.citizenNameMap(
+      reports.map((report) => report.citizenId),
+    )
     return reports.map((report) => ({
       report,
       reporterName: citizenNames.get(report.citizenId) ?? null,
@@ -373,7 +416,9 @@ export class FactCheckingQueryService {
 
   async listOpenReportsInboxEnriched(): Promise<EnrichedReport[]> {
     const reports = await this.listOpenReportsInbox()
-    const citizenNames = await this.citizenNameMap()
+    const citizenNames = await this.citizenNameMap(
+      reports.map((report) => report.citizenId),
+    )
     return reports.map((report) => ({
       report,
       reporterName: citizenNames.get(report.citizenId) ?? null,
@@ -384,10 +429,14 @@ export class FactCheckingQueryService {
     status?: InboxSubjectStatus,
   ): Promise<EnrichedInboxSubject[]> {
     const subjects = await this.listInboxSubjects(status)
-    const [investigationsByInbox, journalistNames] = await Promise.all([
-      this.investigationByInboxMap(),
-      this.journalistNameMap(),
-    ])
+    const investigationsByInbox = await this.investigationByInboxMap(
+      subjects.map((subject) => subject.id),
+    )
+    const journalistNames = await this.journalistNameMap(
+      [...investigationsByInbox.values()].map(
+        (investigation) => investigation.journalistId,
+      ),
+    )
     return subjects.map((subject) => {
       const investigation = investigationsByInbox.get(subject.id)
       return {
@@ -404,8 +453,12 @@ export class FactCheckingQueryService {
   ): Promise<EnrichedInvestigation[]> {
     const investigations = await this.listInvestigations(filter)
     const [inboxSubjects, journalistNames] = await Promise.all([
-      this.inboxSubjectByIdMap(),
-      this.journalistNameMap(),
+      this.inboxSubjectByIdMap(
+        investigations.map((investigation) => investigation.inboxSubjectId),
+      ),
+      this.journalistNameMap(
+        investigations.map((investigation) => investigation.journalistId),
+      ),
     ])
     return investigations.map((investigation) => {
       const subject = inboxSubjects.get(investigation.inboxSubjectId)
@@ -422,12 +475,21 @@ export class FactCheckingQueryService {
     scope?: string,
   ): Promise<EnrichedPublication[]> {
     const publications = await this.listPublications(scope)
-    const [investigationsById, inboxSubjects, authoritySourceNames] =
-      await Promise.all([
-        this.investigationByIdMap(),
-        this.inboxSubjectByIdMap(),
-        this.authoritySourceNameMap(),
-      ])
+    const [investigationsById, authoritySourceNames] = await Promise.all([
+      this.investigationByIdMap(
+        publications.map((publication) => publication.investigationId),
+      ),
+      this.authoritySourceNameMap(
+        publications.flatMap((publication) =>
+          this.publicationAuthoritySourceIds(publication),
+        ),
+      ),
+    ])
+    const inboxSubjects = await this.inboxSubjectByIdMap(
+      [...investigationsById.values()].map(
+        (investigation) => investigation.inboxSubjectId,
+      ),
+    )
     return publications.map((publication) => {
       const investigation = investigationsById.get(publication.investigationId)
       const subject = investigation
@@ -493,7 +555,9 @@ export class FactCheckingQueryService {
       investigation
         ? this.inboxSubjectRepository.findById(investigation.inboxSubjectId)
         : null,
-      this.authoritySourceNameMap(),
+      this.authoritySourceNameMap(
+        this.publicationAuthoritySourceIds(publication),
+      ),
     ])
     return {
       publication,
@@ -506,7 +570,9 @@ export class FactCheckingQueryService {
     investigationId: string,
   ): Promise<EnrichedInvestigationMedia[]> {
     const media = await this.getInvestigationSourceMedia(investigationId)
-    const authoritySources = await this.authoritySourceMap()
+    const authoritySources = await this.authoritySourceMap(
+      media.map((item) => item.authoritySourceId),
+    )
     return media.map((item) => {
       const source = item.authoritySourceId
         ? (authoritySources.get(item.authoritySourceId) ?? null)
@@ -523,7 +589,9 @@ export class FactCheckingQueryService {
     investigationId: string,
   ): Promise<EnrichedEvidence[]> {
     const bundles = await this.getInvestigationEvidence(investigationId)
-    const citizenNames = await this.citizenNameMap()
+    const citizenNames = await this.citizenNameMap(
+      bundles.map(({ evidence }) => evidence.watcherId),
+    )
     return bundles.map(({ evidence, media }) => ({
       evidence,
       media,
@@ -572,7 +640,9 @@ export class FactCheckingQueryService {
     EnrichedWatcherApplication[]
   > {
     const applications = await this.listWatcherApplications()
-    const citizenNames = await this.citizenNameMap()
+    const citizenNames = await this.citizenNameMap(
+      applications.map((application) => application.actorId),
+    )
     return applications.map((application) => ({
       application,
       applicantName: citizenNames.get(application.actorId) ?? null,
@@ -591,48 +661,83 @@ export class FactCheckingQueryService {
   // Lookup maps (id -> display value) used to enrich collections in one pass
   // ---------------------------------------------------------------------------
 
-  private async citizenNameMap(): Promise<Map<string, string>> {
-    const citizens = await this.citizenRepository.findAll()
+  private async citizenNameMap(
+    ids: ReadonlyArray<string | null | undefined>,
+  ): Promise<Map<string, string>> {
+    const citizens = await this.citizenRepository.findByIds(uniqueIds(ids))
     return new Map(citizens.map((citizen) => [citizen.id, citizen.name]))
   }
 
-  private async journalistNameMap(): Promise<Map<string, string>> {
-    const journalists = await this.journalistRepository.findAll()
+  private async journalistNameMap(
+    ids: ReadonlyArray<string | null | undefined>,
+  ): Promise<Map<string, string>> {
+    const journalists = await this.journalistRepository.findByIds(
+      uniqueIds(ids),
+    )
     return new Map(
       journalists.map((journalist) => [journalist.id, journalist.name]),
     )
   }
 
-  private async inboxSubjectByIdMap(): Promise<Map<string, InboxSubject>> {
-    const subjects = await this.inboxSubjectRepository.findAll()
+  private async inboxSubjectByIdMap(
+    ids: ReadonlyArray<string | null | undefined>,
+  ): Promise<Map<string, InboxSubject>> {
+    const subjects = await this.inboxSubjectRepository.findByIds(uniqueIds(ids))
     return new Map(subjects.map((subject) => [subject.id, subject]))
   }
 
-  private async authoritySourceNameMap(): Promise<Map<string, string>> {
-    const sources = await this.authoritySourceRepository.findAll()
+  private async authoritySourceNameMap(
+    ids: ReadonlyArray<string | null | undefined>,
+  ): Promise<Map<string, string>> {
+    const sources = await this.authoritySourceRepository.findByIds(
+      uniqueIds(ids),
+    )
     return new Map(sources.map((source) => [source.id, source.name]))
   }
 
-  private async authoritySourceMap(): Promise<Map<string, AuthoritySource>> {
-    const sources = await this.authoritySourceRepository.findAll()
+  private async authoritySourceMap(
+    ids: ReadonlyArray<string | null | undefined>,
+  ): Promise<Map<string, AuthoritySource>> {
+    const sources = await this.authoritySourceRepository.findByIds(
+      uniqueIds(ids),
+    )
     return new Map(sources.map((source) => [source.id, source]))
   }
 
-  private async investigationByIdMap(): Promise<Map<string, Investigation>> {
-    const investigations = await this.investigationRepository.findAll()
+  private async investigationByIdMap(
+    ids: ReadonlyArray<string | null | undefined>,
+  ): Promise<Map<string, Investigation>> {
+    const investigations = await this.investigationRepository.findByIds(
+      uniqueIds(ids),
+    )
     return new Map(
       investigations.map((investigation) => [investigation.id, investigation]),
     )
   }
 
-  private async investigationByInboxMap(): Promise<Map<string, Investigation>> {
-    const investigations = await this.investigationRepository.findAll()
+  // Keyed by inboxSubjectId — each subject backs at most one investigation, so
+  // the FK is effectively unique on this side of the relation.
+  private async investigationByInboxMap(
+    inboxSubjectIds: ReadonlyArray<string | null | undefined>,
+  ): Promise<Map<string, Investigation>> {
+    const investigations =
+      await this.investigationRepository.findByInboxSubjectIds(
+        uniqueIds(inboxSubjectIds),
+      )
     return new Map(
       investigations.map((investigation) => [
         investigation.inboxSubjectId,
         investigation,
       ]),
     )
+  }
+
+  // The authority sources referenced by a publication's verified media/links.
+  private publicationAuthoritySourceIds(publication: Publication): string[] {
+    return [
+      ...publication.verifiedMedia.map((media) => media.authoritySourceId),
+      ...publication.verifiedLinks.map((link) => link.authoritySourceId),
+    ].filter((id): id is string => Boolean(id))
   }
 
   // ---------------------------------------------------------------------------

@@ -5,6 +5,7 @@ export interface IAuthoritySourceRepository {
   save(authoritySource: AuthoritySource): Promise<void>
   saveMany(authoritySources: AuthoritySource[]): Promise<void>
   findById(id: string): Promise<AuthoritySource | null>
+  findByIds(ids: string[]): Promise<AuthoritySource[]>
   findAll(): Promise<AuthoritySource[]>
   findByType(type: SourceType): Promise<AuthoritySource[]>
   delete(id: string): Promise<void>

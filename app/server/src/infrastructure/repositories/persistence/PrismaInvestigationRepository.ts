@@ -30,6 +30,14 @@ export class PrismaInvestigationRepository implements IInvestigationRepository {
     return row ? this.toDomain(row) : null
   }
 
+  async findByIds(ids: string[]): Promise<Investigation[]> {
+    if (ids.length === 0) return []
+    const rows = await prisma.investigation.findMany({
+      where: { id: { in: ids } },
+    })
+    return rows.map((row) => this.toDomain(row))
+  }
+
   async findByReportId(reportId: string): Promise<Investigation | null> {
     const row = await prisma.investigation.findFirst({
       where: {
@@ -48,6 +56,16 @@ export class PrismaInvestigationRepository implements IInvestigationRepository {
       where: { inboxSubjectId },
     })
     return row ? this.toDomain(row) : null
+  }
+
+  async findByInboxSubjectIds(
+    inboxSubjectIds: string[],
+  ): Promise<Investigation[]> {
+    if (inboxSubjectIds.length === 0) return []
+    const rows = await prisma.investigation.findMany({
+      where: { inboxSubjectId: { in: inboxSubjectIds } },
+    })
+    return rows.map((row) => this.toDomain(row))
   }
 
   async findByJournalistId(journalistId: string): Promise<Investigation[]> {

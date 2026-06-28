@@ -86,6 +86,20 @@ export class PrismaPublicationRepository implements IPublicationRepository {
     return row ? this.toDomain(row) : null
   }
 
+  async findByInvestigationIds(
+    investigationIds: string[],
+  ): Promise<Publication[]> {
+    if (investigationIds.length === 0) return []
+    const rows = await prisma.publication.findMany({
+      where: { investigationId: { in: investigationIds } },
+      include: {
+        verifiedMedia: { orderBy: { order: 'asc' } },
+        verifiedLinks: true,
+      },
+    })
+    return rows.map((row) => this.toDomain(row))
+  }
+
   async findAll(options?: {
     skip?: number
     take?: number
