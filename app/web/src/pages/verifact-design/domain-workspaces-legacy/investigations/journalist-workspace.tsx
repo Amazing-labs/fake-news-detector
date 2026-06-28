@@ -1,6 +1,14 @@
 import { ClipboardCheck, FilePlus2 } from 'lucide-react'
-import { useRef, useState } from 'react'
+import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import {
+  addJournalistProofMedia,
+  investigationQueryKeys,
+  saveInvestigationDraft,
+  submitInvestigationForReview,
+} from '@entities/investigation/api'
+import { toApiErrorMessage } from '@shared/api/http'
 import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
@@ -36,6 +44,7 @@ import { DossierHeader, MetaCell, OriginBadge } from './primitives'
 import type {
   MediaCategory,
   MediaType,
+  SourceType,
   Verdict,
 } from '@entities/investigation/schemas'
 import type {
@@ -56,7 +65,16 @@ export function JournalistInvestigationWorkspace({
   journalistProofMedia: JournalistProofMedia[]
   watcherEvidence: WatcherEvidenceItem[]
 }) {
+  const queryClient = useQueryClient()
+
   const [proofType, setProofType] = useState<MediaType>('LINK')
+  const [proofAuthorityName, setProofAuthorityName] = useState('')
+  const [proofSourceType, setProofSourceType] = useState<SourceType>(
+    SOURCE_TYPE_OPTIONS[0][0] as SourceType,
+  )
+  const [proofUrl, setProofUrl] = useState('')
+  const [proofUploadedUrls, setProofUploadedUrls] = useState<string[]>([])
+
   const [mediaCategory, setMediaCategory] = useState<MediaCategory | ''>(
     dossier.category ?? '',
   )
@@ -65,26 +83,62 @@ export function JournalistInvestigationWorkspace({
   )
   const [notes, setNotes] = useState<string>(dossier.notes ?? '')
 
-  // Snapshots at mount — checked only in the submit handler (not during render)
-  const initialCategory = useRef(dossier.category ?? '')
-  const initialVerdict = useRef(dossier.verdict ?? 'UNVERIFIABLE')
-  const initialNotes = useRef(dossier.notes ?? '')
-
   const allSourceMedia = sourceGroups.flatMap((g) => g.media)
   const allEvidenceMedia = watcherEvidence.flatMap((e) => e.media)
 
-  function handleSubmitForReview() {
-    const isDirty =
-      mediaCategory !== initialCategory.current ||
-      draftVerdict !== initialVerdict.current ||
-      notes !== initialNotes.current
+  const buildDraftInput = () => ({
+    mediaCategory: mediaCategory === '' ? null : mediaCategory,
+    draftVerdict,
+    investigationNotes: notes,
+  })
 
-    if (!isDirty) {
-      toast.error(
-        'Aucune modification détectée — mettez à jour le verdict ou la catégorie avant de soumettre.',
-      )
-      return
-    }
+  const saveDraftMutation = useMutation({
+    mutationFn: () => saveInvestigationDraft(dossier.id, buildDraftInput()),
+    onSuccess: () => {
+      toast.success('Brouillon enregistré.')
+      void queryClient.invalidateQueries({
+        queryKey: investigationQueryKeys.detail(dossier.id),
+      })
+    },
+    onError: (error) => toast.error(toApiErrorMessage(error)),
+  })
+
+  const submitMutation = useMutation({
+    mutationFn: async () => {
+      await saveInvestigationDraft(dossier.id, buildDraftInput())
+      await submitInvestigationForReview(dossier.id)
+    },
+    onSuccess: () => {
+      toast.success('Dossier soumis en revue.')
+      void queryClient.invalidateQueries({
+        queryKey: investigationQueryKeys.all,
+      })
+    },
+    onError: (error) => toast.error(toApiErrorMessage(error)),
+  })
+
+  const proofUrlValue = proofUploadedUrls[0] ?? proofUrl.trim()
+  const addProofMutation = useMutation({
+    mutationFn: () =>
+      addJournalistProofMedia(dossier.id, {
+        url: proofUrlValue,
+        type: proofType,
+        authoritySourceName: proofAuthorityName.trim(),
+        authoritySourceType: proofSourceType,
+      }),
+    onSuccess: () => {
+      toast.success('Preuve ajoutée.')
+      setProofAuthorityName('')
+      setProofUrl('')
+      setProofUploadedUrls([])
+      void queryClient.invalidateQueries({
+        queryKey: investigationQueryKeys.sourceMedia(dossier.id),
+      })
+    },
+    onError: (error) => toast.error(toApiErrorMessage(error)),
+  })
+
+  function handleSubmitForReview() {
     if (!mediaCategory) {
       toast.error('La catégorie dominante est requise avant la soumission.')
       return
@@ -107,7 +161,25 @@ export function JournalistInvestigationWorkspace({
       )
       return
     }
-    toast.success('Dossier soumis en revue.')
+    submitMutation.mutate()
+  }
+
+  function handleAddProof() {
+    if (!proofAuthorityName.trim()) {
+      toast.error("La source d'autorité est obligatoire.")
+      return
+    }
+    if (!proofUrlValue) {
+      toast.error('Ajoute un fichier ou une URL pour la preuve.')
+      return
+    }
+    try {
+      new URL(proofUrlValue)
+    } catch {
+      toast.error('La preuve doit être une URL valide.')
+      return
+    }
+    addProofMutation.mutate()
   }
 
   return (
@@ -118,9 +190,15 @@ export function JournalistInvestigationWorkspace({
             <DossierHeader
               dossier={dossier}
               action={
-                <Button size="sm" onClick={handleSubmitForReview}>
+                <Button
+                  size="sm"
+                  onClick={handleSubmitForReview}
+                  disabled={submitMutation.isPending}
+                >
                   <ClipboardCheck className="size-4" />
-                  Soumettre en revue
+                  {submitMutation.isPending
+                    ? 'Soumission…'
+                    : 'Soumettre en revue'}
                 </Button>
               }
             />
@@ -167,7 +245,11 @@ export function JournalistInvestigationWorkspace({
                       </span>
                     </div>
                     {group.media.map((m) => (
-                      <SourceMediaCard key={m.id} media={m} />
+                      <SourceMediaCard
+                        key={m.id}
+                        media={m}
+                        investigationId={dossier.id}
+                      />
                     ))}
                   </div>
                 ))}
@@ -208,11 +290,21 @@ export function JournalistInvestigationWorkspace({
                     </Label>
                     <Label className="grid gap-1.5 text-sm">
                       Source d'autorité
-                      <Input placeholder="Nom de la source" />
+                      <Input
+                        placeholder="Nom de la source"
+                        value={proofAuthorityName}
+                        onChange={(e) => setProofAuthorityName(e.target.value)}
+                      />
                     </Label>
                     <Label className="grid gap-1.5 text-sm">
                       Type de source
-                      <select className={SELECT_CLASS}>
+                      <select
+                        value={proofSourceType}
+                        onChange={(e) =>
+                          setProofSourceType(e.target.value as SourceType)
+                        }
+                        className={SELECT_CLASS}
+                      >
                         {SOURCE_TYPE_OPTIONS.map(([v, l]) => (
                           <option key={v} value={v}>
                             {l}
@@ -225,16 +317,28 @@ export function JournalistInvestigationWorkspace({
                   <MediaDropzone
                     inputId="journalist-proof-media"
                     description="Glissez un fichier ou collez une URL ci-dessous pour les liens."
+                    onUrlsChange={setProofUploadedUrls}
                   />
                   {proofType === 'LINK' && (
                     <Label className="grid gap-1.5 text-sm">
                       URL
-                      <Input placeholder="https://…" type="url" />
+                      <Input
+                        placeholder="https://…"
+                        type="url"
+                        value={proofUrl}
+                        onChange={(e) => setProofUrl(e.target.value)}
+                      />
                     </Label>
                   )}
-                  <Button className="w-fit">
+                  <Button
+                    className="w-fit"
+                    onClick={handleAddProof}
+                    disabled={addProofMutation.isPending}
+                  >
                     <FilePlus2 className="size-4" />
-                    Ajouter la preuve
+                    {addProofMutation.isPending
+                      ? 'Ajout…'
+                      : 'Ajouter la preuve'}
                   </Button>
                 </CardContent>
               </Card>
@@ -249,6 +353,7 @@ export function JournalistInvestigationWorkspace({
                   key={e.id}
                   evidence={e}
                   withClassification
+                  investigationId={dossier.id}
                 />
               ))}
             </div>
@@ -314,6 +419,16 @@ export function JournalistInvestigationWorkspace({
                     placeholder="Vos observations de travail — visibles par la direction lors de la revue."
                   />
                 </Label>
+                <Button
+                  size="sm"
+                  className="w-fit"
+                  onClick={() => saveDraftMutation.mutate()}
+                  disabled={saveDraftMutation.isPending}
+                >
+                  {saveDraftMutation.isPending
+                    ? 'Enregistrement…'
+                    : 'Enregistrer le brouillon'}
+                </Button>
               </CardContent>
             </Card>
           </TabsContent>

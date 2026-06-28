@@ -1,5 +1,15 @@
 import { ChevronDown, Download, ExternalLink, Play } from 'lucide-react'
 import { useState } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
+import {
+  classifyInvestigationSourceMedia,
+  classifyWatcherEvidenceMedia,
+  investigationQueryKeys,
+  type MediaClassificationInput,
+} from '@entities/investigation/api'
+import type { MediaCategory, Verdict } from '@entities/investigation/schemas'
+import { toApiErrorMessage } from '@shared/api/http'
 import { cn } from '@shared/lib/utils'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
@@ -20,6 +30,68 @@ import type {
   WatcherEvidenceItem,
   WatcherEvidenceMedia,
 } from './types'
+
+// Shared classification form (category + reliability + justification) used by
+// the journalist to classify source media and watcher evidence media.
+function MediaClassificationForm({
+  initial,
+  isPending,
+  error,
+  onSave,
+}: {
+  initial: { category: string; reliability: string; justification: string }
+  isPending: boolean
+  error: unknown
+  onSave: (input: MediaClassificationInput) => void
+}) {
+  const [category, setCategory] = useState(initial.category)
+  const [reliability, setReliability] = useState(initial.reliability)
+  const [justification, setJustification] = useState(initial.justification)
+  const canSave =
+    category !== '' && reliability !== '' && justification.trim() !== ''
+
+  return (
+    <div className="grid gap-3">
+      <div className="grid gap-3 md:grid-cols-2">
+        <Label className="grid gap-1.5 text-sm">
+          Categorie
+          <CategorySelect value={category} onChange={setCategory} />
+        </Label>
+        <Label className="grid gap-1.5 text-sm">
+          Fiabilite
+          <ReliabilitySelect value={reliability} onChange={setReliability} />
+        </Label>
+      </div>
+      <Label className="grid gap-1.5 text-sm">
+        Justification
+        <Textarea
+          value={justification}
+          onChange={(e) => setJustification(e.target.value)}
+          rows={2}
+          className="resize-none"
+          placeholder="Pourquoi ce media est-il fiable ou non ?"
+        />
+      </Label>
+      {error ? (
+        <p className="text-xs text-red-400">{toApiErrorMessage(error)}</p>
+      ) : null}
+      <Button
+        size="sm"
+        className="w-fit"
+        disabled={!canSave || isPending}
+        onClick={() =>
+          onSave({
+            category: category as MediaCategory,
+            reliability: reliability as Verdict,
+            justification: justification.trim(),
+          })
+        }
+      >
+        {isPending ? 'Enregistrement…' : 'Enregistrer la classification'}
+      </Button>
+    </div>
+  )
+}
 
 function DownloadButton({ href, label }: { href: string; label: string }) {
   const [loading, setLoading] = useState(false)
@@ -154,10 +226,28 @@ function MediaArtifact({
 
 // ── Source media card (journalist classifies) ──────────────────────────────────
 
-export function SourceMediaCard({ media }: { media: SourceMedia }) {
+export function SourceMediaCard({
+  media,
+  investigationId,
+}: {
+  media: SourceMedia
+  investigationId: string
+}) {
+  const queryClient = useQueryClient()
   const isClassified = Boolean(
     media.category && media.reliability && media.justification,
   )
+  const mutation = useMutation({
+    mutationFn: (input: MediaClassificationInput) =>
+      classifyInvestigationSourceMedia(investigationId, media.id, input),
+    onSuccess: () => {
+      toast.success('Classification enregistrée.')
+      void queryClient.invalidateQueries({
+        queryKey: investigationQueryKeys.sourceMedia(investigationId),
+      })
+    },
+  })
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="pb-3">
@@ -186,24 +276,16 @@ export function SourceMediaCard({ media }: { media: SourceMedia }) {
             title={domainLabel(media.type)}
           />
         )}
-        <div className="grid gap-3 md:grid-cols-2">
-          <Label className="grid gap-1.5 text-sm">
-            Categorie
-            <CategorySelect defaultValue={media.category ?? undefined} />
-          </Label>
-          <Label className="grid gap-1.5 text-sm">
-            Fiabilite
-            <ReliabilitySelect defaultValue={media.reliability ?? undefined} />
-          </Label>
-        </div>
-        <Label className="grid gap-1.5 text-sm">
-          Justification
-          <Textarea
-            defaultValue={media.justification ?? ''}
-            rows={2}
-            className="resize-none"
-          />
-        </Label>
+        <MediaClassificationForm
+          initial={{
+            category: media.category ?? '',
+            reliability: media.reliability ?? '',
+            justification: media.justification ?? '',
+          }}
+          isPending={mutation.isPending}
+          error={mutation.error}
+          onSave={(input) => mutation.mutate(input)}
+        />
       </CardContent>
     </Card>
   )
@@ -329,13 +411,34 @@ export function JournalistProofList({
 function EvidenceMediaClassificationRow({
   media,
   index,
+  investigationId,
+  evidenceId,
 }: {
   media: WatcherEvidenceMedia
   index: number
+  investigationId: string
+  evidenceId: string
 }) {
+  const queryClient = useQueryClient()
   const isClassified = Boolean(
     media.category && media.reliability && media.justification,
   )
+  const mutation = useMutation({
+    mutationFn: (input: MediaClassificationInput) =>
+      classifyWatcherEvidenceMedia(
+        investigationId,
+        evidenceId,
+        media.id,
+        input,
+      ),
+    onSuccess: () => {
+      toast.success('Classification enregistrée.')
+      void queryClient.invalidateQueries({
+        queryKey: investigationQueryKeys.evidence(investigationId),
+      })
+    },
+  })
+
   return (
     <div className="grid gap-3 rounded-lg border p-3">
       <div className="flex items-center justify-between gap-2">
@@ -354,25 +457,16 @@ function EvidenceMediaClassificationRow({
         type={media.type}
         title={`Media ${index + 1}`}
       />
-      <div className="grid gap-3 md:grid-cols-2">
-        <Label className="grid gap-1.5 text-sm">
-          Categorie
-          <CategorySelect defaultValue={media.category ?? undefined} />
-        </Label>
-        <Label className="grid gap-1.5 text-sm">
-          Fiabilite
-          <ReliabilitySelect defaultValue={media.reliability ?? undefined} />
-        </Label>
-      </div>
-      <Label className="grid gap-1.5 text-sm">
-        Justification
-        <Textarea
-          defaultValue={media.justification ?? ''}
-          rows={2}
-          className="resize-none"
-          placeholder="Pourquoi ce media est-il fiable ou non ?"
-        />
-      </Label>
+      <MediaClassificationForm
+        initial={{
+          category: media.category ?? '',
+          reliability: media.reliability ?? '',
+          justification: media.justification ?? '',
+        }}
+        isPending={mutation.isPending}
+        error={mutation.error}
+        onSave={(input) => mutation.mutate(input)}
+      />
     </div>
   )
 }
@@ -382,9 +476,11 @@ function EvidenceMediaClassificationRow({
 export function WatcherEvidenceCard({
   evidence,
   withClassification,
+  investigationId,
 }: {
   evidence: WatcherEvidenceItem
   withClassification: boolean
+  investigationId: string
 }) {
   const [isOpen, setIsOpen] = useState(false)
   const classifiedCount = evidence.media.filter(
@@ -453,7 +549,13 @@ export function WatcherEvidenceCard({
 
           {withClassification ? (
             evidence.media.map((m, i) => (
-              <EvidenceMediaClassificationRow key={i} media={m} index={i} />
+              <EvidenceMediaClassificationRow
+                key={m.id}
+                media={m}
+                index={i}
+                investigationId={investigationId}
+                evidenceId={evidence.id}
+              />
             ))
           ) : (
             <div className="grid gap-3">

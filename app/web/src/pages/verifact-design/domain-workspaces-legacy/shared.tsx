@@ -260,9 +260,11 @@ type UploadEntry = {
 export function MediaDropzone({
   inputId = 'media-upload',
   description = 'Images, vidéos, audio, PDF ou documents utiles au desk.',
+  onUrlsChange,
 }: {
   inputId?: string
   description?: string
+  onUrlsChange?: (urls: string[]) => void
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -276,6 +278,14 @@ export function MediaDropzone({
   useEffect(() => {
     void flushOrphanedUploads()
   }, [])
+
+  // Lift uploaded (non-local) URLs so a parent form can submit them.
+  useEffect(() => {
+    onUrlsChange?.(
+      entries.map((e) => e.url).filter((url) => !url.startsWith('#local:')),
+    )
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [entries])
 
   // Cleanup on unmount: delete pending uploads + revoke object URLs
   useEffect(() => {

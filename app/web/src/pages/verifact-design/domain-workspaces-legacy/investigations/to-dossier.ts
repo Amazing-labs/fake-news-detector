@@ -89,6 +89,7 @@ export function toWatcherEvidence(
     watcher: item.watcherName,
     note: item.content,
     media: item.media.map((m) => ({
+      id: m.id,
       url: m.url,
       type: mediaType.parse(m.type),
       category: nullableCategory.parse(m.category),

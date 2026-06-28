@@ -5,6 +5,27 @@ import type {
   InvestigationList,
   InvestigationMediaList,
 } from './model'
+import type { MediaCategory, MediaType, SourceType, Verdict } from './schemas'
+
+export type MediaClassificationInput = {
+  category: MediaCategory
+  reliability: Verdict
+  justification: string
+}
+
+export type ProofMediaInput = {
+  url: string
+  type: MediaType
+  order?: number
+  authoritySourceName: string
+  authoritySourceType: SourceType
+}
+
+export type InvestigationDraftInput = {
+  mediaCategory: MediaCategory | null
+  draftVerdict: Verdict
+  investigationNotes: string
+}
 
 export type InvestigationScope =
   | 'in-progress'
@@ -59,5 +80,54 @@ export function getInvestigationSourceMedia(investigationId: string) {
 export function getInvestigationEvidence(investigationId: string) {
   return apiRequest<EvidenceList>(
     `/api/investigations/${investigationId}/evidence`,
+  )
+}
+
+export function saveInvestigationDraft(
+  investigationId: string,
+  input: InvestigationDraftInput,
+) {
+  return apiRequest<null>(`/api/investigations/${investigationId}/draft`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function submitInvestigationForReview(investigationId: string) {
+  return apiRequest<null>(`/api/investigations/${investigationId}/review`, {
+    method: 'POST',
+  })
+}
+
+export function classifyInvestigationSourceMedia(
+  investigationId: string,
+  mediaId: number,
+  input: MediaClassificationInput,
+) {
+  return apiRequest<null>(
+    `/api/investigations/${investigationId}/source-media/${mediaId}`,
+    { method: 'POST', body: JSON.stringify(input) },
+  )
+}
+
+export function classifyWatcherEvidenceMedia(
+  investigationId: string,
+  evidenceId: string,
+  mediaId: number,
+  input: MediaClassificationInput,
+) {
+  return apiRequest<null>(
+    `/api/investigations/${investigationId}/evidence/${evidenceId}/media/${mediaId}`,
+    { method: 'POST', body: JSON.stringify(input) },
+  )
+}
+
+export function addJournalistProofMedia(
+  investigationId: string,
+  input: ProofMediaInput,
+) {
+  return apiRequest<null>(
+    `/api/investigations/${investigationId}/proof-media`,
+    { method: 'POST', body: JSON.stringify(input) },
   )
 }

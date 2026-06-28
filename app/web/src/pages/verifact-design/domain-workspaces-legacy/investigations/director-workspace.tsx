@@ -164,6 +164,7 @@ export function DirectorInvestigationWorkspace({
                   key={e.id}
                   evidence={e}
                   withClassification={false}
+                  investigationId={dossier.id}
                 />
               ))}
             </div>
