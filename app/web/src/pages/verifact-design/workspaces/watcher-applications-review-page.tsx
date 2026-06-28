@@ -56,6 +56,9 @@ export function WatcherApplicationsReviewPage() {
   const pendingApplications = applications.filter(
     (item) => item.status === 'PENDING',
   )
+  const decidedApplications = applications.filter(
+    (item) => item.status !== 'PENDING',
+  )
 
   if (isActorPending) {
     return (
@@ -162,10 +165,43 @@ export function WatcherApplicationsReviewPage() {
         </TabsContent>
         <TabsContent value="history" className="mt-4">
           <Card>
-            <CardContent className="p-5">
-              <p className="text-muted-foreground text-sm">
-                Decisions passees, refus motives et approbations de vigies.
-              </p>
+            <CardContent className="grid gap-3 p-5">
+              {applicationsQuery.isPending ? (
+                <p className="text-muted-foreground text-sm">
+                  Chargement de l&apos;historique...
+                </p>
+              ) : null}
+              {applicationsQuery.isError ? (
+                <p className="text-destructive text-sm">
+                  {toApiErrorMessage(applicationsQuery.error)}
+                </p>
+              ) : null}
+              {!applicationsQuery.isPending &&
+              decidedApplications.length === 0 ? (
+                <p className="text-muted-foreground text-sm">
+                  Aucune décision passée pour l&apos;instant.
+                </p>
+              ) : null}
+              {decidedApplications.map((item) => (
+                <div key={item.id} className="grid gap-2 rounded-lg border p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-medium">
+                      {item.applicantName ?? `Candidature #${item.id}`}
+                    </p>
+                    <StatusBadge status={item.status} />
+                  </div>
+                  <p className="text-muted-foreground text-sm">
+                    {item.motivation}
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    {new Date(item.updatedAt).toLocaleDateString('fr-FR', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </p>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </TabsContent>
