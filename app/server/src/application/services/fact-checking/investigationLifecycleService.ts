@@ -13,6 +13,7 @@ import {
 } from '../../../domain/events'
 import { Investigation } from '../../../domain/entities/Investigation'
 import { Report } from '../../../domain/entities/Report'
+import { CITIZEN_NOTIFICATION_BATCH_SIZE } from '../../../shared/constants'
 import { NotFoundError } from '../../../shared/errors'
 import {
   archivedUnverifiableMessageForStakeholder,
@@ -102,15 +103,26 @@ export class InvestigationLifecycleService {
   }
 
   async broadcastPublicationToCitizens(publicationId: string): Promise<void> {
-    const citizens = await this.citizenRepository.findAll()
-    if (citizens.length === 0) return
-
-    const notifications = NotificationFactory.createBatch(
-      citizens.map((citizen) => citizen.id),
-      'Une nouvelle publication officielle est disponible.',
-      publicationId,
-    )
-    await this.notificationRepository.saveMany(notifications)
+    // Resolve only ids (not full Citizen entities) and persist in bounded
+    // chunks — same pattern as correction broadcasts — so the fan-out stays
+    // flat as the citizen base grows.
+    const citizenIds = await this.citizenRepository.findAllIds()
+    for (
+      let index = 0;
+      index < citizenIds.length;
+      index += CITIZEN_NOTIFICATION_BATCH_SIZE
+    ) {
+      const batch = citizenIds.slice(
+        index,
+        index + CITIZEN_NOTIFICATION_BATCH_SIZE,
+      )
+      const notifications = NotificationFactory.createBatch(
+        batch,
+        'Une nouvelle publication officielle est disponible.',
+        publicationId,
+      )
+      await this.notificationRepository.saveMany(notifications)
+    }
   }
 
   async notifyArchiveAccepted(

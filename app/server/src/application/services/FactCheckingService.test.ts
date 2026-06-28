@@ -283,7 +283,7 @@ describe('FactCheckingService new workflows', () => {
     ctx.reportRepository.findById.mockResolvedValue(report)
     ctx.citizenRepository.findById.mockResolvedValue(citizen)
     ctx.journalistRepository.findById.mockResolvedValue(journalist)
-    ctx.citizenRepository.findAll.mockResolvedValue([citizen])
+    ctx.citizenRepository.findAllIds.mockResolvedValue([citizen.id])
 
     const publicationId = await ctx.service.approveInvestigation(
       director.id,
@@ -342,7 +342,7 @@ describe('FactCheckingService new workflows', () => {
     ctx.reportRepository.findById.mockResolvedValue(report)
     ctx.citizenRepository.findById.mockResolvedValue(citizen)
     ctx.journalistRepository.findById.mockResolvedValue(journalist)
-    ctx.citizenRepository.findAll.mockResolvedValue([citizen])
+    ctx.citizenRepository.findAllIds.mockResolvedValue([citizen.id])
 
     await ctx.service.approveInvestigation(director.id, investigation.id, {
       verifiedLinks: [
