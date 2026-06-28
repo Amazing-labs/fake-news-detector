@@ -75,6 +75,7 @@ export function createFactCheckingService(
     dependencies.evidenceRepository,
     dependencies.notificationRepository,
     dependencies.watcherApplicationRepository,
+    dependencies.directorRepository,
   )
 
   const journalistWorkflowService = new JournalistWorkflowService(

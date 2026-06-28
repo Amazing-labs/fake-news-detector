@@ -13,7 +13,7 @@ import type {
 } from '../../../domain/repositories'
 import { AuthoritySourceFactory } from '../../../domain/factories/AuthoritySourceFactory'
 import { InvestigationMediaFactory } from '../../../domain/factories/MediaFactory'
-import { NotificationFactory } from '../../../domain/factories/NotificationFactory'
+import { notifyActiveDirectors } from './directorNotifications'
 import { Investigation } from '../../../domain/entities/Investigation'
 import type {
   MediaCategory,
@@ -68,7 +68,9 @@ export class JournalistWorkflowService {
       )
     }
 
-    await this.notifyActiveDirectors(
+    await notifyActiveDirectors(
+      this.directorRepository,
+      this.notificationRepository,
       'Nouvelle enquête ouverte',
       `Une enquête a été ouverte sur le sujet « ${subject.theme} ».`,
     )
@@ -103,7 +105,9 @@ export class JournalistWorkflowService {
     const subject = await this.inboxSubjectRepository.findById(
       investigation.inboxSubjectId,
     )
-    await this.notifyActiveDirectors(
+    await notifyActiveDirectors(
+      this.directorRepository,
+      this.notificationRepository,
       'Enquête soumise en revue',
       subject
         ? `L'enquête sur « ${subject.theme} » est prête pour arbitrage.`
@@ -268,23 +272,6 @@ export class JournalistWorkflowService {
     }
 
     return []
-  }
-
-  // Fan an ALERT out to every active editorial director so the desk is aware of
-  // pipeline activity (an investigation just opened, or one is ready for
-  // arbitration). No-op when no active director exists.
-  private async notifyActiveDirectors(
-    theme: string,
-    message: string,
-  ): Promise<void> {
-    const directors = await this.directorRepository.findAll()
-    const activeDirectors = directors.filter((director) => director.isActive())
-    if (activeDirectors.length === 0) return
-
-    const notifications = activeDirectors.map((director) =>
-      NotificationFactory.createAlertNotification(director.id, theme, message),
-    )
-    await this.notificationRepository.saveMany(notifications)
   }
 
   private assertJournalistOwnsInvestigation(

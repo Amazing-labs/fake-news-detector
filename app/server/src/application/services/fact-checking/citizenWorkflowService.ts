@@ -1,5 +1,6 @@
 import type {
   ICitizenRepository,
+  IDirectorRepository,
   IEvidenceRepository,
   IInboxSubjectRepository,
   IInvestigationRepository,
@@ -19,6 +20,7 @@ import {
   NotFoundError,
   ValidationError,
 } from '../../../shared/errors'
+import { notifyActiveDirectors } from './directorNotifications'
 import type { SubmitReportInput, SubmitWatcherEvidenceInput } from './types'
 
 export class CitizenWorkflowService {
@@ -31,6 +33,7 @@ export class CitizenWorkflowService {
     private readonly evidenceRepository: IEvidenceRepository,
     private readonly notificationRepository: INotificationRepository,
     private readonly watcherApplicationRepository: IWatcherApplicationRepository,
+    private readonly directorRepository: IDirectorRepository,
   ) {}
 
   async submitReport(input: SubmitReportInput): Promise<string> {
@@ -96,6 +99,14 @@ export class CitizenWorkflowService {
       motivation,
     })
     await this.watcherApplicationRepository.save(application)
+
+    await notifyActiveDirectors(
+      this.directorRepository,
+      this.notificationRepository,
+      'Nouvelle candidature vigie',
+      `${citizen.name} a déposé une candidature pour devenir vigie.`,
+    )
+
     return application.id
   }
 

@@ -88,6 +88,7 @@ function buildService(deps: any = {}) {
   }
   const directorRepository = {
     findById: vi.fn(),
+    findAll: vi.fn(async () => []),
     update: vi.fn(),
     ...deps.directorRepository,
   }
