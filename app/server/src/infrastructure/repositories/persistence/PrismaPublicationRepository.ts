@@ -1,5 +1,8 @@
 import { Publication } from '../../../domain/entities/Publication'
-import type { IPublicationRepository } from '../../../domain/repositories/IPublicationRepository'
+import type {
+  IPublicationRepository,
+  PublicationRef,
+} from '../../../domain/repositories/IPublicationRepository'
 import {
   VerifiedLink,
   VerifiedMedia,
@@ -86,18 +89,14 @@ export class PrismaPublicationRepository implements IPublicationRepository {
     return row ? this.toDomain(row) : null
   }
 
-  async findByInvestigationIds(
+  async findRefsByInvestigationIds(
     investigationIds: string[],
-  ): Promise<Publication[]> {
+  ): Promise<PublicationRef[]> {
     if (investigationIds.length === 0) return []
-    const rows = await prisma.publication.findMany({
+    return prisma.publication.findMany({
       where: { investigationId: { in: investigationIds } },
-      include: {
-        verifiedMedia: { orderBy: { order: 'asc' } },
-        verifiedLinks: true,
-      },
+      select: { id: true, investigationId: true },
     })
-    return rows.map((row) => this.toDomain(row))
   }
 
   async findAll(options?: {

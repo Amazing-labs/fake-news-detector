@@ -326,19 +326,16 @@ export class FactCheckingQueryService {
       ]),
     )
 
-    const publications =
-      await this.publicationRepository.findByInvestigationIds(
+    const publicationRefs =
+      await this.publicationRepository.findRefsByInvestigationIds(
         investigations.map((investigation) => investigation.id),
       )
     const publicationByInvestigationId = new Map(
-      publications.map((publication) => [
-        publication.investigationId,
-        publication,
-      ]),
+      publicationRefs.map((ref) => [ref.investigationId, ref]),
     )
 
     const corrections = await this.correctionRepository.findByPublicationIds(
-      publications.map((publication) => publication.id),
+      publicationRefs.map((ref) => ref.id),
     )
     const correctionCountByPublicationId = new Map<string, number>()
     for (const correction of corrections) {

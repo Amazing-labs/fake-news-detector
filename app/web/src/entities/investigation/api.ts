@@ -5,27 +5,17 @@ import type {
   InvestigationList,
   InvestigationMediaList,
 } from './model'
-import type { MediaCategory, MediaType, SourceType, Verdict } from './schemas'
+import type {
+  InvestigationDraftInput,
+  MediaClassificationInput,
+  ProofMediaInput,
+} from './schemas'
 
-export type MediaClassificationInput = {
-  category: MediaCategory
-  reliability: Verdict
-  justification: string
-}
-
-export type ProofMediaInput = {
-  url: string
-  type: MediaType
-  order?: number
-  authoritySourceName: string
-  authoritySourceType: SourceType
-}
-
-export type InvestigationDraftInput = {
-  mediaCategory: MediaCategory | null
-  draftVerdict: Verdict
-  investigationNotes: string
-}
+export type {
+  InvestigationDraftInput,
+  MediaClassificationInput,
+  ProofMediaInput,
+} from './schemas'
 
 export type InvestigationScope =
   | 'in-progress'

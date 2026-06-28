@@ -102,6 +102,7 @@ export class JournalistWorkflowService {
   ): Promise<void> {
     const journalist = await this.getJournalistOrThrow(journalistId)
     const investigation = await this.getInvestigationOrThrow(investigationId)
+    this.assertJournalistOwnsInvestigation(investigation, journalistId)
 
     journalist.submitInvestigationDraft(
       investigation,

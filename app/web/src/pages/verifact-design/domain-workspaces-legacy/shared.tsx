@@ -279,12 +279,18 @@ export function MediaDropzone({
     void flushOrphanedUploads()
   }, [])
 
+  // Keep the latest callback in a ref so the URL-lifting effect can stay keyed
+  // to `entries` only, without going stale when the parent passes a new fn.
+  const onUrlsChangeRef = useRef(onUrlsChange)
+  useEffect(() => {
+    onUrlsChangeRef.current = onUrlsChange
+  }, [onUrlsChange])
+
   // Lift uploaded (non-local) URLs so a parent form can submit them.
   useEffect(() => {
-    onUrlsChange?.(
+    onUrlsChangeRef.current?.(
       entries.map((e) => e.url).filter((url) => !url.startsWith('#local:')),
     )
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entries])
 
   // Cleanup on unmount: delete pending uploads + revoke object URLs

@@ -277,6 +277,7 @@ export function SourceMediaCard({
           />
         )}
         <MediaClassificationForm
+          key={`${media.id}-${media.category ?? ''}-${media.reliability ?? ''}`}
           initial={{
             category: media.category ?? '',
             reliability: media.reliability ?? '',
@@ -458,6 +459,7 @@ function EvidenceMediaClassificationRow({
         title={`Media ${index + 1}`}
       />
       <MediaClassificationForm
+        key={`${media.id}-${media.category ?? ''}-${media.reliability ?? ''}`}
         initial={{
           category: media.category ?? '',
           reliability: media.reliability ?? '',

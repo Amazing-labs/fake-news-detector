@@ -117,7 +117,11 @@ export function JournalistInvestigationWorkspace({
     onError: (error) => toast.error(toApiErrorMessage(error)),
   })
 
-  const proofUrlValue = proofUploadedUrls[0] ?? proofUrl.trim()
+  // A LINK proof comes from the typed URL field; every other type comes from an
+  // uploaded asset. Keep them strictly separated so switching type can never
+  // submit a stale URL that belongs to the other input.
+  const proofUrlValue =
+    proofType === 'LINK' ? proofUrl.trim() : (proofUploadedUrls[0] ?? '')
   const addProofMutation = useMutation({
     mutationFn: () =>
       addJournalistProofMedia(dossier.id, {
@@ -276,9 +280,11 @@ export function JournalistInvestigationWorkspace({
                       Type
                       <select
                         value={proofType}
-                        onChange={(e) =>
+                        onChange={(e) => {
                           setProofType(e.target.value as MediaType)
-                        }
+                          setProofUrl('')
+                          setProofUploadedUrls([])
+                        }}
                         className={SELECT_CLASS}
                       >
                         {MEDIA_TYPE_OPTIONS.map(([v, l]) => (
@@ -315,6 +321,7 @@ export function JournalistInvestigationWorkspace({
                   </div>
                   {/* Always show drag-and-drop — URL field additionally for LINK type */}
                   <MediaDropzone
+                    key={proofType}
                     inputId="journalist-proof-media"
                     description="Glissez un fichier ou collez une URL ci-dessous pour les liens."
                     onUrlsChange={setProofUploadedUrls}
