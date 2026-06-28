@@ -1,6 +1,13 @@
 import { Link } from '@tanstack/react-router'
 import { ExternalLink } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import {
+  decisionQueryKeys,
+  listDirectorDecisions,
+  type Decision,
+} from '@entities/decision/api'
+import { toApiErrorMessage } from '@shared/api/http'
 import { cn } from '@shared/lib/utils'
 import { Button } from '@shared/ui/shadcn/button'
 import {
@@ -283,6 +290,139 @@ function HistoryCard(props: {
   )
 }
 
+// Maps a workflow-audit decision (its resulting status) to a display label and
+// badge style. Covers the statuses a director's decision can produce.
+const DECISION_META: Record<string, { label: string; className: string }> = {
+  PUBLISHED: {
+    label: 'Publiée',
+    className: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  },
+  NEEDS_REVISION: {
+    label: 'Renvoyée en correction',
+    className: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
+  },
+  ARCHIVED: {
+    label: 'Archivée',
+    className: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
+  },
+  CANCELED: {
+    label: 'Annulée',
+    className: 'bg-red-500/10 text-red-400 border-red-500/20',
+  },
+  PENDING_REVIEW: {
+    label: 'Soumise en revue',
+    className: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  },
+}
+
+function DecisionBadge({ status }: { status: string }) {
+  const meta = DECISION_META[status]
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium',
+        meta?.className ?? 'bg-muted text-muted-foreground border-transparent',
+      )}
+    >
+      {meta?.label ?? status}
+    </span>
+  )
+}
+
+function formatDecisionDate(iso: string): string {
+  const date = new Date(iso)
+  return Number.isNaN(date.getTime())
+    ? iso
+    : date.toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      })
+}
+
+// Director-only: the real history of past editorial decisions, backed by
+// GET /api/director/decisions (workflow audit trail).
+function DirectorDecisionsCard(props: {
+  title: string
+  description: string
+  action?: ReactNode
+}) {
+  const query = useQuery({
+    queryKey: decisionQueryKeys.list(),
+    queryFn: () => listDirectorDecisions(),
+  })
+  const decisions: Decision[] = query.data?.items ?? []
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>{props.title}</CardTitle>
+        <CardDescription>{props.description}</CardDescription>
+        {props.action ? <CardAction>{props.action}</CardAction> : null}
+      </CardHeader>
+      <CardContent>
+        {query.isPending ? (
+          <p className="text-muted-foreground text-sm">Chargement…</p>
+        ) : query.isError ? (
+          <p className="text-sm text-red-400">
+            {toApiErrorMessage(query.error)}
+          </p>
+        ) : decisions.length === 0 ? (
+          <p className="text-muted-foreground text-sm">
+            Aucune décision pour l&apos;instant.
+          </p>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Dossier</TableHead>
+                <TableHead>Motif</TableHead>
+                <TableHead>Décision</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="text-right">Détails</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {decisions.map((decision) => (
+                <TableRow key={decision.id}>
+                  <TableCell className="font-medium">
+                    {decision.title ?? 'Enquête'}
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {decision.comment ?? '—'}
+                  </TableCell>
+                  <TableCell>
+                    <DecisionBadge status={decision.newStatus} />
+                  </TableCell>
+                  <TableCell className="text-muted-foreground">
+                    {formatDecisionDate(decision.createdAt)}
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="text-muted-foreground hover:text-foreground size-8 rounded-full"
+                      asChild
+                      aria-label={`Voir ${decision.title ?? 'l’enquête'}`}
+                    >
+                      <Link
+                        to="/investigations/$investigationId"
+                        params={{ investigationId: decision.investigationId }}
+                      >
+                        <ExternalLink className="size-4" />
+                      </Link>
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
 export function WorkTable(props: {
   actor?: Actor
   title?: string
@@ -291,6 +431,19 @@ export function WorkTable(props: {
 }) {
   const actor = props.actor ?? 'journalist'
   const copy = historyCopy(actor)
+
+  if (actor === 'director') {
+    return (
+      <DirectorDecisionsCard
+        title={props.title ?? 'Historique des décisions'}
+        description={
+          props.description ??
+          'Publications, corrections, archivages et annulations arbitrés par la direction.'
+        }
+        action={props.action}
+      />
+    )
+  }
 
   if (actor === 'watcher') {
     return (
@@ -310,8 +463,7 @@ export function WorkTable(props: {
     )
   }
 
-  const historyKey =
-    actor === 'director' || actor === 'journalist' ? actor : 'citizen'
+  const historyKey = actor === 'journalist' ? 'journalist' : 'citizen'
 
   return (
     <HistoryCard

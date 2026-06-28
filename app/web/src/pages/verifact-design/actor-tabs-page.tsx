@@ -41,7 +41,7 @@ export function ActorTabsPage(props: {
         </div>
         {props.tabs.map((tab) => (
           <TabsContent key={tab.value} value={tab.value} className="mt-4">
-            <WorkTable title={props.title.replace('.', '')} />
+            <WorkTable actor={actor} title={props.title.replace('.', '')} />
           </TabsContent>
         ))}
       </Tabs>

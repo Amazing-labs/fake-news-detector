@@ -52,6 +52,10 @@ function NotificationPopover() {
   const notificationsQuery = useQuery({
     queryKey: notificationQueryKeys.list(),
     queryFn: () => listNotifications(),
+    // Poll so the bell lights up shortly after new notifications arrive,
+    // without requiring a navigation/manual refresh.
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
   })
   const notifications = notificationsQuery.data?.items ?? []
   const unreadCount = notifications.filter((n) => !n.isRead).length
