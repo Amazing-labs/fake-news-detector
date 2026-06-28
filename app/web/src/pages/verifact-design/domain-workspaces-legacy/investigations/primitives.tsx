@@ -83,9 +83,19 @@ export function DossierHeader({
   )
 }
 
-export function CategorySelect({ defaultValue }: { defaultValue?: string }) {
+export function CategorySelect({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (value: string) => void
+}) {
   return (
-    <select defaultValue={defaultValue ?? ''} className={SELECT_CLASS}>
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className={SELECT_CLASS}
+    >
       <option value="" disabled>
         Catégorie
       </option>
@@ -98,9 +108,19 @@ export function CategorySelect({ defaultValue }: { defaultValue?: string }) {
   )
 }
 
-export function ReliabilitySelect({ defaultValue }: { defaultValue?: string }) {
+export function ReliabilitySelect({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (value: string) => void
+}) {
   return (
-    <select defaultValue={defaultValue ?? ''} className={SELECT_CLASS}>
+    <select
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      className={SELECT_CLASS}
+    >
       <option value="" disabled>
         Fiabilité
       </option>

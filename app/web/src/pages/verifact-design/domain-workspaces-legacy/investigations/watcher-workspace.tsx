@@ -122,6 +122,7 @@ export function WatcherInvestigationWorkspace({
                   key={e.id}
                   evidence={e}
                   withClassification={false}
+                  investigationId={dossier.id}
                 />
               ))}
             </div>

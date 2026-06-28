@@ -91,6 +91,28 @@ export class JournalistWorkflowService {
     await this.workflowAuditRepository.save(audit)
   }
 
+  async updateInvestigationDraft(
+    journalistId: string,
+    investigationId: string,
+    input: {
+      mediaCategory: MediaCategory | null
+      draftVerdict: Verdict
+      investigationNotes: string
+    },
+  ): Promise<void> {
+    const journalist = await this.getJournalistOrThrow(journalistId)
+    const investigation = await this.getInvestigationOrThrow(investigationId)
+    this.assertJournalistOwnsInvestigation(investigation, journalistId)
+
+    journalist.submitInvestigationDraft(
+      investigation,
+      input.mediaCategory,
+      input.draftVerdict,
+      input.investigationNotes,
+    )
+    await this.investigationRepository.update(investigation)
+  }
+
   async updateInvestigationSourceMediaItem(
     journalistId: string,
     investigationId: string,

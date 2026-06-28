@@ -32,6 +32,14 @@ export class PrismaJournalistRepository implements IJournalistRepository {
     return row ? this.toDomain(row) : null
   }
 
+  async findByIds(ids: string[]): Promise<Journalist[]> {
+    if (ids.length === 0) return []
+    const rows = await prisma.actor.findMany({
+      where: { role: 'JOURNALIST', id: { in: ids } },
+    })
+    return rows.map((row) => this.toDomain(row))
+  }
+
   async findByEmail(email: string): Promise<Journalist | null> {
     const row = await prisma.actor.findUnique({ where: { email } })
     return row ? this.toDomain(row) : null

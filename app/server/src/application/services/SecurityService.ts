@@ -27,6 +27,8 @@ export type Permission =
   | 'report.pick'
   | 'investigation.update'
   | 'investigation.submitForReview'
+  // Staff (journalist + director): read the editorial inbox
+  | 'inbox.read'
   // Director
   | 'investigation.approve'
   | 'publication.correct'
@@ -52,6 +54,7 @@ const ROLE_PERMISSIONS: Record<ActorRole, ReadonlySet<Permission>> = {
     'report.pick',
     'investigation.update',
     'investigation.submitForReview',
+    'inbox.read',
     'notifications.read',
   ]),
   EDITORIAL_DIRECTOR: new Set<Permission>([
@@ -64,6 +67,7 @@ const ROLE_PERMISSIONS: Record<ActorRole, ReadonlySet<Permission>> = {
     'journalist.manage',
     'citizen.manage',
     'inbox.manage',
+    'inbox.read',
     'director.dashboard.read',
     'notifications.read',
   ]),

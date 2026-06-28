@@ -29,6 +29,12 @@ export const updateMediaSchema = z.object({
   justification: z.string().min(1),
 })
 
+export const updateInvestigationDraftSchema = z.object({
+  mediaCategory: mediaCategorySchema.nullable(),
+  draftVerdict: verdictSchema,
+  investigationNotes: z.string(),
+})
+
 export const proofMediaSchema = z.object({
   url: z.url(),
   type: mediaTypeSchema,

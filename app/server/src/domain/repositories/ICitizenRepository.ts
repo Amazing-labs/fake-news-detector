@@ -4,6 +4,7 @@ import type { Citizen, CitizenStatus, CitizenType } from '../entities/Citizen'
 export interface ICitizenRepository {
   save(citizen: Citizen): Promise<void>
   findById(id: string): Promise<Citizen | null>
+  findByIds(ids: string[]): Promise<Citizen[]>
   findByEmail(email: string): Promise<Citizen | null>
   findAll(): Promise<Citizen[]>
   findAllIds(): Promise<string[]>

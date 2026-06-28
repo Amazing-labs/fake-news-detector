@@ -415,8 +415,8 @@ describe('createApp', () => {
     const securityService = new SecurityService({
       authenticate: vi.fn(async () => ({
         isValid: true,
-        actorId: 'citizen-1',
-        role: 'CITIZEN' as const,
+        actorId: 'journalist-1',
+        role: 'JOURNALIST' as const,
       })),
     })
     const app = createApp({
@@ -475,7 +475,7 @@ describe('createApp', () => {
 
     const response = await app.request('/api/inbox-subjects?status=INVALID', {
       headers: {
-        Authorization: 'Bearer citizen-1:CITIZEN',
+        Authorization: 'Bearer journalist-1:JOURNALIST',
       },
     })
 
@@ -751,6 +751,7 @@ describe('report access authorization', () => {
     // path; an empty map is enough for these authorization-focused assertions.
     const citizenRepository = {
       findAll: vi.fn(async () => []),
+      findByIds: vi.fn(async () => []),
       findById: vi.fn(async () => null),
     }
 

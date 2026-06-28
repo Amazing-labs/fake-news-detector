@@ -260,9 +260,11 @@ type UploadEntry = {
 export function MediaDropzone({
   inputId = 'media-upload',
   description = 'Images, vidéos, audio, PDF ou documents utiles au desk.',
+  onUrlsChange,
 }: {
   inputId?: string
   description?: string
+  onUrlsChange?: (urls: string[]) => void
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
   const [isDragging, setIsDragging] = useState(false)
@@ -276,6 +278,20 @@ export function MediaDropzone({
   useEffect(() => {
     void flushOrphanedUploads()
   }, [])
+
+  // Keep the latest callback in a ref so the URL-lifting effect can stay keyed
+  // to `entries` only, without going stale when the parent passes a new fn.
+  const onUrlsChangeRef = useRef(onUrlsChange)
+  useEffect(() => {
+    onUrlsChangeRef.current = onUrlsChange
+  }, [onUrlsChange])
+
+  // Lift uploaded (non-local) URLs so a parent form can submit them.
+  useEffect(() => {
+    onUrlsChangeRef.current?.(
+      entries.map((e) => e.url).filter((url) => !url.startsWith('#local:')),
+    )
+  }, [entries])
 
   // Cleanup on unmount: delete pending uploads + revoke object URLs
   useEffect(() => {

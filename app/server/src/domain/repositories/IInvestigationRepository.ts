@@ -5,8 +5,10 @@ import { Evidence } from '../entities/Evidence'
 export interface IInvestigationRepository {
   save(investigation: Investigation): Promise<void>
   findById(id: string): Promise<Investigation | null>
+  findByIds(ids: string[]): Promise<Investigation[]>
   findByReportId(reportId: string): Promise<Investigation | null>
   findByInboxSubjectId(inboxSubjectId: string): Promise<Investigation | null>
+  findByInboxSubjectIds(inboxSubjectIds: string[]): Promise<Investigation[]>
   findByJournalistId(journalistId: string): Promise<Investigation[]>
   findAll(): Promise<Investigation[]>
   findInProgress(): Promise<Investigation[]>

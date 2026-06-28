@@ -41,6 +41,14 @@ export class PrismaAuthoritySourceRepository implements IAuthoritySourceReposito
     return row ? this.toDomain(row) : null
   }
 
+  async findByIds(ids: string[]): Promise<AuthoritySource[]> {
+    if (ids.length === 0) return []
+    const rows = await prisma.authoritySource.findMany({
+      where: { id: { in: ids } },
+    })
+    return rows.map((row) => this.toDomain(row))
+  }
+
   async findAll(): Promise<AuthoritySource[]> {
     const rows = await prisma.authoritySource.findMany()
     return rows.map((row) => this.toDomain(row))

@@ -47,6 +47,22 @@ export class PrismaInboxSubjectRepository implements IInboxSubjectRepository {
     return row ? this.toDomain(row) : null
   }
 
+  async findByIds(ids: string[]): Promise<InboxSubject[]> {
+    if (ids.length === 0) return []
+    const rows = await prisma.inboxSubject.findMany({
+      where: { id: { in: ids } },
+    })
+    return rows.map((row) => this.toDomain(row))
+  }
+
+  async findByReportIds(reportIds: string[]): Promise<InboxSubject[]> {
+    if (reportIds.length === 0) return []
+    const rows = await prisma.inboxSubject.findMany({
+      where: { reportId: { in: reportIds } },
+    })
+    return rows.map((row) => this.toDomain(row))
+  }
+
   async findAll(): Promise<InboxSubject[]> {
     const rows = await prisma.inboxSubject.findMany()
     return rows.map((row) => this.toDomain(row))

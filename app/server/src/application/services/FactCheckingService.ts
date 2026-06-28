@@ -94,6 +94,24 @@ export class FactCheckingService {
     )
   }
 
+  async updateInvestigationDraft(
+    journalistId: string,
+    investigationId: string,
+    input: {
+      mediaCategory: MediaCategory | null
+      draftVerdict: Verdict
+      investigationNotes: string
+    },
+  ): Promise<void> {
+    return this.runInTransaction(() =>
+      this.journalistWorkflowService.updateInvestigationDraft(
+        journalistId,
+        investigationId,
+        input,
+      ),
+    )
+  }
+
   async updateInvestigationSourceMediaItem(
     journalistId: string,
     investigationId: string,

@@ -32,6 +32,7 @@ export type JournalistProofMedia = {
 }
 
 export type WatcherEvidenceMedia = {
+  id: number
   url: string
   type: MediaType
   category?: MediaCategory | null

@@ -9,6 +9,8 @@ export interface IInboxSubjectRepository {
   save(subject: InboxSubject): Promise<void>
   update(subject: InboxSubject): Promise<void>
   findById(id: string): Promise<InboxSubject | null>
+  findByIds(ids: string[]): Promise<InboxSubject[]>
+  findByReportIds(reportIds: string[]): Promise<InboxSubject[]>
   findAll(): Promise<InboxSubject[]>
   findByStatus(status: InboxSubjectStatus): Promise<InboxSubject[]>
   findByOrigin(origin: InboxSubjectOrigin): Promise<InboxSubject[]>

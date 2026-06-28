@@ -50,6 +50,17 @@ export class PrismaCorrectionRepository implements ICorrectionRepository {
     return rows.map((r) => this.toDomain(r))
   }
 
+  async findByPublicationIds(publicationIds: string[]): Promise<Correction[]> {
+    if (publicationIds.length === 0) return []
+    const rows = await prisma.correction.findMany({
+      where: {
+        publicationId: { in: publicationIds },
+      },
+    })
+
+    return rows.map((r) => this.toDomain(r))
+  }
+
   async findByCorrectedBy(correctedById: string): Promise<Correction[]> {
     const rows = await prisma.correction.findMany({
       where: {
