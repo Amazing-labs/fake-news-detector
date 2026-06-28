@@ -26,6 +26,7 @@ import type {
 import type { Citizen } from '../../domain/entities/Citizen'
 import type { Correction } from '../../domain/entities/Correction'
 import type { Director } from '../../domain/entities/Director'
+import type { Evidence } from '../../domain/entities/Evidence'
 import type {
   InboxSubject,
   InboxSubjectStatus,
@@ -155,6 +156,14 @@ export interface EnrichedWatcherApplication {
 export interface EnrichedDecision {
   audit: WorkflowAudit
   title: string | null
+}
+
+// A watcher's past contribution: the evidence plus the title/status of the
+// investigation it was attached to, for the watcher's own history view.
+export interface EnrichedContribution {
+  evidence: Evidence
+  investigationTitle: string | null
+  investigationStatus: string | null
 }
 
 // Unified read-model for the media attached to an inbox subject: director
@@ -289,6 +298,37 @@ export class FactCheckingQueryService {
         : undefined
       return { audit, title: subject?.theme ?? null }
     })
+  }
+
+  // A watcher's own past contributions (evidence), newest first, each joined
+  // with the title and status of the investigation it was attached to.
+  async listContributionsForWatcherEnriched(
+    watcherId: string,
+  ): Promise<EnrichedContribution[]> {
+    const evidence = await this.evidenceRepository.findByWatcherId(watcherId)
+    const investigations = await this.investigationRepository.findByIds(
+      evidence.map((item) => item.investigationId),
+    )
+    const investigationById = new Map(
+      investigations.map((investigation) => [investigation.id, investigation]),
+    )
+    const inboxSubjects = await this.inboxSubjectByIdMap(
+      investigations.map((investigation) => investigation.inboxSubjectId),
+    )
+    return evidence
+      .slice()
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .map((item) => {
+        const investigation = investigationById.get(item.investigationId)
+        const subject = investigation
+          ? inboxSubjects.get(investigation.inboxSubjectId)
+          : undefined
+        return {
+          evidence: item,
+          investigationTitle: subject?.theme ?? null,
+          investigationStatus: investigation?.status ?? null,
+        }
+      })
   }
 
   // Dashboard KPIs for the connected actor. Citizens and watchers share the
