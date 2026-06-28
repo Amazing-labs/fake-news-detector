@@ -1,16 +1,19 @@
 import type {
   IAuthoritySourceRepository,
+  IDirectorRepository,
   IEvidenceRepository,
   IInboxSubjectMediaRepository,
   IInboxSubjectRepository,
   IInvestigationMediaRepository,
   IInvestigationRepository,
   IJournalistRepository,
+  INotificationRepository,
   IReportMediaRepository,
   IWorkflowAuditRepository,
 } from '../../../domain/repositories'
 import { AuthoritySourceFactory } from '../../../domain/factories/AuthoritySourceFactory'
 import { InvestigationMediaFactory } from '../../../domain/factories/MediaFactory'
+import { NotificationFactory } from '../../../domain/factories/NotificationFactory'
 import { Investigation } from '../../../domain/entities/Investigation'
 import type {
   MediaCategory,
@@ -36,6 +39,8 @@ export class JournalistWorkflowService {
     private readonly evidenceRepository: IEvidenceRepository,
     private readonly authoritySourceRepository: IAuthoritySourceRepository,
     private readonly workflowAuditRepository: IWorkflowAuditRepository,
+    private readonly directorRepository: IDirectorRepository,
+    private readonly notificationRepository: INotificationRepository,
   ) {}
 
   async pickInboxSubject(
@@ -63,6 +68,11 @@ export class JournalistWorkflowService {
       )
     }
 
+    await this.notifyActiveDirectors(
+      'Nouvelle enquête ouverte',
+      `Une enquête a été ouverte sur le sujet « ${subject.theme} ».`,
+    )
+
     return investigation
   }
 
@@ -89,6 +99,16 @@ export class JournalistWorkflowService {
     )
     await this.investigationRepository.update(investigation)
     await this.workflowAuditRepository.save(audit)
+
+    const subject = await this.inboxSubjectRepository.findById(
+      investigation.inboxSubjectId,
+    )
+    await this.notifyActiveDirectors(
+      'Enquête soumise en revue',
+      subject
+        ? `L'enquête sur « ${subject.theme} » est prête pour arbitrage.`
+        : 'Une enquête est prête pour arbitrage.',
+    )
   }
 
   async updateInvestigationDraft(
@@ -248,6 +268,23 @@ export class JournalistWorkflowService {
     }
 
     return []
+  }
+
+  // Fan an ALERT out to every active editorial director so the desk is aware of
+  // pipeline activity (an investigation just opened, or one is ready for
+  // arbitration). No-op when no active director exists.
+  private async notifyActiveDirectors(
+    theme: string,
+    message: string,
+  ): Promise<void> {
+    const directors = await this.directorRepository.findAll()
+    const activeDirectors = directors.filter((director) => director.isActive())
+    if (activeDirectors.length === 0) return
+
+    const notifications = activeDirectors.map((director) =>
+      NotificationFactory.createAlertNotification(director.id, theme, message),
+    )
+    await this.notificationRepository.saveMany(notifications)
   }
 
   private assertJournalistOwnsInvestigation(
