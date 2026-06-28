@@ -771,6 +771,7 @@ describe('report access authorization', () => {
       {} as any,
       {} as any,
       {} as any,
+      {} as any,
     )
 
     const reportController = new ReportController({} as any, queryService)

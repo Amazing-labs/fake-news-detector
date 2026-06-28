@@ -45,6 +45,19 @@ export function createDirectorRoutes(
   routes.openapi(
     createRoute({
       method: 'get',
+      path: '/decisions',
+      middleware: createPermissionMiddleware(
+        securityService,
+        'director.dashboard.read',
+      ),
+      responses: okResponse('Director decision history'),
+    }),
+    directorController.listDecisions,
+  )
+
+  routes.openapi(
+    createRoute({
+      method: 'get',
       path: '/citizens',
       middleware: manageCitizen,
       responses: okResponse('List of citizens'),

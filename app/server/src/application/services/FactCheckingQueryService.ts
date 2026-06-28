@@ -21,6 +21,7 @@ import type {
   IReportMediaRepository,
   IReportRepository,
   IWatcherApplicationRepository,
+  IWorkflowAuditRepository,
 } from '../../domain/repositories'
 import type { Citizen } from '../../domain/entities/Citizen'
 import type { Correction } from '../../domain/entities/Correction'
@@ -34,6 +35,7 @@ import type { Journalist } from '../../domain/entities/Journalist'
 import type { Publication } from '../../domain/entities/Publication'
 import type { Report } from '../../domain/entities/Report'
 import type { WatcherApplication } from '../../domain/entities/WatcherApplication'
+import type { WorkflowAudit } from '../../domain/entities/WorkflowAudit'
 import type {
   AuthoritySource,
   SourceType,
@@ -148,6 +150,13 @@ export interface EnrichedWatcherApplication {
   applicantName: string | null
 }
 
+// A past editorial decision: the workflow-audit row plus the title of the
+// investigation it acted on, resolved on the read side for the history view.
+export interface EnrichedDecision {
+  audit: WorkflowAudit
+  title: string | null
+}
+
 // Unified read-model for the media attached to an inbox subject: director
 // subjects carry their own InboxSubjectMedia, report-origin subjects surface the
 // originating report's media. Origin tags the provenance for the UI.
@@ -179,6 +188,7 @@ export class FactCheckingQueryService {
     private readonly inboxSubjectMediaRepository: IInboxSubjectMediaRepository,
     private readonly reportMediaRepository: IReportMediaRepository,
     private readonly authoritySourceRepository: IAuthoritySourceRepository,
+    private readonly workflowAuditRepository: IWorkflowAuditRepository,
   ) {}
 
   // ---------------------------------------------------------------------------
@@ -254,6 +264,31 @@ export class FactCheckingQueryService {
         this.notificationRepository.count(),
       ])
     return { pendingReviews, publishedCount, totalNotifications }
+  }
+
+  // Past editorial decisions taken by a director (publish / send-back to
+  // revision / archive / cancel), newest first, each joined with the title of
+  // the investigation it acted on. Backed by the workflow audit trail.
+  async listDirectorDecisionsEnriched(
+    directorId: string,
+  ): Promise<EnrichedDecision[]> {
+    const audits = await this.workflowAuditRepository.findByActorId(directorId)
+    const investigations = await this.investigationRepository.findByIds(
+      audits.map((audit) => audit.investigationId),
+    )
+    const investigationById = new Map(
+      investigations.map((investigation) => [investigation.id, investigation]),
+    )
+    const inboxSubjects = await this.inboxSubjectByIdMap(
+      investigations.map((investigation) => investigation.inboxSubjectId),
+    )
+    return audits.map((audit) => {
+      const investigation = investigationById.get(audit.investigationId)
+      const subject = investigation
+        ? inboxSubjects.get(investigation.inboxSubjectId)
+        : undefined
+      return { audit, title: subject?.theme ?? null }
+    })
   }
 
   // Dashboard KPIs for the connected actor. Citizens and watchers share the

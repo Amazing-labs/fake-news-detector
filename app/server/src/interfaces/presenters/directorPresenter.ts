@@ -1,4 +1,24 @@
 import type { Investigation } from '../../domain/entities/Investigation'
+import type { EnrichedDecision } from '../../application/services/FactCheckingQueryService'
+
+export function presentDecision({ audit, title }: EnrichedDecision) {
+  return {
+    id: audit.id,
+    investigationId: audit.investigationId,
+    title,
+    newStatus: audit.newStatus,
+    previousStatus: audit.previousStatus,
+    comment: audit.comment,
+    createdAt: audit.createdAt.toISOString(),
+  }
+}
+
+export function presentDecisionList(decisions: EnrichedDecision[]) {
+  return {
+    items: decisions.map(presentDecision),
+    total: decisions.length,
+  }
+}
 
 export function presentDirectorDashboard(input: {
   pendingReviews: Investigation[]

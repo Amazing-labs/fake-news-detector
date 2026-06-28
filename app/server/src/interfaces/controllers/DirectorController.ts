@@ -5,7 +5,10 @@ import { noContent, ok } from '../http/responses'
 import type { AppVariables } from '../http/types'
 import { requiredParam, validatedJson } from '../http/request'
 import type { citizenManagementSchema } from '../http/schemas/common'
-import { presentDirectorDashboard } from '../presenters/directorPresenter'
+import {
+  presentDecisionList,
+  presentDirectorDashboard,
+} from '../presenters/directorPresenter'
 import type { z } from 'zod'
 
 export class DirectorController {
@@ -17,6 +20,14 @@ export class DirectorController {
   getDashboard = async (c: Context<{ Variables: AppVariables }>) => {
     const dashboard = await this.queryService.getDirectorDashboard()
     return ok(c, presentDirectorDashboard(dashboard))
+  }
+
+  listDecisions = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
+    const decisions = await this.queryService.listDirectorDecisionsEnriched(
+      actor.actorId,
+    )
+    return ok(c, presentDecisionList(decisions))
   }
 
   banCitizen = async (c: Context<{ Variables: AppVariables }>) => {
