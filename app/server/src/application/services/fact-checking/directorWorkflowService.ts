@@ -167,6 +167,7 @@ export class DirectorWorkflowService {
       investigation.journalistId,
       'Enquête à corriger',
       `Votre enquête a été rejetée: ${reason}`,
+      'WARNING',
     )
     await this.notificationRepository.save(notification)
   }
@@ -240,6 +241,7 @@ export class DirectorWorkflowService {
         reportCitizenId,
         'Signalement supprimé',
         `Votre signalement a été supprimé définitivement: ${reason}`,
+        'INFO',
       )
       await this.notificationRepository.save(notification)
     }
@@ -306,6 +308,7 @@ export class DirectorWorkflowService {
       citizen.id,
       'Watcher',
       'Votre candidature watcher a été approuvée.',
+      'SUCCESS',
     )
     await this.notificationRepository.save(notification)
   }
@@ -328,6 +331,7 @@ export class DirectorWorkflowService {
       application.actorId,
       'Watcher',
       'Votre candidature watcher a été rejetée.',
+      'INFO',
     )
     await this.notificationRepository.save(notification)
   }

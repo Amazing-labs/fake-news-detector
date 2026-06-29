@@ -9,6 +9,10 @@ export type NotificationType =
   | 'ALERT'
   | 'ARCHIVED_PUBLICATION'
 
+// Visual tone / severity, orthogonal to the type: a SUCCESS is pleasant, a
+// WARNING puts pressure (action required), an INFO simply informs.
+export type NotificationLevel = 'SUCCESS' | 'WARNING' | 'INFO'
+
 export class Notification {
   constructor(
     public readonly id: string,
@@ -21,6 +25,7 @@ export class Notification {
     public updatedAt: Date = new Date(),
     public publicationId?: string,
     public investigationId?: string,
+    public level: NotificationLevel = 'INFO',
   ) {}
 
   markAsRead(): void {
@@ -56,6 +61,7 @@ export class Notification {
     actorId: string,
     publicationId?: string,
     investigationId?: string,
+    level: NotificationLevel = 'INFO',
   ): Notification {
     const normalizedPublicationId = publicationId?.trim() || undefined
     const normalizedInvestigationId = investigationId?.trim() || undefined
@@ -97,6 +103,7 @@ export class Notification {
           new Date(),
           normalizedPublicationId,
           undefined,
+          level,
         )
       case 'CORRECTION':
         return new Notification(
@@ -110,6 +117,7 @@ export class Notification {
           new Date(),
           normalizedPublicationId,
           undefined,
+          level,
         )
       case 'ALERT':
         return new Notification(
@@ -123,6 +131,7 @@ export class Notification {
           new Date(),
           normalizedPublicationId,
           undefined,
+          level,
         )
       case 'ARCHIVED_PUBLICATION':
         return new Notification(
@@ -136,6 +145,7 @@ export class Notification {
           new Date(),
           undefined,
           normalizedInvestigationId,
+          level,
         )
       default:
         throw new DomainError('Invalid notification type')
@@ -147,6 +157,7 @@ export class Notification {
     publicationTheme: string,
     publicationMessage: string,
     publicationId: string,
+    level: NotificationLevel = 'INFO',
   ): Notification {
     return this.create(
       'PUBLICATION',
@@ -154,6 +165,8 @@ export class Notification {
       publicationMessage,
       citizenId,
       publicationId,
+      undefined,
+      level,
     )
   }
 
@@ -162,6 +175,7 @@ export class Notification {
     correctionTitle: string,
     correctionMessage: string,
     publicationId: string,
+    level: NotificationLevel = 'INFO',
   ): Notification {
     return this.create(
       'CORRECTION',
@@ -169,6 +183,8 @@ export class Notification {
       correctionMessage,
       actorId,
       publicationId,
+      undefined,
+      level,
     )
   }
 
@@ -176,8 +192,17 @@ export class Notification {
     journalistId: string,
     theme: string,
     message: string,
+    level: NotificationLevel = 'WARNING',
   ): Notification {
-    return this.create('ALERT', theme, message, journalistId)
+    return this.create(
+      'ALERT',
+      theme,
+      message,
+      journalistId,
+      undefined,
+      undefined,
+      level,
+    )
   }
 
   static createArchivedPublicationNotification(
@@ -185,6 +210,7 @@ export class Notification {
     theme: string,
     message: string,
     investigationId: string,
+    level: NotificationLevel = 'INFO',
   ): Notification {
     return this.create(
       'ARCHIVED_PUBLICATION',
@@ -193,6 +219,7 @@ export class Notification {
       actorId,
       undefined,
       investigationId,
+      level,
     )
   }
 }

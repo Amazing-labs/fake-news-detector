@@ -4,9 +4,10 @@ import type {
 } from '../../../domain/repositories'
 import { NotificationFactory } from '../../../domain/factories/NotificationFactory'
 
-// Fan an ALERT out to every active editorial director so the desk is aware of
-// pipeline activity it should react to (an investigation opened, one is ready
-// for arbitration, a watcher applied…). No-op when no active director exists.
+// Inform every active editorial director about pipeline activity it should be
+// aware of (an investigation opened, one is ready for arbitration, a watcher
+// applied…). These are INFO-level (awareness, not pressure). No-op when no
+// active director exists.
 export async function notifyActiveDirectors(
   directorRepository: IDirectorRepository,
   notificationRepository: INotificationRepository,
@@ -18,7 +19,12 @@ export async function notifyActiveDirectors(
   if (activeDirectors.length === 0) return
 
   const notifications = activeDirectors.map((director) =>
-    NotificationFactory.createAlertNotification(director.id, theme, message),
+    NotificationFactory.createAlertNotification(
+      director.id,
+      theme,
+      message,
+      'INFO',
+    ),
   )
   await notificationRepository.saveMany(notifications)
 }

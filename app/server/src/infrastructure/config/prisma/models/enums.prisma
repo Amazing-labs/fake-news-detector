@@ -110,3 +110,11 @@ enum NotificationType {
   ALERT
   ARCHIVED_PUBLICATION
 }
+
+// Visual tone / severity, orthogonal to NotificationType: the same event type
+// can be a pleasant SUCCESS, a pressing WARNING, or a neutral INFO.
+enum NotificationLevel {
+  SUCCESS
+  WARNING
+  INFO
+}

@@ -4,6 +4,7 @@ export function presentNotification(notification: Notification) {
   return {
     id: notification.id,
     type: notification.type,
+    level: notification.level,
     theme: notification.theme,
     message: notification.message,
     actorId: notification.actorId,
