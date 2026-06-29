@@ -79,7 +79,8 @@ function MediaClassificationForm({
       <Button
         size="sm"
         className="w-fit"
-        disabled={!canSave || isPending}
+        disabled={!canSave}
+        loading={isPending}
         onClick={() =>
           onSave({
             category: category as MediaCategory,

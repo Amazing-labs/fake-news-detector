@@ -178,8 +178,12 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
           </div>
 
           <div className="grid gap-2 sm:grid-cols-3">
-            <DarkButton type="submit" disabled={isPending}>
-              {publishMutation.isPending ? 'Publication...' : 'Publier'}
+            <DarkButton
+              type="submit"
+              disabled={isPending}
+              loading={publishMutation.isPending}
+            >
+              Publier
             </DarkButton>
             <DarkButton
               type="button"
@@ -243,13 +247,11 @@ export function ApproveInvestigationForm(props: { investigationId?: string }) {
                 <DarkButton
                   type="button"
                   onClick={submitCommentAction}
-                  disabled={activeCommentMutation.isPending}
+                  loading={activeCommentMutation.isPending}
                 >
-                  {activeCommentMutation.isPending
-                    ? 'Envoi...'
-                    : commentAction === 'reject'
-                      ? 'Confirmer le refus'
-                      : "Confirmer l'archivage"}
+                  {commentAction === 'reject'
+                    ? 'Confirmer le refus'
+                    : "Confirmer l'archivage"}
                 </DarkButton>
               </div>
             </div>

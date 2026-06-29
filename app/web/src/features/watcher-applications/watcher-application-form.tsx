@@ -59,9 +59,9 @@ export function WatcherApplicationForm() {
         />
 
         <div>
-          <DarkButton type="submit" disabled={mutation.isPending}>
-            <UserPlus className="size-4" />
-            {mutation.isPending ? 'Envoi...' : 'Envoyer la candidature'}
+          <DarkButton type="submit" loading={mutation.isPending}>
+            {!mutation.isPending && <UserPlus className="size-4" />}
+            Envoyer la candidature
           </DarkButton>
         </div>
       </form>

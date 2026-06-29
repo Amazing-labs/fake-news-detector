@@ -112,8 +112,12 @@ export function SubmitWatcherEvidenceForm() {
           </p>
         )}
         <div>
-          <DarkButton type="submit" disabled={mutation.isPending || !canSubmit}>
-            {mutation.isPending ? 'Envoi...' : 'Envoyer la preuve'}
+          <DarkButton
+            type="submit"
+            disabled={!canSubmit}
+            loading={mutation.isPending}
+          >
+            Envoyer la preuve
           </DarkButton>
         </div>
       </form>

@@ -211,7 +211,8 @@ function ReasonForm(props: {
         </Button>
         <Button
           variant={isBan ? 'destructive' : 'default'}
-          disabled={!reason || props.isPending}
+          disabled={!reason}
+          loading={props.isPending}
           onClick={() => reason && props.onConfirm(reason, details.trim())}
         >
           {isBan ? 'Bannir' : 'Désactiver'}
@@ -299,6 +300,10 @@ function JournalistsList() {
               <Button
                 size="sm"
                 disabled={statusMutation.isPending}
+                loading={
+                  statusMutation.isPending &&
+                  statusMutation.variables?.journalistId === journalist.id
+                }
                 onClick={() =>
                   statusMutation.mutate({
                     journalistId: journalist.id,
@@ -444,6 +449,10 @@ function CitizensList({ watcherOnly = false }: { watcherOnly?: boolean }) {
               <Button
                 size="sm"
                 disabled={statusMutation.isPending}
+                loading={
+                  statusMutation.isPending &&
+                  statusMutation.variables?.citizenId === citizen.id
+                }
                 onClick={() =>
                   statusMutation.mutate({
                     citizenId: citizen.id,

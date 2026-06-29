@@ -128,6 +128,11 @@ export function WatcherApplicationsReviewPage() {
                     <Button
                       size="sm"
                       disabled={decisionMutation.isPending}
+                      loading={
+                        decisionMutation.isPending &&
+                        decisionMutation.variables?.id === item.id &&
+                        decisionMutation.variables?.decision === 'approve'
+                      }
                       onClick={() =>
                         decisionMutation.mutate({
                           id: item.id,
@@ -135,13 +140,22 @@ export function WatcherApplicationsReviewPage() {
                         })
                       }
                     >
-                      <CheckCircle2 />
+                      {!(
+                        decisionMutation.isPending &&
+                        decisionMutation.variables?.id === item.id &&
+                        decisionMutation.variables?.decision === 'approve'
+                      ) && <CheckCircle2 />}
                       Approuver
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       disabled={decisionMutation.isPending}
+                      loading={
+                        decisionMutation.isPending &&
+                        decisionMutation.variables?.id === item.id &&
+                        decisionMutation.variables?.decision === 'reject'
+                      }
                       onClick={() =>
                         decisionMutation.mutate({
                           id: item.id,

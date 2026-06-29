@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Spinner } from './loader'
 
 export function DarkFormCard(props: {
   title: string
@@ -85,9 +86,19 @@ export function DarkButton(
   props: React.ButtonHTMLAttributes<HTMLButtonElement> & {
     children: ReactNode
     variant?: 'primary' | 'secondary'
+    // Show a leading spinner and disable the button while a server action runs.
+    loading?: boolean
   },
 ) {
-  const { className, variant = 'primary', type = 'button', ...rest } = props
+  const {
+    className,
+    variant = 'primary',
+    type = 'button',
+    loading = false,
+    disabled,
+    children,
+    ...rest
+  } = props
   const tone =
     variant === 'primary'
       ? 'bg-primary text-primary-foreground hover:bg-primary/90'
@@ -96,8 +107,12 @@ export function DarkButton(
   return (
     <button
       type={type}
+      disabled={disabled || loading}
       className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${tone} ${className ?? ''}`}
       {...rest}
-    />
+    >
+      {loading ? <Spinner /> : null}
+      {children}
+    </button>
   )
 }

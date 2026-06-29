@@ -195,9 +195,9 @@ export function NotificationsWorkspacePage() {
               variant="outline"
               size="sm"
               onClick={() => markAll.mutate()}
-              disabled={markAll.isPending}
+              loading={markAll.isPending}
             >
-              <CheckCheck className="size-4" />
+              {!markAll.isPending && <CheckCheck className="size-4" />}
               Tout lire
             </Button>
           )}

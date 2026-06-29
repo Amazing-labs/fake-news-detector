@@ -197,9 +197,11 @@ export function JournalistInvestigationWorkspace({
                 <Button
                   size="sm"
                   onClick={handleSubmitForReview}
-                  disabled={submitMutation.isPending}
+                  loading={submitMutation.isPending}
                 >
-                  <ClipboardCheck className="size-4" />
+                  {!submitMutation.isPending && (
+                    <ClipboardCheck className="size-4" />
+                  )}
                   {submitMutation.isPending
                     ? 'Soumission…'
                     : 'Soumettre en revue'}
@@ -340,9 +342,11 @@ export function JournalistInvestigationWorkspace({
                   <Button
                     className="w-fit"
                     onClick={handleAddProof}
-                    disabled={addProofMutation.isPending}
+                    loading={addProofMutation.isPending}
                   >
-                    <FilePlus2 className="size-4" />
+                    {!addProofMutation.isPending && (
+                      <FilePlus2 className="size-4" />
+                    )}
                     {addProofMutation.isPending
                       ? 'Ajout…'
                       : 'Ajouter la preuve'}
@@ -430,7 +434,7 @@ export function JournalistInvestigationWorkspace({
                   size="sm"
                   className="w-fit"
                   onClick={() => saveDraftMutation.mutate()}
-                  disabled={saveDraftMutation.isPending}
+                  loading={saveDraftMutation.isPending}
                 >
                   {saveDraftMutation.isPending
                     ? 'Enregistrement…'
