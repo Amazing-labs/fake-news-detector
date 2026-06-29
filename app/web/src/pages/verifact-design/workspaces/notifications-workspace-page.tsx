@@ -3,12 +3,11 @@ import { Link } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   AlertTriangle,
-  Archive,
   ArrowLeft,
   CheckCheck,
+  CheckCircle2,
   ExternalLink,
-  Newspaper,
-  RotateCcw,
+  Info,
 } from 'lucide-react'
 import { toApiErrorMessage } from '@shared/api/http'
 import { cn } from '@shared/lib/utils'
@@ -32,99 +31,77 @@ import {
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 
-const notificationTypeConfig = {
-  PUBLICATION: {
-    icon: Newspaper,
-    label: 'Publication',
-    intent: 'Verdict public disponible',
-    actionLabel: 'Ouvrir la publication',
-    description:
-      'Une enquête a été finalisée et son verdict est désormais public. Vous pouvez consulter les preuves, les sources vérifiées et le verdict officiel.',
-    color: 'blue' as const,
+// Visual tone is driven by `level` (success / warning / info), so a pleasant
+// event no longer looks like an alarm. `type` only decides where the action
+// link points (see TYPE_ACTION_LABEL / getNotificationTarget).
+const levelConfig = {
+  SUCCESS: {
+    icon: CheckCircle2,
+    label: 'Succès',
+    intent: 'Bonne nouvelle',
+    color: 'green' as const,
   },
-  CORRECTION: {
-    icon: RotateCcw,
-    label: 'Correctif',
-    intent: 'Publication corrigée',
-    actionLabel: 'Ouvrir le correctif',
-    description:
-      'Une publication existante a été révisée après une nouvelle validation éditoriale. Un correctif officiel remplace ou complète le contenu initial.',
-    color: 'amber' as const,
-  },
-  ALERT: {
+  WARNING: {
     icon: AlertTriangle,
     label: 'Alerte',
     intent: 'Intervention attendue',
-    actionLabel: 'Retour aux notifications',
-    description:
-      'Une action est requise de votre part : une preuve, une révision ou une décision éditoriale attend votre intervention dans les meilleurs délais.',
     color: 'red' as const,
   },
-  ARCHIVED_PUBLICATION: {
-    icon: Archive,
-    label: 'Archive',
-    intent: 'Enquête archivée',
-    actionLabel: 'Ouvrir le dossier',
-    description:
-      "Une enquête a été classée sans suite par la direction éditoriale. Le dossier reste accessible à titre d'archive pour référence future.",
-    color: 'zinc' as const,
+  INFO: {
+    icon: Info,
+    label: 'Information',
+    intent: 'Pour information',
+    color: 'blue' as const,
   },
 } as const
 
+// Action-button label per notification type (the link target, not the tone).
+const typeActionLabel: Record<string, string> = {
+  PUBLICATION: 'Ouvrir la publication',
+  CORRECTION: 'Ouvrir le correctif',
+  ARCHIVED_PUBLICATION: 'Ouvrir le dossier',
+}
+
 const colorMap = {
+  green: {
+    icon: 'bg-emerald-500/15 text-emerald-400',
+    badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+    border: 'border-emerald-500/20',
+  },
   blue: {
     icon: 'bg-blue-500/15 text-blue-400',
     badge: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
     border: 'border-blue-500/20',
-  },
-  amber: {
-    icon: 'bg-amber-500/15 text-amber-400',
-    badge: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-    border: 'border-amber-500/20',
   },
   red: {
     icon: 'bg-red-500/15 text-red-400',
     badge: 'bg-red-500/10 text-red-400 border-red-500/20',
     border: 'border-red-500/20',
   },
-  zinc: {
-    icon: 'bg-zinc-500/15 text-zinc-400',
-    badge: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
-    border: 'border-zinc-500/20',
-  },
 }
 
 type NotifItem = NotificationItem
 
-function getNotificationConfig(type: string) {
-  return (
-    notificationTypeConfig[type as keyof typeof notificationTypeConfig] ??
-    notificationTypeConfig.ALERT
-  )
+function getLevelConfig(level: string) {
+  return levelConfig[level as keyof typeof levelConfig] ?? levelConfig.INFO
 }
 
 function getNotificationTarget(item: NotifItem) {
+  const label = typeActionLabel[item.type] ?? 'Voir le détail'
+
   if (item.publicationId) {
-    return {
-      kind: 'publication',
-      id: item.publicationId,
-      label: getNotificationConfig(item.type).actionLabel,
-    } as const
+    return { kind: 'publication', id: item.publicationId, label } as const
   }
 
   if (item.investigationId) {
-    return {
-      kind: 'investigation',
-      id: item.investigationId,
-      label: getNotificationConfig(item.type).actionLabel,
-    } as const
+    return { kind: 'investigation', id: item.investigationId, label } as const
   }
 
   return null
 }
 
 function NotificationRow({ item }: { item: NotifItem }) {
-  const config = getNotificationConfig(item.type)
+  const config = getLevelConfig(item.level)
   const Icon = config.icon
   const target = getNotificationTarget(item)
 
@@ -333,7 +310,7 @@ export function NotificationDetailWorkspacePage({
       </AppLayout>
     )
   }
-  const config = getNotificationConfig(item.type)
+  const config = getLevelConfig(item.level)
   const target = getNotificationTarget(item)
   const Icon = config.icon
   const colors = colorMap[config.color]

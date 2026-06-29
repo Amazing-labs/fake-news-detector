@@ -1,11 +1,10 @@
 import { Link, useLocation, useNavigate } from '@tanstack/react-router'
 import {
   AlertTriangle,
-  Archive,
   Bell,
+  CheckCircle2,
+  Info,
   Moon,
-  Newspaper,
-  RotateCcw,
   Search,
   ShieldCheck,
   Sun,
@@ -41,11 +40,18 @@ import type { Actor, PageKind } from './types'
 
 let tabletNavScrollLeft = 0
 
-const NOTIF_ICONS: Record<string, ComponentType<{ className?: string }>> = {
-  PUBLICATION: Newspaper,
-  CORRECTION: RotateCcw,
-  ALERT: AlertTriangle,
-  ARCHIVED_PUBLICATION: Archive,
+// Icon + tone come from the notification level (success / warning / info) so a
+// pleasant notification looks pleasant and an alert puts pressure.
+const LEVEL_ICONS: Record<string, ComponentType<{ className?: string }>> = {
+  SUCCESS: CheckCircle2,
+  WARNING: AlertTriangle,
+  INFO: Info,
+}
+
+const LEVEL_TONE: Record<string, string> = {
+  SUCCESS: 'bg-emerald-500/15 text-emerald-400',
+  WARNING: 'bg-red-500/15 text-red-400',
+  INFO: 'bg-blue-500/15 text-blue-400',
 }
 
 function NotificationPopover() {
@@ -58,7 +64,15 @@ function NotificationPopover() {
     refetchIntervalInBackground: false,
   })
   const notifications = notificationsQuery.data?.items ?? []
-  const unreadCount = notifications.filter((n) => !n.isRead).length
+  const unreadItems = notifications.filter((n) => !n.isRead)
+  const unreadCount = unreadItems.length
+  // Tint the bell badge by the most pressing unread level: warning (pressure)
+  // wins, then success, otherwise info.
+  const badgeTone = unreadItems.some((n) => n.level === 'WARNING')
+    ? 'bg-destructive'
+    : unreadItems.some((n) => n.level === 'SUCCESS')
+      ? 'bg-emerald-500'
+      : 'bg-blue-500'
 
   return (
     <HoverCard openDelay={150} closeDelay={250}>
@@ -68,8 +82,18 @@ function NotificationPopover() {
             <Bell className="size-4" />
             {unreadCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 flex size-3">
-                <span className="bg-destructive absolute inline-flex size-full animate-ping rounded-full opacity-60" />
-                <span className="bg-destructive relative inline-flex size-3 items-center justify-center rounded-full text-[8px] font-bold text-white">
+                <span
+                  className={cn(
+                    'absolute inline-flex size-full animate-ping rounded-full opacity-60',
+                    badgeTone,
+                  )}
+                />
+                <span
+                  className={cn(
+                    'relative inline-flex size-3 items-center justify-center rounded-full text-[8px] font-bold text-white',
+                    badgeTone,
+                  )}
+                >
                   {unreadCount}
                 </span>
               </span>
@@ -91,8 +115,9 @@ function NotificationPopover() {
         {/* Notification rows */}
         <div className="max-h-[340px] overflow-y-auto">
           {notifications.map((item) => {
-            const Icon = NOTIF_ICONS[item.type] ?? Bell
+            const Icon = LEVEL_ICONS[item.level] ?? Bell
             const isRead = item.isRead
+            const tone = LEVEL_TONE[item.level] ?? ''
             return (
               <Link
                 key={item.id}
@@ -105,8 +130,8 @@ function NotificationPopover() {
               >
                 <div
                   className={cn(
-                    'bg-muted mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full',
-                    !isRead && 'bg-primary/10 text-primary',
+                    'mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full',
+                    isRead ? 'bg-muted text-muted-foreground' : tone,
                   )}
                 >
                   <Icon className="size-3.5" />
