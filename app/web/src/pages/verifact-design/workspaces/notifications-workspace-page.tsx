@@ -21,6 +21,7 @@ import {
 } from '@entities/notification/api'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
+import { LoadingRow, PageLoader } from '@shared/ui/loader'
 
 import {
   Tabs,
@@ -234,15 +235,27 @@ export function NotificationsWorkspacePage() {
           </TabsList>
 
           <TabsContent value="all" className="mt-4">
-            <div className="grid gap-2">
-              {items.map((item) => (
-                <NotificationRow key={item.id} item={item} />
-              ))}
-            </div>
+            {notificationsQuery.isPending ? (
+              <LoadingRow label="Chargement des notifications…" />
+            ) : notificationsQuery.isError ? (
+              <p className="text-destructive text-sm">
+                {toApiErrorMessage(notificationsQuery.error)}
+              </p>
+            ) : items.length > 0 ? (
+              <div className="grid gap-2">
+                {items.map((item) => (
+                  <NotificationRow key={item.id} item={item} />
+                ))}
+              </div>
+            ) : (
+              <EmptyState label="Aucune notification disponible" />
+            )}
           </TabsContent>
 
           <TabsContent value="unread" className="mt-4">
-            {unread.length > 0 ? (
+            {notificationsQuery.isPending ? (
+              <LoadingRow label="Chargement des notifications…" />
+            ) : unread.length > 0 ? (
               <div className="grid gap-2">
                 {unread.map((item) => (
                   <NotificationRow key={item.id} item={item} />
@@ -254,7 +267,9 @@ export function NotificationsWorkspacePage() {
           </TabsContent>
 
           <TabsContent value="read" className="mt-4">
-            {read.length > 0 ? (
+            {notificationsQuery.isPending ? (
+              <LoadingRow label="Chargement des notifications…" />
+            ) : read.length > 0 ? (
               <div className="grid gap-2">
                 {read.map((item) => (
                   <NotificationRow key={item.id} item={item} />
@@ -299,20 +314,22 @@ export function NotificationDetailWorkspacePage({
   if (!item) {
     return (
       <AppLayout actor={actor} page="notifications">
-        <div className="rounded-xl border p-8 text-center">
-          <p
-            className={cn(
-              'font-medium',
-              notificationsQuery.isError && 'text-destructive',
-            )}
-          >
-            {notificationsQuery.isPending
-              ? 'Chargement…'
-              : notificationsQuery.isError
+        {notificationsQuery.isPending ? (
+          <PageLoader label="Chargement de la notification…" />
+        ) : (
+          <div className="rounded-xl border p-8 text-center">
+            <p
+              className={cn(
+                'font-medium',
+                notificationsQuery.isError && 'text-destructive',
+              )}
+            >
+              {notificationsQuery.isError
                 ? toApiErrorMessage(notificationsQuery.error)
                 : 'Notification introuvable'}
-          </p>
-        </div>
+            </p>
+          </div>
+        )}
       </AppLayout>
     )
   }
