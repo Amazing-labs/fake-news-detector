@@ -95,6 +95,8 @@ function buildService(deps: any = {}) {
   const watcherApplicationRepository = {
     save: vi.fn(),
     findWatcherApplicationById: vi.fn(),
+    findByActorId: vi.fn(async () => []),
+    findAll: vi.fn(async () => []),
     updateWatcherApplicationStatus: vi.fn(),
     ...deps.watcherApplicationRepository,
   }

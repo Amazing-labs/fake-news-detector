@@ -38,6 +38,14 @@ export class PrismaWatcherApplicationRepository implements IWatcherApplicationRe
     return row ? this.toDomain(row) : null
   }
 
+  async findByActorId(actorId: string): Promise<WatcherApplication[]> {
+    const rows = await prisma.watcherApplication.findMany({
+      where: { actorId },
+      orderBy: { createdAt: 'desc' },
+    })
+    return rows.map((row) => this.toDomain(row))
+  }
+
   async findAll(): Promise<WatcherApplication[]> {
     const rows = await prisma.watcherApplication.findMany()
     return rows.map((row) => this.toDomain(row))

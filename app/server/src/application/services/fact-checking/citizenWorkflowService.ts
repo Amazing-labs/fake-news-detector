@@ -94,6 +94,21 @@ export class CitizenWorkflowService {
       throw new BusinessRuleError('Citizen is already a watcher')
     }
 
+    // A citizen keeps the full history of their applications (one row each), so
+    // we never overwrite a past attempt. Only block when an application is still
+    // active (pending or approved); a previously rejected citizen can re-apply,
+    // which simply creates a new row alongside the old ones.
+    const applications =
+      await this.watcherApplicationRepository.findByActorId(citizenId)
+    const hasActiveApplication = applications.some(
+      (application) => application.status !== 'REJECTED',
+    )
+    if (hasActiveApplication) {
+      throw new BusinessRuleError(
+        'A watcher application is already pending or approved for this citizen',
+      )
+    }
+
     const application = WatcherApplicationFactory.create({
       actorId: citizenId,
       motivation,

@@ -10,8 +10,12 @@ model WatcherApplication {
   createdAt DateTime @default(now())
   updatedAt DateTime @default(now()) @updatedAt
 
-  actorId String @unique
+  // Not unique: a citizen keeps a full history of applications (one row per
+  // attempt). The "only one active at a time" rule is enforced in the
+  // application service, not by the schema.
+  actorId String
   actor   Actor  @relation("WatcherApplicationAuthor", fields: [actorId], references: [id])
 
+  @@index([actorId])
   @@map("watcher_applications")
 }
