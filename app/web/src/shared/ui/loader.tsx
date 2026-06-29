@@ -39,3 +39,27 @@ export function PageLoader({ label = 'Chargement…' }: { label?: string }) {
     </div>
   )
 }
+
+// Compact inline loader for list/card/table bodies: an animated spinner next to
+// a short label. Use this instead of a static "Chargement…" paragraph.
+export function LoadingRow({
+  label = 'Chargement…',
+  className,
+}: {
+  label?: string
+  className?: string
+}) {
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className={cn(
+        'text-muted-foreground flex items-center gap-2 text-sm',
+        className,
+      )}
+    >
+      <Spinner />
+      <span>{label}</span>
+    </div>
+  )
+}

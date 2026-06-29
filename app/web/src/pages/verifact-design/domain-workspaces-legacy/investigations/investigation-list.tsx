@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { PageLoader } from '@shared/ui/loader'
 import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
@@ -76,13 +77,11 @@ export function InvestigationList({ status }: { status: string }) {
               {toApiErrorMessage(investigationsQuery.error)}
             </p>
           </div>
+        ) : investigationsQuery.isPending ? (
+          <PageLoader label="Chargement des enquêtes…" />
         ) : (
           <div className="rounded-lg border border-dashed p-8 text-center">
-            <p className="font-medium">
-              {investigationsQuery.isPending
-                ? 'Chargement des enquêtes…'
-                : 'Aucun dossier pour ce filtre'}
-            </p>
+            <p className="font-medium">Aucun dossier pour ce filtre</p>
             <p className="text-muted-foreground mt-1 text-sm">
               Les enquêtes apparaîtront ici quand leur statut changera.
             </p>

@@ -4,6 +4,7 @@ import { FilePlus2 } from 'lucide-react'
 import { listReports, reportQueryKeys } from '@entities/report/api'
 import { CreateReportForm } from '@features/reports/create-report-form'
 import { toApiErrorMessage } from '@shared/api/http'
+import { LoadingRow } from '@shared/ui/loader'
 import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
@@ -47,9 +48,7 @@ export function CitizenWorkspacePage() {
           </CardHeader>
           <CardContent className="grid gap-3">
             {reportsQuery.isPending ? (
-              <p className="text-muted-foreground text-sm">
-                Chargement des signalements...
-              </p>
+              <LoadingRow label="Chargement des signalements…" />
             ) : null}
             {reportsQuery.isError ? (
               <p className="text-destructive text-sm">

@@ -1,6 +1,7 @@
 import { Link } from '@tanstack/react-router'
 import { LogIn, Plus } from 'lucide-react'
 import { cn } from '@shared/lib/utils'
+import { PageLoader } from '@shared/ui/loader'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
 import {
@@ -25,11 +26,7 @@ export function RoleDashboard({ actor: fallbackActor }: { actor?: Actor }) {
   if (isPending) {
     return (
       <AppLayout actor={fallbackActor ?? 'guest'} page="dashboard">
-        <Card>
-          <CardContent className="text-muted-foreground p-6 text-sm">
-            Chargement de la session...
-          </CardContent>
-        </Card>
+        <PageLoader label="Chargement de la session…" />
       </AppLayout>
     )
   }

@@ -18,6 +18,7 @@ import { listReports, reportQueryKeys } from '@entities/report/api'
 import { useAppSession } from '@entities/session/model'
 import { toApiErrorMessage } from '@shared/api/http'
 import { cn } from '@shared/lib/utils'
+import { LoadingRow } from '@shared/ui/loader'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
 import {
@@ -146,7 +147,7 @@ function HistoryTableCard(props: {
       </CardHeader>
       <CardContent>
         {props.isPending ? (
-          <p className="text-muted-foreground text-sm">Chargement…</p>
+          <LoadingRow />
         ) : props.isError ? (
           <p className="text-sm text-red-400">
             {toApiErrorMessage(props.error)}

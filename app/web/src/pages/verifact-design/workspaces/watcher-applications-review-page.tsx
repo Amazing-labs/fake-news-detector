@@ -13,6 +13,7 @@ import {
 } from '@entities/watcher-application/api'
 import { WatcherApplicationForm } from '@features/watcher-applications/watcher-application-form'
 import { toApiErrorMessage } from '@shared/api/http'
+import { LoadingRow } from '@shared/ui/loader'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
 import {
@@ -94,9 +95,7 @@ export function WatcherApplicationsReviewPage() {
           <Card>
             <CardContent className="grid gap-3 p-5">
               {applicationsQuery.isPending ? (
-                <p className="text-muted-foreground text-sm">
-                  Chargement des candidatures...
-                </p>
+                <LoadingRow label="Chargement des candidatures…" />
               ) : null}
               {applicationsQuery.isError ? (
                 <p className="text-destructive text-sm">
@@ -167,9 +166,7 @@ export function WatcherApplicationsReviewPage() {
           <Card>
             <CardContent className="grid gap-3 p-5">
               {applicationsQuery.isPending ? (
-                <p className="text-muted-foreground text-sm">
-                  Chargement de l&apos;historique...
-                </p>
+                <LoadingRow label="Chargement de l'historique…" />
               ) : null}
               {applicationsQuery.isError ? (
                 <p className="text-destructive text-sm">
@@ -237,9 +234,7 @@ function WatcherContributionWorkspacePage() {
         </CardHeader>
         <CardContent className="grid gap-3">
           {investigationsQuery.isPending ? (
-            <p className="text-muted-foreground text-sm">
-              Chargement des enquêtes...
-            </p>
+            <LoadingRow label="Chargement des enquêtes…" />
           ) : null}
           {investigationsQuery.isError ? (
             <p className="text-destructive text-sm">
