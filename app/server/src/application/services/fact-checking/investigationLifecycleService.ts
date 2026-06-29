@@ -170,9 +170,21 @@ export class InvestigationLifecycleService {
       stakeholderIds.add(actorId)
     }
 
+    // Parties accountable for the dossier, who get the stronger WARNING tone:
+    // the journalist whose enquiry was force-stopped, and — only when they are a
+    // recipient (includeActor, i.e. the automatic case) — the editorial
+    // director. The automatic cancellation is triggered by the *system* (the
+    // 1000-attempt safeguard), so the director is notified for awareness, not as
+    // the initiator. Reporter and watchers have nothing to act on → INFO.
+    const accountableIds = new Set<string>([investigation.journalistId])
+    if (includeActor) {
+      accountableIds.add(actorId)
+    }
+
     const automatic = reasonCode === 'MAX_REVISION_ATTEMPTS_REACHED'
-    const notifications = Array.from(stakeholderIds).map((stakeholderId) =>
-      NotificationFactory.createArchivedPublicationNotification(
+    const notifications = Array.from(stakeholderIds).map((stakeholderId) => {
+      const level = accountableIds.has(stakeholderId) ? 'WARNING' : 'INFO'
+      return NotificationFactory.createArchivedPublicationNotification(
         stakeholderId,
         'Enquête annulée',
         canceledMessageForStakeholder(
@@ -182,8 +194,9 @@ export class InvestigationLifecycleService {
           automatic,
         ),
         investigation.id,
-      ),
-    )
+        level,
+      )
+    })
 
     if (notifications.length > 0) {
       await this.notificationRepository.saveMany(notifications)
