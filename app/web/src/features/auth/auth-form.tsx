@@ -109,12 +109,8 @@ export function AuthForm(props: {
           placeholder="Au moins 8 caracteres"
         />
 
-        <Button type="submit" disabled={pending}>
-          {pending
-            ? 'En cours...'
-            : mode === 'sign-up'
-              ? 'Créer un compte'
-              : 'Se connecter'}
+        <Button type="submit" loading={pending}>
+          {mode === 'sign-up' ? 'Créer un compte' : 'Se connecter'}
         </Button>
       </form>
     </SectionCard>
