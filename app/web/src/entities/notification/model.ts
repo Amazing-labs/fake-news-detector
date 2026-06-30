@@ -1,6 +1,6 @@
-// Visual tone, orthogonal to `type`: success is pleasant, warning puts
-// pressure (action required), info simply informs. Mirrors the server enum.
-export type NotificationLevel = 'SUCCESS' | 'WARNING' | 'INFO'
+import type { NotificationLevel } from './schemas'
+
+export type { NotificationLevel } from './schemas'
 
 export type NotificationItem = {
   id: string

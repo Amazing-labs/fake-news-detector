@@ -127,7 +127,9 @@ function StatusReasonDialog(props: {
     <Dialog
       open={props.pending !== null}
       onOpenChange={(next) => {
-        if (!next) props.onCancel()
+        // Don't let the user dismiss the dialog mid-request — the mutation would
+        // keep running in the background while they think they cancelled.
+        if (!next && !props.isPending) props.onCancel()
       }}
     >
       <DialogContent>
@@ -262,7 +264,9 @@ function JournalistsList() {
           {toApiErrorMessage(journalistsQuery.error)}
         </p>
       ) : null}
-      {!journalistsQuery.isPending && rows.length === 0 ? (
+      {!journalistsQuery.isPending &&
+      !journalistsQuery.isError &&
+      rows.length === 0 ? (
         <p className="text-muted-foreground text-sm">
           Aucun journaliste provisionné.
         </p>
@@ -411,7 +415,9 @@ function CitizensList({ watcherOnly = false }: { watcherOnly?: boolean }) {
           {toApiErrorMessage(citizensQuery.error)}
         </p>
       ) : null}
-      {!citizensQuery.isPending && rows.length === 0 ? (
+      {!citizensQuery.isPending &&
+      !citizensQuery.isError &&
+      rows.length === 0 ? (
         <p className="text-muted-foreground text-sm">{emptyLabel}</p>
       ) : null}
       {rows.map((citizen) => (

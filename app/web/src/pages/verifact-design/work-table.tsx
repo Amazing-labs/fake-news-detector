@@ -314,7 +314,7 @@ function ContributionsHistory(props: { title: string; description: string }) {
     id: contribution.id,
     title: contribution.title,
     context: contribution.investigationTitle ?? 'Contribution',
-    status: contribution.investigationStatus ?? 'OPEN',
+    status: contribution.investigationStatus ?? '—',
     date: formatHistoryDate(contribution.createdAt),
     link: {
       to: '/investigations/$investigationId',

@@ -1,13 +1,9 @@
 import { apiRequest } from '@shared/api/http'
 import type { CitizenList } from './model'
+import type { CitizenStatusInput } from './schemas'
 
 export type { CitizenListItem, CitizenList } from './model'
-
-// Mirrors the server-side citizenManagementSchema (reason/details optional).
-export type CitizenStatusInput = {
-  reason?: 'SPAM' | 'ABUSE' | 'FRAUD' | 'INACTIVITY' | 'USER_REQUEST' | 'OTHER'
-  details?: string
-}
+export type { CitizenStatusInput, CitizenStatusReason } from './schemas'
 
 export const citizenQueryKeys = {
   all: ['citizens'] as const,
