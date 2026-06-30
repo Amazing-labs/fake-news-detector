@@ -1,5 +1,7 @@
+import { Prisma } from '@prisma/client'
 import { WatcherApplication } from '../../../domain/entities/WatcherApplication'
 import type { IWatcherApplicationRepository } from '../../../domain/repositories/IWatcherApplicationRepository'
+import { BusinessRuleError } from '../../../shared/errors'
 import { prisma } from '../../config/database'
 
 type PrismaWatcherApplicationRow = NonNullable<
@@ -8,16 +10,31 @@ type PrismaWatcherApplicationRow = NonNullable<
 
 export class PrismaWatcherApplicationRepository implements IWatcherApplicationRepository {
   async save(application: WatcherApplication): Promise<void> {
-    await prisma.watcherApplication.create({
-      data: {
-        id: application.id,
-        actorId: application.actorId,
-        motivation: application.motivation,
-        status: application.status,
-        createdAt: application.createdAt,
-        updatedAt: application.updatedAt,
-      },
-    })
+    try {
+      await prisma.watcherApplication.create({
+        data: {
+          id: application.id,
+          actorId: application.actorId,
+          motivation: application.motivation,
+          status: application.status,
+          createdAt: application.createdAt,
+          updatedAt: application.updatedAt,
+        },
+      })
+    } catch (error) {
+      // The partial unique index (one active application per actor) is the race
+      // safety net behind the service-level check. Translate its violation into
+      // a clean business error instead of leaking a raw 500.
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        error.code === 'P2002'
+      ) {
+        throw new BusinessRuleError(
+          'A watcher application is already pending or approved for this citizen',
+        )
+      }
+      throw error
+    }
   }
 
   async updateWatcherApplicationStatus(

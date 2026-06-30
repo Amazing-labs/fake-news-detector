@@ -26,5 +26,13 @@ export async function notifyActiveDirectors(
       'INFO',
     ),
   )
-  await notificationRepository.saveMany(notifications)
+
+  // Best-effort: this fan-out is a secondary side-effect of an already-committed
+  // business action. A transient notification outage must not turn that success
+  // into a 500 for the caller, so we swallow (and log) persistence failures.
+  try {
+    await notificationRepository.saveMany(notifications)
+  } catch (error) {
+    console.error('Failed to notify active directors', error)
+  }
 }

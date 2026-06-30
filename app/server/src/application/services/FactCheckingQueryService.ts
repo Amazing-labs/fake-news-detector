@@ -283,7 +283,7 @@ export class FactCheckingQueryService {
   ): Promise<EnrichedDecision[]> {
     const audits = await this.workflowAuditRepository.findByActorId(directorId)
     const investigations = await this.investigationRepository.findByIds(
-      audits.map((audit) => audit.investigationId),
+      uniqueIds(audits.map((audit) => audit.investigationId)),
     )
     const investigationById = new Map(
       investigations.map((investigation) => [investigation.id, investigation]),
@@ -307,7 +307,7 @@ export class FactCheckingQueryService {
   ): Promise<EnrichedContribution[]> {
     const evidence = await this.evidenceRepository.findByWatcherId(watcherId)
     const investigations = await this.investigationRepository.findByIds(
-      evidence.map((item) => item.investigationId),
+      uniqueIds(evidence.map((item) => item.investigationId)),
     )
     const investigationById = new Map(
       investigations.map((investigation) => [investigation.id, investigation]),
