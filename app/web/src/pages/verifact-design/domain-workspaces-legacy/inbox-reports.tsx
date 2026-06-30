@@ -1,4 +1,5 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { toast } from 'sonner'
 import {
   Download,
   ExternalLink,
@@ -30,10 +31,11 @@ import {
   TabsList,
   TabsTrigger,
 } from '@shared/ui/shadcn/tabs'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CreateDirectorInboxSubjectForm } from '@features/inbox-subjects/create-director-inbox-subject-form'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
+import { toApiErrorMessage } from '@shared/api/http'
 import { downloadFromUrl, triggerBlobDownload } from '@shared/lib/download'
 import { domainLabel } from '../workspace-labels'
 import { MetaCell, StatusBadge } from '../workspace-ui'
@@ -44,6 +46,7 @@ import {
   getInboxSubjectMedia,
   inboxSubjectQueryKeys,
   listInboxSubjects,
+  pickInboxSubject,
 } from '@entities/inbox-subject/api'
 import type {
   InboxSubjectItem,
@@ -54,6 +57,29 @@ import { CitizenWorkspacePage } from './overview'
 const ORIGIN_LABELS: Record<string, string> = {
   REPORT: 'Signalement citoyen',
   DIRECTOR_INITIATED: 'Création direction',
+}
+
+// A journalist claims a subject -> the server opens the investigation and
+// returns it; on success we refresh the inbox and jump to the new dossier.
+function usePickSubjectMutation() {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: pickInboxSubject,
+    onSuccess: (investigation) => {
+      if (!investigation) return
+      void queryClient.invalidateQueries({
+        queryKey: inboxSubjectQueryKeys.all,
+      })
+      void navigate({
+        to: '/investigations/$investigationId',
+        params: { investigationId: investigation.id },
+      })
+    },
+    onError: (error) => {
+      toast.error(toApiErrorMessage(error))
+    },
+  })
 }
 
 // ── Reports list (director only) ───────────────────────────────────────────────
@@ -209,6 +235,7 @@ function InboxList(props: {
     queryKey: inboxSubjectQueryKeys.list(),
     queryFn: () => listInboxSubjects(),
   })
+  const pickMutation = usePickSubjectMutation()
   const allRows = inboxSubjectsQuery.data?.items ?? []
   const rows: InboxSubjectItem[] =
     props.filter === 'all'
@@ -317,7 +344,15 @@ function InboxList(props: {
                           <DialogClose asChild>
                             <Button variant="outline">Annuler</Button>
                           </DialogClose>
-                          <Button>Confirmer la prise</Button>
+                          <Button
+                            loading={
+                              pickMutation.isPending &&
+                              pickMutation.variables === item.id
+                            }
+                            onClick={() => pickMutation.mutate(item.id)}
+                          >
+                            Confirmer la prise
+                          </Button>
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
@@ -355,6 +390,7 @@ export function InboxSubjectDetailWorkspacePage({
     queryKey: inboxSubjectQueryKeys.media(subjectId),
     queryFn: () => getInboxSubjectMedia(subjectId),
   })
+  const pickMutation = usePickSubjectMutation()
   const subject = subjectQuery.data
 
   if (!subject) return null
@@ -402,7 +438,12 @@ export function InboxSubjectDetailWorkspacePage({
                       <DialogClose asChild>
                         <Button variant="outline">Annuler</Button>
                       </DialogClose>
-                      <Button>Confirmer la prise</Button>
+                      <Button
+                        loading={pickMutation.isPending}
+                        onClick={() => pickMutation.mutate(subjectId)}
+                      >
+                        Confirmer la prise
+                      </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>

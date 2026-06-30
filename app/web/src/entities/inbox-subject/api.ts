@@ -20,6 +20,15 @@ export function getInboxSubject(subjectId: string) {
   return apiRequest<InboxSubjectItem>(`/api/inbox-subjects/${subjectId}`)
 }
 
+// A journalist claims an open subject; the server opens the investigation and
+// returns it, so the caller can navigate straight to the new dossier.
+export function pickInboxSubject(subjectId: string) {
+  return apiRequest<{ id: string }>(`/api/inbox-subjects/${subjectId}/pick`, {
+    method: 'POST',
+    body: JSON.stringify({}),
+  })
+}
+
 export function getInboxSubjectMedia(subjectId: string) {
   return apiRequest<InboxSubjectMediaList>(
     `/api/inbox-subjects/${subjectId}/media`,
