@@ -15,11 +15,10 @@ import {
   NotFoundError,
   ValidationError,
 } from '../../../shared/errors'
+import { CITIZEN_NOTIFICATION_BATCH_SIZE } from '../../../shared/constants'
 import type { PublishCorrectionInput } from './types'
 
 export class CorrectionWorkflowService {
-  private static readonly CITIZEN_NOTIFICATION_BATCH_SIZE = 500
-
   constructor(
     private readonly directorRepository: IDirectorRepository,
     private readonly publicationRepository: IPublicationRepository,
@@ -128,11 +127,11 @@ export class CorrectionWorkflowService {
     for (
       let index = 0;
       index < citizenIds.length;
-      index += CorrectionWorkflowService.CITIZEN_NOTIFICATION_BATCH_SIZE
+      index += CITIZEN_NOTIFICATION_BATCH_SIZE
     ) {
       const batch = citizenIds.slice(
         index,
-        index + CorrectionWorkflowService.CITIZEN_NOTIFICATION_BATCH_SIZE,
+        index + CITIZEN_NOTIFICATION_BATCH_SIZE,
       )
       const notifications = batch.map((citizenId) =>
         NotificationFactory.createCorrectionNotification(

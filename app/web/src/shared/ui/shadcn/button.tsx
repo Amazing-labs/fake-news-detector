@@ -2,6 +2,7 @@ import * as React from 'react'
 import { Slot } from '@radix-ui/react-slot'
 import { cva, type VariantProps } from 'class-variance-authority'
 import { cn } from '../../lib/utils'
+import { Spinner } from '../loader'
 
 const buttonVariants = cva(
   "focus-visible:border-ring focus-visible:ring-ring/50 inline-flex shrink-0 items-center justify-center gap-2 rounded-md text-sm font-medium whitespace-nowrap transition-all outline-none focus-visible:ring-[3px] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 [&_svg]:shrink-0",
@@ -37,19 +38,42 @@ function Button({
   variant,
   size,
   asChild = false,
+  loading = false,
+  disabled,
+  children,
   ...props
 }: React.ComponentProps<'button'> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean
+    // When true (non-asChild buttons), show a leading spinner and disable the
+    // button so server-bound actions read as "in progress" rather than just
+    // greyed out.
+    loading?: boolean
   }) {
   const Comp = asChild ? Slot : 'button'
+  // asChild forwards to a single child (e.g. a Link), so we must not inject a
+  // sibling spinner there — Slot requires exactly one child.
+  const showSpinner = loading && !asChild
+  const compProps: React.ComponentProps<'button'> = {
+    ...props,
+    disabled: asChild ? disabled : disabled || loading,
+  }
 
   return (
     <Comp
       data-slot="button"
       className={cn(buttonVariants({ variant, size, className }))}
-      {...props}
-    />
+      {...compProps}
+    >
+      {showSpinner ? (
+        <>
+          <Spinner />
+          {children}
+        </>
+      ) : (
+        children
+      )}
+    </Comp>
   )
 }
 

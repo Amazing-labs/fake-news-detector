@@ -7,6 +7,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { useState } from 'react'
+import { PageLoader } from '@shared/ui/loader'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
 import {
@@ -185,11 +186,7 @@ export function PublicationDetailWorkspacePage({
   if (publicationQuery.isPending) {
     return (
       <AppLayout actor={actor} page="publications">
-        <Card>
-          <CardContent className="pt-6">
-            Chargement de la publication...
-          </CardContent>
-        </Card>
+        <PageLoader label="Chargement de la publication…" />
       </AppLayout>
     )
   }

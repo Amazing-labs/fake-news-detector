@@ -13,6 +13,7 @@ import {
 } from '@entities/watcher-application/api'
 import { WatcherApplicationForm } from '@features/watcher-applications/watcher-application-form'
 import { toApiErrorMessage } from '@shared/api/http'
+import { LoadingRow } from '@shared/ui/loader'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
 import {
@@ -56,6 +57,9 @@ export function WatcherApplicationsReviewPage() {
   const pendingApplications = applications.filter(
     (item) => item.status === 'PENDING',
   )
+  const decidedApplications = applications.filter(
+    (item) => item.status !== 'PENDING',
+  )
 
   if (isActorPending) {
     return (
@@ -91,9 +95,7 @@ export function WatcherApplicationsReviewPage() {
           <Card>
             <CardContent className="grid gap-3 p-5">
               {applicationsQuery.isPending ? (
-                <p className="text-muted-foreground text-sm">
-                  Chargement des candidatures...
-                </p>
+                <LoadingRow label="Chargement des candidatures…" />
               ) : null}
               {applicationsQuery.isError ? (
                 <p className="text-destructive text-sm">
@@ -126,6 +128,11 @@ export function WatcherApplicationsReviewPage() {
                     <Button
                       size="sm"
                       disabled={decisionMutation.isPending}
+                      loading={
+                        decisionMutation.isPending &&
+                        decisionMutation.variables?.id === item.id &&
+                        decisionMutation.variables?.decision === 'approve'
+                      }
                       onClick={() =>
                         decisionMutation.mutate({
                           id: item.id,
@@ -133,13 +140,22 @@ export function WatcherApplicationsReviewPage() {
                         })
                       }
                     >
-                      <CheckCircle2 />
+                      {!(
+                        decisionMutation.isPending &&
+                        decisionMutation.variables?.id === item.id &&
+                        decisionMutation.variables?.decision === 'approve'
+                      ) && <CheckCircle2 />}
                       Approuver
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
                       disabled={decisionMutation.isPending}
+                      loading={
+                        decisionMutation.isPending &&
+                        decisionMutation.variables?.id === item.id &&
+                        decisionMutation.variables?.decision === 'reject'
+                      }
                       onClick={() =>
                         decisionMutation.mutate({
                           id: item.id,
@@ -162,10 +178,41 @@ export function WatcherApplicationsReviewPage() {
         </TabsContent>
         <TabsContent value="history" className="mt-4">
           <Card>
-            <CardContent className="p-5">
-              <p className="text-muted-foreground text-sm">
-                Decisions passees, refus motives et approbations de vigies.
-              </p>
+            <CardContent className="grid gap-3 p-5">
+              {applicationsQuery.isPending ? (
+                <LoadingRow label="Chargement de l'historique…" />
+              ) : null}
+              {applicationsQuery.isError ? (
+                <p className="text-destructive text-sm">
+                  {toApiErrorMessage(applicationsQuery.error)}
+                </p>
+              ) : null}
+              {!applicationsQuery.isPending &&
+              decidedApplications.length === 0 ? (
+                <p className="text-muted-foreground text-sm">
+                  Aucune décision passée pour l&apos;instant.
+                </p>
+              ) : null}
+              {decidedApplications.map((item) => (
+                <div key={item.id} className="grid gap-2 rounded-lg border p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <p className="font-medium">
+                      {item.applicantName ?? `Candidature #${item.id}`}
+                    </p>
+                    <StatusBadge status={item.status} />
+                  </div>
+                  <p className="text-muted-foreground text-sm">
+                    {item.motivation}
+                  </p>
+                  <p className="text-muted-foreground text-xs">
+                    {new Date(item.updatedAt).toLocaleDateString('fr-FR', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </p>
+                </div>
+              ))}
             </CardContent>
           </Card>
         </TabsContent>
@@ -201,9 +248,7 @@ function WatcherContributionWorkspacePage() {
         </CardHeader>
         <CardContent className="grid gap-3">
           {investigationsQuery.isPending ? (
-            <p className="text-muted-foreground text-sm">
-              Chargement des enquêtes...
-            </p>
+            <LoadingRow label="Chargement des enquêtes…" />
           ) : null}
           {investigationsQuery.isError ? (
             <p className="text-destructive text-sm">

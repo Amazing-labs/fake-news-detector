@@ -21,10 +21,12 @@ import type {
   IReportMediaRepository,
   IReportRepository,
   IWatcherApplicationRepository,
+  IWorkflowAuditRepository,
 } from '../../domain/repositories'
 import type { Citizen } from '../../domain/entities/Citizen'
 import type { Correction } from '../../domain/entities/Correction'
 import type { Director } from '../../domain/entities/Director'
+import type { Evidence } from '../../domain/entities/Evidence'
 import type {
   InboxSubject,
   InboxSubjectStatus,
@@ -34,6 +36,7 @@ import type { Journalist } from '../../domain/entities/Journalist'
 import type { Publication } from '../../domain/entities/Publication'
 import type { Report } from '../../domain/entities/Report'
 import type { WatcherApplication } from '../../domain/entities/WatcherApplication'
+import type { WorkflowAudit } from '../../domain/entities/WorkflowAudit'
 import type {
   AuthoritySource,
   SourceType,
@@ -148,6 +151,21 @@ export interface EnrichedWatcherApplication {
   applicantName: string | null
 }
 
+// A past editorial decision: the workflow-audit row plus the title of the
+// investigation it acted on, resolved on the read side for the history view.
+export interface EnrichedDecision {
+  audit: WorkflowAudit
+  title: string | null
+}
+
+// A watcher's past contribution: the evidence plus the title/status of the
+// investigation it was attached to, for the watcher's own history view.
+export interface EnrichedContribution {
+  evidence: Evidence
+  investigationTitle: string | null
+  investigationStatus: string | null
+}
+
 // Unified read-model for the media attached to an inbox subject: director
 // subjects carry their own InboxSubjectMedia, report-origin subjects surface the
 // originating report's media. Origin tags the provenance for the UI.
@@ -179,6 +197,7 @@ export class FactCheckingQueryService {
     private readonly inboxSubjectMediaRepository: IInboxSubjectMediaRepository,
     private readonly reportMediaRepository: IReportMediaRepository,
     private readonly authoritySourceRepository: IAuthoritySourceRepository,
+    private readonly workflowAuditRepository: IWorkflowAuditRepository,
   ) {}
 
   // ---------------------------------------------------------------------------
@@ -254,6 +273,62 @@ export class FactCheckingQueryService {
         this.notificationRepository.count(),
       ])
     return { pendingReviews, publishedCount, totalNotifications }
+  }
+
+  // Past editorial decisions taken by a director (publish / send-back to
+  // revision / archive / cancel), newest first, each joined with the title of
+  // the investigation it acted on. Backed by the workflow audit trail.
+  async listDirectorDecisionsEnriched(
+    directorId: string,
+  ): Promise<EnrichedDecision[]> {
+    const audits = await this.workflowAuditRepository.findByActorId(directorId)
+    const investigations = await this.investigationRepository.findByIds(
+      uniqueIds(audits.map((audit) => audit.investigationId)),
+    )
+    const investigationById = new Map(
+      investigations.map((investigation) => [investigation.id, investigation]),
+    )
+    const inboxSubjects = await this.inboxSubjectByIdMap(
+      investigations.map((investigation) => investigation.inboxSubjectId),
+    )
+    return audits.map((audit) => {
+      const investigation = investigationById.get(audit.investigationId)
+      const subject = investigation
+        ? inboxSubjects.get(investigation.inboxSubjectId)
+        : undefined
+      return { audit, title: subject?.theme ?? null }
+    })
+  }
+
+  // A watcher's own past contributions (evidence), newest first, each joined
+  // with the title and status of the investigation it was attached to.
+  async listContributionsForWatcherEnriched(
+    watcherId: string,
+  ): Promise<EnrichedContribution[]> {
+    const evidence = await this.evidenceRepository.findByWatcherId(watcherId)
+    const investigations = await this.investigationRepository.findByIds(
+      uniqueIds(evidence.map((item) => item.investigationId)),
+    )
+    const investigationById = new Map(
+      investigations.map((investigation) => [investigation.id, investigation]),
+    )
+    const inboxSubjects = await this.inboxSubjectByIdMap(
+      investigations.map((investigation) => investigation.inboxSubjectId),
+    )
+    return evidence
+      .slice()
+      .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+      .map((item) => {
+        const investigation = investigationById.get(item.investigationId)
+        const subject = investigation
+          ? inboxSubjects.get(investigation.inboxSubjectId)
+          : undefined
+        return {
+          evidence: item,
+          investigationTitle: subject?.theme ?? null,
+          investigationStatus: investigation?.status ?? null,
+        }
+      })
   }
 
   // Dashboard KPIs for the connected actor. Citizens and watchers share the

@@ -13,6 +13,7 @@ import {
 } from '../../../domain/events'
 import { Investigation } from '../../../domain/entities/Investigation'
 import { Report } from '../../../domain/entities/Report'
+import { CITIZEN_NOTIFICATION_BATCH_SIZE } from '../../../shared/constants'
 import { NotFoundError } from '../../../shared/errors'
 import {
   archivedUnverifiableMessageForStakeholder,
@@ -102,15 +103,26 @@ export class InvestigationLifecycleService {
   }
 
   async broadcastPublicationToCitizens(publicationId: string): Promise<void> {
-    const citizens = await this.citizenRepository.findAll()
-    if (citizens.length === 0) return
-
-    const notifications = NotificationFactory.createBatch(
-      citizens.map((citizen) => citizen.id),
-      'Une nouvelle publication officielle est disponible.',
-      publicationId,
-    )
-    await this.notificationRepository.saveMany(notifications)
+    // Resolve only ids (not full Citizen entities) and persist in bounded
+    // chunks — same pattern as correction broadcasts — so the fan-out stays
+    // flat as the citizen base grows.
+    const citizenIds = await this.citizenRepository.findAllIds()
+    for (
+      let index = 0;
+      index < citizenIds.length;
+      index += CITIZEN_NOTIFICATION_BATCH_SIZE
+    ) {
+      const batch = citizenIds.slice(
+        index,
+        index + CITIZEN_NOTIFICATION_BATCH_SIZE,
+      )
+      const notifications = NotificationFactory.createBatch(
+        batch,
+        'Une nouvelle publication officielle est disponible.',
+        publicationId,
+      )
+      await this.notificationRepository.saveMany(notifications)
+    }
   }
 
   async notifyArchiveAccepted(
@@ -158,9 +170,21 @@ export class InvestigationLifecycleService {
       stakeholderIds.add(actorId)
     }
 
+    // Parties accountable for the dossier, who get the stronger WARNING tone:
+    // the journalist whose enquiry was force-stopped, and — only when they are a
+    // recipient (includeActor, i.e. the automatic case) — the editorial
+    // director. The automatic cancellation is triggered by the *system* (the
+    // 1000-attempt safeguard), so the director is notified for awareness, not as
+    // the initiator. Reporter and watchers have nothing to act on → INFO.
+    const accountableIds = new Set<string>([investigation.journalistId])
+    if (includeActor) {
+      accountableIds.add(actorId)
+    }
+
     const automatic = reasonCode === 'MAX_REVISION_ATTEMPTS_REACHED'
-    const notifications = Array.from(stakeholderIds).map((stakeholderId) =>
-      NotificationFactory.createArchivedPublicationNotification(
+    const notifications = Array.from(stakeholderIds).map((stakeholderId) => {
+      const level = accountableIds.has(stakeholderId) ? 'WARNING' : 'INFO'
+      return NotificationFactory.createArchivedPublicationNotification(
         stakeholderId,
         'Enquête annulée',
         canceledMessageForStakeholder(
@@ -170,8 +194,9 @@ export class InvestigationLifecycleService {
           automatic,
         ),
         investigation.id,
-      ),
-    )
+        level,
+      )
+    })
 
     if (notifications.length > 0) {
       await this.notificationRepository.saveMany(notifications)

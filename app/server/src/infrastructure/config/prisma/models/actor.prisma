@@ -30,7 +30,7 @@ model Actor {
   notifications            Notification[]  @relation("ActorNotifications")
   createdInboxSubjects     InboxSubject[]  @relation("InboxSubjectCreator")
 
-  watcherApplication WatcherApplication? @relation("WatcherApplicationAuthor")
+  watcherApplications WatcherApplication[] @relation("WatcherApplicationAuthor")
 
   reportMedia        ReportMedia[]
   investigationMedia InvestigationMedia[]

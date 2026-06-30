@@ -14,6 +14,7 @@ import {
   getDashboardMetrics,
 } from '@entities/dashboard/api'
 import type { ActorMetrics } from '@entities/dashboard/model'
+import { PageLoader } from '@shared/ui/loader'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
 import {
@@ -217,11 +218,7 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
   if (reportQuery.isPending) {
     return (
       <AppLayout actor={actor} page="reports">
-        <Card>
-          <CardContent className="pt-6">
-            Chargement du signalement...
-          </CardContent>
-        </Card>
+        <PageLoader label="Chargement du signalement…" />
       </AppLayout>
     )
   }

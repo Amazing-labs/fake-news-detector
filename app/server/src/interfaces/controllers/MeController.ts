@@ -62,4 +62,27 @@ export class MeController {
       `Unsupported actor role: ${actor.actorRole as string}`,
     )
   }
+
+  // The connected actor's own contributions (watcher evidence), newest first.
+  // Returns an empty list for actors who have never contributed.
+  listContributions = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
+    const contributions =
+      await this.queryService.listContributionsForWatcherEnriched(actor.actorId)
+
+    return ok(c, {
+      items: contributions.map(
+        ({ evidence, investigationTitle, investigationStatus }) => ({
+          id: evidence.id,
+          investigationId: evidence.investigationId,
+          investigationTitle,
+          investigationStatus,
+          title: evidence.title,
+          content: evidence.content,
+          createdAt: evidence.createdAt.toISOString(),
+        }),
+      ),
+      total: contributions.length,
+    })
+  }
 }

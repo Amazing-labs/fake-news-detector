@@ -103,6 +103,7 @@ export function createAppDependencies(): AppDependencies {
     inboxSubjectMediaRepository,
     reportMediaRepository,
     authoritySourceRepository,
+    workflowAuditRepository,
   )
   const notificationService = new NotificationService(notificationRepository)
   const securityService = new SecurityService(

@@ -2,6 +2,7 @@ export const notificationItems = [
   {
     id: 'publication-disponible',
     type: 'PUBLICATION',
+    level: 'SUCCESS',
     theme: 'Publication disponible',
     message: 'Le dossier checkpoint est maintenant publié avec son verdict.',
     isRead: false,
@@ -11,6 +12,7 @@ export const notificationItems = [
   {
     id: 'correctif-publie',
     type: 'CORRECTION',
+    level: 'INFO',
     theme: 'Correctif publié',
     message: 'Une publication a été corrigée après nouvelle validation.',
     isRead: false,
@@ -20,6 +22,7 @@ export const notificationItems = [
   {
     id: 'dossier-archive',
     type: 'ARCHIVED_PUBLICATION',
+    level: 'INFO',
     theme: 'Dossier archivé',
     message: 'Une enquête non vérifiable a été archivée par la direction.',
     isRead: true,
@@ -29,6 +32,7 @@ export const notificationItems = [
   {
     id: 'action-requise',
     type: 'ALERT',
+    level: 'WARNING',
     theme: 'Action requise',
     message: 'Une preuve ou une révision attend ton intervention.',
     isRead: true,

@@ -68,8 +68,8 @@ export function CreateJournalistForm() {
           onChange={(event) => setEmail(event.target.value)}
         />
         <div>
-          <DarkButton type="submit" disabled={mutation.isPending}>
-            {mutation.isPending ? 'Création...' : 'Créer le journaliste'}
+          <DarkButton type="submit" loading={mutation.isPending}>
+            Créer le journaliste
           </DarkButton>
         </div>
       </form>

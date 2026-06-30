@@ -11,6 +11,7 @@ import {
 import type { MediaCategory, Verdict } from '@entities/investigation/schemas'
 import { toApiErrorMessage } from '@shared/api/http'
 import { cn } from '@shared/lib/utils'
+import { Spinner } from '@shared/ui/loader'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
 import { downloadFromUrl } from '@shared/lib/download'
@@ -78,7 +79,8 @@ function MediaClassificationForm({
       <Button
         size="sm"
         className="w-fit"
-        disabled={!canSave || isPending}
+        disabled={!canSave}
+        loading={isPending}
         onClick={() =>
           onSave({
             category: category as MediaCategory,
@@ -115,8 +117,8 @@ function DownloadButton({ href, label }: { href: string; label: string }) {
         downloadFromUrl(href, filename).finally(() => setLoading(false))
       }}
     >
-      <Download className="size-4" />
-      {loading ? 'Telechargement…' : label}
+      {loading ? <Spinner /> : <Download className="size-4" />}
+      {loading ? 'Téléchargement…' : label}
     </Button>
   )
 }

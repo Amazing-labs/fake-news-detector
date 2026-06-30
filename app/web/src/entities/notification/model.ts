@@ -1,6 +1,11 @@
+import type { NotificationLevel } from './schemas'
+
+export type { NotificationLevel } from './schemas'
+
 export type NotificationItem = {
   id: string
   type: string
+  level: NotificationLevel
   theme: string
   message: string
   actorId: string

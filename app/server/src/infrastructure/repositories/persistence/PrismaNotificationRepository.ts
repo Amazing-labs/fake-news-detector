@@ -12,6 +12,7 @@ export class PrismaNotificationRepository implements INotificationRepository {
       data: {
         id: notification.id,
         type: notification.type,
+        level: notification.level,
         theme: notification.theme,
         message: notification.message,
         actorId: notification.actorId,
@@ -30,6 +31,7 @@ export class PrismaNotificationRepository implements INotificationRepository {
       data: notifications.map((notification) => ({
         id: notification.id,
         type: notification.type,
+        level: notification.level,
         theme: notification.theme,
         message: notification.message,
         actorId: notification.actorId,
@@ -118,6 +120,7 @@ export class PrismaNotificationRepository implements INotificationRepository {
       row.updatedAt,
       row.publicationId ?? undefined,
       row.investigationId ?? undefined,
+      row.level,
     )
   }
 }

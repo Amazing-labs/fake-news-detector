@@ -75,6 +75,7 @@ export function createFactCheckingService(
     dependencies.evidenceRepository,
     dependencies.notificationRepository,
     dependencies.watcherApplicationRepository,
+    dependencies.directorRepository,
   )
 
   const journalistWorkflowService = new JournalistWorkflowService(
@@ -87,6 +88,8 @@ export function createFactCheckingService(
     dependencies.evidenceRepository,
     dependencies.authoritySourceRepository,
     dependencies.workflowAuditRepository,
+    dependencies.directorRepository,
+    dependencies.notificationRepository,
   )
 
   const directorWorkflowService = new DirectorWorkflowService(

@@ -22,5 +22,14 @@ export function createMeRoutes(
     meController.getMe,
   )
 
+  routes.openapi(
+    createRoute({
+      method: 'get',
+      path: '/contributions',
+      responses: okResponse('Current actor contributions'),
+    }),
+    meController.listContributions,
+  )
+
   return routes
 }

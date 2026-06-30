@@ -8,6 +8,7 @@ import {
   investigationQueryKeys,
 } from '@entities/investigation/api'
 import { toApiErrorMessage } from '@shared/api/http'
+import { PageLoader } from '@shared/ui/loader'
 import { Button } from '@shared/ui/shadcn/button'
 import { Card, CardContent } from '@shared/ui/shadcn/card'
 import {
@@ -127,11 +128,15 @@ export function InvestigationDetailWorkspacePage({
   ) {
     return (
       <AppLayout actor={actor} page="investigations">
-        <Card>
-          <CardContent className={error ? 'text-destructive pt-6' : 'pt-6'}>
-            {error ? toApiErrorMessage(error) : 'Chargement du dossier...'}
-          </CardContent>
-        </Card>
+        {error ? (
+          <Card>
+            <CardContent className="text-destructive pt-6">
+              {toApiErrorMessage(error)}
+            </CardContent>
+          </Card>
+        ) : (
+          <PageLoader label="Chargement du dossier…" />
+        )}
       </AppLayout>
     )
   }

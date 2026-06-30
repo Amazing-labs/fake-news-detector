@@ -9,5 +9,7 @@ export interface IWatcherApplicationRepository {
     status: WatcherApplicationStatus,
   ): Promise<void>
   findWatcherApplicationById(id: string): Promise<WatcherApplication | null>
+  // All applications for an actor (newest first) — the actor's full history.
+  findByActorId(actorId: string): Promise<WatcherApplication[]>
   findAll(): Promise<WatcherApplication[]>
 }

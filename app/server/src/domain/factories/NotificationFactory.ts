@@ -1,5 +1,9 @@
 // domain/factories/NotificationFactory.ts
-import { Notification, NotificationType } from '../entities/Notification'
+import {
+  Notification,
+  NotificationLevel,
+  NotificationType,
+} from '../entities/Notification'
 import { DomainError } from '../../shared/errors'
 
 export class NotificationFactory {
@@ -10,6 +14,7 @@ export class NotificationFactory {
     actorId: string
     publicationId?: string
     investigationId?: string
+    level?: NotificationLevel
   }): Notification {
     return Notification.create(
       params.type ?? 'ALERT',
@@ -18,6 +23,7 @@ export class NotificationFactory {
       params.actorId,
       params.publicationId,
       params.investigationId,
+      params.level ?? 'INFO',
     )
   }
 
@@ -26,12 +32,14 @@ export class NotificationFactory {
     publicationTheme: string,
     publicationMessage: string,
     publicationId: string,
+    level: NotificationLevel = 'INFO',
   ): Notification {
     return Notification.createPublicationNotification(
       citizenId,
       publicationTheme,
       publicationMessage,
       publicationId,
+      level,
     )
   }
 
@@ -39,16 +47,23 @@ export class NotificationFactory {
     journalistId: string,
     theme: string,
     message: string,
+    level: NotificationLevel = 'INFO',
   ): Notification {
-    return Notification.createAlertNotification(journalistId, theme, message)
+    return Notification.createAlertNotification(
+      journalistId,
+      theme,
+      message,
+      level,
+    )
   }
 
   static createAlertNotification(
     actorId: string,
     theme: string,
     message: string,
+    level: NotificationLevel = 'WARNING',
   ): Notification {
-    return Notification.create('ALERT', theme, message, actorId)
+    return Notification.createAlertNotification(actorId, theme, message, level)
   }
 
   static createCorrectionNotification(
@@ -56,12 +71,14 @@ export class NotificationFactory {
     correctionTitle: string,
     correctionMessage: string,
     publicationId: string,
+    level: NotificationLevel = 'INFO',
   ): Notification {
     return Notification.createCorrectionNotification(
       actorId,
       correctionTitle,
       correctionMessage,
       publicationId,
+      level,
     )
   }
 
@@ -70,12 +87,14 @@ export class NotificationFactory {
     theme: string,
     message: string,
     investigationId: string,
+    level: NotificationLevel = 'INFO',
   ): Notification {
     return Notification.createArchivedPublicationNotification(
       actorId,
       theme,
       message,
       investigationId,
+      level,
     )
   }
 
@@ -84,12 +103,14 @@ export class NotificationFactory {
     theme: string,
     message: string,
     publicationId: string,
+    level: NotificationLevel = 'SUCCESS',
   ): Notification {
     return Notification.createPublicationNotification(
       journalistId,
       theme,
       message,
       publicationId,
+      level,
     )
   }
 
@@ -98,6 +119,7 @@ export class NotificationFactory {
     message: string,
     publicationId: string,
     theme: string = 'Publication',
+    level: NotificationLevel = 'INFO',
   ): Notification[] {
     if (!publicationId.trim()) {
       throw new DomainError(
@@ -111,6 +133,7 @@ export class NotificationFactory {
         theme,
         message,
         publicationId,
+        level,
       ),
     )
   }

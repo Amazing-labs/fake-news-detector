@@ -21,6 +21,7 @@ import {
   watcherApplicationQueryKeys,
 } from '@entities/watcher-application/api'
 import { toApiErrorMessage } from '@shared/api/http'
+import { LoadingRow } from '@shared/ui/loader'
 import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
@@ -129,7 +130,9 @@ export function DirectorHomePage() {
             <TableBody>
               {pendingReviewsQuery.isPending ? (
                 <TableRow>
-                  <TableCell colSpan={4}>Chargement des enquêtes...</TableCell>
+                  <TableCell colSpan={4}>
+                    <LoadingRow label="Chargement des enquêtes…" />
+                  </TableCell>
                 </TableRow>
               ) : null}
               {pendingReviewsQuery.isError ? (

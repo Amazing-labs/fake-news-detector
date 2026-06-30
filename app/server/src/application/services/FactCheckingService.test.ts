@@ -88,12 +88,15 @@ function buildService(deps: any = {}) {
   }
   const directorRepository = {
     findById: vi.fn(),
+    findAll: vi.fn(async () => []),
     update: vi.fn(),
     ...deps.directorRepository,
   }
   const watcherApplicationRepository = {
     save: vi.fn(),
     findWatcherApplicationById: vi.fn(),
+    findByActorId: vi.fn(async () => []),
+    findAll: vi.fn(async () => []),
     updateWatcherApplicationStatus: vi.fn(),
     ...deps.watcherApplicationRepository,
   }
@@ -283,7 +286,7 @@ describe('FactCheckingService new workflows', () => {
     ctx.reportRepository.findById.mockResolvedValue(report)
     ctx.citizenRepository.findById.mockResolvedValue(citizen)
     ctx.journalistRepository.findById.mockResolvedValue(journalist)
-    ctx.citizenRepository.findAll.mockResolvedValue([citizen])
+    ctx.citizenRepository.findAllIds.mockResolvedValue([citizen.id])
 
     const publicationId = await ctx.service.approveInvestigation(
       director.id,
@@ -342,7 +345,7 @@ describe('FactCheckingService new workflows', () => {
     ctx.reportRepository.findById.mockResolvedValue(report)
     ctx.citizenRepository.findById.mockResolvedValue(citizen)
     ctx.journalistRepository.findById.mockResolvedValue(journalist)
-    ctx.citizenRepository.findAll.mockResolvedValue([citizen])
+    ctx.citizenRepository.findAllIds.mockResolvedValue([citizen.id])
 
     await ctx.service.approveInvestigation(director.id, investigation.id, {
       verifiedLinks: [

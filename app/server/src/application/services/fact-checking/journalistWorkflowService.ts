@@ -1,16 +1,19 @@
 import type {
   IAuthoritySourceRepository,
+  IDirectorRepository,
   IEvidenceRepository,
   IInboxSubjectMediaRepository,
   IInboxSubjectRepository,
   IInvestigationMediaRepository,
   IInvestigationRepository,
   IJournalistRepository,
+  INotificationRepository,
   IReportMediaRepository,
   IWorkflowAuditRepository,
 } from '../../../domain/repositories'
 import { AuthoritySourceFactory } from '../../../domain/factories/AuthoritySourceFactory'
 import { InvestigationMediaFactory } from '../../../domain/factories/MediaFactory'
+import { notifyActiveDirectors } from './directorNotifications'
 import { Investigation } from '../../../domain/entities/Investigation'
 import type {
   MediaCategory,
@@ -36,6 +39,8 @@ export class JournalistWorkflowService {
     private readonly evidenceRepository: IEvidenceRepository,
     private readonly authoritySourceRepository: IAuthoritySourceRepository,
     private readonly workflowAuditRepository: IWorkflowAuditRepository,
+    private readonly directorRepository: IDirectorRepository,
+    private readonly notificationRepository: INotificationRepository,
   ) {}
 
   async pickInboxSubject(
@@ -63,6 +68,13 @@ export class JournalistWorkflowService {
       )
     }
 
+    await notifyActiveDirectors(
+      this.directorRepository,
+      this.notificationRepository,
+      'Nouvelle enquête ouverte',
+      `Une enquête a été ouverte sur le sujet « ${subject.theme} ».`,
+    )
+
     return investigation
   }
 
@@ -89,6 +101,18 @@ export class JournalistWorkflowService {
     )
     await this.investigationRepository.update(investigation)
     await this.workflowAuditRepository.save(audit)
+
+    const subject = await this.inboxSubjectRepository.findById(
+      investigation.inboxSubjectId,
+    )
+    await notifyActiveDirectors(
+      this.directorRepository,
+      this.notificationRepository,
+      'Enquête soumise en revue',
+      subject
+        ? `L'enquête sur « ${subject.theme} » est prête pour arbitrage.`
+        : 'Une enquête est prête pour arbitrage.',
+    )
   }
 
   async updateInvestigationDraft(
