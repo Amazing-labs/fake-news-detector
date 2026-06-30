@@ -1,4 +1,14 @@
-import { FilePlus2, Loader2, X } from 'lucide-react'
+import {
+  File,
+  FileText,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  Loader2,
+  Music,
+  Video,
+  X,
+  type LucideIcon,
+} from 'lucide-react'
 import { useEffect, useRef, useState, type DragEvent } from 'react'
 import { toast } from 'sonner'
 import {
@@ -15,6 +25,17 @@ import { Button, Input, Select, SectionCard } from './primitives'
 import { mediaTypes, type MediaDraft } from './media-fields.model'
 
 const MAX_MEDIA = 6
+
+// Per-type icon so non-image uploads get clear visual feedback (the same way
+// images show a thumbnail), instead of a generic/anonymous placeholder.
+const mediaTypeIcon: Record<MediaDraft['type'], LucideIcon> = {
+  IMAGE: ImageIcon,
+  VIDEO: Video,
+  AUDIO: Music,
+  DOCUMENT: FileText,
+  TEXT: FileText,
+  LINK: LinkIcon,
+}
 
 const acceptedMediaFileTypes = [
   'image/*',
@@ -148,34 +169,37 @@ export function MediaFields(props: {
 
         {props.items.length > 0 && (
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
-            {props.items.map((item, index) => (
-              <div key={`${index}-${item.type}`} className="group relative">
-                {item.type === 'IMAGE' && item.url ? (
-                  <div className="aspect-square overflow-hidden rounded-lg border border-white/10">
-                    <img
-                      src={item.url}
-                      alt={`Média ${index + 1}`}
-                      className="size-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2 text-center">
-                    <FilePlus2 className="size-5 shrink-0 text-white/40" />
-                    <span className="line-clamp-2 text-[10px] text-white/50">
-                      {item.type}
-                    </span>
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={() => removeItem(index)}
-                  className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border border-white/20 bg-black/80 opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
-                  aria-label={`Retirer le média ${index + 1}`}
-                >
-                  <X className="size-3 text-white" />
-                </button>
-              </div>
-            ))}
+            {props.items.map((item, index) => {
+              const Icon = mediaTypeIcon[item.type] ?? File
+              return (
+                <div key={`${index}-${item.type}`} className="group relative">
+                  {item.type === 'IMAGE' && item.url ? (
+                    <div className="aspect-square overflow-hidden rounded-lg border border-white/10">
+                      <img
+                        src={item.url}
+                        alt={`Média ${index + 1}`}
+                        className="size-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2 text-center">
+                      <Icon className="size-6 shrink-0 text-white/70" />
+                      <span className="line-clamp-2 text-[10px] font-medium text-white/60">
+                        {item.type}
+                      </span>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeItem(index)}
+                    className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border border-white/20 bg-black/80 opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
+                    aria-label={`Retirer le média ${index + 1}`}
+                  >
+                    <X className="size-3 text-white" />
+                  </button>
+                </div>
+              )
+            })}
           </div>
         )}
 
