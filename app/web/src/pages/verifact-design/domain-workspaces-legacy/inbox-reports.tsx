@@ -342,13 +342,17 @@ function InboxList(props: {
                 key={item.id}
                 className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
               >
-                <div>
-                  <p className="font-medium">{item.theme}</p>
-                  <p className="text-muted-foreground text-sm">
+                <div className="min-w-0">
+                  <p className="truncate font-medium" title={item.theme}>
+                    {item.theme}
+                  </p>
+                  <p className="text-muted-foreground truncate text-sm">
                     {ORIGIN_LABELS[item.origin] ?? item.origin}
                     {item.ownerName ? ` / ${item.ownerName}` : ''}
                   </p>
-                  <p className="mt-3 text-sm">{item.description}</p>
+                  <p className="mt-3 line-clamp-2 text-sm">
+                    {item.description}
+                  </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 self-start justify-self-start md:justify-self-end">
                   <StatusBadge status={item.status} />

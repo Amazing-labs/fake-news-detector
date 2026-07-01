@@ -152,8 +152,11 @@ export function DirectorHomePage() {
               ) : null}
               {pendingInvestigations.map((item) => (
                 <TableRow key={item.id}>
-                  <TableCell className="font-medium">
-                    {item.inboxSubjectId}
+                  <TableCell
+                    className="max-w-[18rem] truncate font-medium"
+                    title={item.title ?? item.inboxSubjectId}
+                  >
+                    {item.title ?? 'Sujet sans titre'}
                   </TableCell>
                   <TableCell>
                     {item.draftVerdict ? domainLabel(item.draftVerdict) : '-'}

@@ -71,6 +71,37 @@ export function MetaCell({ label, value }: { label: string; value: string }) {
   )
 }
 
+// Friendly placeholder for empty tabs/lists — an icon, a title and a short line
+// so an absent resource reads as intentional rather than a broken/blank panel.
+export function EmptyState({
+  icon: Icon,
+  title,
+  description,
+  className,
+}: {
+  icon?: ComponentType<{ className?: string }>
+  title: string
+  description?: string
+  className?: string
+}) {
+  return (
+    <div
+      className={cn(
+        'flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center',
+        className,
+      )}
+    >
+      {Icon ? <Icon className="text-muted-foreground/60 mb-3 size-8" /> : null}
+      <p className="font-medium">{title}</p>
+      {description ? (
+        <p className="text-muted-foreground mt-1 max-w-sm text-sm">
+          {description}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
 export function StatCard(props: {
   title: string
   value: string
