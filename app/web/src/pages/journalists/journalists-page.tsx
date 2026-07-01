@@ -1,7 +1,4 @@
-import {
-  PeopleManagementPage,
-  UserStatusWorkspacePage,
-} from '../verifact-design/verifact-design-page'
+import { PeopleManagementPage } from '../verifact-design/verifact-design-page'
 import { AppLayout } from '../verifact-design/app-layout'
 import { CreateJournalistForm } from '@features/journalists/create-journalist-form'
 
@@ -15,8 +12,4 @@ export function JournalistCreatePage() {
       <CreateJournalistForm />
     </AppLayout>
   )
-}
-
-export function JournalistStatusPage(props: { journalistId?: string }) {
-  return <UserStatusWorkspacePage userLabel={props.journalistId} />
 }

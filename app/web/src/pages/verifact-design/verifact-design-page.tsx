@@ -21,7 +21,6 @@ import {
   ReportsWorkspacePage,
   RoleAwareDashboardPage,
   UserCreateWorkspacePage,
-  UserStatusWorkspacePage,
   WatcherApplicationsReviewPage,
   WatcherWorkspacePage,
 } from './domain-workspaces'
@@ -50,7 +49,6 @@ export {
   ReportDetailWorkspacePage,
   ReportsWorkspacePage,
   UserCreateWorkspacePage,
-  UserStatusWorkspacePage,
   VeriFactAuthPage,
   WatcherApplicationsReviewPage,
   WatcherWorkspacePage,

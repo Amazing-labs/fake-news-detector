@@ -20,7 +20,6 @@ export {
   ReportsWorkspacePage,
   RoleAwareDashboardPage,
   UserCreateWorkspacePage,
-  UserStatusWorkspacePage,
   WatcherApplicationsReviewPage,
   WatcherWorkspacePage,
 } from './domain-workspaces-legacy'
