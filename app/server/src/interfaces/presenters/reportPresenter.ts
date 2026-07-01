@@ -24,10 +24,12 @@ export function presentReportList(reports: Report[]) {
 export function presentEnrichedReport({
   report,
   reporterName,
+  subjectStatus,
 }: EnrichedReport) {
   return {
     ...presentReport(report),
     reporterName,
+    subjectStatus,
   }
 }
 

@@ -6,15 +6,23 @@ import type {
   InvestigationMediaList,
 } from './model'
 import type {
+  ApproveInvestigationInput,
+  ArchiveInvestigationInput,
+  DirectorReasonInput,
   InvestigationDraftInput,
   MediaClassificationInput,
   ProofMediaInput,
+  SubmitWatcherEvidenceInput,
 } from './schemas'
 
 export type {
+  ApproveInvestigationInput,
+  ArchiveInvestigationInput,
+  DirectorReasonInput,
   InvestigationDraftInput,
   MediaClassificationInput,
   ProofMediaInput,
+  SubmitWatcherEvidenceInput,
 } from './schemas'
 
 export type InvestigationScope =
@@ -120,4 +128,54 @@ export function addJournalistProofMedia(
     `/api/investigations/${investigationId}/proof-media`,
     { method: 'POST', body: JSON.stringify(input) },
   )
+}
+
+export function submitWatcherEvidence(
+  investigationId: string,
+  input: SubmitWatcherEvidenceInput,
+) {
+  return apiRequest<{ id: string }>(
+    `/api/investigations/${investigationId}/evidence`,
+    { method: 'POST', body: JSON.stringify(input) },
+  )
+}
+
+export function approveInvestigation(
+  investigationId: string,
+  input: ApproveInvestigationInput,
+) {
+  return apiRequest<{ publicationId: string }>(
+    `/api/investigations/${investigationId}/approve`,
+    { method: 'POST', body: JSON.stringify(input) },
+  )
+}
+
+export function rejectInvestigation(
+  investigationId: string,
+  input: DirectorReasonInput,
+) {
+  return apiRequest<null>(`/api/investigations/${investigationId}/reject`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function archiveInvestigation(
+  investigationId: string,
+  input: ArchiveInvestigationInput,
+) {
+  return apiRequest<null>(`/api/investigations/${investigationId}/archive`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
+}
+
+export function cancelInvestigation(
+  investigationId: string,
+  input: DirectorReasonInput,
+) {
+  return apiRequest<null>(`/api/investigations/${investigationId}/cancel`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }

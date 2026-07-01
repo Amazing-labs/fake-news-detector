@@ -1,4 +1,4 @@
-import { Archive, BadgeCheck, Ban, PenLine, XCircle } from 'lucide-react'
+import { Archive, BadgeCheck, Ban, PenLine } from 'lucide-react'
 import { Button } from '@shared/ui/shadcn/button'
 import { Card, CardContent, CardHeader } from '@shared/ui/shadcn/card'
 import {
@@ -66,7 +66,7 @@ export function DirectorInvestigationWorkspace({
               <p className="text-sm font-medium">Arbitrage éditorial</p>
               <div className="flex flex-wrap gap-2">
                 {canPublish && (
-                  <PublishInvestigationDialog>
+                  <PublishInvestigationDialog investigationId={dossier.id}>
                     <Button size="sm">
                       <BadgeCheck className="size-4" />
                       Publier
@@ -74,20 +74,30 @@ export function DirectorInvestigationWorkspace({
                   </PublishInvestigationDialog>
                 )}
                 {canArchive && (
-                  <ArbitrationReasonDialog action="Archiver le dossier">
+                  <ArbitrationReasonDialog
+                    investigationId={dossier.id}
+                    kind="archive"
+                    action="Archiver le dossier"
+                  >
                     <Button size="sm">
                       <Archive className="size-4" />
                       Archiver
                     </Button>
                   </ArbitrationReasonDialog>
                 )}
-                <ArbitrationReasonDialog action="Demander une correction">
+                <ArbitrationReasonDialog
+                  investigationId={dossier.id}
+                  kind="reject"
+                  action="Demander une correction"
+                >
                   <Button variant="outline" size="sm">
                     <PenLine className="size-4" />
                     Correction
                   </Button>
                 </ArbitrationReasonDialog>
                 <ArbitrationReasonDialog
+                  investigationId={dossier.id}
+                  kind="cancel"
                   action="Annuler le dossier"
                   tone="destructive"
                 >
@@ -98,15 +108,6 @@ export function DirectorInvestigationWorkspace({
                   >
                     <Ban className="size-4" />
                     Annuler
-                  </Button>
-                </ArbitrationReasonDialog>
-                <ArbitrationReasonDialog
-                  action="Rejeter le dossier"
-                  tone="destructive"
-                >
-                  <Button variant="destructive" size="sm">
-                    <XCircle className="size-4" />
-                    Rejeter
                   </Button>
                 </ArbitrationReasonDialog>
               </div>

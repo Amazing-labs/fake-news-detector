@@ -1,4 +1,5 @@
 import { Link, useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import {
   Download,
@@ -25,12 +26,14 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@shared/ui/shadcn/dialog'
+import { Label } from '@shared/ui/shadcn/label'
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '@shared/ui/shadcn/tabs'
+import { Textarea } from '@shared/ui/shadcn/textarea'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CreateDirectorInboxSubjectForm } from '@features/inbox-subjects/create-director-inbox-subject-form'
 import { AppLayout } from '../app-layout'
@@ -42,6 +45,7 @@ import { MetaCell, StatusBadge } from '../workspace-ui'
 import { listReports, reportQueryKeys } from '@entities/report/api'
 import type { ReportItem } from '@entities/report/model'
 import {
+  deleteInboxSubject,
   getInboxSubject,
   getInboxSubjectMedia,
   inboxSubjectQueryKeys,
@@ -80,6 +84,96 @@ function usePickSubjectMutation() {
       toast.error(toApiErrorMessage(error))
     },
   })
+}
+
+// Director-only: deletes a subject. The server requires a reason, so the dialog
+// keeps the confirm button disabled until one is typed.
+function DeleteSubjectDialog({ item }: { item: InboxSubjectItem }) {
+  const queryClient = useQueryClient()
+  const [open, setOpen] = useState(false)
+  const [reason, setReason] = useState('')
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteInboxSubject(item.id, { reason: reason.trim() }),
+    onSuccess: () => {
+      setOpen(false)
+      setReason('')
+      void queryClient.invalidateQueries({
+        queryKey: inboxSubjectQueryKeys.all,
+      })
+      toast.success('Sujet supprimé.')
+    },
+    onError: (error) => toast.error(toApiErrorMessage(error)),
+  })
+
+  function handleDelete() {
+    if (!reason.trim()) {
+      toast.error('La raison est obligatoire.')
+      return
+    }
+    deleteMutation.mutate()
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (deleteMutation.isPending) return
+        setOpen(next)
+        if (!next) setReason('')
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-muted-foreground hover:text-destructive h-7 px-2"
+        >
+          <Trash2 />
+          Supprimer
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Supprimer le sujet</DialogTitle>
+          <DialogDescription>
+            Indiquez la raison de la suppression pour garder une trace
+            éditoriale.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="rounded-lg border p-4">
+          <p className="font-medium">{item.theme}</p>
+          <p className="text-muted-foreground mt-1 text-sm">
+            {item.description}
+          </p>
+        </div>
+        <Label className="grid gap-2">
+          Raison
+          <Textarea
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            placeholder="Pourquoi ce sujet est-il supprimé ?"
+          />
+        </Label>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline" disabled={deleteMutation.isPending}>
+              Annuler
+            </Button>
+          </DialogClose>
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={!reason.trim()}
+            loading={deleteMutation.isPending}
+          >
+            {!deleteMutation.isPending && <Trash2 />}
+            Supprimer
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
 }
 
 // ── Reports list (director only) ───────────────────────────────────────────────
@@ -125,33 +219,23 @@ function ReportList({ items }: { items: ReportItem[] }) {
       <CardHeader>
         <CardTitle>Signalements citoyens</CardTitle>
         <CardDescription>
-          Transformer les alertes utiles en sujets ou archiver les doublons.
+          Suivi des signalements déposés. Les sujets sont ouverts depuis l'inbox
+          journaliste.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
         {items.length ? (
           items.map((item) => (
-            <div
-              key={item.id}
-              className="grid gap-4 rounded-lg border p-4 lg:grid-cols-[1fr_auto]"
-            >
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-medium">{item.title}</p>
-                  <StatusBadge status={item.status} />
-                </div>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  {item.theme}
-                  {item.reporterName ? ` / ${item.reporterName}` : ''}
-                </p>
-                <p className="mt-3 text-sm">{item.content}</p>
+            <div key={item.id} className="rounded-lg border p-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-medium">{item.title}</p>
+                <StatusBadge status={item.status} />
               </div>
-              <div className="flex shrink-0 flex-wrap items-start gap-2">
-                <Button size="sm">Créer un sujet</Button>
-                <Button size="sm" variant="outline">
-                  Archiver
-                </Button>
-              </div>
+              <p className="text-muted-foreground mt-1 text-sm">
+                {item.theme}
+                {item.reporterName ? ` / ${item.reporterName}` : ''}
+              </p>
+              <p className="mt-3 text-sm">{item.content}</p>
             </div>
           ))
         ) : (
@@ -283,41 +367,7 @@ function InboxList(props: {
                     </Link>
                   </Button>
                   {props.actor === 'director' && (
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-muted-foreground hover:text-destructive h-7 px-2"
-                        >
-                          <Trash2 />
-                          Supprimer
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Supprimer le sujet</DialogTitle>
-                          <DialogDescription>
-                            Voulez-vous vraiment supprimer ce sujet ?
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="rounded-lg border p-4">
-                          <p className="font-medium">{item.theme}</p>
-                          <p className="text-muted-foreground mt-1 text-sm">
-                            {item.description}
-                          </p>
-                        </div>
-                        <DialogFooter>
-                          <DialogClose asChild>
-                            <Button variant="outline">Annuler</Button>
-                          </DialogClose>
-                          <Button variant="destructive">
-                            <Trash2 />
-                            Supprimer
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
+                    <DeleteSubjectDialog item={item} />
                   )}
                   {props.actor === 'journalist' && item.status === 'OPEN' && (
                     <Dialog>

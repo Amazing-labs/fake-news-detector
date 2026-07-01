@@ -755,9 +755,16 @@ describe('report access authorization', () => {
       findById: vi.fn(async () => null),
     }
 
+    // Inbox-subject repo is consulted to join the report's editorial-lifecycle
+    // status on the enriched read path; no linked subject is enough here.
+    const inboxSubjectRepository = {
+      findByReportIds: vi.fn(async () => []),
+      findByReportId: vi.fn(async () => null),
+    }
+
     const queryService = new FactCheckingQueryService(
       params.reportRepository as any,
-      {} as any,
+      inboxSubjectRepository as any,
       {} as any,
       {} as any,
       {} as any,

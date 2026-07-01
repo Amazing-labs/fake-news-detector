@@ -114,6 +114,10 @@ export type ActorMetrics =
 export interface EnrichedReport {
   report: Report
   reporterName: string | null
+  // Status of the InboxSubject this report was converted into (origin REPORT),
+  // joined on the read side so a citizen can follow the editorial lifecycle
+  // (OPEN -> IN_PROGRESS -> ARCHIVED). Null when no subject exists yet.
+  subjectStatus: InboxSubjectStatus | null
 }
 
 export interface EnrichedInboxSubject {
@@ -477,23 +481,27 @@ export class FactCheckingQueryService {
     citizenId?: string,
   ): Promise<EnrichedReport[]> {
     const reports = await this.listReportsForReader(reader, citizenId)
-    const citizenNames = await this.citizenNameMap(
-      reports.map((report) => report.citizenId),
-    )
+    const [citizenNames, subjectStatusByReportId] = await Promise.all([
+      this.citizenNameMap(reports.map((report) => report.citizenId)),
+      this.subjectStatusByReportIdMap(reports.map((report) => report.id)),
+    ])
     return reports.map((report) => ({
       report,
       reporterName: citizenNames.get(report.citizenId) ?? null,
+      subjectStatus: subjectStatusByReportId.get(report.id) ?? null,
     }))
   }
 
   async listOpenReportsInboxEnriched(): Promise<EnrichedReport[]> {
     const reports = await this.listOpenReportsInbox()
-    const citizenNames = await this.citizenNameMap(
-      reports.map((report) => report.citizenId),
-    )
+    const [citizenNames, subjectStatusByReportId] = await Promise.all([
+      this.citizenNameMap(reports.map((report) => report.citizenId)),
+      this.subjectStatusByReportIdMap(reports.map((report) => report.id)),
+    ])
     return reports.map((report) => ({
       report,
       reporterName: citizenNames.get(report.citizenId) ?? null,
+      subjectStatus: subjectStatusByReportId.get(report.id) ?? null,
     }))
   }
 
@@ -584,8 +592,15 @@ export class FactCheckingQueryService {
     reader: ReaderContext,
   ): Promise<EnrichedReport> {
     const report = await this.getReportForReader(reportId, reader)
-    const citizen = await this.citizenRepository.findById(report.citizenId)
-    return { report, reporterName: citizen?.name ?? null }
+    const [citizen, subject] = await Promise.all([
+      this.citizenRepository.findById(report.citizenId),
+      this.inboxSubjectRepository.findByReportId(report.id),
+    ])
+    return {
+      report,
+      reporterName: citizen?.name ?? null,
+      subjectStatus: subject?.status ?? null,
+    }
   }
 
   async getInboxSubjectEnriched(
@@ -756,6 +771,21 @@ export class FactCheckingQueryService {
   ): Promise<Map<string, InboxSubject>> {
     const subjects = await this.inboxSubjectRepository.findByIds(uniqueIds(ids))
     return new Map(subjects.map((subject) => [subject.id, subject]))
+  }
+
+  // Keyed by reportId — the InboxSubject a report was converted into (origin
+  // REPORT) carries the editorial lifecycle status the citizen follows.
+  private async subjectStatusByReportIdMap(
+    reportIds: ReadonlyArray<string | null | undefined>,
+  ): Promise<Map<string, InboxSubjectStatus>> {
+    const subjects = await this.inboxSubjectRepository.findByReportIds(
+      uniqueIds(reportIds),
+    )
+    const byReportId = new Map<string, InboxSubjectStatus>()
+    for (const subject of subjects) {
+      if (subject.reportId) byReportId.set(subject.reportId, subject.status)
+    }
+    return byReportId
   }
 
   private async authoritySourceNameMap(

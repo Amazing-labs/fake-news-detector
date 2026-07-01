@@ -68,7 +68,9 @@ export function CitizenWorkspacePage() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <p className="font-medium">{item.title}</p>
-                    <StatusBadge status={item.status} />
+                    {/* Prefer the joined InboxSubject status: it captures the
+                        IN_PROGRESS step the binary report status can't. */}
+                    <StatusBadge status={item.subjectStatus ?? item.status} />
                   </div>
                   <p className="text-muted-foreground mt-2 text-sm">
                     {item.content}

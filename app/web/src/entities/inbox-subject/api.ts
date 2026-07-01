@@ -35,6 +35,18 @@ export function getInboxSubjectMedia(subjectId: string) {
   )
 }
 
+// Director-only: deletes a subject. The server requires a non-empty reason
+// (deleteInboxSubjectSchema) for the editorial audit trail.
+export function deleteInboxSubject(
+  subjectId: string,
+  input: { reason: string },
+) {
+  return apiRequest<null>(`/api/inbox-subjects/${subjectId}`, {
+    method: 'DELETE',
+    body: JSON.stringify(input),
+  })
+}
+
 export function listInboxSubjects(params?: { status?: InboxSubjectStatus }) {
   const search = new URLSearchParams()
 

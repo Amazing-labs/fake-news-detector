@@ -42,7 +42,7 @@ export function WatcherInvestigationWorkspace({
             <DossierHeader
               dossier={dossier}
               action={
-                <WatcherContributeDialog>
+                <WatcherContributeDialog investigationId={dossier.id}>
                   <Button size="sm">
                     <FilePlus2 className="size-4" />
                     Contribuer
