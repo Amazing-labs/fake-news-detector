@@ -201,7 +201,7 @@ export function MediaFields(props: {
                     type="button"
                     onClick={() => removeItem(index)}
                     disabled={props.disabled}
-                    className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border border-white/20 bg-black/80 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 disabled:cursor-not-allowed"
+                    className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border border-white/20 bg-black/80 opacity-0 shadow-sm transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none disabled:cursor-not-allowed"
                     aria-label={`Retirer le média ${index + 1}`}
                   >
                     <X className="size-3 text-white" />
