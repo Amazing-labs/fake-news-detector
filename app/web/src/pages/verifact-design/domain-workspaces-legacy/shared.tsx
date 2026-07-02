@@ -201,10 +201,14 @@ export function PublishInvestigationDialog({
         verifiedMedia,
       })
     },
-    onSuccess: () => {
+    // Snapshot the submitted upload URLs before the request so the success
+    // cleanup untracks exactly what was sent — even if the (now locked) media
+    // field state were to change mid-flight.
+    onMutate: () => ({ submittedUrls: media.map((item) => item.url) }),
+    onSuccess: (_result, _variables, context) => {
       // Mark the submitted media as no longer pending so MediaFields' unmount
       // cleanup does not delete the files we just attached to the publication.
-      untrackPendingUploads(media.map((item) => item.url))
+      untrackPendingUploads(context?.submittedUrls ?? [])
       setOpen(false)
       resetEvidence()
       void queryClient.invalidateQueries({ queryKey: ['investigations'] })
@@ -303,6 +307,7 @@ export function PublishInvestigationDialog({
                 description="Upload des fichiers qui renforcent la publication — le type est détecté automatiquement."
                 items={media}
                 onChange={setMedia}
+                disabled={mutation.isPending}
               />
             </section>
           </div>
@@ -370,8 +375,11 @@ export function WatcherContributeDialog({
         content: content.trim(),
         media: validMedia,
       }),
-    onSuccess: () => {
-      untrackPendingUploads(media.map((item) => item.url))
+    // Snapshot the submitted upload URLs so the success cleanup untracks exactly
+    // what was sent, not whatever the field holds when the request resolves.
+    onMutate: () => ({ submittedUrls: media.map((item) => item.url) }),
+    onSuccess: (_result, _variables, context) => {
+      untrackPendingUploads(context?.submittedUrls ?? [])
       setOpen(false)
       reset()
       void queryClient.invalidateQueries({ queryKey: ['investigations'] })
@@ -436,6 +444,7 @@ export function WatcherContributeDialog({
             description="Images, vidéos, audio, PDF ou documents utiles au dossier."
             items={media}
             onChange={setMedia}
+            disabled={mutation.isPending}
           />
         </div>
         <DialogFooter>

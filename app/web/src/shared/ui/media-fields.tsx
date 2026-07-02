@@ -63,6 +63,9 @@ export function MediaFields(props: {
   items: MediaDraft[]
   onChange: (items: MediaDraft[]) => void
   variant?: 'default' | 'dark'
+  /** Locks every control (upload, edit, remove) — e.g. while a submit is
+   * pending — so in-flight uploads can't be mutated or deleted. */
+  disabled?: boolean
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -70,6 +73,9 @@ export function MediaFields(props: {
   const isDark = props.variant === 'dark'
   const canUpload = isSupabaseUploadConfigured()
   const isFull = props.items.length >= MAX_MEDIA
+  // Upload/edit controls are locked while uploading OR while the parent marks
+  // the field disabled (e.g. a submit is in flight).
+  const inputsDisabled = isUploading || (props.disabled ?? false)
 
   // Clean up orphans from previous sessions on mount
   useEffect(() => {
@@ -91,7 +97,7 @@ export function MediaFields(props: {
   }, [])
 
   async function handleFiles(files: FileList | null) {
-    if (isUploading || !files?.length || !canUpload) return
+    if (props.disabled || isUploading || !files?.length || !canUpload) return
     const slots = MAX_MEDIA - props.items.length
     if (slots <= 0) return
 
@@ -125,12 +131,13 @@ export function MediaFields(props: {
 
   function handleDrop(event: DragEvent<HTMLElement>) {
     event.preventDefault()
-    if (!isUploading && canUpload && event.dataTransfer) {
+    if (!props.disabled && !isUploading && canUpload && event.dataTransfer) {
       void handleFiles(event.dataTransfer.files)
     }
   }
 
   function removeItem(index: number) {
+    if (props.disabled) return
     const url = props.items[index]?.url
     if (url) {
       if (sessionUploadsRef.current.includes(url)) {
@@ -145,6 +152,7 @@ export function MediaFields(props: {
   }
 
   function updateItem(index: number, patch: Partial<MediaDraft>) {
+    if (props.disabled) return
     const next = [...props.items]
     next[index] = { ...next[index], ...patch }
     props.onChange(next)
@@ -192,7 +200,8 @@ export function MediaFields(props: {
                   <button
                     type="button"
                     onClick={() => removeItem(index)}
-                    className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border border-white/20 bg-black/80 opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
+                    disabled={props.disabled}
+                    className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border border-white/20 bg-black/80 opacity-0 shadow-sm transition-opacity group-hover:opacity-100 disabled:cursor-not-allowed"
                     aria-label={`Retirer le média ${index + 1}`}
                   >
                     <X className="size-3 text-white" />
@@ -210,7 +219,7 @@ export function MediaFields(props: {
             onDrop={handleDrop}
             className={cn(
               dropzoneBase,
-              isUploading
+              inputsDisabled
                 ? 'pointer-events-none cursor-not-allowed opacity-50'
                 : 'cursor-pointer',
             )}
@@ -232,7 +241,7 @@ export function MediaFields(props: {
               multiple
               accept={acceptedMediaFileTypes}
               className="hidden"
-              disabled={isUploading}
+              disabled={inputsDisabled}
               onChange={(e) => void handleFiles(e.target.files)}
             />
           </label>
@@ -296,7 +305,11 @@ export function MediaFields(props: {
                   </option>
                 ))}
               </Select>
-              <Button variant="secondary" onClick={() => removeItem(index)}>
+              <Button
+                variant="secondary"
+                disabled={props.disabled}
+                onClick={() => removeItem(index)}
+              >
                 Retirer ce média
               </Button>
             </div>
@@ -315,7 +328,7 @@ export function MediaFields(props: {
             className={cn(
               dropzoneBase,
               'min-h-40',
-              isUploading
+              inputsDisabled
                 ? 'pointer-events-none cursor-not-allowed opacity-50'
                 : 'cursor-pointer',
             )}
@@ -337,7 +350,7 @@ export function MediaFields(props: {
               multiple
               accept={acceptedMediaFileTypes}
               className="hidden"
-              disabled={isUploading}
+              disabled={inputsDisabled}
               onChange={(e) => void handleFiles(e.target.files)}
             />
           </label>
