@@ -23,3 +23,19 @@ export type ReportList = {
   items: ReportItem[]
   total: number
 }
+
+export type ReportMediaItem = {
+  id: number
+  url: string
+  type: string
+  order: number
+  origin: string
+  uploadedById: string
+  createdAt: string
+  updatedAt: string
+}
+
+export type ReportMediaList = {
+  items: ReportMediaItem[]
+  total: number
+}

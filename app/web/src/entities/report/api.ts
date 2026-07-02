@@ -1,5 +1,5 @@
 import { apiRequest } from '@shared/api/http'
-import type { ReportItem, ReportList } from './model'
+import type { ReportItem, ReportList, ReportMediaList } from './model'
 
 export type MediaInput = {
   url: string
@@ -17,6 +17,7 @@ export type CreateReportInput = {
 export const reportQueryKeys = {
   all: ['reports'] as const,
   detail: (reportId: string) => ['reports', 'detail', reportId] as const,
+  media: (reportId: string) => ['reports', 'media', reportId] as const,
   list: (params?: { citizenId?: string }) =>
     ['reports', 'list', params ?? {}] as const,
 }
@@ -35,6 +36,10 @@ export function listReports(params?: { citizenId?: string }) {
 
 export function getReport(reportId: string) {
   return apiRequest<ReportItem>(`/api/reports/${reportId}`)
+}
+
+export function getReportMedia(reportId: string) {
+  return apiRequest<ReportMediaList>(`/api/reports/${reportId}/media`)
 }
 
 export function createReport(input: CreateReportInput) {

@@ -744,6 +744,27 @@ export class FactCheckingQueryService {
     }))
   }
 
+  // Media a citizen attached to their own report, so they can review and
+  // download it from their report history. Ownership is enforced by
+  // getReportForReader (a citizen reading another citizen's report gets 404).
+  async getReportMediaForReader(
+    reportId: string,
+    reader: ReaderContext,
+  ): Promise<InboxSubjectMediaView[]> {
+    await this.getReportForReader(reportId, reader)
+    const media = await this.reportMediaRepository.findByReportId(reportId)
+    return media.map((item) => ({
+      id: item.id,
+      url: item.url,
+      type: item.type,
+      order: item.order,
+      origin: 'CITIZEN_REPORT',
+      uploadedById: item.uploadedById,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+    }))
+  }
+
   async listWatcherApplicationsEnriched(): Promise<
     EnrichedWatcherApplication[]
   > {

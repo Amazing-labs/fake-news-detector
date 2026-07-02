@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   ExternalLink,
   FileSearch,
+  Paperclip,
   PenLine,
   RotateCcw,
 } from 'lucide-react'
@@ -35,7 +36,7 @@ import {
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { domainLabel } from '../workspace-labels'
-import { MetaCell, StatCard, StatusBadge } from '../workspace-ui'
+import { EmptyState, MetaCell, StatCard, StatusBadge } from '../workspace-ui'
 import {
   CitizenReportCreateWorkspacePage as CitizenReportCreateWorkspace,
   CitizenWorkspacePage as CitizenWorkspace,
@@ -50,8 +51,14 @@ import {
   listPublications,
   publicationQueryKeys,
 } from '@entities/publication/api'
-import { getReport, reportQueryKeys } from '@entities/report/api'
+import {
+  getReport,
+  getReportMedia,
+  reportQueryKeys,
+} from '@entities/report/api'
 import { toApiErrorMessage } from '@shared/api/http'
+import { MediaPreviewItem } from './media-preview'
+import { toPreviewMedia } from './media-preview-utils'
 import { GuestHomePage } from './admin'
 
 function useActorMetrics() {
@@ -234,7 +241,13 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
     queryFn: () => getReport(reportId),
     enabled: Boolean(reportId),
   })
+  const mediaQuery = useQuery({
+    queryKey: reportQueryKeys.media(reportId),
+    queryFn: () => getReportMedia(reportId),
+    enabled: Boolean(reportId),
+  })
   const report = reportQuery.data
+  const media = (mediaQuery.data?.items ?? []).map(toPreviewMedia)
 
   if (reportQuery.isPending) {
     return (
@@ -311,6 +324,7 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
       <Tabs defaultValue="content">
         <TabsList>
           <TabsTrigger value="content">Contenu</TabsTrigger>
+          <TabsTrigger value="media">Médias ({media.length})</TabsTrigger>
           <TabsTrigger value="tracking">Suivi</TabsTrigger>
         </TabsList>
 
@@ -328,6 +342,30 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
               </p>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="media" className="mt-4">
+          {mediaQuery.isPending ? (
+            <PageLoader label="Chargement des médias…" />
+          ) : mediaQuery.isError ? (
+            <Card>
+              <CardContent className="text-destructive pt-6">
+                {toApiErrorMessage(mediaQuery.error)}
+              </CardContent>
+            </Card>
+          ) : media.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {media.map((item) => (
+                <MediaPreviewItem key={item.name} item={item} canDownload />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Paperclip}
+              title="Aucun média joint"
+              description="Vous n'avez pas ajouté de média à ce signalement."
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="tracking" className="mt-4">
