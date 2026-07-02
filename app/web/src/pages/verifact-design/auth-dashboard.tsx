@@ -1,5 +1,12 @@
 import { Link, useNavigate } from '@tanstack/react-router'
-import { CheckCircle2, Clock3, ShieldCheck, Sparkles } from 'lucide-react'
+import {
+  CheckCircle2,
+  Clock3,
+  Eye,
+  EyeOff,
+  ShieldCheck,
+  Sparkles,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import {
   localAuthActors,
@@ -36,6 +43,7 @@ export function VeriFactAuthPage(props: {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [pending, setPending] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -199,14 +207,34 @@ export function VeriFactAuthPage(props: {
               </div>
               <div className="grid gap-3">
                 <Label htmlFor="password">Mot de passe</Label>
-                <Input
-                  id="password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="********"
-                  type="password"
-                  required
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="********"
+                    type={showPassword ? 'text' : 'password'}
+                    className="pr-10"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword((visible) => !visible)}
+                    className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 absolute inset-y-0 right-0 flex items-center rounded-md px-3 focus-visible:ring-[3px] focus-visible:outline-none"
+                    aria-label={
+                      showPassword
+                        ? 'Masquer le mot de passe'
+                        : 'Afficher le mot de passe'
+                    }
+                    aria-pressed={showPassword}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="size-4" />
+                    ) : (
+                      <Eye className="size-4" />
+                    )}
+                  </button>
+                </div>
               </div>
               {error ? (
                 <Alert variant="destructive">
