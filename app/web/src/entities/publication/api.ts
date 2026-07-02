@@ -1,8 +1,8 @@
 import { apiRequest } from '@shared/api/http'
 import type { CorrectionList, PublicationItem, PublicationList } from './model'
-import type { PublicationScope } from './schemas'
+import type { CreateCorrectionInput, PublicationScope } from './schemas'
 
-export type { PublicationScope }
+export type { CreateCorrectionInput, PublicationScope }
 
 export const publicationQueryKeys = {
   all: ['publications'] as const,
@@ -35,5 +35,15 @@ export function getPublication(publicationId: string) {
 export function getPublicationCorrections(publicationId: string) {
   return apiRequest<CorrectionList>(
     `/api/publications/${publicationId}/corrections`,
+  )
+}
+
+export function createPublicationCorrection(
+  publicationId: string,
+  input: CreateCorrectionInput,
+) {
+  return apiRequest<{ correctionId: string }>(
+    `/api/publications/${publicationId}/corrections`,
+    { method: 'POST', body: JSON.stringify(input) },
   )
 }

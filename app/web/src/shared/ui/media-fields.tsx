@@ -1,4 +1,14 @@
-import { FilePlus2, Loader2, X } from 'lucide-react'
+import {
+  File,
+  FileText,
+  Image as ImageIcon,
+  Link as LinkIcon,
+  Loader2,
+  Music,
+  Video,
+  X,
+  type LucideIcon,
+} from 'lucide-react'
 import { useEffect, useRef, useState, type DragEvent } from 'react'
 import { toast } from 'sonner'
 import {
@@ -15,6 +25,17 @@ import { Button, Input, Select, SectionCard } from './primitives'
 import { mediaTypes, type MediaDraft } from './media-fields.model'
 
 const MAX_MEDIA = 6
+
+// Per-type icon so non-image uploads get clear visual feedback (the same way
+// images show a thumbnail), instead of a generic/anonymous placeholder.
+const mediaTypeIcon: Record<MediaDraft['type'], LucideIcon> = {
+  IMAGE: ImageIcon,
+  VIDEO: Video,
+  AUDIO: Music,
+  DOCUMENT: FileText,
+  TEXT: FileText,
+  LINK: LinkIcon,
+}
 
 const acceptedMediaFileTypes = [
   'image/*',
@@ -42,6 +63,9 @@ export function MediaFields(props: {
   items: MediaDraft[]
   onChange: (items: MediaDraft[]) => void
   variant?: 'default' | 'dark'
+  /** Locks every control (upload, edit, remove) — e.g. while a submit is
+   * pending — so in-flight uploads can't be mutated or deleted. */
+  disabled?: boolean
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -49,6 +73,9 @@ export function MediaFields(props: {
   const isDark = props.variant === 'dark'
   const canUpload = isSupabaseUploadConfigured()
   const isFull = props.items.length >= MAX_MEDIA
+  // Upload/edit controls are locked while uploading OR while the parent marks
+  // the field disabled (e.g. a submit is in flight).
+  const inputsDisabled = isUploading || (props.disabled ?? false)
 
   // Clean up orphans from previous sessions on mount
   useEffect(() => {
@@ -70,7 +97,7 @@ export function MediaFields(props: {
   }, [])
 
   async function handleFiles(files: FileList | null) {
-    if (isUploading || !files?.length || !canUpload) return
+    if (props.disabled || isUploading || !files?.length || !canUpload) return
     const slots = MAX_MEDIA - props.items.length
     if (slots <= 0) return
 
@@ -104,12 +131,13 @@ export function MediaFields(props: {
 
   function handleDrop(event: DragEvent<HTMLElement>) {
     event.preventDefault()
-    if (!isUploading && canUpload && event.dataTransfer) {
+    if (!props.disabled && !isUploading && canUpload && event.dataTransfer) {
       void handleFiles(event.dataTransfer.files)
     }
   }
 
   function removeItem(index: number) {
+    if (props.disabled) return
     const url = props.items[index]?.url
     if (url) {
       if (sessionUploadsRef.current.includes(url)) {
@@ -124,6 +152,7 @@ export function MediaFields(props: {
   }
 
   function updateItem(index: number, patch: Partial<MediaDraft>) {
+    if (props.disabled) return
     const next = [...props.items]
     next[index] = { ...next[index], ...patch }
     props.onChange(next)
@@ -148,34 +177,38 @@ export function MediaFields(props: {
 
         {props.items.length > 0 && (
           <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
-            {props.items.map((item, index) => (
-              <div key={`${index}-${item.type}`} className="group relative">
-                {item.type === 'IMAGE' && item.url ? (
-                  <div className="aspect-square overflow-hidden rounded-lg border border-white/10">
-                    <img
-                      src={item.url}
-                      alt={`Média ${index + 1}`}
-                      className="size-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="flex aspect-square flex-col items-center justify-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2 text-center">
-                    <FilePlus2 className="size-5 shrink-0 text-white/40" />
-                    <span className="line-clamp-2 text-[10px] text-white/50">
-                      {item.type}
-                    </span>
-                  </div>
-                )}
-                <button
-                  type="button"
-                  onClick={() => removeItem(index)}
-                  className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border border-white/20 bg-black/80 opacity-0 shadow-sm transition-opacity group-hover:opacity-100"
-                  aria-label={`Retirer le média ${index + 1}`}
-                >
-                  <X className="size-3 text-white" />
-                </button>
-              </div>
-            ))}
+            {props.items.map((item, index) => {
+              const Icon = mediaTypeIcon[item.type] ?? File
+              return (
+                <div key={`${index}-${item.type}`} className="group relative">
+                  {item.type === 'IMAGE' && item.url ? (
+                    <div className="aspect-square overflow-hidden rounded-lg border border-white/10">
+                      <img
+                        src={item.url}
+                        alt={`Média ${index + 1}`}
+                        className="size-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2 text-center">
+                      <Icon className="size-6 shrink-0 text-white/70" />
+                      <span className="line-clamp-2 text-[10px] font-medium text-white/60">
+                        {item.type}
+                      </span>
+                    </div>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeItem(index)}
+                    disabled={props.disabled}
+                    className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border border-white/20 bg-black/80 opacity-0 shadow-sm transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none disabled:cursor-not-allowed"
+                    aria-label={`Retirer le média ${index + 1}`}
+                  >
+                    <X className="size-3 text-white" />
+                  </button>
+                </div>
+              )
+            })}
           </div>
         )}
 
@@ -186,7 +219,7 @@ export function MediaFields(props: {
             onDrop={handleDrop}
             className={cn(
               dropzoneBase,
-              isUploading
+              inputsDisabled
                 ? 'pointer-events-none cursor-not-allowed opacity-50'
                 : 'cursor-pointer',
             )}
@@ -208,7 +241,7 @@ export function MediaFields(props: {
               multiple
               accept={acceptedMediaFileTypes}
               className="hidden"
-              disabled={isUploading}
+              disabled={inputsDisabled}
               onChange={(e) => void handleFiles(e.target.files)}
             />
           </label>
@@ -272,7 +305,11 @@ export function MediaFields(props: {
                   </option>
                 ))}
               </Select>
-              <Button variant="secondary" onClick={() => removeItem(index)}>
+              <Button
+                variant="secondary"
+                disabled={props.disabled}
+                onClick={() => removeItem(index)}
+              >
                 Retirer ce média
               </Button>
             </div>
@@ -291,7 +328,7 @@ export function MediaFields(props: {
             className={cn(
               dropzoneBase,
               'min-h-40',
-              isUploading
+              inputsDisabled
                 ? 'pointer-events-none cursor-not-allowed opacity-50'
                 : 'cursor-pointer',
             )}
@@ -313,7 +350,7 @@ export function MediaFields(props: {
               multiple
               accept={acceptedMediaFileTypes}
               className="hidden"
-              disabled={isUploading}
+              disabled={inputsDisabled}
               onChange={(e) => void handleFiles(e.target.files)}
             />
           </label>

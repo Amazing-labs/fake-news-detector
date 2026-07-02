@@ -64,22 +64,33 @@ export class PrismaInboxSubjectRepository implements IInboxSubjectRepository {
   }
 
   async findAll(): Promise<InboxSubject[]> {
-    const rows = await prisma.inboxSubject.findMany()
+    const rows = await prisma.inboxSubject.findMany({
+      orderBy: { createdAt: 'desc' },
+    })
     return rows.map((row) => this.toDomain(row))
   }
 
   async findByStatus(status: InboxSubjectStatus): Promise<InboxSubject[]> {
-    const rows = await prisma.inboxSubject.findMany({ where: { status } })
+    const rows = await prisma.inboxSubject.findMany({
+      where: { status },
+      orderBy: { createdAt: 'desc' },
+    })
     return rows.map((row) => this.toDomain(row))
   }
 
   async findByOrigin(origin: InboxSubjectOrigin): Promise<InboxSubject[]> {
-    const rows = await prisma.inboxSubject.findMany({ where: { origin } })
+    const rows = await prisma.inboxSubject.findMany({
+      where: { origin },
+      orderBy: { createdAt: 'desc' },
+    })
     return rows.map((row) => this.toDomain(row))
   }
 
   async findByCreatedBy(createdById: string): Promise<InboxSubject[]> {
-    const rows = await prisma.inboxSubject.findMany({ where: { createdById } })
+    const rows = await prisma.inboxSubject.findMany({
+      where: { createdById },
+      orderBy: { createdAt: 'desc' },
+    })
     return rows.map((row) => this.toDomain(row))
   }
 

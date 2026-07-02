@@ -8,12 +8,14 @@ export const actorMetricsSchema = z.discriminatedUnion('profile', [
     inProgressInvestigations: z.number(),
     pendingReviews: z.number(),
     publishedCount: z.number(),
+    contributionScore: z.number(),
   }),
   z.object({
     profile: z.literal('journalist'),
     currentDossiers: z.number(),
     pendingReviews: z.number(),
     directorReturns: z.number(),
+    contributionScore: z.number(),
   }),
   z.object({
     profile: z.literal('citizen'),
@@ -21,12 +23,14 @@ export const actorMetricsSchema = z.discriminatedUnion('profile', [
     awaitingReply: z.number(),
     repliesReceived: z.number(),
     corrections: z.number(),
+    contributionScore: z.number(),
   }),
   z.object({
     profile: z.literal('watcher'),
     followedInvestigations: z.number(),
     evidenceThisMonth: z.number(),
     acceptedContributions: z.number(),
+    contributionScore: z.number(),
   }),
 ])
 

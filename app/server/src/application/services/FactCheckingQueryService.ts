@@ -81,6 +81,9 @@ export interface DirectorDashboardData {
 // - journalist: own investigations by lifecycle stage
 // - citizen: own reports + how far each travelled (publication / corrections)
 // - watcher: own evidence (followed investigations, this-month, published-on)
+// Every variant carries `contributionScore` — the actor's cumulative
+// engagement/arbitration score kept on the domain entity — so the profile page
+// can surface it uniformly regardless of role.
 export type ActorMetrics =
   | {
       profile: 'director'
@@ -88,12 +91,14 @@ export type ActorMetrics =
       inProgressInvestigations: number
       pendingReviews: number
       publishedCount: number
+      contributionScore: number
     }
   | {
       profile: 'journalist'
       currentDossiers: number
       pendingReviews: number
       directorReturns: number
+      contributionScore: number
     }
   | {
       profile: 'citizen'
@@ -101,12 +106,14 @@ export type ActorMetrics =
       awaitingReply: number
       repliesReceived: number
       corrections: number
+      contributionScore: number
     }
   | {
       profile: 'watcher'
       followedInvestigations: number
       evidenceThisMonth: number
       acceptedContributions: number
+      contributionScore: number
     }
 
 // Read-model wrappers: the domain entity plus the display names/titles joined
@@ -114,6 +121,10 @@ export type ActorMetrics =
 export interface EnrichedReport {
   report: Report
   reporterName: string | null
+  // Status of the InboxSubject this report was converted into (origin REPORT),
+  // joined on the read side so a citizen can follow the editorial lifecycle
+  // (OPEN -> IN_PROGRESS -> ARCHIVED). Null when no subject exists yet.
+  subjectStatus: InboxSubjectStatus | null
 }
 
 export interface EnrichedInboxSubject {
@@ -335,24 +346,26 @@ export class FactCheckingQueryService {
   // CITIZEN role, so the citizenType decides which profile to compute.
   async getActorMetrics(reader: ReaderContext): Promise<ActorMetrics> {
     if (reader.actorRole === 'EDITORIAL_DIRECTOR') {
-      return this.directorMetrics()
+      return this.directorMetrics(reader.actorId)
     }
     if (reader.actorRole === 'JOURNALIST') {
       return this.journalistMetrics(reader.actorId)
     }
     const citizen = await this.citizenRepository.findById(reader.actorId)
+    const contributionScore = citizen?.engagementScore ?? 0
     return citizen?.isWatcher()
-      ? this.watcherMetrics(reader.actorId)
-      : this.citizenMetrics(reader.actorId)
+      ? this.watcherMetrics(reader.actorId, contributionScore)
+      : this.citizenMetrics(reader.actorId, contributionScore)
   }
 
-  private async directorMetrics(): Promise<ActorMetrics> {
-    const [openSubjects, inProgress, pendingReviews, publishedCount] =
+  private async directorMetrics(directorId: string): Promise<ActorMetrics> {
+    const [openSubjects, inProgress, pendingReviews, publishedCount, director] =
       await Promise.all([
         this.inboxSubjectRepository.findByStatus('OPEN'),
         this.investigationRepository.findInProgress(),
         this.investigationRepository.findPendingReviews(),
         this.publicationRepository.count(),
+        this.directorRepository.findById(directorId),
       ])
     return {
       profile: 'director',
@@ -360,21 +373,28 @@ export class FactCheckingQueryService {
       inProgressInvestigations: inProgress.length,
       pendingReviews: pendingReviews.length,
       publishedCount,
+      contributionScore: director?.scoreInvestigation ?? 0,
     }
   }
 
   private async journalistMetrics(journalistId: string): Promise<ActorMetrics> {
-    const own =
-      await this.investigationRepository.findByJournalistId(journalistId)
+    const [own, journalist] = await Promise.all([
+      this.investigationRepository.findByJournalistId(journalistId),
+      this.journalistRepository.findById(journalistId),
+    ])
     return {
       profile: 'journalist',
       currentDossiers: own.filter((i) => i.canBeEdited()).length,
       pendingReviews: own.filter((i) => i.isPendingReview()).length,
       directorReturns: own.filter((i) => i.status === 'NEEDS_REVISION').length,
+      contributionScore: journalist?.engagementScore ?? 0,
     }
   }
 
-  private async citizenMetrics(citizenId: string): Promise<ActorMetrics> {
+  private async citizenMetrics(
+    citizenId: string,
+    contributionScore: number,
+  ): Promise<ActorMetrics> {
     const reports = await this.reportRepository.findByCitizenId(citizenId)
     const activeReports = reports.filter((r) => r.status === 'OPEN').length
 
@@ -445,10 +465,14 @@ export class FactCheckingQueryService {
         .length,
       repliesReceived: trails.filter((t) => t.replied).length,
       corrections: trails.reduce((sum, t) => sum + t.corrections, 0),
+      contributionScore,
     }
   }
 
-  private async watcherMetrics(watcherId: string): Promise<ActorMetrics> {
+  private async watcherMetrics(
+    watcherId: string,
+    contributionScore: number,
+  ): Promise<ActorMetrics> {
     const [evidence, publishedInvestigations] = await Promise.all([
       this.evidenceRepository.findByWatcherId(watcherId),
       this.investigationRepository.findPublished(),
@@ -465,6 +489,7 @@ export class FactCheckingQueryService {
       acceptedContributions: evidence.filter((e) =>
         publishedIds.has(e.investigationId),
       ).length,
+      contributionScore,
     }
   }
 
@@ -477,23 +502,27 @@ export class FactCheckingQueryService {
     citizenId?: string,
   ): Promise<EnrichedReport[]> {
     const reports = await this.listReportsForReader(reader, citizenId)
-    const citizenNames = await this.citizenNameMap(
-      reports.map((report) => report.citizenId),
-    )
+    const [citizenNames, subjectStatusByReportId] = await Promise.all([
+      this.citizenNameMap(reports.map((report) => report.citizenId)),
+      this.subjectStatusByReportIdMap(reports.map((report) => report.id)),
+    ])
     return reports.map((report) => ({
       report,
       reporterName: citizenNames.get(report.citizenId) ?? null,
+      subjectStatus: subjectStatusByReportId.get(report.id) ?? null,
     }))
   }
 
   async listOpenReportsInboxEnriched(): Promise<EnrichedReport[]> {
     const reports = await this.listOpenReportsInbox()
-    const citizenNames = await this.citizenNameMap(
-      reports.map((report) => report.citizenId),
-    )
+    const [citizenNames, subjectStatusByReportId] = await Promise.all([
+      this.citizenNameMap(reports.map((report) => report.citizenId)),
+      this.subjectStatusByReportIdMap(reports.map((report) => report.id)),
+    ])
     return reports.map((report) => ({
       report,
       reporterName: citizenNames.get(report.citizenId) ?? null,
+      subjectStatus: subjectStatusByReportId.get(report.id) ?? null,
     }))
   }
 
@@ -584,8 +613,15 @@ export class FactCheckingQueryService {
     reader: ReaderContext,
   ): Promise<EnrichedReport> {
     const report = await this.getReportForReader(reportId, reader)
-    const citizen = await this.citizenRepository.findById(report.citizenId)
-    return { report, reporterName: citizen?.name ?? null }
+    const [citizen, subject] = await Promise.all([
+      this.citizenRepository.findById(report.citizenId),
+      this.inboxSubjectRepository.findByReportId(report.id),
+    ])
+    return {
+      report,
+      reporterName: citizen?.name ?? null,
+      subjectStatus: subject?.status ?? null,
+    }
   }
 
   async getInboxSubjectEnriched(
@@ -708,6 +744,27 @@ export class FactCheckingQueryService {
     }))
   }
 
+  // Media a citizen attached to their own report, so they can review and
+  // download it from their report history. Ownership is enforced by
+  // getReportForReader (a citizen reading another citizen's report gets 404).
+  async getReportMediaForReader(
+    reportId: string,
+    reader: ReaderContext,
+  ): Promise<InboxSubjectMediaView[]> {
+    await this.getReportForReader(reportId, reader)
+    const media = await this.reportMediaRepository.findByReportId(reportId)
+    return media.map((item) => ({
+      id: item.id,
+      url: item.url,
+      type: item.type,
+      order: item.order,
+      origin: 'CITIZEN_REPORT',
+      uploadedById: item.uploadedById,
+      createdAt: item.createdAt,
+      updatedAt: item.updatedAt,
+    }))
+  }
+
   async listWatcherApplicationsEnriched(): Promise<
     EnrichedWatcherApplication[]
   > {
@@ -756,6 +813,21 @@ export class FactCheckingQueryService {
   ): Promise<Map<string, InboxSubject>> {
     const subjects = await this.inboxSubjectRepository.findByIds(uniqueIds(ids))
     return new Map(subjects.map((subject) => [subject.id, subject]))
+  }
+
+  // Keyed by reportId — the InboxSubject a report was converted into (origin
+  // REPORT) carries the editorial lifecycle status the citizen follows.
+  private async subjectStatusByReportIdMap(
+    reportIds: ReadonlyArray<string | null | undefined>,
+  ): Promise<Map<string, InboxSubjectStatus>> {
+    const subjects = await this.inboxSubjectRepository.findByReportIds(
+      uniqueIds(reportIds),
+    )
+    const byReportId = new Map<string, InboxSubjectStatus>()
+    for (const subject of subjects) {
+      if (subject.reportId) byReportId.set(subject.reportId, subject.status)
+    }
+    return byReportId
   }
 
   private async authoritySourceNameMap(

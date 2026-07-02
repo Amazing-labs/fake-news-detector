@@ -11,6 +11,7 @@ import type {
 import {
   presentEnrichedReport,
   presentEnrichedReportList,
+  presentReportMediaList,
 } from '../presenters/reportPresenter'
 import type { z } from 'zod'
 
@@ -48,5 +49,14 @@ export class ReportController {
       citizenId,
     )
     return ok(c, presentEnrichedReportList(reports))
+  }
+
+  getMedia = async (c: Context<{ Variables: AppVariables }>) => {
+    const actor = c.get('actor')
+    const media = await this.queryService.getReportMediaForReader(
+      requiredParam(c, 'reportId'),
+      actor,
+    )
+    return ok(c, presentReportMediaList(media))
   }
 }

@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
+import { Spinner } from './loader'
 
 export function PageLayout(props: {
   title: string
@@ -163,9 +164,19 @@ export function StatusBadge(props: { value: string | null | undefined }) {
 export function Button(
   props: React.ButtonHTMLAttributes<HTMLButtonElement> & {
     variant?: 'primary' | 'secondary' | 'danger'
+    // Show a leading spinner and disable the button while a server action runs.
+    loading?: boolean
   },
 ) {
-  const { className, variant = 'primary', type = 'button', ...rest } = props
+  const {
+    className,
+    variant = 'primary',
+    type = 'button',
+    loading = false,
+    disabled,
+    children,
+    ...rest
+  } = props
 
   const tone =
     variant === 'primary'
@@ -177,9 +188,13 @@ export function Button(
   return (
     <button
       type={type}
-      className={`inline-flex items-center justify-center rounded-full px-4 py-2 text-sm font-black transition duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${tone} ${className ?? ''}`}
+      disabled={disabled || loading}
+      className={`inline-flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-black transition duration-200 hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 ${tone} ${className ?? ''}`}
       {...rest}
-    />
+    >
+      {loading ? <Spinner /> : null}
+      {children}
+    </button>
   )
 }
 

@@ -116,11 +116,10 @@ export function CreateReportForm() {
         <div className="flex flex-wrap gap-2">
           <DarkButton
             type="submit"
-            disabled={
-              mutation.isPending || normalizeMediaDrafts(media).length === 0
-            }
+            disabled={normalizeMediaDrafts(media).length === 0}
+            loading={mutation.isPending}
           >
-            {mutation.isPending ? 'Envoi...' : 'Envoyer le signalement'}
+            Envoyer le signalement
           </DarkButton>
           <Link
             to="/reports"

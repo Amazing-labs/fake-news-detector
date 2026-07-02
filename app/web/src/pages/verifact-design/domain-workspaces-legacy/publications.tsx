@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useNavigate } from '@tanstack/react-router'
 import {
   ExternalLink,
   FileSearch,
@@ -7,6 +7,7 @@ import {
   ShieldCheck,
 } from 'lucide-react'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { PageLoader } from '@shared/ui/loader'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
@@ -17,6 +18,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@shared/ui/shadcn/card'
+import { Input } from '@shared/ui/shadcn/input'
 import { Label } from '@shared/ui/shadcn/label'
 import { Textarea } from '@shared/ui/shadcn/textarea'
 import {
@@ -25,12 +27,13 @@ import {
   TabsList,
   TabsTrigger,
 } from '@shared/ui/shadcn/tabs'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { domainLabel } from '../workspace-labels'
 import { MetaCell } from '../workspace-ui'
 import {
+  createPublicationCorrection,
   getPublication,
   listPublications,
   publicationQueryKeys,
@@ -437,6 +440,8 @@ export function PublicationCorrectionsWorkspacePage({
 }: {
   publicationId?: string
 }) {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const isPublicationLocked = Boolean(publicationId)
 
   const listQuery = useQuery({
@@ -447,6 +452,8 @@ export function PublicationCorrectionsWorkspacePage({
   const options = listQuery.data?.items ?? []
 
   const [selectedPublicationId, setSelectedPublicationId] = useState('')
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
   // No implicit first-option default: keep the select in sync with the actual
   // state so the placeholder shows until the director explicitly picks one.
   const activePublicationId = publicationId ?? selectedPublicationId
@@ -457,6 +464,42 @@ export function PublicationCorrectionsWorkspacePage({
     enabled: Boolean(activePublicationId),
   })
   const publication = targetQuery.data
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      createPublicationCorrection(activePublicationId, {
+        title: title.trim(),
+        content: content.trim(),
+      }),
+    onSuccess: () => {
+      toast.success('Correctif publié.')
+      void queryClient.invalidateQueries({ queryKey: ['publications'] })
+      void navigate({
+        to: '/publications/$publicationId',
+        params: { publicationId: activePublicationId },
+      })
+    },
+    onError: (error) => toast.error(toApiErrorMessage(error)),
+  })
+
+  const canSubmit =
+    Boolean(publication) && title.trim() !== '' && content.trim() !== ''
+
+  function handleSubmit() {
+    if (!publication) {
+      toast.error('Sélectionne une publication cible.')
+      return
+    }
+    if (!title.trim()) {
+      toast.error('Le titre du correctif est obligatoire.')
+      return
+    }
+    if (!content.trim()) {
+      toast.error('Le contenu du correctif est obligatoire.')
+      return
+    }
+    mutation.mutate()
+  }
 
   return (
     <AppLayout actor="director" page="publications">
@@ -510,12 +553,31 @@ export function PublicationCorrectionsWorkspacePage({
             </div>
           )}
           <Label className="grid gap-2">
-            Correction
-            <Textarea placeholder="Formuler le correctif à publier" />
+            Titre du correctif
+            <Input
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="Titre de la correction publiée"
+              disabled={!publication}
+            />
           </Label>
-          <Button className="w-fit" disabled={!publication}>
-            <RotateCcw />
-            Préparer le correctif
+          <Label className="grid gap-2">
+            Correction
+            <Textarea
+              value={content}
+              onChange={(event) => setContent(event.target.value)}
+              placeholder="Formuler le correctif à publier"
+              disabled={!publication}
+            />
+          </Label>
+          <Button
+            className="w-fit"
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            loading={mutation.isPending}
+          >
+            {!mutation.isPending && <RotateCcw />}
+            Publier le correctif
           </Button>
         </CardContent>
       </Card>

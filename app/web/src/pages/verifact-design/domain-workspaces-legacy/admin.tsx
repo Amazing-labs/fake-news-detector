@@ -1,16 +1,13 @@
 import { Link } from '@tanstack/react-router'
-import { Ban, ShieldCheck } from 'lucide-react'
+import { ShieldCheck } from 'lucide-react'
 import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
   CardAction,
-  CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
 } from '@shared/ui/shadcn/card'
-import { Label } from '@shared/ui/shadcn/label'
-import { Textarea } from '@shared/ui/shadcn/textarea'
 import { AppLayout } from '../app-layout'
 import {
   PeopleManagementPage as PeopleManagementWorkspace,
@@ -28,49 +25,6 @@ export function PeopleManagementPage() {
 
 export function UserCreateWorkspacePage() {
   return <UserCreateWorkspace />
-}
-
-export function UserStatusWorkspacePage({ userLabel }: { userLabel?: string }) {
-  const isActive = userLabel !== 'Malik Sissoko'
-
-  return (
-    <AppLayout actor="director" page="people">
-      <Card>
-        <CardHeader>
-          <CardTitle>{userLabel ?? 'Compte sélectionné'}</CardTitle>
-          <CardDescription>
-            Modifier le statut sans exposer les identifiants internes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <Label className="grid gap-2">
-            Raison
-            <select className="border-input bg-background h-10 rounded-md border px-3 text-sm">
-              <option value="ABUSE">Abus de la plateforme</option>
-              <option value="INACTIVE">Compte inactif</option>
-              <option value="SECURITY">Risque de securite</option>
-              <option value="OTHER">Autre</option>
-            </select>
-          </Label>
-          <Label className="grid gap-2">
-            Détails
-            <Textarea placeholder="Commentaire interne" />
-          </Label>
-          <div className="flex flex-wrap gap-2">
-            {isActive ? (
-              <Button variant="outline">Desactiver</Button>
-            ) : (
-              <Button>Activer</Button>
-            )}
-            <Button variant="destructive">
-              <Ban />
-              Bannir
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </AppLayout>
-  )
 }
 
 export function WatcherApplicationsReviewPage() {

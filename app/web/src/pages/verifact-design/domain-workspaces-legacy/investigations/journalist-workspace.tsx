@@ -1,4 +1,4 @@
-import { ClipboardCheck, FilePlus2 } from 'lucide-react'
+import { ClipboardCheck, FilePlus2, Inbox, Users } from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -41,6 +41,7 @@ import {
   WatcherEvidenceCard,
 } from './media-cards'
 import { DossierHeader, MetaCell, OriginBadge } from './primitives'
+import { EmptyState } from '../../workspace-ui'
 import type {
   MediaCategory,
   MediaType,
@@ -238,28 +239,36 @@ export function JournalistInvestigationWorkspace({
 
           {/* SOURCE — classify citizen + director media */}
           <TabsContent value="source" className="mt-4">
-            <div className="grid gap-6">
-              {sourceGroups
-                .filter((g) => g.media.length > 0)
-                .map((group) => (
-                  <div key={group.origin} className="grid gap-3">
-                    <div className="flex items-center gap-2">
-                      <OriginBadge origin={group.origin} />
-                      <span className="text-muted-foreground text-sm">
-                        {group.media.length} média
-                        {group.media.length > 1 ? 's' : ''}
-                      </span>
+            {allSourceMedia.length > 0 ? (
+              <div className="grid gap-6">
+                {sourceGroups
+                  .filter((g) => g.media.length > 0)
+                  .map((group) => (
+                    <div key={group.origin} className="grid gap-3">
+                      <div className="flex items-center gap-2">
+                        <OriginBadge origin={group.origin} />
+                        <span className="text-muted-foreground text-sm">
+                          {group.media.length} média
+                          {group.media.length > 1 ? 's' : ''}
+                        </span>
+                      </div>
+                      {group.media.map((m) => (
+                        <SourceMediaCard
+                          key={m.id}
+                          media={m}
+                          investigationId={dossier.id}
+                        />
+                      ))}
                     </div>
-                    {group.media.map((m) => (
-                      <SourceMediaCard
-                        key={m.id}
-                        media={m}
-                        investigationId={dossier.id}
-                      />
-                    ))}
-                  </div>
-                ))}
-            </div>
+                  ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={Inbox}
+                title="Aucun média source"
+                description="Le sujet à l'origine de cette enquête ne comporte pas de média à classifier."
+              />
+            )}
           </TabsContent>
 
           {/* PROOF — authority source required, no category/reliability */}
@@ -358,16 +367,24 @@ export function JournalistInvestigationWorkspace({
 
           {/* WATCHERS — read + classify contributions */}
           <TabsContent value="watchers" className="mt-4">
-            <div className="grid gap-3">
-              {watcherEvidence.map((e) => (
-                <WatcherEvidenceCard
-                  key={e.id}
-                  evidence={e}
-                  withClassification
-                  investigationId={dossier.id}
-                />
-              ))}
-            </div>
+            {watcherEvidence.length > 0 ? (
+              <div className="grid gap-3">
+                {watcherEvidence.map((e) => (
+                  <WatcherEvidenceCard
+                    key={e.id}
+                    evidence={e}
+                    withClassification
+                    investigationId={dossier.id}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={Users}
+                title="Aucune contribution de vigie"
+                description="Les vigies n'ont pas encore documenté cette enquête."
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="notes" className="mt-4">

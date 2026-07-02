@@ -3,16 +3,10 @@ import type { ReactNode } from 'react'
 import { cn } from '@shared/lib/utils'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@shared/ui/shadcn/card'
+import { Card, CardContent } from '@shared/ui/shadcn/card'
 import { Textarea } from '@shared/ui/shadcn/textarea'
 import { domainLabel } from '../../workspace-labels'
-import { StatusBadge } from '../../workspace-ui'
+import { EmptyState, StatusBadge } from '../../workspace-ui'
 import {
   CATEGORY_OPTIONS,
   MEDIA_TYPE_ICONS,
@@ -60,6 +54,20 @@ export function MetaCell({ label, value }: { label: string; value: string }) {
   )
 }
 
+// Inbox-subject content the investigation was opened on, elevated into a quoted
+// italic block. Shared by the director view and the DossierHeader (journalist /
+// watcher) so every role reads the source context the same way.
+export function SubjectContextQuote({ subject }: { subject: string }) {
+  return (
+    <blockquote className="border-primary/50 bg-muted/40 rounded-r-lg border-l-2 px-4 py-3">
+      <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+        Contexte du sujet
+      </p>
+      <p className="mt-1.5 text-sm leading-relaxed italic">{subject}</p>
+    </blockquote>
+  )
+}
+
 export function DossierHeader({
   dossier,
   action,
@@ -68,17 +76,17 @@ export function DossierHeader({
   action?: ReactNode
 }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-3">
-      <div className="min-w-0">
-        <h1 className="text-lg leading-snug font-semibold">{dossier.title}</h1>
-        <p className="text-muted-foreground mt-1 max-w-2xl text-sm">
-          {dossier.subject}
-        </p>
+    <div className="grid gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h1 className="min-w-0 text-lg leading-snug font-semibold">
+          {dossier.title}
+        </h1>
+        <div className="flex shrink-0 items-center gap-2">
+          <StatusBadge status={dossier.status} />
+          {action}
+        </div>
       </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <StatusBadge status={dossier.status} />
-        {action}
-      </div>
+      <SubjectContextQuote subject={dossier.subject} />
     </div>
   )
 }
@@ -142,19 +150,19 @@ export function NotesBlock({
 }) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Notes d'enquête</CardTitle>
-        <CardDescription>
-          {readOnly
-            ? 'Notes rédigées par le journaliste sur ce dossier.'
-            : 'Vos notes de travail — visibles par la direction lors de la revue.'}
-        </CardDescription>
-      </CardHeader>
       <CardContent>
         {readOnly ? (
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            {notes}
-          </p>
+          notes.trim() ? (
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              {notes}
+            </p>
+          ) : (
+            <EmptyState
+              icon={FileText}
+              title="Aucune note d'enquête"
+              description="Le journaliste n'a pas encore rédigé de note sur ce dossier."
+            />
+          )
         ) : (
           <div className="grid gap-3">
             <Textarea defaultValue={notes} rows={5} className="resize-none" />

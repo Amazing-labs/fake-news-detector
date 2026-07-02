@@ -71,18 +71,22 @@ export class PrismaInvestigationRepository implements IInvestigationRepository {
   async findByJournalistId(journalistId: string): Promise<Investigation[]> {
     const rows = await prisma.investigation.findMany({
       where: { journalistId },
+      orderBy: { createdAt: 'desc' },
     })
     return rows.map((row) => this.toDomain(row))
   }
 
   async findAll(): Promise<Investigation[]> {
-    const rows = await prisma.investigation.findMany()
+    const rows = await prisma.investigation.findMany({
+      orderBy: { createdAt: 'desc' },
+    })
     return rows.map((row) => this.toDomain(row))
   }
 
   async findInProgress(): Promise<Investigation[]> {
     const rows = await prisma.investigation.findMany({
       where: { status: 'IN_PROGRESS' },
+      orderBy: { createdAt: 'desc' },
     })
     return rows.map((row) => this.toDomain(row))
   }
@@ -90,6 +94,7 @@ export class PrismaInvestigationRepository implements IInvestigationRepository {
   async findPendingReviews(): Promise<Investigation[]> {
     const rows = await prisma.investigation.findMany({
       where: { status: 'PENDING_REVIEW' },
+      orderBy: { createdAt: 'desc' },
     })
     return rows.map((row) => this.toDomain(row))
   }
@@ -97,6 +102,7 @@ export class PrismaInvestigationRepository implements IInvestigationRepository {
   async findPublished(): Promise<Investigation[]> {
     const rows = await prisma.investigation.findMany({
       where: { status: 'PUBLISHED' },
+      orderBy: { createdAt: 'desc' },
     })
     return rows.map((row) => this.toDomain(row))
   }
@@ -104,6 +110,7 @@ export class PrismaInvestigationRepository implements IInvestigationRepository {
   async findCanceled(): Promise<Investigation[]> {
     const rows = await prisma.investigation.findMany({
       where: { status: 'CANCELED' },
+      orderBy: { createdAt: 'desc' },
     })
     return rows.map((row) => this.toDomain(row))
   }
@@ -114,6 +121,7 @@ export class PrismaInvestigationRepository implements IInvestigationRepository {
     // or sent back for revision (NEEDS_REVISION).
     const rows = await prisma.investigation.findMany({
       where: { status: { in: ['OPEN', 'IN_PROGRESS', 'NEEDS_REVISION'] } },
+      orderBy: { createdAt: 'desc' },
     })
     return rows.map((row) => this.toDomain(row))
   }

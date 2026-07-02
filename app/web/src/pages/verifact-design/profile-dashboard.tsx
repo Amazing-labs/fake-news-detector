@@ -1,4 +1,9 @@
 import type { ReactNode } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import {
+  dashboardQueryKeys,
+  getDashboardMetrics,
+} from '@entities/dashboard/api'
 import { formatActorStatus } from '@entities/session/model'
 import { Avatar, AvatarFallback, AvatarImage } from '@shared/ui/shadcn/avatar'
 import { Badge } from '@shared/ui/shadcn/badge'
@@ -15,13 +20,19 @@ import {
   TabsList,
   TabsTrigger,
 } from '@shared/ui/shadcn/tabs'
-import { CheckCircle2, ShieldCheck } from 'lucide-react'
+import { Award, BadgeCheck, CheckCircle2, ShieldCheck } from 'lucide-react'
 import { AppLayout } from './app-layout'
 import { initials, sessionRoleLabel, useResolvedActor } from './session-routing'
 import { WorkTable } from './work-table'
 
 export function ProfileDashboard() {
   const { session, actor, isActorPending } = useResolvedActor('journalist')
+  const metricsQuery = useQuery({
+    queryKey: dashboardQueryKeys.metrics(),
+    queryFn: getDashboardMetrics,
+    enabled: actor !== 'guest',
+  })
+  const contributionScore = metricsQuery.data?.contributionScore
 
   if (isActorPending) {
     return (
@@ -68,13 +79,19 @@ export function ProfileDashboard() {
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-xl font-semibold">{displayName}</h1>
                   <Badge variant="secondary">{roleLabel}</Badge>
+                  {actor === 'watcher' && (
+                    <Badge className="gap-1 border-transparent bg-sky-500/10 text-sky-600 dark:text-sky-400">
+                      <BadgeCheck className="size-3.5" />
+                      Vigie certifiée
+                    </Badge>
+                  )}
                 </div>
                 <p className="text-muted-foreground mt-0.5 text-sm">{email}</p>
               </div>
             </div>
 
             {/* Stats row */}
-            <div className="mt-5 grid gap-3 sm:grid-cols-2">
+            <div className="mt-5 grid gap-3 sm:grid-cols-3">
               <StatCell
                 icon={<ShieldCheck className="size-4" />}
                 label="Rôle"
@@ -84,6 +101,14 @@ export function ProfileDashboard() {
                 icon={<CheckCircle2 className="size-4" />}
                 label="Statut"
                 value={statusLabel}
+              />
+              <StatCell
+                icon={<Award className="size-4" />}
+                label="Score de contribution"
+                value={
+                  contributionScore != null ? String(contributionScore) : '—'
+                }
+                sub="points cumulés"
               />
             </div>
           </CardContent>
