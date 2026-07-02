@@ -211,7 +211,7 @@ export class DirectorWorkflowService {
       await this.investigationRepository.findByInboxSubjectId(inboxSubjectId)
     if (linkedInvestigation) {
       throw new BusinessRuleError(
-        'InboxSubject cannot be deleted after an investigation has started',
+        'Cannot delete a subject once an investigation has been opened on it. Archive it instead.',
       )
     }
 

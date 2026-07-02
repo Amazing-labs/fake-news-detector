@@ -362,7 +362,10 @@ function InboxList(props: {
                       <ExternalLink />
                     </Link>
                   </Button>
-                  {props.actor === 'director' && (
+                  {/* A subject can only be deleted while pristine (OPEN) — once
+                      an investigation has ever been opened, archiving is the
+                      only path, matching the server-side guard. */}
+                  {props.actor === 'director' && item.status === 'OPEN' && (
                     <DeleteSubjectDialog item={item} />
                   )}
                   {props.actor === 'journalist' && item.status === 'OPEN' && (
