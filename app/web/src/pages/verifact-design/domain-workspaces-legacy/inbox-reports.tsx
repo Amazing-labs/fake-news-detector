@@ -535,7 +535,7 @@ export function InboxSubjectDetailWorkspacePage({
             <div className="grid gap-4 sm:grid-cols-2">
               {media.map((item) => (
                 <MediaPreviewItem
-                  key={item.name}
+                  key={item.url}
                   item={item}
                   canDownload={actor === 'journalist' || actor === 'director'}
                 />

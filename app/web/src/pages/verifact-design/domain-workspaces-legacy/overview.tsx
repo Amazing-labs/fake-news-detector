@@ -356,7 +356,7 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
           ) : media.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2">
               {media.map((item) => (
-                <MediaPreviewItem key={item.name} item={item} canDownload />
+                <MediaPreviewItem key={item.url} item={item} canDownload />
               ))}
             </div>
           ) : (
