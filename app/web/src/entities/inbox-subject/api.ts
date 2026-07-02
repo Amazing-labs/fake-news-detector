@@ -1,4 +1,5 @@
 import { apiRequest } from '@shared/api/http'
+import type { InvestigationRef } from '@entities/investigation/model'
 import type {
   InboxSubjectItem,
   InboxSubjectList,
@@ -23,7 +24,7 @@ export function getInboxSubject(subjectId: string) {
 // A journalist claims an open subject; the server opens the investigation and
 // returns it, so the caller can navigate straight to the new dossier.
 export function pickInboxSubject(subjectId: string) {
-  return apiRequest<{ id: string }>(`/api/inbox-subjects/${subjectId}/pick`, {
+  return apiRequest<InvestigationRef>(`/api/inbox-subjects/${subjectId}/pick`, {
     method: 'POST',
     body: JSON.stringify({}),
   })

@@ -24,6 +24,15 @@ export type InvestigationList = {
   total: number
 }
 
+/**
+ * Non-enriched investigation payload returned by the "pick subject" endpoint
+ * (server-side `presentInvestigation`): no joined title/subject/journalist name.
+ */
+export type InvestigationRef = Omit<
+  InvestigationItem,
+  'title' | 'subject' | 'journalistName'
+>
+
 export type InvestigationMediaItem = {
   id: number
   url: string
