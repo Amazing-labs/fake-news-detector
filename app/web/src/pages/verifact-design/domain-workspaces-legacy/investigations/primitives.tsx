@@ -54,6 +54,20 @@ export function MetaCell({ label, value }: { label: string; value: string }) {
   )
 }
 
+// Inbox-subject content the investigation was opened on, elevated into a quoted
+// italic block. Shared by the director view and the DossierHeader (journalist /
+// watcher) so every role reads the source context the same way.
+export function SubjectContextQuote({ subject }: { subject: string }) {
+  return (
+    <blockquote className="border-primary/50 bg-muted/40 rounded-r-lg border-l-2 px-4 py-3">
+      <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
+        Contexte du sujet
+      </p>
+      <p className="mt-1.5 text-sm leading-relaxed italic">{subject}</p>
+    </blockquote>
+  )
+}
+
 export function DossierHeader({
   dossier,
   action,
@@ -62,17 +76,17 @@ export function DossierHeader({
   action?: ReactNode
 }) {
   return (
-    <div className="flex flex-wrap items-start justify-between gap-3">
-      <div className="min-w-0">
-        <h1 className="text-lg leading-snug font-semibold">{dossier.title}</h1>
-        <p className="text-muted-foreground mt-1 max-w-2xl text-sm">
-          {dossier.subject}
-        </p>
+    <div className="grid gap-4">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <h1 className="min-w-0 text-lg leading-snug font-semibold">
+          {dossier.title}
+        </h1>
+        <div className="flex shrink-0 items-center gap-2">
+          <StatusBadge status={dossier.status} />
+          {action}
+        </div>
       </div>
-      <div className="flex shrink-0 items-center gap-2">
-        <StatusBadge status={dossier.status} />
-        {action}
-      </div>
+      <SubjectContextQuote subject={dossier.subject} />
     </div>
   )
 }

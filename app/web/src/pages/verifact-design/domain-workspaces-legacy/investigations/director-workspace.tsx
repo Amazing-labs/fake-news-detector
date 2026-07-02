@@ -24,7 +24,12 @@ import {
   SourceMediaReadRow,
   WatcherEvidenceCard,
 } from './media-cards'
-import { MetaCell, NotesBlock, OriginBadge } from './primitives'
+import {
+  MetaCell,
+  NotesBlock,
+  OriginBadge,
+  SubjectContextQuote,
+} from './primitives'
 import type {
   Dossier,
   JournalistProofMedia,
@@ -66,14 +71,7 @@ export function DirectorInvestigationWorkspace({
             </div>
 
             {/* Inbox subject content — elevated, quoted, in italics */}
-            <blockquote className="border-primary/50 bg-muted/40 rounded-r-lg border-l-2 px-4 py-3">
-              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
-                Contexte du sujet
-              </p>
-              <p className="mt-1.5 text-sm leading-relaxed italic">
-                {dossier.subject}
-              </p>
-            </blockquote>
+            <SubjectContextQuote subject={dossier.subject} />
           </CardHeader>
           <CardContent className="grid gap-4">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
