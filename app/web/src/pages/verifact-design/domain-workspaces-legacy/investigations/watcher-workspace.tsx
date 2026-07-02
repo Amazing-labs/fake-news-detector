@@ -1,4 +1,4 @@
-import { FilePlus2 } from 'lucide-react'
+import { FilePlus2, FileSearch, Inbox, Users } from 'lucide-react'
 import { Button } from '@shared/ui/shadcn/button'
 import { Card, CardContent, CardHeader } from '@shared/ui/shadcn/card'
 import {
@@ -9,6 +9,7 @@ import {
 } from '@shared/ui/shadcn/tabs'
 import { AppLayout } from '../../app-layout'
 import { domainLabel } from '../../workspace-labels'
+import { EmptyState } from '../../workspace-ui'
 import { WatcherContributeDialog } from '../shared'
 import {
   JournalistProofList,
@@ -42,7 +43,7 @@ export function WatcherInvestigationWorkspace({
             <DossierHeader
               dossier={dossier}
               action={
-                <WatcherContributeDialog>
+                <WatcherContributeDialog investigationId={dossier.id}>
                   <Button size="sm">
                     <FilePlus2 className="size-4" />
                     Contribuer
@@ -84,24 +85,32 @@ export function WatcherInvestigationWorkspace({
 
           {/* SOURCE — read-only, watcher can view/download to understand context */}
           <TabsContent value="source" className="mt-4">
-            <div className="grid gap-6">
-              {sourceGroups
-                .filter((g) => g.media.length > 0)
-                .map((group) => (
-                  <div key={group.origin} className="grid gap-3">
-                    <div className="flex items-center gap-2">
-                      <OriginBadge origin={group.origin} />
-                      <span className="text-muted-foreground text-sm">
-                        {group.media.length} média
-                        {group.media.length > 1 ? 's' : ''}
-                      </span>
+            {sourceGroups.flatMap((g) => g.media).length > 0 ? (
+              <div className="grid gap-6">
+                {sourceGroups
+                  .filter((g) => g.media.length > 0)
+                  .map((group) => (
+                    <div key={group.origin} className="grid gap-3">
+                      <div className="flex items-center gap-2">
+                        <OriginBadge origin={group.origin} />
+                        <span className="text-muted-foreground text-sm">
+                          {group.media.length} média
+                          {group.media.length > 1 ? 's' : ''}
+                        </span>
+                      </div>
+                      {group.media.map((media) => (
+                        <SourceMediaReadRow key={media.id} media={media} />
+                      ))}
                     </div>
-                    {group.media.map((media) => (
-                      <SourceMediaReadRow key={media.id} media={media} />
-                    ))}
-                  </div>
-                ))}
-            </div>
+                  ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={Inbox}
+                title="Aucun média source"
+                description="Aucun média n'a été joint au sujet à l'origine de cette enquête."
+              />
+            )}
           </TabsContent>
 
           {/* JOURNALIST PROOF — read-only with download */}
@@ -109,23 +118,33 @@ export function WatcherInvestigationWorkspace({
             {journalistProofMedia.length > 0 ? (
               <JournalistProofList proofMedia={journalistProofMedia} />
             ) : (
-              <p className="text-muted-foreground text-sm">
-                Aucune preuve journalistique ajoutée pour l&apos;instant.
-              </p>
+              <EmptyState
+                icon={FileSearch}
+                title="Aucune preuve journalistique"
+                description="Le journaliste n'a pas encore versé de preuve à ce dossier."
+              />
             )}
           </TabsContent>
 
           <TabsContent value="contributions" className="mt-4">
-            <div className="grid gap-3">
-              {watcherEvidence.map((e) => (
-                <WatcherEvidenceCard
-                  key={e.id}
-                  evidence={e}
-                  withClassification={false}
-                  investigationId={dossier.id}
-                />
-              ))}
-            </div>
+            {watcherEvidence.length > 0 ? (
+              <div className="grid gap-3">
+                {watcherEvidence.map((e) => (
+                  <WatcherEvidenceCard
+                    key={e.id}
+                    evidence={e}
+                    withClassification={false}
+                    investigationId={dossier.id}
+                  />
+                ))}
+              </div>
+            ) : (
+              <EmptyState
+                icon={Users}
+                title="Aucune contribution pour l'instant"
+                description="Sois la première vigie à documenter cette enquête via « Contribuer »."
+              />
+            )}
           </TabsContent>
 
           <TabsContent value="notes" className="mt-4">

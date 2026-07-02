@@ -1,11 +1,14 @@
 import { Link } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { toast } from 'sonner'
 import {
   AlertTriangle,
   CheckCircle2,
+  Circle,
   ClipboardCheck,
   ExternalLink,
   FileSearch,
+  Paperclip,
   PenLine,
   RotateCcw,
 } from 'lucide-react'
@@ -24,9 +27,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@shared/ui/shadcn/card'
-import { Input } from '@shared/ui/shadcn/input'
-import { Label } from '@shared/ui/shadcn/label'
-import { Textarea } from '@shared/ui/shadcn/textarea'
 import {
   Tabs,
   TabsContent,
@@ -36,7 +36,7 @@ import {
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { domainLabel } from '../workspace-labels'
-import { MetaCell, StatCard, StatusBadge } from '../workspace-ui'
+import { EmptyState, MetaCell, StatCard, StatusBadge } from '../workspace-ui'
 import {
   CitizenReportCreateWorkspacePage as CitizenReportCreateWorkspace,
   CitizenWorkspacePage as CitizenWorkspace,
@@ -45,13 +45,20 @@ import { DirectorHomePage as DirectorHomeWorkspace } from '../workspaces/directo
 import {
   investigationQueryKeys,
   listInvestigations,
+  submitInvestigationForReview,
 } from '@entities/investigation/api'
 import {
   listPublications,
   publicationQueryKeys,
 } from '@entities/publication/api'
-import { getReport, reportQueryKeys } from '@entities/report/api'
+import {
+  getReport,
+  getReportMedia,
+  reportQueryKeys,
+} from '@entities/report/api'
 import { toApiErrorMessage } from '@shared/api/http'
+import { MediaPreviewItem } from './media-preview'
+import { toPreviewMedia } from './media-preview-utils'
 import { GuestHomePage } from './admin'
 
 function useActorMetrics() {
@@ -90,6 +97,7 @@ export function DirectorHomePage() {
 }
 
 export function JournalistWorkspacePage() {
+  const queryClient = useQueryClient()
   const { data } = useActorMetrics()
   const metrics = metricsFor(data, 'journalist')
   const inProgressQuery = useQuery({
@@ -97,6 +105,19 @@ export function JournalistWorkspacePage() {
     queryFn: () => listInvestigations({ scope: 'in-progress' }),
   })
   const currentInvestigation = inProgressQuery.data?.items[0]
+
+  const submitMutation = useMutation({
+    mutationFn: (investigationId: string) =>
+      submitInvestigationForReview(investigationId),
+    onSuccess: () => {
+      toast.success('Dossier soumis en revue.')
+      void queryClient.invalidateQueries({
+        queryKey: investigationQueryKeys.all,
+      })
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+    },
+    onError: (error) => toast.error(toApiErrorMessage(error)),
+  })
 
   return (
     <AppLayout actor="journalist" page="dashboard">
@@ -155,7 +176,14 @@ export function JournalistWorkspacePage() {
                       Ouvrir le brouillon
                     </Link>
                   </Button>
-                  <Button size="sm" variant="outline">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() =>
+                      submitMutation.mutate(currentInvestigation.id)
+                    }
+                    loading={submitMutation.isPending}
+                  >
                     Soumettre en revue
                   </Button>
                 </div>
@@ -213,7 +241,13 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
     queryFn: () => getReport(reportId),
     enabled: Boolean(reportId),
   })
+  const mediaQuery = useQuery({
+    queryKey: reportQueryKeys.media(reportId),
+    queryFn: () => getReportMedia(reportId),
+    enabled: Boolean(reportId),
+  })
   const report = reportQuery.data
+  const media = (mediaQuery.data?.items ?? []).map(toPreviewMedia)
 
   if (reportQuery.isPending) {
     return (
@@ -239,6 +273,28 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
     return null
   }
 
+  // The joined InboxSubject status is the richer editorial lifecycle the citizen
+  // follows (OPEN -> IN_PROGRESS -> ARCHIVED); fall back to the binary report
+  // status if the report was never converted into a subject.
+  const lifecycle = report.subjectStatus ?? report.status
+  const trackingSteps = [
+    {
+      title: 'Réception',
+      body: 'Signalement reçu et conservé dans le desk.',
+      done: true,
+    },
+    {
+      title: 'En enquête',
+      body: 'Un journaliste a ouvert un sujet et vérifie la rumeur.',
+      done: lifecycle === 'IN_PROGRESS' || lifecycle === 'ARCHIVED',
+    },
+    {
+      title: 'Retour',
+      body: 'Une publication ou une archive a clôturé le signalement.',
+      done: lifecycle === 'ARCHIVED',
+    },
+  ]
+
   return (
     <AppLayout actor={actor} page="reports">
       {/* Header card */}
@@ -251,7 +307,7 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
                 Historique du signalement et suivi éditorial.
               </p>
             </div>
-            <StatusBadge status={report.status} />
+            <StatusBadge status={lifecycle} />
           </div>
           <div className="mt-3 grid gap-3 sm:grid-cols-3">
             <MetaCell label="Thème" value={report.theme} />
@@ -268,6 +324,7 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
       <Tabs defaultValue="content">
         <TabsList>
           <TabsTrigger value="content">Contenu</TabsTrigger>
+          <TabsTrigger value="media">Médias ({media.length})</TabsTrigger>
           <TabsTrigger value="tracking">Suivi</TabsTrigger>
         </TabsList>
 
@@ -287,6 +344,30 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
           </Card>
         </TabsContent>
 
+        <TabsContent value="media" className="mt-4">
+          {mediaQuery.isPending ? (
+            <PageLoader label="Chargement des médias…" />
+          ) : mediaQuery.isError ? (
+            <Card>
+              <CardContent className="text-destructive pt-6">
+                {toApiErrorMessage(mediaQuery.error)}
+              </CardContent>
+            </Card>
+          ) : media.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2">
+              {media.map((item) => (
+                <MediaPreviewItem key={item.name} item={item} canDownload />
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Paperclip}
+              title="Aucun média joint"
+              description="Vous n'avez pas ajouté de média à ce signalement."
+            />
+          )}
+        </TabsContent>
+
         <TabsContent value="tracking" className="mt-4">
           <Card>
             <CardHeader>
@@ -296,22 +377,24 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
-              {[
-                ['Réception', 'Signalement reçu et conservé dans le desk.'],
-                [
-                  'Qualification',
-                  'Le desk vérifie si un sujet doit être ouvert.',
-                ],
-                [
-                  'Retour',
-                  'Une publication ou une archive sera rattachée ici.',
-                ],
-              ].map(([title, body]) => (
-                <div key={title} className="flex gap-3">
-                  <CheckCircle2 className="text-muted-foreground mt-0.5 size-4 shrink-0" />
+              {trackingSteps.map((step) => (
+                <div key={step.title} className="flex gap-3">
+                  {step.done ? (
+                    <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-emerald-600" />
+                  ) : (
+                    <Circle className="text-muted-foreground/50 mt-0.5 size-4 shrink-0" />
+                  )}
                   <div>
-                    <p className="text-sm font-medium">{title}</p>
-                    <p className="text-muted-foreground text-sm">{body}</p>
+                    <p
+                      className={
+                        step.done
+                          ? 'text-sm font-medium'
+                          : 'text-muted-foreground text-sm font-medium'
+                      }
+                    >
+                      {step.title}
+                    </p>
+                    <p className="text-muted-foreground text-sm">{step.body}</p>
                   </div>
                 </div>
               ))}
@@ -443,56 +526,40 @@ export function WatcherWorkspacePage() {
         />
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1fr_1fr]">
-        <Card>
-          <CardHeader>
-            <CardTitle>Enquetes a enrichir</CardTitle>
-            <CardDescription>
-              Une vigie ajoute des preuves mais ne pilote pas l'enquête.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {enrichable.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                Aucune enquête à enrichir pour le moment.
-              </p>
-            ) : null}
-            {enrichable.map((item) => (
-              <div key={item.id} className="rounded-lg border p-4">
-                <div className="flex items-center justify-between gap-3">
-                  <p className="font-medium">
-                    {item.title ?? 'Sujet sans titre'}
-                  </p>
-                  <Badge variant="outline">{domainLabel(item.status)}</Badge>
-                </div>
-                <p className="text-muted-foreground mt-2 text-sm">
-                  Ajouter média, contexte terrain et justification.
+      <Card>
+        <CardHeader>
+          <CardTitle>Enquetes a enrichir</CardTitle>
+          <CardDescription>
+            Une vigie ajoute des preuves mais ne pilote pas l'enquête. Ouvre une
+            enquête pour soumettre une contribution.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {enrichable.length === 0 ? (
+            <p className="text-muted-foreground text-sm">
+              Aucune enquête à enrichir pour le moment.
+            </p>
+          ) : null}
+          {enrichable.map((item) => (
+            <Link
+              key={item.id}
+              to="/investigations/$investigationId"
+              params={{ investigationId: item.id }}
+              className="hover:bg-muted/40 block rounded-lg border p-4 transition-colors"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <p className="font-medium">
+                  {item.title ?? 'Sujet sans titre'}
                 </p>
+                <Badge variant="outline">{domainLabel(item.status)}</Badge>
               </div>
-            ))}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Soumettre une preuve</CardTitle>
-            <CardDescription>
-              Les medias devront etre classes avant la revue editoriale.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-4">
-            <Label className="grid gap-2">
-              Titre
-              <Input placeholder="Source locale, image, lien..." />
-            </Label>
-            <Label className="grid gap-2">
-              Observation
-              <Textarea placeholder="Ce que la preuve confirme ou ecarte" />
-            </Label>
-            <Button className="w-fit">Ajouter la preuve</Button>
-          </CardContent>
-        </Card>
-      </div>
+              <p className="text-muted-foreground mt-2 text-sm">
+                Ajouter média, contexte terrain et justification.
+              </p>
+            </Link>
+          ))}
+        </CardContent>
+      </Card>
     </AppLayout>
   )
 }

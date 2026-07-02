@@ -102,24 +102,3 @@ export const roleCards: RoleCard[] = [
     icon: ShieldCheck,
   },
 ]
-
-export const notifications = [
-  {
-    title: 'Nouvelle preuve ajoutée',
-    body: 'La cellule preuves a joint une source primaire au dossier carburant.',
-    badge: 'preuve',
-    unread: true,
-  },
-  {
-    title: 'Arbitrage requis',
-    body: 'Une enquête attend la décision du directeur de publication.',
-    badge: 'urgent',
-    unread: true,
-  },
-  {
-    title: 'Correction planifiée',
-    body: 'Un correctif est prêt à être relu avant publication.',
-    badge: 'correctif',
-    unread: false,
-  },
-]

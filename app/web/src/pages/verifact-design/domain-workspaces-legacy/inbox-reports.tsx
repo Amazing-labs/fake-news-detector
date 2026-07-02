@@ -1,11 +1,7 @@
-import { Link } from '@tanstack/react-router'
-import {
-  Download,
-  ExternalLink,
-  FilePlus2,
-  FileText,
-  Trash2,
-} from 'lucide-react'
+import { Link, useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
+import { toast } from 'sonner'
+import { ExternalLink, FilePlus2, Trash2 } from 'lucide-react'
 import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
@@ -24,36 +20,152 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@shared/ui/shadcn/dialog'
+import { Label } from '@shared/ui/shadcn/label'
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from '@shared/ui/shadcn/tabs'
-import { useQuery } from '@tanstack/react-query'
+import { Textarea } from '@shared/ui/shadcn/textarea'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CreateDirectorInboxSubjectForm } from '@features/inbox-subjects/create-director-inbox-subject-form'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
-import { downloadFromUrl, triggerBlobDownload } from '@shared/lib/download'
+import { toApiErrorMessage } from '@shared/api/http'
 import { domainLabel } from '../workspace-labels'
 import { MetaCell, StatusBadge } from '../workspace-ui'
 import { listReports, reportQueryKeys } from '@entities/report/api'
 import type { ReportItem } from '@entities/report/model'
 import {
+  deleteInboxSubject,
   getInboxSubject,
   getInboxSubjectMedia,
   inboxSubjectQueryKeys,
   listInboxSubjects,
+  pickInboxSubject,
 } from '@entities/inbox-subject/api'
-import type {
-  InboxSubjectItem,
-  InboxSubjectMediaItem,
-} from '@entities/inbox-subject/model'
+import type { InboxSubjectItem } from '@entities/inbox-subject/model'
+import { MediaPreviewItem } from './media-preview'
+import { toPreviewMedia, type PreviewMedia } from './media-preview-utils'
 import { CitizenWorkspacePage } from './overview'
 
 const ORIGIN_LABELS: Record<string, string> = {
   REPORT: 'Signalement citoyen',
   DIRECTOR_INITIATED: 'Création direction',
+}
+
+// A journalist claims a subject -> the server opens the investigation and
+// returns it; on success we refresh the inbox and jump to the new dossier.
+function usePickSubjectMutation() {
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: pickInboxSubject,
+    onSuccess: (investigation) => {
+      if (!investigation) return
+      void queryClient.invalidateQueries({
+        queryKey: inboxSubjectQueryKeys.all,
+      })
+      void navigate({
+        to: '/investigations/$investigationId',
+        params: { investigationId: investigation.id },
+      })
+    },
+    onError: (error) => {
+      toast.error(toApiErrorMessage(error))
+    },
+  })
+}
+
+// Director-only: deletes a subject. The server requires a reason, so the dialog
+// keeps the confirm button disabled until one is typed.
+function DeleteSubjectDialog({ item }: { item: InboxSubjectItem }) {
+  const queryClient = useQueryClient()
+  const [open, setOpen] = useState(false)
+  const [reason, setReason] = useState('')
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteInboxSubject(item.id, { reason: reason.trim() }),
+    onSuccess: () => {
+      setOpen(false)
+      setReason('')
+      void queryClient.invalidateQueries({
+        queryKey: inboxSubjectQueryKeys.all,
+      })
+      toast.success('Sujet supprimé.')
+    },
+    onError: (error) => toast.error(toApiErrorMessage(error)),
+  })
+
+  function handleDelete() {
+    if (!reason.trim()) {
+      toast.error('La raison est obligatoire.')
+      return
+    }
+    deleteMutation.mutate()
+  }
+
+  return (
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (deleteMutation.isPending) return
+        setOpen(next)
+        if (!next) setReason('')
+      }}
+    >
+      <DialogTrigger asChild>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="text-muted-foreground hover:text-destructive h-7 px-2"
+        >
+          <Trash2 />
+          Supprimer
+        </Button>
+      </DialogTrigger>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Supprimer le sujet</DialogTitle>
+          <DialogDescription>
+            Indiquez la raison de la suppression pour garder une trace
+            éditoriale.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="rounded-lg border p-4">
+          <p className="font-medium">{item.theme}</p>
+          <p className="text-muted-foreground mt-1 text-sm">
+            {item.description}
+          </p>
+        </div>
+        <Label className="grid gap-2">
+          Raison
+          <Textarea
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
+            placeholder="Pourquoi ce sujet est-il supprimé ?"
+          />
+        </Label>
+        <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline" disabled={deleteMutation.isPending}>
+              Annuler
+            </Button>
+          </DialogClose>
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={!reason.trim()}
+            loading={deleteMutation.isPending}
+          >
+            {!deleteMutation.isPending && <Trash2 />}
+            Supprimer
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  )
 }
 
 // ── Reports list (director only) ───────────────────────────────────────────────
@@ -99,33 +211,23 @@ function ReportList({ items }: { items: ReportItem[] }) {
       <CardHeader>
         <CardTitle>Signalements citoyens</CardTitle>
         <CardDescription>
-          Transformer les alertes utiles en sujets ou archiver les doublons.
+          Suivi des signalements déposés. Les sujets sont ouverts depuis l'inbox
+          journaliste.
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
         {items.length ? (
           items.map((item) => (
-            <div
-              key={item.id}
-              className="grid gap-4 rounded-lg border p-4 lg:grid-cols-[1fr_auto]"
-            >
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-medium">{item.title}</p>
-                  <StatusBadge status={item.status} />
-                </div>
-                <p className="text-muted-foreground mt-1 text-sm">
-                  {item.theme}
-                  {item.reporterName ? ` / ${item.reporterName}` : ''}
-                </p>
-                <p className="mt-3 text-sm">{item.content}</p>
+            <div key={item.id} className="rounded-lg border p-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <p className="font-medium">{item.title}</p>
+                <StatusBadge status={item.status} />
               </div>
-              <div className="flex shrink-0 flex-wrap items-start gap-2">
-                <Button size="sm">Créer un sujet</Button>
-                <Button size="sm" variant="outline">
-                  Archiver
-                </Button>
-              </div>
+              <p className="text-muted-foreground mt-1 text-sm">
+                {item.theme}
+                {item.reporterName ? ` / ${item.reporterName}` : ''}
+              </p>
+              <p className="mt-3 text-sm">{item.content}</p>
             </div>
           ))
         ) : (
@@ -209,6 +311,7 @@ function InboxList(props: {
     queryKey: inboxSubjectQueryKeys.list(),
     queryFn: () => listInboxSubjects(),
   })
+  const pickMutation = usePickSubjectMutation()
   const allRows = inboxSubjectsQuery.data?.items ?? []
   const rows: InboxSubjectItem[] =
     props.filter === 'all'
@@ -231,13 +334,17 @@ function InboxList(props: {
                 key={item.id}
                 className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
               >
-                <div>
-                  <p className="font-medium">{item.theme}</p>
-                  <p className="text-muted-foreground text-sm">
+                <div className="min-w-0">
+                  <p className="truncate font-medium" title={item.theme}>
+                    {item.theme}
+                  </p>
+                  <p className="text-muted-foreground truncate text-sm">
                     {ORIGIN_LABELS[item.origin] ?? item.origin}
                     {item.ownerName ? ` / ${item.ownerName}` : ''}
                   </p>
-                  <p className="mt-3 text-sm">{item.description}</p>
+                  <p className="mt-3 line-clamp-2 text-sm">
+                    {item.description}
+                  </p>
                 </div>
                 <div className="flex flex-wrap items-center gap-2 self-start justify-self-start md:justify-self-end">
                   <StatusBadge status={item.status} />
@@ -256,41 +363,7 @@ function InboxList(props: {
                     </Link>
                   </Button>
                   {props.actor === 'director' && (
-                    <Dialog>
-                      <DialogTrigger asChild>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className="text-muted-foreground hover:text-destructive h-7 px-2"
-                        >
-                          <Trash2 />
-                          Supprimer
-                        </Button>
-                      </DialogTrigger>
-                      <DialogContent>
-                        <DialogHeader>
-                          <DialogTitle>Supprimer le sujet</DialogTitle>
-                          <DialogDescription>
-                            Voulez-vous vraiment supprimer ce sujet ?
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="rounded-lg border p-4">
-                          <p className="font-medium">{item.theme}</p>
-                          <p className="text-muted-foreground mt-1 text-sm">
-                            {item.description}
-                          </p>
-                        </div>
-                        <DialogFooter>
-                          <DialogClose asChild>
-                            <Button variant="outline">Annuler</Button>
-                          </DialogClose>
-                          <Button variant="destructive">
-                            <Trash2 />
-                            Supprimer
-                          </Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
+                    <DeleteSubjectDialog item={item} />
                   )}
                   {props.actor === 'journalist' && item.status === 'OPEN' && (
                     <Dialog>
@@ -317,7 +390,15 @@ function InboxList(props: {
                           <DialogClose asChild>
                             <Button variant="outline">Annuler</Button>
                           </DialogClose>
-                          <Button>Confirmer la prise</Button>
+                          <Button
+                            loading={
+                              pickMutation.isPending &&
+                              pickMutation.variables === item.id
+                            }
+                            onClick={() => pickMutation.mutate(item.id)}
+                          >
+                            Confirmer la prise
+                          </Button>
                         </DialogFooter>
                       </DialogContent>
                     </Dialog>
@@ -355,12 +436,13 @@ export function InboxSubjectDetailWorkspacePage({
     queryKey: inboxSubjectQueryKeys.media(subjectId),
     queryFn: () => getInboxSubjectMedia(subjectId),
   })
+  const pickMutation = usePickSubjectMutation()
   const subject = subjectQuery.data
 
   if (!subject) return null
 
-  const media: SubjectMedia[] = (mediaQuery.data?.items ?? []).map(
-    toSubjectMedia,
+  const media: PreviewMedia[] = (mediaQuery.data?.items ?? []).map(
+    toPreviewMedia,
   )
   const mediaCount = media.length
   const canTake = actor === 'journalist' && subject.status === 'OPEN'
@@ -402,7 +484,12 @@ export function InboxSubjectDetailWorkspacePage({
                       <DialogClose asChild>
                         <Button variant="outline">Annuler</Button>
                       </DialogClose>
-                      <Button>Confirmer la prise</Button>
+                      <Button
+                        loading={pickMutation.isPending}
+                        onClick={() => pickMutation.mutate(subjectId)}
+                      >
+                        Confirmer la prise
+                      </Button>
                     </DialogFooter>
                   </DialogContent>
                 </Dialog>
@@ -447,7 +534,7 @@ export function InboxSubjectDetailWorkspacePage({
           {mediaCount > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2">
               {media.map((item) => (
-                <SubjectMediaItem
+                <MediaPreviewItem
                   key={item.name}
                   item={item}
                   canDownload={actor === 'journalist' || actor === 'director'}
@@ -469,124 +556,5 @@ export function InboxSubjectDetailWorkspacePage({
         <Link to="/inbox-subjects/global">← Retour aux sujets</Link>
       </Button>
     </AppLayout>
-  )
-}
-
-// ── Media helpers ──────────────────────────────────────────────────────────────
-
-async function downloadMedia(item: SubjectMedia) {
-  const contentUrl =
-    item.type === 'IMAGE'
-      ? item.imageUrl
-      : item.type === 'VIDEO'
-        ? item.videoUrl
-        : item.type === 'AUDIO'
-          ? item.audioUrl
-          : item.url
-
-  if (!contentUrl || contentUrl.startsWith('#')) {
-    if (item.type === 'DOCUMENT') {
-      const blob = new Blob(
-        [
-          `[Fichier de démonstration]\n\n${item.name}\n\nCe fichier est un placeholder.`,
-        ],
-        { type: 'text/plain' },
-      )
-      triggerBlobDownload(blob, item.name)
-    }
-    return
-  }
-
-  await downloadFromUrl(contentUrl, item.name)
-}
-
-type SubjectMedia = {
-  name: string
-  type: 'IMAGE' | 'VIDEO' | 'AUDIO' | 'DOCUMENT' | 'LINK' | 'TEXT'
-  url: string
-  imageUrl?: string
-  alt?: string
-  videoUrl?: string
-  posterUrl?: string
-  audioUrl?: string
-  size?: string
-}
-
-function mediaName(url: string, type: string): string {
-  try {
-    const last = new URL(url).pathname.split('/').pop()
-    if (last) return decodeURIComponent(last)
-  } catch {
-    // not a parseable URL — fall back to the type label
-  }
-  return domainLabel(type)
-}
-
-function toSubjectMedia(item: InboxSubjectMediaItem): SubjectMedia {
-  const type = item.type as SubjectMedia['type']
-  return {
-    name: mediaName(item.url, item.type),
-    type,
-    url: item.url,
-    imageUrl: type === 'IMAGE' ? item.url : undefined,
-    videoUrl: type === 'VIDEO' ? item.url : undefined,
-    audioUrl: type === 'AUDIO' ? item.url : undefined,
-  }
-}
-
-function SubjectMediaItem({
-  item,
-  canDownload,
-}: {
-  item: SubjectMedia
-  canDownload: boolean
-}) {
-  return (
-    <div className="overflow-hidden rounded-lg border">
-      {item.type === 'IMAGE' && item.imageUrl ? (
-        <img
-          src={item.imageUrl}
-          alt={item.alt ?? item.name}
-          className="h-48 w-full object-cover"
-        />
-      ) : item.type === 'VIDEO' && item.videoUrl ? (
-        <video
-          src={item.videoUrl}
-          poster={item.posterUrl}
-          controls
-          className="h-48 w-full bg-black object-contain"
-        />
-      ) : item.type === 'AUDIO' && item.audioUrl ? (
-        <div className="bg-muted/40 flex h-24 items-center justify-center px-4">
-          <audio src={item.audioUrl} controls className="w-full" />
-        </div>
-      ) : (
-        <div className="bg-muted/40 flex h-24 items-center justify-center gap-3 px-4">
-          <FileText className="text-muted-foreground size-8 shrink-0" />
-          <p className="text-muted-foreground min-w-0 truncate text-sm">
-            {item.name}
-          </p>
-        </div>
-      )}
-      <div className="flex items-center justify-between gap-2 px-3 py-2">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium">{item.name}</p>
-          {item.size && (
-            <p className="text-muted-foreground text-xs">{item.size}</p>
-          )}
-        </div>
-        {canDownload && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="text-muted-foreground hover:text-foreground size-8 shrink-0"
-            aria-label={`Télécharger ${item.name}`}
-            onClick={() => downloadMedia(item)}
-          >
-            <Download className="size-4" />
-          </Button>
-        )}
-      </div>
-    </div>
   )
 }

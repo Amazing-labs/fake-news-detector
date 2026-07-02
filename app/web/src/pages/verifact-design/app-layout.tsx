@@ -10,7 +10,7 @@ import {
   Sun,
 } from 'lucide-react'
 import type { ComponentType, ReactNode } from 'react'
-import { useLayoutEffect, useRef } from 'react'
+import { useLayoutEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   listNotifications,
@@ -180,9 +180,16 @@ export function AppLayout(props: {
   const visibleNavItems = navItems.filter((item) =>
     navByActor[actor].includes(item.label),
   )
+  const [isSigningOut, setIsSigningOut] = useState(false)
   async function handleSignOut() {
-    await signOutAppSession()
-    await navigate({ to: '/auth', search: { mode: 'sign-in' } })
+    setIsSigningOut(true)
+    try {
+      await signOutAppSession()
+      // Back to the guest landing page after logout, not the auth screen.
+      await navigate({ to: '/' })
+    } finally {
+      setIsSigningOut(false)
+    }
   }
 
   function isActivePath(to: string) {
@@ -296,17 +303,21 @@ export function AppLayout(props: {
                 <Moon className="size-4" />
               )}
             </Button>
-            <Button variant="outline" asChild>
-              {session ? (
-                <button type="button" onClick={() => void handleSignOut()}>
-                  Déconnexion
-                </button>
-              ) : (
+            {session ? (
+              <Button
+                variant="outline"
+                onClick={() => void handleSignOut()}
+                loading={isSigningOut}
+              >
+                Déconnexion
+              </Button>
+            ) : (
+              <Button variant="outline" asChild>
                 <Link to="/auth" search={{ mode: 'sign-in' }}>
                   Connexion
                 </Link>
-              )}
-            </Button>
+              </Button>
+            )}
           </div>
           <nav className="border-t lg:hidden">
             <div

@@ -29,6 +29,5 @@ export {
   NotificationsWorkspacePage,
   PeopleManagementPage,
   UserCreateWorkspacePage,
-  UserStatusWorkspacePage,
   WatcherApplicationsReviewPage,
 } from './domain-workspaces-legacy/admin'

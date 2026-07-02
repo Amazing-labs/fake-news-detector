@@ -3,16 +3,10 @@ import type { ReactNode } from 'react'
 import { cn } from '@shared/lib/utils'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@shared/ui/shadcn/card'
+import { Card, CardContent } from '@shared/ui/shadcn/card'
 import { Textarea } from '@shared/ui/shadcn/textarea'
 import { domainLabel } from '../../workspace-labels'
-import { StatusBadge } from '../../workspace-ui'
+import { EmptyState, StatusBadge } from '../../workspace-ui'
 import {
   CATEGORY_OPTIONS,
   MEDIA_TYPE_ICONS,
@@ -142,19 +136,19 @@ export function NotesBlock({
 }) {
   return (
     <Card>
-      <CardHeader>
-        <CardTitle className="text-base">Notes d'enquête</CardTitle>
-        <CardDescription>
-          {readOnly
-            ? 'Notes rédigées par le journaliste sur ce dossier.'
-            : 'Vos notes de travail — visibles par la direction lors de la revue.'}
-        </CardDescription>
-      </CardHeader>
       <CardContent>
         {readOnly ? (
-          <p className="text-muted-foreground text-sm leading-relaxed">
-            {notes}
-          </p>
+          notes.trim() ? (
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              {notes}
+            </p>
+          ) : (
+            <EmptyState
+              icon={FileText}
+              title="Aucune note d'enquête"
+              description="Le journaliste n'a pas encore rédigé de note sur ce dossier."
+            />
+          )
         ) : (
           <div className="grid gap-3">
             <Textarea defaultValue={notes} rows={5} className="resize-none" />

@@ -48,6 +48,16 @@ export function createReportRoutes(
 
   routes.openapi(
     createRoute({
+      method: 'get',
+      path: '/{reportId}/media',
+      request: { params: reportIdParamSchema },
+      responses: okResponse('Report media'),
+    }),
+    reportController.getMedia,
+  )
+
+  routes.openapi(
+    createRoute({
       method: 'post',
       path: '/',
       middleware: createPermissionMiddleware(securityService, 'report.submit'),

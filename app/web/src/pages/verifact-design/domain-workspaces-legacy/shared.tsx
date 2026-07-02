@@ -6,7 +6,17 @@ import {
   type DragEvent,
   type ReactNode,
 } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
+import {
+  approveInvestigation,
+  archiveInvestigation,
+  cancelInvestigation,
+  rejectInvestigation,
+  submitWatcherEvidence,
+} from '@entities/investigation/api'
+import { toApiErrorMessage } from '@shared/api/http'
 import {
   deleteFilesFromSupabase,
   flushOrphanedUploads,
@@ -16,6 +26,11 @@ import {
   uploadFileToSupabase,
 } from '@shared/lib/supabase'
 import { cn } from '@shared/lib/utils'
+import { MediaFields } from '@shared/ui/media-fields'
+import {
+  normalizeMediaDrafts,
+  type MediaDraft,
+} from '@shared/ui/media-fields.model'
 import { Button } from '@shared/ui/shadcn/button'
 import {
   Dialog,
@@ -30,11 +45,12 @@ import {
 import { Input } from '@shared/ui/shadcn/input'
 import { Label } from '@shared/ui/shadcn/label'
 import { Textarea } from '@shared/ui/shadcn/textarea'
+import type { SourceType } from '@entities/investigation/schemas'
 
 const fieldControlClassName =
   'border-input bg-background ring-offset-background focus-visible:ring-ring h-10 w-full rounded-md border px-3 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none'
 
-const sourceTypeOptions = [
+const sourceTypeOptions: [SourceType, string][] = [
   ['OFFICIAL_DECREE', 'Décision officielle'],
   ['ORIGINAL_RETRACTION', 'Rectificatif original'],
   ['DIRECT_EVIDENCE', 'Preuve directe'],
@@ -42,26 +58,67 @@ const sourceTypeOptions = [
   ['AUTHORITY_STATEMENT', "Déclaration d'autorité"],
 ]
 
-const mediaTypeOptions = [
-  ['IMAGE', 'Image'],
-  ['VIDEO', 'Vidéo'],
-  ['DOCUMENT', 'Document'],
-  ['AUDIO', 'Audio'],
-  ['TEXT', 'Texte'],
-  ['LINK', 'Lien'],
-]
-
+// One dialog for the three reason-bearing arbitration actions. `kind` selects
+// the endpoint: reject = send the dossier back to the journalist "à corriger",
+// cancel = definitive cancellation, archive = close an unverifiable dossier.
 export function ArbitrationReasonDialog({
+  investigationId,
+  kind,
   action,
   children,
   tone = 'default',
 }: {
+  investigationId: string
+  kind: 'reject' | 'cancel' | 'archive'
   action: string
   children: ReactNode
   tone?: 'default' | 'destructive'
 }) {
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const [open, setOpen] = useState(false)
+  const [reason, setReason] = useState('')
+
+  const mutation = useMutation({
+    mutationFn: () => {
+      const trimmed = reason.trim()
+      if (kind === 'reject') {
+        return rejectInvestigation(investigationId, { reason: trimmed })
+      }
+      if (kind === 'cancel') {
+        return cancelInvestigation(investigationId, { reason: trimmed })
+      }
+      return archiveInvestigation(investigationId, { comment: trimmed })
+    },
+    onSuccess: () => {
+      setOpen(false)
+      setReason('')
+      void queryClient.invalidateQueries({ queryKey: ['investigations'] })
+      void queryClient.invalidateQueries({ queryKey: ['decisions'] })
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      toast.success(`${action} — effectué.`)
+      void navigate({ to: '/investigations' })
+    },
+    onError: (error) => toast.error(toApiErrorMessage(error)),
+  })
+
+  function handleConfirm() {
+    if (!reason.trim()) {
+      toast.error('La raison est obligatoire.')
+      return
+    }
+    mutation.mutate()
+  }
+
   return (
-    <Dialog>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (mutation.isPending) return
+        setOpen(next)
+        if (!next) setReason('')
+      }}
+    >
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent>
         <DialogHeader>
@@ -74,14 +131,22 @@ export function ArbitrationReasonDialog({
           Raison
           <Textarea
             required
+            value={reason}
+            onChange={(event) => setReason(event.target.value)}
             placeholder="Explique la raison de cette decision..."
           />
         </Label>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Annuler</Button>
+            <Button variant="outline" disabled={mutation.isPending}>
+              Annuler
+            </Button>
           </DialogClose>
-          <Button variant={tone === 'destructive' ? 'destructive' : 'default'}>
+          <Button
+            variant={tone === 'destructive' ? 'destructive' : 'default'}
+            onClick={handleConfirm}
+            loading={mutation.isPending}
+          >
             Confirmer
           </Button>
         </DialogFooter>
@@ -91,16 +156,87 @@ export function ArbitrationReasonDialog({
 }
 
 export function PublishInvestigationDialog({
+  investigationId,
   children,
 }: {
+  investigationId: string
   children: ReactNode
 }) {
+  const queryClient = useQueryClient()
+  const navigate = useNavigate()
+  const [open, setOpen] = useState(false)
   const [withEvidence, setWithEvidence] = useState(false)
+
+  const [linkUrl, setLinkUrl] = useState('')
+  const [linkAuthorityName, setLinkAuthorityName] = useState('')
+  const [linkAuthorityType, setLinkAuthorityType] =
+    useState<SourceType>('OFFICIAL_DECREE')
+  const [media, setMedia] = useState<MediaDraft[]>([])
+
+  function resetEvidence() {
+    setWithEvidence(false)
+    setLinkUrl('')
+    setLinkAuthorityName('')
+    setLinkAuthorityType('OFFICIAL_DECREE')
+    setMedia([])
+  }
+
+  const mutation = useMutation({
+    mutationFn: () => {
+      const trimmedLink = linkUrl.trim()
+      const trimmedAuthority = linkAuthorityName.trim()
+      const verifiedLinks = trimmedLink
+        ? [
+            {
+              url: trimmedLink,
+              authoritySource: trimmedAuthority
+                ? { name: trimmedAuthority, type: linkAuthorityType }
+                : undefined,
+            },
+          ]
+        : []
+      const verifiedMedia = normalizeMediaDrafts(media)
+      return approveInvestigation(investigationId, {
+        verifiedLinks,
+        verifiedMedia,
+      })
+    },
+    onSuccess: () => {
+      // Mark the submitted media as no longer pending so MediaFields' unmount
+      // cleanup does not delete the files we just attached to the publication.
+      untrackPendingUploads(media.map((item) => item.url))
+      setOpen(false)
+      resetEvidence()
+      void queryClient.invalidateQueries({ queryKey: ['investigations'] })
+      void queryClient.invalidateQueries({ queryKey: ['publications'] })
+      void queryClient.invalidateQueries({ queryKey: ['decisions'] })
+      void queryClient.invalidateQueries({ queryKey: ['dashboard'] })
+      toast.success('Dossier publié.')
+      void navigate({ to: '/publications/list' })
+    },
+    onError: (error) => toast.error(toApiErrorMessage(error)),
+  })
+
+  function handlePublish() {
+    const trimmedLink = linkUrl.trim()
+    if (trimmedLink) {
+      try {
+        new URL(trimmedLink)
+      } catch {
+        toast.error('Le lien vérifié doit être une URL valide (ex: https://…).')
+        return
+      }
+    }
+    mutation.mutate()
+  }
 
   return (
     <Dialog
-      onOpenChange={(open) => {
-        if (!open) setWithEvidence(false)
+      open={open}
+      onOpenChange={(next) => {
+        if (mutation.isPending) return
+        setOpen(next)
+        if (!next) resetEvidence()
       }}
     >
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -125,15 +261,32 @@ export function PublishInvestigationDialog({
               <div className="grid gap-3 sm:grid-cols-2">
                 <Label className="grid gap-2 sm:col-span-2">
                   URL
-                  <Input placeholder="https://source-officielle.example" />
+                  <Input
+                    type="url"
+                    value={linkUrl}
+                    onChange={(event) => setLinkUrl(event.target.value)}
+                    placeholder="https://source-officielle.example"
+                  />
                 </Label>
                 <Label className="grid gap-2">
                   Source d'autorité
-                  <Input placeholder="Nom de la source" />
+                  <Input
+                    value={linkAuthorityName}
+                    onChange={(event) =>
+                      setLinkAuthorityName(event.target.value)
+                    }
+                    placeholder="Nom de la source"
+                  />
                 </Label>
                 <Label className="grid gap-2">
                   Type de source
-                  <select className={fieldControlClassName}>
+                  <select
+                    className={fieldControlClassName}
+                    value={linkAuthorityType}
+                    onChange={(event) =>
+                      setLinkAuthorityType(event.target.value as SourceType)
+                    }
+                  >
                     {sourceTypeOptions.map(([value, label]) => (
                       <option key={value} value={value}>
                         {label}
@@ -145,58 +298,38 @@ export function PublishInvestigationDialog({
             </section>
 
             <section className="grid gap-3 border-t pt-5">
-              <div>
-                <p className="text-sm font-medium">Média vérifié</p>
-                <p className="text-muted-foreground text-sm">
-                  Upload un fichier, puis qualifie sa nature et sa source.
-                </p>
-              </div>
-              <MediaDropzone
-                inputId="publication-proof-media"
-                description="Images, vidéos, audio, PDF ou documents qui renforcent la publication."
+              <MediaFields
+                title="Médias vérifiés"
+                description="Upload des fichiers qui renforcent la publication — le type est détecté automatiquement."
+                items={media}
+                onChange={setMedia}
               />
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Label className="grid gap-2">
-                  Type de média
-                  <select className={fieldControlClassName}>
-                    {mediaTypeOptions.map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </Label>
-                <Label className="grid gap-2">
-                  Source rattachée
-                  <select className={fieldControlClassName}>
-                    {sourceTypeOptions.map(([value, label]) => (
-                      <option key={value} value={value}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </Label>
-              </div>
             </section>
           </div>
         ) : null}
 
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Annuler</Button>
+            <Button variant="outline" disabled={mutation.isPending}>
+              Annuler
+            </Button>
           </DialogClose>
           {withEvidence ? (
-            <Button>
-              <BadgeCheck />
+            <Button onClick={handlePublish} loading={mutation.isPending}>
+              {!mutation.isPending && <BadgeCheck />}
               Publier avec preuves
             </Button>
           ) : (
             <>
-              <Button variant="outline" onClick={() => setWithEvidence(true)}>
+              <Button
+                variant="outline"
+                onClick={() => setWithEvidence(true)}
+                disabled={mutation.isPending}
+              >
                 Oui, ajouter des preuves
               </Button>
-              <Button>
-                <BadgeCheck />
+              <Button onClick={handlePublish} loading={mutation.isPending}>
+                {!mutation.isPending && <BadgeCheck />}
                 Non, publier
               </Button>
             </>
@@ -207,9 +340,71 @@ export function PublishInvestigationDialog({
   )
 }
 
-export function WatcherContributeDialog({ children }: { children: ReactNode }) {
+export function WatcherContributeDialog({
+  investigationId,
+  children,
+}: {
+  investigationId: string
+  children: ReactNode
+}) {
+  const queryClient = useQueryClient()
+  const [open, setOpen] = useState(false)
+  const [title, setTitle] = useState('')
+  const [content, setContent] = useState('')
+  const [media, setMedia] = useState<MediaDraft[]>([])
+
+  const validMedia = normalizeMediaDrafts(media)
+  const canSubmit =
+    title.trim() !== '' && content.trim() !== '' && validMedia.length > 0
+
+  function reset() {
+    setTitle('')
+    setContent('')
+    setMedia([])
+  }
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      submitWatcherEvidence(investigationId, {
+        title: title.trim(),
+        content: content.trim(),
+        media: validMedia,
+      }),
+    onSuccess: () => {
+      untrackPendingUploads(media.map((item) => item.url))
+      setOpen(false)
+      reset()
+      void queryClient.invalidateQueries({ queryKey: ['investigations'] })
+      toast.success('Preuve envoyée.')
+    },
+    onError: (error) => toast.error(toApiErrorMessage(error)),
+  })
+
+  function handleSubmit() {
+    if (!title.trim()) {
+      toast.error('Le titre est obligatoire.')
+      return
+    }
+    if (!content.trim()) {
+      toast.error("L'observation est obligatoire.")
+      return
+    }
+    if (validMedia.length === 0) {
+      toast.error('Au moins un média est requis.')
+      return
+    }
+    mutation.mutate()
+  }
+
   return (
-    <Dialog>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => {
+        if (mutation.isPending) return
+        setOpen(next)
+        if (!next) reset()
+      }}
+    >
       <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="max-w-lg">
         <DialogHeader>
@@ -222,23 +417,39 @@ export function WatcherContributeDialog({ children }: { children: ReactNode }) {
         <div className="grid gap-4">
           <Label className="grid gap-2">
             Titre
-            <Input placeholder="Source locale, image, lien..." />
+            <Input
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="Source locale, image, lien..."
+            />
           </Label>
           <Label className="grid gap-2">
             Observation
-            <Textarea placeholder="Ce que la preuve confirme ou écarte" />
+            <Textarea
+              value={content}
+              onChange={(event) => setContent(event.target.value)}
+              placeholder="Ce que la preuve confirme ou écarte"
+            />
           </Label>
-          <MediaDropzone
-            inputId="watcher-contribute-media"
+          <MediaFields
+            title="Médias de la preuve"
             description="Images, vidéos, audio, PDF ou documents utiles au dossier."
+            items={media}
+            onChange={setMedia}
           />
         </div>
         <DialogFooter>
           <DialogClose asChild>
-            <Button variant="outline">Annuler</Button>
+            <Button variant="outline" disabled={mutation.isPending}>
+              Annuler
+            </Button>
           </DialogClose>
-          <Button>
-            <FilePlus2 />
+          <Button
+            onClick={handleSubmit}
+            disabled={!canSubmit}
+            loading={mutation.isPending}
+          >
+            {!mutation.isPending && <FilePlus2 />}
             Ajouter la preuve
           </Button>
         </DialogFooter>

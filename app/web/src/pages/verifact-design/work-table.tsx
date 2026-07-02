@@ -168,8 +168,16 @@ function HistoryTableCard(props: {
             <TableBody>
               {props.rows.map((row) => (
                 <TableRow key={row.id}>
-                  <TableCell className="font-medium">{row.title}</TableCell>
-                  <TableCell className="text-muted-foreground max-w-xs truncate">
+                  <TableCell
+                    className="max-w-[16rem] truncate font-medium"
+                    title={row.title}
+                  >
+                    {row.title}
+                  </TableCell>
+                  <TableCell
+                    className="text-muted-foreground max-w-xs truncate"
+                    title={row.context}
+                  >
                     {row.context}
                   </TableCell>
                   <TableCell>

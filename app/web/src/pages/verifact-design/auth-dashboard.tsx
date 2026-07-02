@@ -220,12 +220,8 @@ export function VeriFactAuthPage(props: {
                   <AlertDescription>{message}</AlertDescription>
                 </Alert>
               ) : null}
-              <Button className="w-full" disabled={pending} type="submit">
-                {pending
-                  ? 'En cours...'
-                  : mode === 'sign-up'
-                    ? 'Créer un compte'
-                    : 'Connexion'}
+              <Button className="w-full" loading={pending} type="submit">
+                {mode === 'sign-up' ? 'Créer un compte' : 'Connexion'}
               </Button>
             </form>
           )}
