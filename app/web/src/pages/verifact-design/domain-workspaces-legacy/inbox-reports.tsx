@@ -145,8 +145,10 @@ function DeleteSubjectDialog({ item }: { item: InboxSubjectItem }) {
           </DialogDescription>
         </DialogHeader>
         <div className="rounded-lg border p-4">
-          <p className="font-medium">{item.theme}</p>
-          <p className="text-muted-foreground mt-1 text-sm">
+          <p className="truncate font-medium" title={item.theme}>
+            {item.theme}
+          </p>
+          <p className="text-muted-foreground mt-1 line-clamp-2 text-sm break-words">
             {item.description}
           </p>
         </div>
@@ -395,8 +397,13 @@ function InboxList(props: {
                           </DialogDescription>
                         </DialogHeader>
                         <div className="rounded-lg border p-4">
-                          <p className="font-medium">{item.theme}</p>
-                          <p className="text-muted-foreground mt-1 text-sm">
+                          <p
+                            className="truncate font-medium"
+                            title={item.theme}
+                          >
+                            {item.theme}
+                          </p>
+                          <p className="text-muted-foreground mt-1 line-clamp-2 text-sm break-words">
                             {item.description}
                           </p>
                         </div>
@@ -489,8 +496,10 @@ export function InboxSubjectDetailWorkspacePage({
                       </DialogDescription>
                     </DialogHeader>
                     <div className="rounded-lg border p-4">
-                      <p className="font-medium">{subject.theme}</p>
-                      <p className="text-muted-foreground mt-1 text-sm">
+                      <p className="truncate font-medium" title={subject.theme}>
+                        {subject.theme}
+                      </p>
+                      <p className="text-muted-foreground mt-1 line-clamp-2 text-sm break-words">
                         {subject.description}
                       </p>
                     </div>
