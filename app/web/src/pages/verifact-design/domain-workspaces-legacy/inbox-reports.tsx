@@ -33,6 +33,7 @@ import { CreateDirectorInboxSubjectForm } from '@features/inbox-subjects/create-
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { toApiErrorMessage } from '@shared/api/http'
+import { deleteFilesFromSupabase } from '@shared/lib/supabase'
 import { domainLabel } from '../workspace-labels'
 import { MetaCell, StatusBadge } from '../workspace-ui'
 import { listReports, reportQueryKeys } from '@entities/report/api'
@@ -86,8 +87,18 @@ function DeleteSubjectDialog({ item }: { item: InboxSubjectItem }) {
   const [reason, setReason] = useState('')
 
   const deleteMutation = useMutation({
-    mutationFn: () => deleteInboxSubject(item.id, { reason: reason.trim() }),
-    onSuccess: () => {
+    // Collect the subject's media URLs *before* deleting: the API cascade only
+    // removes the DB rows, never the real objects in the storage bucket (the
+    // server never touches Supabase Storage), so we purge them ourselves after.
+    mutationFn: async () => {
+      const media = await getInboxSubjectMedia(item.id).catch(() => null)
+      await deleteInboxSubject(item.id, { reason: reason.trim() })
+      return media?.items.map((entry) => entry.url) ?? []
+    },
+    onSuccess: (mediaUrls) => {
+      // Best-effort bucket cleanup: the DB is already consistent, so a failure
+      // here leaves an orphaned file at worst — never a broken deletion.
+      if (mediaUrls.length > 0) void deleteFilesFromSupabase(mediaUrls)
       setOpen(false)
       setReason('')
       void queryClient.invalidateQueries({
