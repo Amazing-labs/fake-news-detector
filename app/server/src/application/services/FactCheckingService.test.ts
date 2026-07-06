@@ -24,7 +24,7 @@ function buildService(deps: any = {}) {
   }
   const reportMediaRepository = {
     saveMany: vi.fn(),
-    findByReportId: vi.fn(),
+    findByReportId: vi.fn().mockResolvedValue([]),
     ...deps.reportMediaRepository,
   }
   const investigationRepository = {

@@ -7,11 +7,13 @@ import type {
   IInvestigationRepository,
   INotificationRepository,
   IPublicationRepository,
+  IReportMediaRepository,
   IReportRepository,
   IWatcherApplicationRepository,
   IWorkflowAuditRepository,
 } from '../../../domain/repositories'
 import type { InboxSubjectMediaInsert } from '../../../domain/repositories/IInboxSubjectMediaRepository'
+import type { IMediaStorage } from '../../../domain/interfaces'
 import { PublicationFactory } from '../../../domain/factories/PublicationFactory'
 import { NotificationFactory } from '../../../domain/factories/NotificationFactory'
 import { AuthoritySourceFactory } from '../../../domain/factories/AuthoritySourceFactory'
@@ -55,6 +57,8 @@ export class DirectorWorkflowService {
     private readonly authoritySourceRepository: IAuthoritySourceRepository,
     private readonly domainEventPublisher: IDomainEventPublisher,
     private readonly investigationLifecycleService: InvestigationLifecycleService,
+    private readonly reportMediaRepository: IReportMediaRepository,
+    private readonly mediaStorage: IMediaStorage,
   ) {}
 
   async createDirectorInboxSubject(
@@ -216,11 +220,19 @@ export class DirectorWorkflowService {
     }
 
     const subjectOrigin = subject.origin
+    // Collect the real storage URLs before the cascade deletes their rows: a
+    // Prisma cascade drops InboxSubjectMedia/ReportMedia rows but never the
+    // underlying bucket objects, so we must gather them now and purge after.
+    const mediaUrls: string[] = []
     let reportCitizenId: string | null = null
     if (subjectOrigin === 'REPORT' && subject.reportId) {
       const subjectReportId = subject.reportId
       const report = await this.reportRepository.findById(subjectReportId)
       if (!report) throw new NotFoundError('Report', subjectReportId)
+
+      const reportMedia =
+        await this.reportMediaRepository.findByReportId(subjectReportId)
+      mediaUrls.push(...reportMedia.map((item) => item.url))
 
       const reportId = report.id
       const citizenId = report.citizenId
@@ -232,9 +244,19 @@ export class DirectorWorkflowService {
       }
 
       await this.reportRepository.delete(reportId)
+    } else {
+      const subjectMedia =
+        await this.inboxSubjectMediaRepository.findByInboxSubjectId(subject.id)
+      mediaUrls.push(...subjectMedia.map((item) => item.url))
     }
 
     await this.inboxSubjectRepository.delete(subject.id)
+
+    // Best-effort bucket cleanup: the DB is already consistent, so a storage
+    // failure must not fail the deletion — it would only leave orphaned files.
+    if (mediaUrls.length > 0) {
+      await this.mediaStorage.deleteByPublicUrls(mediaUrls)
+    }
 
     if (subjectOrigin === 'REPORT' && reportCitizenId) {
       const notification = NotificationFactory.createAlertNotification(

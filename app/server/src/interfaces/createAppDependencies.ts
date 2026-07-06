@@ -19,6 +19,7 @@ import { PrismaReportMediaRepository } from '../infrastructure/repositories/pers
 import { PrismaReportRepository } from '../infrastructure/repositories/persistence/PrismaReportRepository'
 import { PrismaWatcherApplicationRepository } from '../infrastructure/repositories/persistence/PrismaWatcherApplicationRepository'
 import { PrismaWorkflowAuditRepository } from '../infrastructure/repositories/persistence/PrismaWorkflowAuditRepository'
+import { SupabaseStorageAdapter } from '../infrastructure/adapters'
 import { BetterAuthRequestAuthenticator } from './auth/BetterAuthRequestAuthenticator'
 import { DashboardController } from './controllers/DashboardController'
 import { DirectorController } from './controllers/DirectorController'
@@ -62,6 +63,7 @@ export function createAppDependencies(): AppDependencies {
   const inboxSubjectRepository = new PrismaInboxSubjectRepository()
   const inboxSubjectMediaRepository = new PrismaInboxSubjectMediaRepository()
   const authoritySourceRepository = new PrismaAuthoritySourceRepository()
+  const mediaStorage = new SupabaseStorageAdapter()
 
   const factCheckingService = createTransactionalFactCheckingService({
     reportRepository,
@@ -80,6 +82,7 @@ export function createAppDependencies(): AppDependencies {
     inboxSubjectRepository,
     inboxSubjectMediaRepository,
     authoritySourceRepository,
+    mediaStorage,
   })
 
   const actorManagementService = new ActorManagementService(
