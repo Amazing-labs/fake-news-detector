@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { createReport, reportQueryKeys } from '@entities/report/api'
 import { toApiErrorMessage } from '@shared/api/http'
-import { untrackPendingUploads } from '@shared/lib/supabase'
+import { useAppSession } from '@entities/session/model'
 import {
   DarkButton,
   DarkFormCard,
@@ -30,6 +30,8 @@ export function CreateReportForm() {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [media, setMedia] = useState<MediaDraft[]>([])
+  const { session } = useAppSession()
+  const ownerId = session?.user.actorId ?? ''
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -42,7 +44,6 @@ export function CreateReportForm() {
       })
     },
     onSuccess: () => {
-      untrackPendingUploads(media.map((m) => m.url))
       setTheme(defaultVerificationTheme)
       setTitle('')
       setContent('')
@@ -105,6 +106,7 @@ export function CreateReportForm() {
           description="Images, captures d'écran, vidéos, notes audio ou documents reçus avec la rumeur."
           items={media}
           onChange={setMedia}
+          ownerId={ownerId}
           variant="dark"
         />
         {normalizeMediaDrafts(media).length === 0 && (

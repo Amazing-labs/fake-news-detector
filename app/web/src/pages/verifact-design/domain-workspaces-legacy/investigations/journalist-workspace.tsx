@@ -9,6 +9,7 @@ import {
   submitInvestigationForReview,
 } from '@entities/investigation/api'
 import { toApiErrorMessage } from '@shared/api/http'
+import { useAppSession } from '@entities/session/model'
 import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
@@ -67,6 +68,8 @@ export function JournalistInvestigationWorkspace({
   watcherEvidence: WatcherEvidenceItem[]
 }) {
   const queryClient = useQueryClient()
+  const { session } = useAppSession()
+  const ownerId = session?.user.actorId ?? ''
 
   const [proofType, setProofType] = useState<MediaType>('LINK')
   const [proofAuthorityName, setProofAuthorityName] = useState('')
@@ -335,6 +338,7 @@ export function JournalistInvestigationWorkspace({
                     key={proofType}
                     inputId="journalist-proof-media"
                     description="Glissez un fichier ou collez une URL ci-dessous pour les liens."
+                    ownerId={ownerId}
                     onUrlsChange={setProofUploadedUrls}
                   />
                   {proofType === 'LINK' && (

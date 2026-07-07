@@ -6,6 +6,7 @@ import { createDirectorRoutes } from './routes/directorRoutes'
 import { createInboxSubjectRoutes } from './routes/inboxSubjectRoutes'
 import { createInvestigationRoutes } from './routes/investigationRoutes'
 import { createJournalistRoutes } from './routes/journalistRoutes'
+import { createMediaRoutes } from './routes/mediaRoutes'
 import { createMeRoutes } from './routes/meRoutes'
 import { createNotificationRoutes } from './routes/notificationRoutes'
 import { createPublicationRoutes } from './routes/publicationRoutes'
@@ -105,6 +106,14 @@ export function createApp(dependencies: AppDependencies) {
     '/api/dashboard',
     createDashboardRoutes(
       dependencies.dashboardController,
+      dependencies.securityService,
+    ),
+  )
+
+  app.route(
+    '/api/media',
+    createMediaRoutes(
+      dependencies.mediaController,
       dependencies.securityService,
     ),
   )

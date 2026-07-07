@@ -9,17 +9,13 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react'
-import { useEffect, useRef, useState, type DragEvent } from 'react'
+import { useRef, useState, type DragEvent } from 'react'
 import { toast } from 'sonner'
 import {
-  deleteFilesFromSupabase,
-  flushOrphanedUploads,
-  getPendingUploads,
   isSupabaseUploadConfigured,
-  trackPendingUpload,
-  untrackPendingUploads,
   uploadFileToSupabase,
 } from '../lib/supabase'
+import { cleanupMedia } from '../api/media'
 import { cn } from '../lib/utils'
 import { Button, Input, Select, SectionCard } from './primitives'
 import { mediaTypes, type MediaDraft } from './media-fields.model'
@@ -63,6 +59,9 @@ export function MediaFields(props: {
   items: MediaDraft[]
   onChange: (items: MediaDraft[]) => void
   variant?: 'default' | 'dark'
+  /** Current actor id — uploads are stored under `uploads/<ownerId>/` so the
+   * server can authorise deleting this session's not-yet-submitted files. */
+  ownerId: string
   /** Locks every control (upload, edit, remove) — e.g. while a submit is
    * pending — so in-flight uploads can't be mutated or deleted. */
   disabled?: boolean
@@ -77,24 +76,8 @@ export function MediaFields(props: {
   // the field disabled (e.g. a submit is in flight).
   const inputsDisabled = isUploading || (props.disabled ?? false)
 
-  // Clean up orphans from previous sessions on mount
-  useEffect(() => {
-    void flushOrphanedUploads()
-  }, [])
-
-  // On unmount: delete session uploads still pending (form not submitted)
-  useEffect(() => {
-    return () => {
-      const pending = getPendingUploads()
-      const toDelete = sessionUploadsRef.current.filter((url) =>
-        pending.includes(url),
-      )
-      if (toDelete.length > 0) {
-        void deleteFilesFromSupabase(toDelete)
-        untrackPendingUploads(toDelete)
-      }
-    }
-  }, [])
+  // Abandoned uploads (form left without submitting) are reclaimed by the
+  // server-side reconciliation sweep, so no unmount cleanup is needed here.
 
   async function handleFiles(files: FileList | null) {
     if (props.disabled || isUploading || !files?.length || !canUpload) return
@@ -107,9 +90,8 @@ export function MediaFields(props: {
 
     for (const file of filesToAdd) {
       try {
-        const result = await uploadFileToSupabase(file)
+        const result = await uploadFileToSupabase(file, props.ownerId)
         uploaded.push({ url: result.url, type: result.type })
-        trackPendingUpload(result.url)
         sessionUploadsRef.current.push(result.url)
       } catch (error) {
         toast.error(
@@ -140,10 +122,11 @@ export function MediaFields(props: {
     if (props.disabled) return
     const url = props.items[index]?.url
     if (url) {
+      // Only ask the server to delete files this session uploaded — never a
+      // pre-existing (already-submitted) URL, which would delete a live file.
       if (sessionUploadsRef.current.includes(url)) {
-        void deleteFilesFromSupabase([url])
+        void cleanupMedia([url])
       }
-      untrackPendingUploads([url])
       sessionUploadsRef.current = sessionUploadsRef.current.filter(
         (u) => u !== url,
       )

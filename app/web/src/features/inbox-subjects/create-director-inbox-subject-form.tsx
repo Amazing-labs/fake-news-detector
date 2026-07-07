@@ -2,7 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { apiRequest, toApiErrorMessage } from '@shared/api/http'
-import { untrackPendingUploads } from '@shared/lib/supabase'
+import { useAppSession } from '@entities/session/model'
 import {
   DarkButton,
   DarkFormCard,
@@ -27,6 +27,8 @@ export function CreateDirectorInboxSubjectForm() {
   )
   const [description, setDescription] = useState('')
   const [media, setMedia] = useState<MediaDraft[]>([])
+  const { session } = useAppSession()
+  const ownerId = session?.user.actorId ?? ''
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -41,7 +43,6 @@ export function CreateDirectorInboxSubjectForm() {
       })
     },
     onSuccess: () => {
-      untrackPendingUploads(media.map((m) => m.url))
       setTheme(defaultVerificationTheme)
       setDescription('')
       setMedia([])
@@ -96,6 +97,7 @@ export function CreateDirectorInboxSubjectForm() {
           description="Ajoute les médias d'origine quand le sujet est ouvert directement par le directeur."
           items={media}
           onChange={setMedia}
+          ownerId={ownerId}
           variant="dark"
         />
         {normalizeMediaDrafts(media).length === 0 && (

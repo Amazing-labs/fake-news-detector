@@ -1,0 +1,27 @@
+// Manual reconciliation sweep of orphaned storage uploads.
+// Dry-run by default (logs what it would delete); pass --apply to actually
+// delete. --force additionally bypasses the 50% safety cap, for the one-off
+// cleanup of the historical orphan backlog.
+// Usage: bun run sweep  |  bun run sweep --apply  |  bun run sweep --apply --force
+import { prisma } from '../infrastructure/config/database'
+import { createAppDependencies } from '../interfaces/createAppDependencies'
+
+async function main() {
+  const dependencies = createAppDependencies()
+  const dryRun = !process.argv.includes('--apply')
+  const force = process.argv.includes('--force')
+  const report = await dependencies.storageMaintenanceService.sweepOrphans({
+    dryRun,
+    force,
+  })
+  console.log('Sweep report:', report)
+}
+
+void main()
+  .catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error))
+    process.exitCode = 1
+  })
+  .finally(async () => {
+    await prisma.$disconnect()
+  })

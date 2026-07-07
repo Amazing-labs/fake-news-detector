@@ -40,6 +40,7 @@ export type Permission =
   | 'citizen.manage'
   | 'inbox.manage'
   | 'director.dashboard.read'
+  | 'storage.sweep'
   // Shared
   | 'notifications.read'
 
@@ -69,6 +70,7 @@ const ROLE_PERMISSIONS: Record<ActorRole, ReadonlySet<Permission>> = {
     'inbox.manage',
     'inbox.read',
     'director.dashboard.read',
+    'storage.sweep',
     'notifications.read',
   ]),
 }
