@@ -125,7 +125,7 @@ export function CreateReportForm() {
           </DarkButton>
           <Link
             to="/reports"
-            className="inline-flex items-center justify-center rounded-lg border border-white/15 bg-black px-4 py-2.5 text-sm font-medium text-white transition hover:bg-white/10"
+            className="border-input bg-background text-foreground hover:bg-accent hover:text-accent-foreground inline-flex items-center justify-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-medium transition"
           >
             Retour aux signalements
           </Link>
