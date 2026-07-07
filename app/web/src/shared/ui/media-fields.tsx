@@ -91,7 +91,7 @@ export function MediaFields(props: {
     for (const file of filesToAdd) {
       try {
         const result = await uploadFileToSupabase(file, props.ownerId)
-        uploaded.push({ url: result.url, type: result.type })
+        uploaded.push({ url: result.url, type: result.type, name: result.name })
         sessionUploadsRef.current.push(result.url)
       } catch (error) {
         toast.error(
@@ -163,7 +163,10 @@ export function MediaFields(props: {
             {props.items.map((item, index) => {
               const Icon = mediaTypeIcon[item.type] ?? File
               return (
-                <div key={`${index}-${item.type}`} className="group relative">
+                <div
+                  key={`${index}-${item.type}`}
+                  className="group relative min-w-0"
+                >
                   {item.type === 'IMAGE' && item.url ? (
                     <div className="border-border aspect-square overflow-hidden rounded-lg border">
                       <img
@@ -189,6 +192,14 @@ export function MediaFields(props: {
                   >
                     <X className="size-3 text-white" />
                   </button>
+                  {item.name ? (
+                    <p
+                      className="text-muted-foreground mt-1 truncate text-[10px]"
+                      title={item.name}
+                    >
+                      {item.name}
+                    </p>
+                  ) : null}
                 </div>
               )
             })}

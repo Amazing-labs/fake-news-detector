@@ -1,6 +1,9 @@
 export type MediaDraft = {
   url: string
   type: 'AUDIO' | 'LINK' | 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT'
+  // Original file name, kept client-side for display under the thumbnail. Not
+  // sent to the server (see normalizeMediaDrafts, which only forwards url/type).
+  name?: string
 }
 
 export const mediaTypes: MediaDraft['type'][] = [
