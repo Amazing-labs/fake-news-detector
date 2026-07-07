@@ -28,6 +28,7 @@ import {
   TabsTrigger,
 } from '@shared/ui/shadcn/tabs'
 import { Textarea } from '@shared/ui/shadcn/textarea'
+import { LoadingRow } from '@shared/ui/loader'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CreateDirectorInboxSubjectForm } from '@features/inbox-subjects/create-director-inbox-subject-form'
 import { AppLayout } from '../app-layout'
@@ -343,7 +344,9 @@ function InboxList(props: {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
-        {rows.length ? (
+        {inboxSubjectsQuery.isPending ? (
+          <LoadingRow label="Chargement des sujets…" />
+        ) : rows.length ? (
           rows.map((item) => {
             return (
               <div
