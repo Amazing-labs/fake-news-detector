@@ -81,12 +81,13 @@ export class StorageMaintenanceService {
       )
     }
 
-    console.log('[sweep]', JSON.stringify(report))
-
     if (!dryRun && orphans.length > 0) {
       await this.storage.deleteObjects(orphans.map((object) => object.path))
       report.deleted = orphans.length
     }
+
+    // Logged after deletion so `deleted` reflects what actually happened.
+    console.log('[sweep]', JSON.stringify(report))
 
     return report
   }
