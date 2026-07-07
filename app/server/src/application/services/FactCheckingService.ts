@@ -233,7 +233,7 @@ export class FactCheckingService {
   async deleteInboxSubjectByDirector(
     directorId: string,
     inboxSubjectId: string,
-    reason: string,
+    reason?: string,
   ): Promise<void> {
     return this.runInTransaction(() =>
       this.directorWorkflowService.deleteInboxSubjectByDirector(

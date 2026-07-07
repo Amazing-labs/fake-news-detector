@@ -205,10 +205,8 @@ export class DirectorWorkflowService {
   async deleteInboxSubjectByDirector(
     directorId: string,
     inboxSubjectId: string,
-    reason: string,
+    reason?: string,
   ): Promise<void> {
-    this.assertRequiredText(reason, 'Deletion reason is required')
-
     const director = await this.getDirectorOrThrow(directorId)
     const subject = await this.getInboxSubjectOrThrow(inboxSubjectId)
     const linkedInvestigation =
@@ -220,6 +218,12 @@ export class DirectorWorkflowService {
     }
 
     const subjectOrigin = subject.origin
+    // A deletion reason is only required for REPORT-origin subjects: it is shown
+    // to the citizen who filed the report. A director deleting a subject they
+    // created themselves (DIRECTOR_INITIATED) needs no justification.
+    if (subjectOrigin === 'REPORT') {
+      this.assertRequiredText(reason ?? '', 'Deletion reason is required')
+    }
     // Collect the real storage URLs before the cascade deletes their rows: a
     // Prisma cascade drops InboxSubjectMedia/ReportMedia rows but never the
     // underlying bucket objects, so we must gather them now and purge after.
@@ -273,7 +277,7 @@ export class DirectorWorkflowService {
         subject.id,
         director.id,
         subject.origin,
-        reason,
+        reason ?? '',
         subject.reportId,
       ),
     )

@@ -8,7 +8,7 @@ import { Report } from '../../domain/entities/Report'
 import { Journalist } from '../../domain/entities/Journalist'
 import { Citizen } from '../../domain/entities/Citizen'
 import { MAX_REVISION_ATTEMPTS } from '../../shared/constants'
-import { BusinessRuleError } from '../../shared/errors'
+import { BusinessRuleError, ValidationError } from '../../shared/errors'
 
 function buildService(deps: any = {}) {
   const reportRepository = {
@@ -595,5 +595,56 @@ describe('FactCheckingService new workflows', () => {
         'cleanup',
       ),
     ).rejects.toThrow(BusinessRuleError)
+  })
+
+  test('deleteInboxSubjectByDirector deletes a director-created subject without a reason', async () => {
+    const director = new Director('d1', 'Director', 'd@test')
+    const subject = new InboxSubject(
+      's1',
+      'theme',
+      'description',
+      director.id,
+      null,
+      'OPEN',
+      'DIRECTOR_INITIATED',
+    )
+
+    const ctx = buildService({
+      inboxSubjectMediaRepository: {
+        findByInboxSubjectId: vi.fn().mockResolvedValue([]),
+      },
+    })
+    ctx.directorRepository.findById.mockResolvedValue(director)
+    ctx.inboxSubjectRepository.findById.mockResolvedValue(subject)
+    ctx.investigationRepository.findByInboxSubjectId.mockResolvedValue(null)
+
+    await ctx.service.deleteInboxSubjectByDirector(director.id, subject.id)
+
+    expect(ctx.inboxSubjectRepository.delete).toHaveBeenCalledWith('s1')
+    expect(ctx.reportRepository.delete).not.toHaveBeenCalled()
+    expect(ctx.notificationRepository.save).not.toHaveBeenCalled()
+    expect(ctx.domainEventPublisher.publish).toHaveBeenCalledOnce()
+  })
+
+  test('deleteInboxSubjectByDirector requires a reason for report-origin subjects', async () => {
+    const director = new Director('d1', 'Director', 'd@test')
+    const subject = new InboxSubject(
+      's1',
+      'theme',
+      'description',
+      director.id,
+      'r1',
+      'OPEN',
+      'REPORT',
+    )
+
+    const ctx = buildService()
+    ctx.directorRepository.findById.mockResolvedValue(director)
+    ctx.inboxSubjectRepository.findById.mockResolvedValue(subject)
+    ctx.investigationRepository.findByInboxSubjectId.mockResolvedValue(null)
+
+    await expect(
+      ctx.service.deleteInboxSubjectByDirector(director.id, subject.id),
+    ).rejects.toThrow(ValidationError)
   })
 })

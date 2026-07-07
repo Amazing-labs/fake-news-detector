@@ -36,11 +36,12 @@ export function getInboxSubjectMedia(subjectId: string) {
   )
 }
 
-// Director-only: deletes a subject. The server requires a non-empty reason
-// (deleteInboxSubjectSchema) for the editorial audit trail.
+// Director-only: deletes a subject. A reason is required only for REPORT-origin
+// subjects (the citizen who filed the report is notified with it); for a
+// director-created subject it is omitted.
 export function deleteInboxSubject(
   subjectId: string,
-  input: { reason: string },
+  input: { reason?: string } = {},
 ) {
   return apiRequest<null>(`/api/inbox-subjects/${subjectId}`, {
     method: 'DELETE',

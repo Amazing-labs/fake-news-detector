@@ -78,18 +78,26 @@ function usePickSubjectMutation() {
   })
 }
 
-// Director-only: deletes a subject. The server requires a reason, so the dialog
-// keeps the confirm button disabled until one is typed.
+// Director-only: deletes a subject. A reason is required only for subjects that
+// came from a citizen report (REPORT origin) — the citizen is notified with it.
+// A director deleting a subject they created themselves (DIRECTOR_INITIATED)
+// needs no justification, so the field is hidden and deletion is a direct
+// confirm.
 function DeleteSubjectDialog({ item }: { item: InboxSubjectItem }) {
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState('')
+  const requiresReason = item.origin === 'REPORT'
 
   const deleteMutation = useMutation({
     // The server purges the associated bucket objects (with the service-role
     // key) as part of the deletion, so the client only fires the request — the
     // public anon key is not allowed to delete from storage.
-    mutationFn: () => deleteInboxSubject(item.id, { reason: reason.trim() }),
+    mutationFn: () =>
+      deleteInboxSubject(
+        item.id,
+        requiresReason ? { reason: reason.trim() } : {},
+      ),
     onSuccess: () => {
       setOpen(false)
       setReason('')
@@ -102,7 +110,7 @@ function DeleteSubjectDialog({ item }: { item: InboxSubjectItem }) {
   })
 
   function handleDelete() {
-    if (!reason.trim()) {
+    if (requiresReason && !reason.trim()) {
       toast.error('La raison est obligatoire.')
       return
     }
@@ -132,8 +140,9 @@ function DeleteSubjectDialog({ item }: { item: InboxSubjectItem }) {
         <DialogHeader>
           <DialogTitle>Supprimer le sujet</DialogTitle>
           <DialogDescription>
-            Indiquez la raison de la suppression pour garder une trace
-            éditoriale.
+            {requiresReason
+              ? 'Indiquez la raison de la suppression pour garder une trace éditoriale. Le citoyen ayant émis le signalement en sera informé.'
+              : 'Cette action est définitive et supprime aussi les médias associés.'}
           </DialogDescription>
         </DialogHeader>
         <div className="rounded-lg border p-4">
@@ -144,14 +153,16 @@ function DeleteSubjectDialog({ item }: { item: InboxSubjectItem }) {
             {item.description}
           </p>
         </div>
-        <Label className="grid gap-2">
-          Raison
-          <Textarea
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-            placeholder="Pourquoi ce sujet est-il supprimé ?"
-          />
-        </Label>
+        {requiresReason && (
+          <Label className="grid gap-2">
+            Raison
+            <Textarea
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              placeholder="Pourquoi ce sujet est-il supprimé ?"
+            />
+          </Label>
+        )}
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline" disabled={deleteMutation.isPending}>
@@ -161,7 +172,7 @@ function DeleteSubjectDialog({ item }: { item: InboxSubjectItem }) {
           <Button
             variant="destructive"
             onClick={handleDelete}
-            disabled={!reason.trim()}
+            disabled={requiresReason && !reason.trim()}
             loading={deleteMutation.isPending}
           >
             {!deleteMutation.isPending && <Trash2 />}
