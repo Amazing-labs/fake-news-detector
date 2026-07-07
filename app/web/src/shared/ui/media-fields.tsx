@@ -145,14 +145,14 @@ export function MediaFields(props: {
     return (
       <section className="grid gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-white">
+          <h2 className="text-foreground text-sm font-semibold">
             {props.title ?? 'Médias'}
           </h2>
           <div className="mt-0.5 flex items-center justify-between gap-2">
-            <p className="text-sm text-white/65">
+            <p className="text-muted-foreground text-sm">
               {props.description ?? 'Ajoute un ou plusieurs médias via upload.'}
             </p>
-            <span className="shrink-0 text-xs text-white/40">
+            <span className="text-muted-foreground shrink-0 text-xs">
               {props.items.length} / {MAX_MEDIA}
             </span>
           </div>
@@ -165,7 +165,7 @@ export function MediaFields(props: {
               return (
                 <div key={`${index}-${item.type}`} className="group relative">
                   {item.type === 'IMAGE' && item.url ? (
-                    <div className="aspect-square overflow-hidden rounded-lg border border-white/10">
+                    <div className="border-border aspect-square overflow-hidden rounded-lg border">
                       <img
                         src={item.url}
                         alt={`Média ${index + 1}`}
@@ -173,9 +173,9 @@ export function MediaFields(props: {
                       />
                     </div>
                   ) : (
-                    <div className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2 text-center">
-                      <Icon className="size-6 shrink-0 text-white/70" />
-                      <span className="line-clamp-2 text-[10px] font-medium text-white/60">
+                    <div className="border-border bg-muted flex aspect-square flex-col items-center justify-center gap-1.5 rounded-lg border px-2 text-center">
+                      <Icon className="text-muted-foreground size-6 shrink-0" />
+                      <span className="text-muted-foreground line-clamp-2 text-[10px] font-medium">
                         {item.type}
                       </span>
                     </div>
