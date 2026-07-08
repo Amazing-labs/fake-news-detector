@@ -8,7 +8,7 @@ import { Report } from '../../domain/entities/Report'
 import { Journalist } from '../../domain/entities/Journalist'
 import { Citizen } from '../../domain/entities/Citizen'
 import { MAX_REVISION_ATTEMPTS } from '../../shared/constants'
-import { BusinessRuleError } from '../../shared/errors'
+import { BusinessRuleError, ValidationError } from '../../shared/errors'
 
 function buildService(deps: any = {}) {
   const reportRepository = {
@@ -24,7 +24,7 @@ function buildService(deps: any = {}) {
   }
   const reportMediaRepository = {
     saveMany: vi.fn(),
-    findByReportId: vi.fn(),
+    findByReportId: vi.fn().mockResolvedValue([]),
     ...deps.reportMediaRepository,
   }
   const investigationRepository = {
@@ -143,6 +143,13 @@ function buildService(deps: any = {}) {
     publish: vi.fn(),
     ...deps.domainEventPublisher,
   }
+  const mediaStorage = {
+    deleteByPublicUrls: vi.fn().mockResolvedValue(undefined),
+    deleteObjects: vi.fn().mockResolvedValue(undefined),
+    listObjects: vi.fn().mockResolvedValue([]),
+    toObjectPaths: vi.fn((urls: string[]) => urls),
+    ...deps.mediaStorage,
+  }
 
   const service = createFactCheckingService(
     {
@@ -162,6 +169,7 @@ function buildService(deps: any = {}) {
       inboxSubjectRepository: inboxSubjectRepository as any,
       inboxSubjectMediaRepository: inboxSubjectMediaRepository as any,
       authoritySourceRepository: authoritySourceRepository as any,
+      mediaStorage: mediaStorage as any,
     },
     domainEventPublisher as any,
   )
@@ -170,6 +178,8 @@ function buildService(deps: any = {}) {
     service,
     reportRepository,
     reportMediaRepository,
+    inboxSubjectMediaRepository,
+    mediaStorage,
     investigationRepository,
     publicationRepository,
     notificationRepository,
@@ -595,5 +605,125 @@ describe('FactCheckingService new workflows', () => {
         'cleanup',
       ),
     ).rejects.toThrow(BusinessRuleError)
+  })
+
+  test('deleteInboxSubjectByDirector deletes a director-created subject without a reason', async () => {
+    const director = new Director('d1', 'Director', 'd@test')
+    const subject = new InboxSubject(
+      's1',
+      'theme',
+      'description',
+      director.id,
+      null,
+      'OPEN',
+      'DIRECTOR_INITIATED',
+    )
+
+    const ctx = buildService({
+      inboxSubjectMediaRepository: {
+        findByInboxSubjectId: vi.fn().mockResolvedValue([]),
+      },
+    })
+    ctx.directorRepository.findById.mockResolvedValue(director)
+    ctx.inboxSubjectRepository.findById.mockResolvedValue(subject)
+    ctx.investigationRepository.findByInboxSubjectId.mockResolvedValue(null)
+
+    await ctx.service.deleteInboxSubjectByDirector(director.id, subject.id)
+
+    expect(ctx.inboxSubjectRepository.delete).toHaveBeenCalledWith('s1')
+    expect(ctx.reportRepository.delete).not.toHaveBeenCalled()
+    expect(ctx.notificationRepository.save).not.toHaveBeenCalled()
+    expect(ctx.domainEventPublisher.publish).toHaveBeenCalledOnce()
+  })
+
+  test('deleteInboxSubjectByDirector requires a reason for report-origin subjects', async () => {
+    const director = new Director('d1', 'Director', 'd@test')
+    const subject = new InboxSubject(
+      's1',
+      'theme',
+      'description',
+      director.id,
+      'r1',
+      'OPEN',
+      'REPORT',
+    )
+
+    const ctx = buildService()
+    ctx.directorRepository.findById.mockResolvedValue(director)
+    ctx.inboxSubjectRepository.findById.mockResolvedValue(subject)
+    ctx.investigationRepository.findByInboxSubjectId.mockResolvedValue(null)
+
+    await expect(
+      ctx.service.deleteInboxSubjectByDirector(director.id, subject.id),
+    ).rejects.toThrow(ValidationError)
+  })
+
+  test('deleteInboxSubjectByDirector purges the bucket media after the DB delete', async () => {
+    const director = new Director('d1', 'Director', 'd@test')
+    const subject = new InboxSubject(
+      's1',
+      'theme',
+      'description',
+      director.id,
+      null,
+      'OPEN',
+      'DIRECTOR_INITIATED',
+    )
+
+    const ctx = buildService({
+      inboxSubjectMediaRepository: {
+        findByInboxSubjectId: vi
+          .fn()
+          .mockResolvedValue([
+            { url: 'https://x/uploads/d1/a.png' },
+            { url: 'https://x/uploads/d1/b.pdf' },
+          ]),
+      },
+    })
+    ctx.directorRepository.findById.mockResolvedValue(director)
+    ctx.inboxSubjectRepository.findById.mockResolvedValue(subject)
+    ctx.investigationRepository.findByInboxSubjectId.mockResolvedValue(null)
+
+    await ctx.service.deleteInboxSubjectByDirector(director.id, subject.id)
+
+    expect(ctx.inboxSubjectRepository.delete).toHaveBeenCalledWith('s1')
+    expect(ctx.mediaStorage.deleteByPublicUrls).toHaveBeenCalledWith([
+      'https://x/uploads/d1/a.png',
+      'https://x/uploads/d1/b.pdf',
+    ])
+  })
+
+  test('deleteInboxSubjectByDirector still succeeds when the bucket purge fails', async () => {
+    const director = new Director('d1', 'Director', 'd@test')
+    const subject = new InboxSubject(
+      's1',
+      'theme',
+      'description',
+      director.id,
+      null,
+      'OPEN',
+      'DIRECTOR_INITIATED',
+    )
+
+    const ctx = buildService({
+      inboxSubjectMediaRepository: {
+        findByInboxSubjectId: vi
+          .fn()
+          .mockResolvedValue([{ url: 'https://x/uploads/d1/a.png' }]),
+      },
+      mediaStorage: {
+        deleteByPublicUrls: vi
+          .fn()
+          .mockRejectedValue(new Error('storage down')),
+      },
+    })
+    ctx.directorRepository.findById.mockResolvedValue(director)
+    ctx.inboxSubjectRepository.findById.mockResolvedValue(subject)
+    ctx.investigationRepository.findByInboxSubjectId.mockResolvedValue(null)
+
+    await expect(
+      ctx.service.deleteInboxSubjectByDirector(director.id, subject.id),
+    ).resolves.toBeUndefined()
+    expect(ctx.inboxSubjectRepository.delete).toHaveBeenCalledWith('s1')
   })
 })

@@ -89,7 +89,12 @@ Data fetching uses **TanStack Query** for server state and **Zustand** for clien
 
 ### Media Storage
 
-Supabase Storage (bucket `fake-news-media`) handles file uploads from the web client via `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`. The server does not directly touch Supabase Storage.
+Supabase Storage (bucket `fake-news-media`) holds all uploaded media. Responsibilities are split by trust level:
+
+- **Client (web):** uploads and reads files only, using the public anon key (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`). The bucket's RLS policies grant the `anon` role `INSERT` (upload) and `SELECT`/public read, but **never `DELETE`** — the anon key ships in the browser bundle, so allowing it to delete would let anyone wipe the bucket.
+- **Server (Cloudflare Worker):** is the **only** party allowed to delete objects from Storage. It uses the Supabase **service-role key** (which bypasses RLS) via `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY`, kept server-side only and never exposed to the client. All file deletion (e.g. purging media when an inbox subject is deleted) must go through the server so the storage objects are removed alongside their DB rows — a Prisma cascade deletes rows but never the underlying files.
+
+Rule of thumb: **the client may read and upload; only the server deletes.** Never add client-side file deletion, and never expose the service-role key to the web app.
 
 ### Deployment
 

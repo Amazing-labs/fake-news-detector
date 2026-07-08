@@ -109,6 +109,8 @@ function buildApp() {
     notificationController: notificationController as any,
     meController: { getMe: vi.fn() } as any,
     dashboardController: { metrics: vi.fn() } as any,
+    mediaController: { cleanup: vi.fn() } as any,
+    storageMaintenanceService: { sweepOrphans: vi.fn() } as any,
   })
 
   return { app, reportController }
@@ -220,6 +222,8 @@ describe('createApp', () => {
       } as any,
       meController: { getMe: vi.fn() } as any,
       dashboardController: { metrics: vi.fn() } as any,
+      mediaController: { cleanup: vi.fn() } as any,
+      storageMaintenanceService: { sweepOrphans: vi.fn() } as any,
     })
 
     const response = await app.request('/api/reports', {
@@ -304,6 +308,8 @@ describe('createApp', () => {
       } as any,
       meController: { getMe: vi.fn() } as any,
       dashboardController: { metrics: vi.fn() } as any,
+      mediaController: { cleanup: vi.fn() } as any,
+      storageMaintenanceService: { sweepOrphans: vi.fn() } as any,
     })
 
     const response = await app.request('/api/reports', {
@@ -383,6 +389,8 @@ describe('createApp', () => {
       } as any,
       meController: { getMe: vi.fn() } as any,
       dashboardController: { metrics: vi.fn() } as any,
+      mediaController: { cleanup: vi.fn() } as any,
+      storageMaintenanceService: { sweepOrphans: vi.fn() } as any,
     })
 
     const response = await app.request('/api/reports', {
@@ -471,6 +479,8 @@ describe('createApp', () => {
       } as any,
       meController: { getMe: vi.fn() } as any,
       dashboardController: { metrics: vi.fn() } as any,
+      mediaController: { cleanup: vi.fn() } as any,
+      storageMaintenanceService: { sweepOrphans: vi.fn() } as any,
     })
 
     const response = await app.request('/api/inbox-subjects?status=INVALID', {
@@ -548,6 +558,8 @@ describe('createApp', () => {
       } as any,
       meController: { getMe: vi.fn() } as any,
       dashboardController: { metrics: vi.fn() } as any,
+      mediaController: { cleanup: vi.fn() } as any,
+      storageMaintenanceService: { sweepOrphans: vi.fn() } as any,
     })
 
     const response = await app.request('/api/publications/pub-1/corrections', {
@@ -628,6 +640,8 @@ describe('createApp', () => {
       } as any,
       meController: { getMe: vi.fn() } as any,
       dashboardController: { metrics: vi.fn() } as any,
+      mediaController: { cleanup: vi.fn() } as any,
+      storageMaintenanceService: { sweepOrphans: vi.fn() } as any,
     })
 
     const response = await app.request('/api/investigations/inv-1/approve', {
@@ -695,6 +709,8 @@ describe('createApp', () => {
       } as any,
       meController: { getMe: vi.fn() } as any,
       dashboardController: { metrics: vi.fn() } as any,
+      mediaController: { cleanup: vi.fn() } as any,
+      storageMaintenanceService: { sweepOrphans: vi.fn() } as any,
     })
 
     const response = await app.request(
@@ -795,6 +811,8 @@ describe('report access authorization', () => {
       notificationController: stubController(),
       meController: stubController(),
       dashboardController: stubController(),
+      mediaController: stubController(),
+      storageMaintenanceService: stubController(),
     })
   }
 

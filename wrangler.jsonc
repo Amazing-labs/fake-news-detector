@@ -13,4 +13,9 @@
     "nodejs_compat",
     "nodejs_compat_populate_process_env",
   ],
+  // Daily reconciliation sweep of orphaned storage uploads (03:00 UTC). Runs the
+  // `scheduled` handler in app/server/src/index.ts.
+  "triggers": {
+    "crons": ["0 3 * * *"],
+  },
 }

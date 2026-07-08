@@ -15,6 +15,7 @@ export const createDirectorInboxSubjectSchema = z.object({
   media: z.array(mediaInputSchema).min(1),
 })
 
+// Optional here; required per-origin server-side (REPORT subjects only).
 export const deleteInboxSubjectSchema = z.object({
-  reason: z.string().min(1),
+  reason: z.string().min(1).optional(),
 })

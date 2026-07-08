@@ -18,13 +18,11 @@ import {
 } from '@entities/investigation/api'
 import { toApiErrorMessage } from '@shared/api/http'
 import {
-  deleteFilesFromSupabase,
-  flushOrphanedUploads,
   isSupabaseUploadConfigured,
-  trackPendingUpload,
-  untrackPendingUploads,
   uploadFileToSupabase,
 } from '@shared/lib/supabase'
+import { cleanupMedia } from '@shared/api/media'
+import { useAppSession } from '@entities/session/model'
 import { cn } from '@shared/lib/utils'
 import { MediaFields } from '@shared/ui/media-fields'
 import {
@@ -172,6 +170,8 @@ export function PublishInvestigationDialog({
   const [linkAuthorityType, setLinkAuthorityType] =
     useState<SourceType>('OFFICIAL_DECREE')
   const [media, setMedia] = useState<MediaDraft[]>([])
+  const { session } = useAppSession()
+  const ownerId = session?.user.actorId ?? ''
 
   function resetEvidence() {
     setWithEvidence(false)
@@ -201,14 +201,7 @@ export function PublishInvestigationDialog({
         verifiedMedia,
       })
     },
-    // Snapshot the submitted upload URLs before the request so the success
-    // cleanup untracks exactly what was sent — even if the (now locked) media
-    // field state were to change mid-flight.
-    onMutate: () => ({ submittedUrls: media.map((item) => item.url) }),
-    onSuccess: (_result, _variables, context) => {
-      // Mark the submitted media as no longer pending so MediaFields' unmount
-      // cleanup does not delete the files we just attached to the publication.
-      untrackPendingUploads(context?.submittedUrls ?? [])
+    onSuccess: () => {
       setOpen(false)
       resetEvidence()
       void queryClient.invalidateQueries({ queryKey: ['investigations'] })
@@ -307,6 +300,7 @@ export function PublishInvestigationDialog({
                 description="Upload des fichiers qui renforcent la publication — le type est détecté automatiquement."
                 items={media}
                 onChange={setMedia}
+                ownerId={ownerId}
                 disabled={mutation.isPending}
               />
             </section>
@@ -357,6 +351,8 @@ export function WatcherContributeDialog({
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [media, setMedia] = useState<MediaDraft[]>([])
+  const { session } = useAppSession()
+  const ownerId = session?.user.actorId ?? ''
 
   const validMedia = normalizeMediaDrafts(media)
   const canSubmit =
@@ -375,11 +371,7 @@ export function WatcherContributeDialog({
         content: content.trim(),
         media: validMedia,
       }),
-    // Snapshot the submitted upload URLs so the success cleanup untracks exactly
-    // what was sent, not whatever the field holds when the request resolves.
-    onMutate: () => ({ submittedUrls: media.map((item) => item.url) }),
-    onSuccess: (_result, _variables, context) => {
-      untrackPendingUploads(context?.submittedUrls ?? [])
+    onSuccess: () => {
       setOpen(false)
       reset()
       void queryClient.invalidateQueries({ queryKey: ['investigations'] })
@@ -444,6 +436,7 @@ export function WatcherContributeDialog({
             description="Images, vidéos, audio, PDF ou documents utiles au dossier."
             items={media}
             onChange={setMedia}
+            ownerId={ownerId}
             disabled={mutation.isPending}
           />
         </div>
@@ -480,10 +473,12 @@ type UploadEntry = {
 export function MediaDropzone({
   inputId = 'media-upload',
   description = 'Images, vidéos, audio, PDF ou documents utiles au desk.',
+  ownerId,
   onUrlsChange,
 }: {
   inputId?: string
   description?: string
+  ownerId: string
   onUrlsChange?: (urls: string[]) => void
 }) {
   const inputRef = useRef<HTMLInputElement>(null)
@@ -493,11 +488,6 @@ export function MediaDropzone({
   const uploadedUrlsRef = useRef<string[]>([])
   const previewUrlsRef = useRef<string[]>([])
   const canUpload = isSupabaseUploadConfigured()
-
-  // Flush orphans from previous sessions on mount
-  useEffect(() => {
-    void flushOrphanedUploads()
-  }, [])
 
   // Keep the latest callback in a ref so the URL-lifting effect can stay keyed
   // to `entries` only, without going stale when the parent passes a new fn.
@@ -513,13 +503,9 @@ export function MediaDropzone({
     )
   }, [entries])
 
-  // Cleanup on unmount: delete pending uploads + revoke object URLs
+  // On unmount: revoke preview object URLs.
   useEffect(() => {
     return () => {
-      if (uploadedUrlsRef.current.length > 0) {
-        void deleteFilesFromSupabase(uploadedUrlsRef.current)
-        untrackPendingUploads(uploadedUrlsRef.current)
-      }
       previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))
     }
   }, [])
@@ -537,7 +523,7 @@ export function MediaDropzone({
 
       if (canUpload) {
         try {
-          const result = await uploadFileToSupabase(file)
+          const result = await uploadFileToSupabase(file, ownerId)
           const entry: UploadEntry = {
             url: result.url,
             name: file.name,
@@ -548,7 +534,6 @@ export function MediaDropzone({
           if (previewUrl) previewUrlsRef.current.push(previewUrl)
           setEntries((prev) => [...prev, entry])
           uploadedUrlsRef.current.push(result.url)
-          trackPendingUpload(result.url)
           toast.success(`${file.name} uploadé.`)
         } catch {
           toast.error(`Échec upload : ${file.name}`)
@@ -585,8 +570,9 @@ export function MediaDropzone({
       )
     }
     if (!url.startsWith('#local:')) {
-      void deleteFilesFromSupabase([url])
-      untrackPendingUploads([url])
+      // Ask the server to delete this not-yet-submitted upload (the caller owns
+      // it via the uploads/<ownerId>/ prefix).
+      void cleanupMedia([url])
     }
   }
 

@@ -233,15 +233,17 @@ export class FactCheckingService {
   async deleteInboxSubjectByDirector(
     directorId: string,
     inboxSubjectId: string,
-    reason: string,
+    reason?: string,
   ): Promise<void> {
-    return this.runInTransaction(() =>
+    // Purge the bucket after the transaction commits (best-effort).
+    const mediaUrls = await this.runInTransaction(() =>
       this.directorWorkflowService.deleteInboxSubjectByDirector(
         directorId,
         inboxSubjectId,
         reason,
       ),
     )
+    await this.directorWorkflowService.purgeBucketMedia(mediaUrls)
   }
 
   async archiveUnverifiableInvestigation(

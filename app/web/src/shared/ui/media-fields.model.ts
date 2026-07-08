@@ -1,6 +1,8 @@
 export type MediaDraft = {
   url: string
   type: 'AUDIO' | 'LINK' | 'TEXT' | 'IMAGE' | 'VIDEO' | 'DOCUMENT'
+  // Display-only (under the thumbnail); not sent to the server.
+  name?: string
 }
 
 export const mediaTypes: MediaDraft['type'][] = [

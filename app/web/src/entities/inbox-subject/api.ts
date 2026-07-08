@@ -21,8 +21,7 @@ export function getInboxSubject(subjectId: string) {
   return apiRequest<InboxSubjectItem>(`/api/inbox-subjects/${subjectId}`)
 }
 
-// A journalist claims an open subject; the server opens the investigation and
-// returns it, so the caller can navigate straight to the new dossier.
+// Journalist claims an open subject; server returns the opened investigation.
 export function pickInboxSubject(subjectId: string) {
   return apiRequest<InvestigationRef>(`/api/inbox-subjects/${subjectId}/pick`, {
     method: 'POST',
@@ -36,11 +35,10 @@ export function getInboxSubjectMedia(subjectId: string) {
   )
 }
 
-// Director-only: deletes a subject. The server requires a non-empty reason
-// (deleteInboxSubjectSchema) for the editorial audit trail.
+// Director-only delete; a reason is required only for REPORT subjects (server-enforced).
 export function deleteInboxSubject(
   subjectId: string,
-  input: { reason: string },
+  input: { reason?: string } = {},
 ) {
   return apiRequest<null>(`/api/inbox-subjects/${subjectId}`, {
     method: 'DELETE',

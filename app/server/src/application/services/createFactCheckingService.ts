@@ -2,6 +2,7 @@ import {
   NoopDomainEventPublisher,
   type IDomainEventPublisher,
 } from '../../domain/events'
+import { NoopMediaStorage, type IMediaStorage } from '../../domain/interfaces'
 import type {
   IAuthoritySourceRepository,
   ICitizenRepository,
@@ -49,6 +50,9 @@ export interface FactCheckingServiceRepositoryDependencies {
   inboxSubjectRepository: IInboxSubjectRepository
   inboxSubjectMediaRepository: IInboxSubjectMediaRepository
   authoritySourceRepository: IAuthoritySourceRepository
+  // Storage adapter for purging bucket objects on deletion. Optional so tests
+  // and non-storage callers fall back to a no-op.
+  mediaStorage?: IMediaStorage
 }
 
 export function createFactCheckingService(
@@ -106,6 +110,8 @@ export function createFactCheckingService(
     dependencies.authoritySourceRepository,
     domainEventPublisher,
     investigationLifecycleService,
+    dependencies.reportMediaRepository,
+    dependencies.mediaStorage ?? new NoopMediaStorage(),
   )
 
   const correctionWorkflowService = new CorrectionWorkflowService(

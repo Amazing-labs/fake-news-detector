@@ -28,6 +28,7 @@ import {
   TabsTrigger,
 } from '@shared/ui/shadcn/tabs'
 import { Textarea } from '@shared/ui/shadcn/textarea'
+import { LoadingRow } from '@shared/ui/loader'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CreateDirectorInboxSubjectForm } from '@features/inbox-subjects/create-director-inbox-subject-form'
 import { AppLayout } from '../app-layout'
@@ -55,8 +56,7 @@ const ORIGIN_LABELS: Record<string, string> = {
   DIRECTOR_INITIATED: 'Création direction',
 }
 
-// A journalist claims a subject -> the server opens the investigation and
-// returns it; on success we refresh the inbox and jump to the new dossier.
+// Claim a subject -> server opens the investigation; refresh + jump to it.
 function usePickSubjectMutation() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -78,15 +78,21 @@ function usePickSubjectMutation() {
   })
 }
 
-// Director-only: deletes a subject. The server requires a reason, so the dialog
-// keeps the confirm button disabled until one is typed.
+// Director-only delete. A reason is required only for REPORT subjects (the
+// citizen is notified); director-created subjects delete with no reason.
 function DeleteSubjectDialog({ item }: { item: InboxSubjectItem }) {
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
   const [reason, setReason] = useState('')
+  const requiresReason = item.origin === 'REPORT'
 
   const deleteMutation = useMutation({
-    mutationFn: () => deleteInboxSubject(item.id, { reason: reason.trim() }),
+    // Server purges the bucket objects (service-role); the client only fires the request.
+    mutationFn: () =>
+      deleteInboxSubject(
+        item.id,
+        requiresReason ? { reason: reason.trim() } : {},
+      ),
     onSuccess: () => {
       setOpen(false)
       setReason('')
@@ -99,7 +105,7 @@ function DeleteSubjectDialog({ item }: { item: InboxSubjectItem }) {
   })
 
   function handleDelete() {
-    if (!reason.trim()) {
+    if (requiresReason && !reason.trim()) {
       toast.error('La raison est obligatoire.')
       return
     }
@@ -129,24 +135,29 @@ function DeleteSubjectDialog({ item }: { item: InboxSubjectItem }) {
         <DialogHeader>
           <DialogTitle>Supprimer le sujet</DialogTitle>
           <DialogDescription>
-            Indiquez la raison de la suppression pour garder une trace
-            éditoriale.
+            {requiresReason
+              ? 'Indiquez la raison de la suppression pour garder une trace éditoriale. Le citoyen ayant émis le signalement en sera informé.'
+              : 'Cette action est définitive et supprime aussi les médias associés.'}
           </DialogDescription>
         </DialogHeader>
         <div className="rounded-lg border p-4">
-          <p className="font-medium">{item.theme}</p>
-          <p className="text-muted-foreground mt-1 text-sm">
+          <p className="truncate font-medium" title={item.theme}>
+            {item.theme}
+          </p>
+          <p className="text-muted-foreground mt-1 line-clamp-2 text-sm break-words">
             {item.description}
           </p>
         </div>
-        <Label className="grid gap-2">
-          Raison
-          <Textarea
-            value={reason}
-            onChange={(event) => setReason(event.target.value)}
-            placeholder="Pourquoi ce sujet est-il supprimé ?"
-          />
-        </Label>
+        {requiresReason && (
+          <Label className="grid gap-2">
+            Raison
+            <Textarea
+              value={reason}
+              onChange={(event) => setReason(event.target.value)}
+              placeholder="Pourquoi ce sujet est-il supprimé ?"
+            />
+          </Label>
+        )}
         <DialogFooter>
           <DialogClose asChild>
             <Button variant="outline" disabled={deleteMutation.isPending}>
@@ -156,7 +167,7 @@ function DeleteSubjectDialog({ item }: { item: InboxSubjectItem }) {
           <Button
             variant="destructive"
             onClick={handleDelete}
-            disabled={!reason.trim()}
+            disabled={requiresReason && !reason.trim()}
             loading={deleteMutation.isPending}
           >
             {!deleteMutation.isPending && <Trash2 />}
@@ -327,7 +338,9 @@ function InboxList(props: {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
-        {rows.length ? (
+        {inboxSubjectsQuery.isPending ? (
+          <LoadingRow label="Chargement des sujets…" />
+        ) : rows.length ? (
           rows.map((item) => {
             return (
               <div
@@ -362,7 +375,8 @@ function InboxList(props: {
                       <ExternalLink />
                     </Link>
                   </Button>
-                  {props.actor === 'director' && (
+                  {/* Deletable only while pristine (OPEN); else archive only. */}
+                  {props.actor === 'director' && item.status === 'OPEN' && (
                     <DeleteSubjectDialog item={item} />
                   )}
                   {props.actor === 'journalist' && item.status === 'OPEN' && (
@@ -381,8 +395,13 @@ function InboxList(props: {
                           </DialogDescription>
                         </DialogHeader>
                         <div className="rounded-lg border p-4">
-                          <p className="font-medium">{item.theme}</p>
-                          <p className="text-muted-foreground mt-1 text-sm">
+                          <p
+                            className="truncate font-medium"
+                            title={item.theme}
+                          >
+                            {item.theme}
+                          </p>
+                          <p className="text-muted-foreground mt-1 line-clamp-2 text-sm break-words">
                             {item.description}
                           </p>
                         </div>
@@ -475,8 +494,10 @@ export function InboxSubjectDetailWorkspacePage({
                       </DialogDescription>
                     </DialogHeader>
                     <div className="rounded-lg border p-4">
-                      <p className="font-medium">{subject.theme}</p>
-                      <p className="text-muted-foreground mt-1 text-sm">
+                      <p className="truncate font-medium" title={subject.theme}>
+                        {subject.theme}
+                      </p>
+                      <p className="text-muted-foreground mt-1 line-clamp-2 text-sm break-words">
                         {subject.description}
                       </p>
                     </div>

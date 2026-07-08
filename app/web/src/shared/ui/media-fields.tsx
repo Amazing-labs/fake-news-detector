@@ -9,25 +9,20 @@ import {
   X,
   type LucideIcon,
 } from 'lucide-react'
-import { useEffect, useRef, useState, type DragEvent } from 'react'
+import { useRef, useState, type DragEvent } from 'react'
 import { toast } from 'sonner'
 import {
-  deleteFilesFromSupabase,
-  flushOrphanedUploads,
-  getPendingUploads,
   isSupabaseUploadConfigured,
-  trackPendingUpload,
-  untrackPendingUploads,
   uploadFileToSupabase,
 } from '../lib/supabase'
+import { cleanupMedia } from '../api/media'
 import { cn } from '../lib/utils'
 import { Button, Input, Select, SectionCard } from './primitives'
 import { mediaTypes, type MediaDraft } from './media-fields.model'
 
 const MAX_MEDIA = 6
 
-// Per-type icon so non-image uploads get clear visual feedback (the same way
-// images show a thumbnail), instead of a generic/anonymous placeholder.
+// Per-type icon fallback for non-image tiles.
 const mediaTypeIcon: Record<MediaDraft['type'], LucideIcon> = {
   IMAGE: ImageIcon,
   VIDEO: Video,
@@ -63,8 +58,9 @@ export function MediaFields(props: {
   items: MediaDraft[]
   onChange: (items: MediaDraft[]) => void
   variant?: 'default' | 'dark'
-  /** Locks every control (upload, edit, remove) — e.g. while a submit is
-   * pending — so in-flight uploads can't be mutated or deleted. */
+  /** Current actor id; uploads are stored under `uploads/<ownerId>/`. */
+  ownerId: string
+  /** Locks all controls (e.g. during submit). */
   disabled?: boolean
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -73,28 +69,8 @@ export function MediaFields(props: {
   const isDark = props.variant === 'dark'
   const canUpload = isSupabaseUploadConfigured()
   const isFull = props.items.length >= MAX_MEDIA
-  // Upload/edit controls are locked while uploading OR while the parent marks
-  // the field disabled (e.g. a submit is in flight).
+  // Locked while uploading or when the parent disables the field.
   const inputsDisabled = isUploading || (props.disabled ?? false)
-
-  // Clean up orphans from previous sessions on mount
-  useEffect(() => {
-    void flushOrphanedUploads()
-  }, [])
-
-  // On unmount: delete session uploads still pending (form not submitted)
-  useEffect(() => {
-    return () => {
-      const pending = getPendingUploads()
-      const toDelete = sessionUploadsRef.current.filter((url) =>
-        pending.includes(url),
-      )
-      if (toDelete.length > 0) {
-        void deleteFilesFromSupabase(toDelete)
-        untrackPendingUploads(toDelete)
-      }
-    }
-  }, [])
 
   async function handleFiles(files: FileList | null) {
     if (props.disabled || isUploading || !files?.length || !canUpload) return
@@ -107,9 +83,8 @@ export function MediaFields(props: {
 
     for (const file of filesToAdd) {
       try {
-        const result = await uploadFileToSupabase(file)
-        uploaded.push({ url: result.url, type: result.type })
-        trackPendingUpload(result.url)
+        const result = await uploadFileToSupabase(file, props.ownerId)
+        uploaded.push({ url: result.url, type: result.type, name: result.name })
         sessionUploadsRef.current.push(result.url)
       } catch (error) {
         toast.error(
@@ -140,10 +115,10 @@ export function MediaFields(props: {
     if (props.disabled) return
     const url = props.items[index]?.url
     if (url) {
+      // Only delete files this session uploaded, never an already-submitted URL.
       if (sessionUploadsRef.current.includes(url)) {
-        void deleteFilesFromSupabase([url])
+        void cleanupMedia([url])
       }
-      untrackPendingUploads([url])
       sessionUploadsRef.current = sessionUploadsRef.current.filter(
         (u) => u !== url,
       )
@@ -162,14 +137,14 @@ export function MediaFields(props: {
     return (
       <section className="grid gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-white">
+          <h2 className="text-foreground text-sm font-semibold">
             {props.title ?? 'Médias'}
           </h2>
           <div className="mt-0.5 flex items-center justify-between gap-2">
-            <p className="text-sm text-white/65">
+            <p className="text-muted-foreground text-sm">
               {props.description ?? 'Ajoute un ou plusieurs médias via upload.'}
             </p>
-            <span className="shrink-0 text-xs text-white/40">
+            <span className="text-muted-foreground shrink-0 text-xs">
               {props.items.length} / {MAX_MEDIA}
             </span>
           </div>
@@ -180,9 +155,12 @@ export function MediaFields(props: {
             {props.items.map((item, index) => {
               const Icon = mediaTypeIcon[item.type] ?? File
               return (
-                <div key={`${index}-${item.type}`} className="group relative">
+                <div
+                  key={`${index}-${item.type}`}
+                  className="group relative min-w-0"
+                >
                   {item.type === 'IMAGE' && item.url ? (
-                    <div className="aspect-square overflow-hidden rounded-lg border border-white/10">
+                    <div className="border-border aspect-square overflow-hidden rounded-lg border">
                       <img
                         src={item.url}
                         alt={`Média ${index + 1}`}
@@ -190,9 +168,9 @@ export function MediaFields(props: {
                       />
                     </div>
                   ) : (
-                    <div className="flex aspect-square flex-col items-center justify-center gap-1.5 rounded-lg border border-white/10 bg-white/5 px-2 text-center">
-                      <Icon className="size-6 shrink-0 text-white/70" />
-                      <span className="line-clamp-2 text-[10px] font-medium text-white/60">
+                    <div className="border-border bg-muted flex aspect-square flex-col items-center justify-center gap-1.5 rounded-lg border px-2 text-center">
+                      <Icon className="text-muted-foreground size-6 shrink-0" />
+                      <span className="text-muted-foreground line-clamp-2 text-[10px] font-medium">
                         {item.type}
                       </span>
                     </div>
@@ -206,6 +184,14 @@ export function MediaFields(props: {
                   >
                     <X className="size-3 text-white" />
                   </button>
+                  {item.name ? (
+                    <p
+                      className="text-muted-foreground mt-1 truncate text-[10px]"
+                      title={item.name}
+                    >
+                      {item.name}
+                    </p>
+                  ) : null}
                 </div>
               )
             })}

@@ -7,11 +7,13 @@ import type {
   IInvestigationRepository,
   INotificationRepository,
   IPublicationRepository,
+  IReportMediaRepository,
   IReportRepository,
   IWatcherApplicationRepository,
   IWorkflowAuditRepository,
 } from '../../../domain/repositories'
 import type { InboxSubjectMediaInsert } from '../../../domain/repositories/IInboxSubjectMediaRepository'
+import type { IMediaStorage } from '../../../domain/interfaces'
 import { PublicationFactory } from '../../../domain/factories/PublicationFactory'
 import { NotificationFactory } from '../../../domain/factories/NotificationFactory'
 import { AuthoritySourceFactory } from '../../../domain/factories/AuthoritySourceFactory'
@@ -55,6 +57,8 @@ export class DirectorWorkflowService {
     private readonly authoritySourceRepository: IAuthoritySourceRepository,
     private readonly domainEventPublisher: IDomainEventPublisher,
     private readonly investigationLifecycleService: InvestigationLifecycleService,
+    private readonly reportMediaRepository: IReportMediaRepository,
+    private readonly mediaStorage: IMediaStorage,
   ) {}
 
   async createDirectorInboxSubject(
@@ -201,26 +205,34 @@ export class DirectorWorkflowService {
   async deleteInboxSubjectByDirector(
     directorId: string,
     inboxSubjectId: string,
-    reason: string,
-  ): Promise<void> {
-    this.assertRequiredText(reason, 'Deletion reason is required')
-
+    reason?: string,
+  ): Promise<string[]> {
     const director = await this.getDirectorOrThrow(directorId)
     const subject = await this.getInboxSubjectOrThrow(inboxSubjectId)
     const linkedInvestigation =
       await this.investigationRepository.findByInboxSubjectId(inboxSubjectId)
     if (linkedInvestigation) {
       throw new BusinessRuleError(
-        'InboxSubject cannot be deleted after an investigation has started',
+        'Cannot delete a subject once an investigation has been opened on it. Archive it instead.',
       )
     }
 
     const subjectOrigin = subject.origin
+    // A reason is only required for REPORT subjects — it's shown to the citizen.
+    if (subjectOrigin === 'REPORT') {
+      this.assertRequiredText(reason ?? '', 'Deletion reason is required')
+    }
+    // Collect media URLs before deletion: the cascade drops rows, not bucket files.
+    const mediaUrls: string[] = []
     let reportCitizenId: string | null = null
     if (subjectOrigin === 'REPORT' && subject.reportId) {
       const subjectReportId = subject.reportId
       const report = await this.reportRepository.findById(subjectReportId)
       if (!report) throw new NotFoundError('Report', subjectReportId)
+
+      const reportMedia =
+        await this.reportMediaRepository.findByReportId(subjectReportId)
+      mediaUrls.push(...reportMedia.map((item) => item.url))
 
       const reportId = report.id
       const citizenId = report.citizenId
@@ -232,6 +244,10 @@ export class DirectorWorkflowService {
       }
 
       await this.reportRepository.delete(reportId)
+    } else {
+      const subjectMedia =
+        await this.inboxSubjectMediaRepository.findByInboxSubjectId(subject.id)
+      mediaUrls.push(...subjectMedia.map((item) => item.url))
     }
 
     await this.inboxSubjectRepository.delete(subject.id)
@@ -251,10 +267,26 @@ export class DirectorWorkflowService {
         subject.id,
         director.id,
         subject.origin,
-        reason,
+        reason ?? '',
         subject.reportId,
       ),
     )
+
+    // Purged by the caller after commit (see purgeBucketMedia), not here.
+    return mediaUrls
+  }
+
+  // Best-effort bucket purge, run after commit so it can't roll back the delete.
+  async purgeBucketMedia(mediaUrls: string[]): Promise<void> {
+    if (mediaUrls.length === 0) return
+    try {
+      await this.mediaStorage.deleteByPublicUrls(mediaUrls)
+    } catch (error) {
+      console.error(
+        '[storage] failed to purge bucket media after subject deletion:',
+        error instanceof Error ? error.message : String(error),
+      )
+    }
   }
 
   async archiveUnverifiableInvestigation(
