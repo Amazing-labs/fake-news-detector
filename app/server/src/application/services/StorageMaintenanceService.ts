@@ -32,8 +32,10 @@ export class StorageMaintenanceService {
     private readonly storage: IMediaStorage,
     private readonly referencedMedia: IReferencedMediaRepository,
     // When false the sweep only logs what it *would* delete (dry-run), so it can
-    // be observed against a real bucket before being armed.
-    private readonly enabled: boolean,
+    // be observed against a real bucket before being armed. Accepts a getter so
+    // the flag can be read lazily at run time — on Cloudflare Workers process.env
+    // is not populated during the top-level module evaluation that constructs it.
+    private readonly enabled: boolean | (() => boolean),
   ) {}
 
   // `force` bypasses the MAX_DELETE_RATIO safety cap. It exists for the one-off
@@ -44,7 +46,9 @@ export class StorageMaintenanceService {
   async sweepOrphans(
     options: { dryRun?: boolean; force?: boolean } = {},
   ): Promise<SweepReport> {
-    const dryRun = options.dryRun ?? !this.enabled
+    const isEnabled =
+      typeof this.enabled === 'function' ? this.enabled() : this.enabled
+    const dryRun = options.dryRun ?? !isEnabled
 
     const objects = await this.storage.listObjects(UPLOAD_PREFIX)
     const cutoff = Date.now() - MIN_AGE_MS
@@ -65,19 +69,22 @@ export class StorageMaintenanceService {
       aborted: false,
     }
 
+    // Cap is measured against the AGED (deletion-eligible) pool, not the total
+    // listed objects: a burst of fresh (young) uploads must not dilute the ratio
+    // and let a keep-set bug slip a mass deletion of live files under the cap.
     const overCap =
-      objects.length > 0 && orphans.length / objects.length > MAX_DELETE_RATIO
+      aged.length > 0 && orphans.length / aged.length > MAX_DELETE_RATIO
 
     if (overCap && !options.force) {
       console.error(
-        `[sweep] ABORT: would delete ${orphans.length}/${objects.length} objects (> ${MAX_DELETE_RATIO * 100}% cap) — refusing (pass --force to override)`,
+        `[sweep] ABORT: would delete ${orphans.length}/${aged.length} eligible objects (> ${MAX_DELETE_RATIO * 100}% cap) — refusing (pass --force to override)`,
       )
       return { ...report, aborted: true }
     }
 
     if (overCap) {
       console.warn(
-        `[sweep] FORCE: cap of ${MAX_DELETE_RATIO * 100}% bypassed — proceeding on ${orphans.length}/${objects.length} objects`,
+        `[sweep] FORCE: cap of ${MAX_DELETE_RATIO * 100}% bypassed — proceeding on ${orphans.length}/${aged.length} eligible objects`,
       )
     }
 

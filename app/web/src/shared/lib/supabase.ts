@@ -33,6 +33,15 @@ export function inferMediaType(file: File): MediaDraft['type'] {
 // so the reconciliation sweep can list them. The public anon key may upload and
 // read but is never allowed to delete — deletion is server-side only.
 export async function uploadFileToSupabase(file: File, ownerId: string) {
+  if (!ownerId.trim()) {
+    // Without an owner id the object would land at `uploads//<uuid>`, outside the
+    // `uploads/<actorId>/` prefix the server uses for ownership + cleanup — it
+    // could never be removed via /api/media/cleanup and would orphan. Fail loudly
+    // (e.g. the session hasn't loaded yet) instead of uploading a stray file.
+    throw new Error(
+      "Impossible d'envoyer le média : session utilisateur indisponible. Réessaie une fois connecté.",
+    )
+  }
   const client = getSupabaseClient()
   const extension = file.name.includes('.')
     ? file.name.split('.').pop()

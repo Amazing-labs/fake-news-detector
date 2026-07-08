@@ -19,7 +19,14 @@ export default {
       runWithPrismaConnectionString(
         env?.DATABASE_URL ?? readProcessEnv('DATABASE_URL'),
         () => dependencies.storageMaintenanceService.sweepOrphans(),
-      ),
+      ).catch((error) => {
+        // Log with a consistent prefix before Cloudflare marks the cron failed,
+        // so a rejected sweep is diagnosable in the Workers logs.
+        console.error(
+          '[sweep] ERROR: scheduled reconciliation sweep failed:',
+          error instanceof Error ? error.message : String(error),
+        )
+      }),
     )
   },
 }

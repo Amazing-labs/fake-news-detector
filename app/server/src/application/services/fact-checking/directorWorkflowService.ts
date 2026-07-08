@@ -206,7 +206,7 @@ export class DirectorWorkflowService {
     directorId: string,
     inboxSubjectId: string,
     reason?: string,
-  ): Promise<void> {
+  ): Promise<string[]> {
     const director = await this.getDirectorOrThrow(directorId)
     const subject = await this.getInboxSubjectOrThrow(inboxSubjectId)
     const linkedInvestigation =
@@ -256,12 +256,6 @@ export class DirectorWorkflowService {
 
     await this.inboxSubjectRepository.delete(subject.id)
 
-    // Best-effort bucket cleanup: the DB is already consistent, so a storage
-    // failure must not fail the deletion — it would only leave orphaned files.
-    if (mediaUrls.length > 0) {
-      await this.mediaStorage.deleteByPublicUrls(mediaUrls)
-    }
-
     if (subjectOrigin === 'REPORT' && reportCitizenId) {
       const notification = NotificationFactory.createAlertNotification(
         reportCitizenId,
@@ -281,6 +275,26 @@ export class DirectorWorkflowService {
         subject.reportId,
       ),
     )
+
+    // Return the URLs instead of purging here: the bucket cleanup is deferred to
+    // the caller and run AFTER the transaction commits (see purgeBucketMedia).
+    return mediaUrls
+  }
+
+  // Best-effort bucket purge, invoked by the facade AFTER the Prisma transaction
+  // commits. Kept out of the transaction so a storage/network failure can neither
+  // roll back the deletion nor hold the DB transaction open during an external
+  // call; any failure is logged, never thrown.
+  async purgeBucketMedia(mediaUrls: string[]): Promise<void> {
+    if (mediaUrls.length === 0) return
+    try {
+      await this.mediaStorage.deleteByPublicUrls(mediaUrls)
+    } catch (error) {
+      console.error(
+        '[storage] failed to purge bucket media after subject deletion:',
+        error instanceof Error ? error.message : String(error),
+      )
+    }
   }
 
   async archiveUnverifiableInvestigation(

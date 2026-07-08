@@ -102,4 +102,31 @@ describe('StorageMaintenanceService.sweepOrphans', () => {
     ])
     expect(report).toMatchObject({ orphans: 3, deleted: 3, aborted: false })
   })
+
+  test('cap is measured against the aged pool, not the total listed objects', async () => {
+    const { service, storage } = makeService(
+      [
+        { path: 'uploads/a/1', createdAt: old() }, // aged orphan
+        { path: 'uploads/a/2', createdAt: young() }, // young -> not eligible
+        { path: 'uploads/a/3', createdAt: young() },
+        { path: 'uploads/a/4', createdAt: young() },
+      ],
+      [],
+      true,
+    )
+
+    const report = await service.sweepOrphans()
+
+    // 1 orphan of 4 listed = 25% (under cap) but 1 of 1 aged = 100% (over cap):
+    // the aged denominator must win and abort, otherwise a burst of young uploads
+    // would dilute the safety cap.
+    expect(storage.deleteObjects).not.toHaveBeenCalled()
+    expect(report).toMatchObject({
+      listed: 4,
+      aged: 1,
+      orphans: 1,
+      deleted: 0,
+      aborted: true,
+    })
+  })
 })

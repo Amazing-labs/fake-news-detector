@@ -13,8 +13,12 @@ import { readProcessEnv } from '../../shared'
 // they are absent the adapter degrades to a logged no-op so local/dev without
 // storage configured still runs.
 export class SupabaseStorageAdapter implements IMediaStorage {
-  private readonly bucket =
-    readProcessEnv('SUPABASE_STORAGE_BUCKET') ?? 'fake-news-media'
+  // Read lazily: on Cloudflare Workers process.env is not populated during the
+  // top-level module evaluation that constructs this adapter, so an eager read
+  // would ignore any SUPABASE_STORAGE_BUCKET override.
+  private get bucket(): string {
+    return readProcessEnv('SUPABASE_STORAGE_BUCKET') ?? 'fake-news-media'
+  }
   private client: SupabaseClient | null | undefined
 
   private getClient(): SupabaseClient | null {
@@ -94,7 +98,9 @@ export class SupabaseStorageAdapter implements IMediaStorage {
 
         for (const entry of data) {
           const full = dir ? `${dir}/${entry.name}` : entry.name
-          if (entry.id === null) {
+          // Folders come back with a null/undefined id; a falsy check is more
+          // robust than `=== null` across SDK/API versions.
+          if (!entry.id) {
             await walk(full)
           } else {
             results.push({

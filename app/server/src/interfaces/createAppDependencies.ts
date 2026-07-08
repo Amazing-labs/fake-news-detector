@@ -123,8 +123,10 @@ export function createAppDependencies(): AppDependencies {
     mediaStorage,
     referencedMediaRepository,
     // Armed only when explicitly enabled; otherwise the sweep is dry-run so it
-    // can be observed against the real bucket before deleting anything.
-    readProcessEnv('STORAGE_SWEEP_ENABLED') === 'true',
+    // can be observed against the real bucket before deleting anything. Read
+    // lazily (a getter) because on Cloudflare Workers process.env is not
+    // populated during the top-level module evaluation that runs this.
+    () => readProcessEnv('STORAGE_SWEEP_ENABLED') === 'true',
   )
 
   return {
