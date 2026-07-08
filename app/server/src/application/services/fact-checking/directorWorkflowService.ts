@@ -218,15 +218,11 @@ export class DirectorWorkflowService {
     }
 
     const subjectOrigin = subject.origin
-    // A deletion reason is only required for REPORT-origin subjects: it is shown
-    // to the citizen who filed the report. A director deleting a subject they
-    // created themselves (DIRECTOR_INITIATED) needs no justification.
+    // A reason is only required for REPORT subjects — it's shown to the citizen.
     if (subjectOrigin === 'REPORT') {
       this.assertRequiredText(reason ?? '', 'Deletion reason is required')
     }
-    // Collect the real storage URLs before the cascade deletes their rows: a
-    // Prisma cascade drops InboxSubjectMedia/ReportMedia rows but never the
-    // underlying bucket objects, so we must gather them now and purge after.
+    // Collect media URLs before deletion: the cascade drops rows, not bucket files.
     const mediaUrls: string[] = []
     let reportCitizenId: string | null = null
     if (subjectOrigin === 'REPORT' && subject.reportId) {
@@ -276,15 +272,11 @@ export class DirectorWorkflowService {
       ),
     )
 
-    // Return the URLs instead of purging here: the bucket cleanup is deferred to
-    // the caller and run AFTER the transaction commits (see purgeBucketMedia).
+    // Purged by the caller after commit (see purgeBucketMedia), not here.
     return mediaUrls
   }
 
-  // Best-effort bucket purge, invoked by the facade AFTER the Prisma transaction
-  // commits. Kept out of the transaction so a storage/network failure can neither
-  // roll back the deletion nor hold the DB transaction open during an external
-  // call; any failure is logged, never thrown.
+  // Best-effort bucket purge, run after commit so it can't roll back the delete.
   async purgeBucketMedia(mediaUrls: string[]): Promise<void> {
     if (mediaUrls.length === 0) return
     try {

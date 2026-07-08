@@ -117,9 +117,7 @@ describe('StorageMaintenanceService.sweepOrphans', () => {
 
     const report = await service.sweepOrphans()
 
-    // 1 orphan of 4 listed = 25% (under cap) but 1 of 1 aged = 100% (over cap):
-    // the aged denominator must win and abort, otherwise a burst of young uploads
-    // would dilute the safety cap.
+    // 1/4 listed = 25% (under cap) but 1/1 aged = 100%: the aged pool must win.
     expect(storage.deleteObjects).not.toHaveBeenCalled()
     expect(report).toMatchObject({
       listed: 4,

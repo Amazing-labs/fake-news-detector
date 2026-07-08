@@ -8,8 +8,7 @@ const app = createApp(dependencies)
 
 export default {
   fetch: app.fetch,
-  // Cloudflare Cron Trigger: reconciliation sweep that deletes orphaned bucket
-  // uploads (abandoned forms, files removed before submit, failed cleanups).
+  // Cron: reconciliation sweep for orphaned bucket uploads.
   scheduled: async (
     _event: unknown,
     env: { DATABASE_URL?: string } | undefined,
@@ -20,8 +19,6 @@ export default {
         env?.DATABASE_URL ?? readProcessEnv('DATABASE_URL'),
         () => dependencies.storageMaintenanceService.sweepOrphans(),
       ).catch((error) => {
-        // Log with a consistent prefix before Cloudflare marks the cron failed,
-        // so a rejected sweep is diagnosable in the Workers logs.
         console.error(
           '[sweep] ERROR: scheduled reconciliation sweep failed:',
           error instanceof Error ? error.message : String(error),

@@ -28,16 +28,11 @@ export function inferMediaType(file: File): MediaDraft['type'] {
   return 'DOCUMENT'
 }
 
-// Uploads under `uploads/<ownerId>/` so the server can verify ownership when the
-// owner asks to delete a not-yet-submitted file (POST /api/media/cleanup), and
-// so the reconciliation sweep can list them. The public anon key may upload and
-// read but is never allowed to delete — deletion is server-side only.
+// Uploads under `uploads/<ownerId>/` for server-side ownership + cleanup.
 export async function uploadFileToSupabase(file: File, ownerId: string) {
   if (!ownerId.trim()) {
-    // Without an owner id the object would land at `uploads//<uuid>`, outside the
-    // `uploads/<actorId>/` prefix the server uses for ownership + cleanup — it
-    // could never be removed via /api/media/cleanup and would orphan. Fail loudly
-    // (e.g. the session hasn't loaded yet) instead of uploading a stray file.
+    // Empty ownerId would orphan the file at `uploads//<uuid>` (outside the
+    // cleanup prefix) — fail instead, e.g. when the session hasn't loaded yet.
     throw new Error(
       "Impossible d'envoyer le média : session utilisateur indisponible. Réessaie une fois connecté.",
     )

@@ -235,9 +235,7 @@ export class FactCheckingService {
     inboxSubjectId: string,
     reason?: string,
   ): Promise<void> {
-    // Delete the DB rows inside the transaction, then purge the bucket objects
-    // AFTER it commits (best-effort) so a storage failure can never roll it back
-    // and the transaction is not held open during an external network call.
+    // Purge the bucket after the transaction commits (best-effort).
     const mediaUrls = await this.runInTransaction(() =>
       this.directorWorkflowService.deleteInboxSubjectByDirector(
         directorId,

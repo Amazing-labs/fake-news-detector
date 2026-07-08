@@ -56,8 +56,7 @@ const ORIGIN_LABELS: Record<string, string> = {
   DIRECTOR_INITIATED: 'Création direction',
 }
 
-// A journalist claims a subject -> the server opens the investigation and
-// returns it; on success we refresh the inbox and jump to the new dossier.
+// Claim a subject -> server opens the investigation; refresh + jump to it.
 function usePickSubjectMutation() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
@@ -79,11 +78,8 @@ function usePickSubjectMutation() {
   })
 }
 
-// Director-only: deletes a subject. A reason is required only for subjects that
-// came from a citizen report (REPORT origin) — the citizen is notified with it.
-// A director deleting a subject they created themselves (DIRECTOR_INITIATED)
-// needs no justification, so the field is hidden and deletion is a direct
-// confirm.
+// Director-only delete. A reason is required only for REPORT subjects (the
+// citizen is notified); director-created subjects delete with no reason.
 function DeleteSubjectDialog({ item }: { item: InboxSubjectItem }) {
   const queryClient = useQueryClient()
   const [open, setOpen] = useState(false)
@@ -91,9 +87,7 @@ function DeleteSubjectDialog({ item }: { item: InboxSubjectItem }) {
   const requiresReason = item.origin === 'REPORT'
 
   const deleteMutation = useMutation({
-    // The server purges the associated bucket objects (with the service-role
-    // key) as part of the deletion, so the client only fires the request — the
-    // public anon key is not allowed to delete from storage.
+    // Server purges the bucket objects (service-role); the client only fires the request.
     mutationFn: () =>
       deleteInboxSubject(
         item.id,
@@ -381,9 +375,7 @@ function InboxList(props: {
                       <ExternalLink />
                     </Link>
                   </Button>
-                  {/* A subject can only be deleted while pristine (OPEN) — once
-                      an investigation has ever been opened, archiving is the
-                      only path, matching the server-side guard. */}
+                  {/* Deletable only while pristine (OPEN); else archive only. */}
                   {props.actor === 'director' && item.status === 'OPEN' && (
                     <DeleteSubjectDialog item={item} />
                   )}

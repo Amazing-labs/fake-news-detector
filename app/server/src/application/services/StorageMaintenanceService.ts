@@ -1,16 +1,10 @@
 import type { IMediaStorage } from '../../domain/interfaces'
 import type { IReferencedMediaRepository } from '../../domain/repositories'
 
-// All client uploads live under this prefix.
 const UPLOAD_PREFIX = 'uploads'
-// Never touch an object younger than this: it may be a freshly uploaded file
-// still sitting in a form that hasn't been submitted yet. This threshold's only
-// job is to eliminate the race between "unreferenced now" and "about to be
-// referenced".
+// Grace period: skip objects younger than this (may be an unsubmitted upload).
 const MIN_AGE_MS = 24 * 60 * 60 * 1000
-// Refuse to delete an implausible fraction of the bucket in one run: if a
-// keep-set bug ever returns too few references, this stops the sweep from
-// wiping live files instead.
+// Abort if a run would delete more than this fraction of the eligible pool.
 const MAX_DELETE_RATIO = 0.5
 
 export interface SweepReport {
@@ -23,26 +17,16 @@ export interface SweepReport {
   aborted: boolean
 }
 
-// Reconciliation sweep: deletes bucket objects that are old enough AND no longer
-// referenced by any media table (the "keep-set"). It is the backstop that
-// guarantees orphaned uploads never accumulate — abandoned forms, browser
-// crashes, failed immediate-cleanup calls, and best-effort deletion misses.
+/** Backstop that deletes aged, unreferenced bucket objects (orphaned uploads). */
 export class StorageMaintenanceService {
   constructor(
     private readonly storage: IMediaStorage,
     private readonly referencedMedia: IReferencedMediaRepository,
-    // When false the sweep only logs what it *would* delete (dry-run), so it can
-    // be observed against a real bucket before being armed. Accepts a getter so
-    // the flag can be read lazily at run time — on Cloudflare Workers process.env
-    // is not populated during the top-level module evaluation that constructs it.
+    // Dry-run unless armed; a getter defers the read to run time (Workers env).
     private readonly enabled: boolean | (() => boolean),
   ) {}
 
-  // `force` bypasses the MAX_DELETE_RATIO safety cap. It exists for the one-off
-  // manual cleanup of the historical orphan backlog (accumulated back when the
-  // client-side delete silently failed): that backlog legitimately exceeds the
-  // cap, and until it is cleared once the ratio stays high forever, keeping the
-  // scheduled sweep permanently aborted. Never wire `force` to the cron.
+  // `force` bypasses the safety cap (one-off backlog cleanup); never used by the cron.
   async sweepOrphans(
     options: { dryRun?: boolean; force?: boolean } = {},
   ): Promise<SweepReport> {
@@ -69,9 +53,7 @@ export class StorageMaintenanceService {
       aborted: false,
     }
 
-    // Cap is measured against the AGED (deletion-eligible) pool, not the total
-    // listed objects: a burst of fresh (young) uploads must not dilute the ratio
-    // and let a keep-set bug slip a mass deletion of live files under the cap.
+    // Ratio against the aged (eligible) pool, so young uploads can't dilute it.
     const overCap =
       aged.length > 0 && orphans.length / aged.length > MAX_DELETE_RATIO
 
@@ -93,7 +75,7 @@ export class StorageMaintenanceService {
       report.deleted = orphans.length
     }
 
-    // Logged after deletion so `deleted` reflects what actually happened.
+    // Logged after deletion so `deleted` reflects what happened.
     console.log('[sweep]', JSON.stringify(report))
 
     return report

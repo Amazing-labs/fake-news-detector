@@ -1,8 +1,5 @@
-// Manual reconciliation sweep of orphaned storage uploads.
-// Dry-run by default (logs what it would delete); pass --apply to actually
-// delete. --force additionally bypasses the 50% safety cap, for the one-off
-// cleanup of the historical orphan backlog.
-// Usage: bun run sweep  |  bun run sweep --apply  |  bun run sweep --apply --force
+// Manual reconciliation sweep (dry-run by default).
+// bun run sweep | sweep --apply | sweep --apply --force
 import { prisma } from '../infrastructure/config/database'
 import { createAppDependencies } from '../interfaces/createAppDependencies'
 

@@ -503,9 +503,7 @@ export function MediaDropzone({
     )
   }, [entries])
 
-  // On unmount: revoke preview object URLs. Abandoned uploads (form left without
-  // submitting) are reclaimed by the server-side reconciliation sweep, so no
-  // file deletion is needed here.
+  // On unmount: revoke preview object URLs.
   useEffect(() => {
     return () => {
       previewUrlsRef.current.forEach((url) => URL.revokeObjectURL(url))

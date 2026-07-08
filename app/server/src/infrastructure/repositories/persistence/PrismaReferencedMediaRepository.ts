@@ -1,15 +1,10 @@
 import type { IReferencedMediaRepository } from '../../../domain/repositories'
 import { prisma } from '../../config/database'
 
-// Gathers every bucket URL still referenced by the domain, across all media
-// tables. ⚠️ If you add a table with a media `url` column, add its query to
-// `collectUrls` below — the single place that enumerates the media tables — or
-// the storage sweep will delete its files as orphans.
+// Every bucket URL still referenced by the domain.
+// ⚠️ New media table? Add it to collectUrls or the sweep will delete its files.
 export class PrismaReferencedMediaRepository implements IReferencedMediaRepository {
-  // The one place the five media tables are enumerated. `where` scopes the
-  // query: undefined = every referenced URL; `{ url: { in } }` = only the given
-  // URLs. Keeping both public methods on this list removes the single-point-of-
-  // failure of forgetting to update one but not the other.
+  // The single place the media tables are enumerated (undefined `where` = all).
   private async collectUrls(where?: {
     url: { in: string[] }
   }): Promise<string[]> {

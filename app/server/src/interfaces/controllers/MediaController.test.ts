@@ -10,8 +10,7 @@ const BUCKET =
   'https://ref.supabase.co/storage/v1/object/public/fake-news-media'
 const url = (path: string) => `${BUCKET}/${path}`
 
-// Identity-ish storage: maps public URLs back to their in-bucket path and
-// records what it was asked to delete.
+// Maps public URLs to paths and records deletions.
 function makeStorage(): IMediaStorage & { deleted: string[] } {
   const deleted: string[] = []
   return {

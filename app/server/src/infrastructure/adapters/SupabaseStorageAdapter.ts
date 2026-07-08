@@ -1,21 +1,13 @@
-// infrastructure/adapters/SupabaseStorageAdapter.ts
-
 import { createClient, type SupabaseClient } from '@supabase/supabase-js'
 import type { IMediaStorage, StorageObject } from '../../domain/interfaces'
 import { readProcessEnv } from '../../shared'
 
-// Server-side management of bucket objects with the Supabase service-role key,
-// which bypasses Storage RLS. The public anon key used by the web client is
-// intentionally not allowed to delete, so removing/listing files must go here.
-//
-// Credentials are read from process.env (SUPABASE_URL /
-// SUPABASE_SERVICE_ROLE_KEY), mirroring how the database URL is resolved. When
-// they are absent the adapter degrades to a logged no-op so local/dev without
-// storage configured still runs.
+/**
+ * Server-side bucket operations via the Supabase service-role key (the anon
+ * client used by the web app cannot delete). No-op when unconfigured.
+ */
 export class SupabaseStorageAdapter implements IMediaStorage {
-  // Read lazily: on Cloudflare Workers process.env is not populated during the
-  // top-level module evaluation that constructs this adapter, so an eager read
-  // would ignore any SUPABASE_STORAGE_BUCKET override.
+  // Lazy: Workers don't populate process.env at module-eval time.
   private get bucket(): string {
     return readProcessEnv('SUPABASE_STORAGE_BUCKET') ?? 'fake-news-media'
   }
@@ -39,9 +31,7 @@ export class SupabaseStorageAdapter implements IMediaStorage {
     return this.client
   }
 
-  // Maps a Supabase public URL back to its object path inside the bucket, e.g.
-  // https://<ref>.supabase.co/storage/v1/object/public/<bucket>/uploads/x.png
-  // -> uploads/x.png
+  // Public URL -> in-bucket object path.
   private extractPath(publicUrl: string): string {
     const marker = `/object/public/${this.bucket}/`
     const idx = publicUrl.indexOf(marker)
@@ -82,8 +72,7 @@ export class SupabaseStorageAdapter implements IMediaStorage {
     const results: StorageObject[] = []
     const pageSize = 1000
 
-    // Supabase list() is per-prefix and non-recursive; folders come back as
-    // entries with a null id, so we descend into them.
+    // list() is non-recursive; folders have a falsy id, so descend into them.
     const walk = async (dir: string): Promise<void> => {
       let offset = 0
       for (;;) {
@@ -98,8 +87,6 @@ export class SupabaseStorageAdapter implements IMediaStorage {
 
         for (const entry of data) {
           const full = dir ? `${dir}/${entry.name}` : entry.name
-          // Folders come back with a null/undefined id; a falsy check is more
-          // robust than `=== null` across SDK/API versions.
           if (!entry.id) {
             await walk(full)
           } else {

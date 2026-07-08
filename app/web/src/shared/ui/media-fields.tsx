@@ -22,8 +22,7 @@ import { mediaTypes, type MediaDraft } from './media-fields.model'
 
 const MAX_MEDIA = 6
 
-// Per-type icon so non-image uploads get clear visual feedback (the same way
-// images show a thumbnail), instead of a generic/anonymous placeholder.
+// Per-type icon fallback for non-image tiles.
 const mediaTypeIcon: Record<MediaDraft['type'], LucideIcon> = {
   IMAGE: ImageIcon,
   VIDEO: Video,
@@ -59,11 +58,9 @@ export function MediaFields(props: {
   items: MediaDraft[]
   onChange: (items: MediaDraft[]) => void
   variant?: 'default' | 'dark'
-  /** Current actor id — uploads are stored under `uploads/<ownerId>/` so the
-   * server can authorise deleting this session's not-yet-submitted files. */
+  /** Current actor id; uploads are stored under `uploads/<ownerId>/`. */
   ownerId: string
-  /** Locks every control (upload, edit, remove) — e.g. while a submit is
-   * pending — so in-flight uploads can't be mutated or deleted. */
+  /** Locks all controls (e.g. during submit). */
   disabled?: boolean
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
@@ -72,12 +69,8 @@ export function MediaFields(props: {
   const isDark = props.variant === 'dark'
   const canUpload = isSupabaseUploadConfigured()
   const isFull = props.items.length >= MAX_MEDIA
-  // Upload/edit controls are locked while uploading OR while the parent marks
-  // the field disabled (e.g. a submit is in flight).
+  // Locked while uploading or when the parent disables the field.
   const inputsDisabled = isUploading || (props.disabled ?? false)
-
-  // Abandoned uploads (form left without submitting) are reclaimed by the
-  // server-side reconciliation sweep, so no unmount cleanup is needed here.
 
   async function handleFiles(files: FileList | null) {
     if (props.disabled || isUploading || !files?.length || !canUpload) return
@@ -122,8 +115,7 @@ export function MediaFields(props: {
     if (props.disabled) return
     const url = props.items[index]?.url
     if (url) {
-      // Only ask the server to delete files this session uploaded — never a
-      // pre-existing (already-submitted) URL, which would delete a live file.
+      // Only delete files this session uploaded, never an already-submitted URL.
       if (sessionUploadsRef.current.includes(url)) {
         void cleanupMedia([url])
       }
