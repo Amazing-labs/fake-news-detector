@@ -46,7 +46,6 @@ export function VeriFactAuthPage(props: {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [pending, setPending] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
 
   useEffect(() => {
     setMode(props.initialMode ?? 'sign-in')
@@ -61,7 +60,6 @@ export function VeriFactAuthPage(props: {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setPending(true)
-    setMessage(null)
 
     try {
       const result =
@@ -80,7 +78,7 @@ export function VeriFactAuthPage(props: {
         return
       }
 
-      setMessage('Session ouverte.')
+      toast.success('Session ouverte.')
       setPassword('')
       const refreshedSession = await authClient.getSession()
       await navigate({
@@ -88,6 +86,8 @@ export function VeriFactAuthPage(props: {
           (refreshedSession.data ?? result.data) as unknown as AppSession,
         ),
       })
+    } catch {
+      toast.error('Une erreur inattendue est survenue. Veuillez réessayer.')
     } finally {
       setPending(false)
     }
@@ -241,12 +241,6 @@ export function VeriFactAuthPage(props: {
                   </button>
                 </div>
               </div>
-              {message ? (
-                <Alert>
-                  <AlertTitle>Succes</AlertTitle>
-                  <AlertDescription>{message}</AlertDescription>
-                </Alert>
-              ) : null}
               <Button className="w-full" loading={pending} type="submit">
                 {mode === 'sign-up' ? 'Créer un compte' : 'Connexion'}
               </Button>
