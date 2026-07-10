@@ -8,7 +8,7 @@ export function requiredParam(
 ): string {
   const value = c.req.param(key)
   if (!value) {
-    throw new ValidationError(`Route param ${key} is required`)
+    throw new ValidationError(`Le paramètre « ${key} » est obligatoire.`)
   }
   return value
 }
@@ -19,7 +19,9 @@ export function requiredNumericParam(
 ): number {
   const value = Number(requiredParam(c, key))
   if (!Number.isInteger(value) || value < 0) {
-    throw new ValidationError(`Route param ${key} must be a valid number`)
+    throw new ValidationError(
+      `Le paramètre « ${key} » doit être un nombre valide.`,
+    )
   }
   return value
 }

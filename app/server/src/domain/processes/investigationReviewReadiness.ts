@@ -57,10 +57,10 @@ export type EvidenceWithMedia = { evidence: Evidence; media: EvidenceMedia[] }
 export function assertWatcherEvidenceMediaCompleteForReview(
   bundles: EvidenceWithMedia[],
 ): void {
-  for (const { evidence, media } of bundles) {
+  for (const { media } of bundles) {
     if (media.length === 0) {
       throw new BusinessRuleError(
-        `Evidence ${evidence.id} must include at least one media item before review`,
+        'Each evidence must include at least one media item before review',
       )
     }
     for (const row of media) {
