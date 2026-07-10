@@ -80,10 +80,11 @@ export function VeriFactAuthPage(props: {
 
       toast.success('Session ouverte.')
       setPassword('')
-      const refreshedSession = await authClient.getSession()
+      // If the session refresh fails, still navigate using the sign-in result.
+      const refreshedSession = await authClient.getSession().catch(() => null)
       await navigate({
         to: dashboardPathForSession(
-          (refreshedSession.data ?? result.data) as unknown as AppSession,
+          (refreshedSession?.data ?? result.data) as unknown as AppSession,
         ),
       })
     } catch {
