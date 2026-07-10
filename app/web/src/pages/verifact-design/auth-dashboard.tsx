@@ -8,6 +8,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import {
   localAuthActors,
   signInLocalActor,
@@ -45,8 +46,6 @@ export function VeriFactAuthPage(props: {
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [pending, setPending] = useState(false)
-  const [message, setMessage] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setMode(props.initialMode ?? 'sign-in')
@@ -61,8 +60,6 @@ export function VeriFactAuthPage(props: {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setPending(true)
-    setError(null)
-    setMessage(null)
 
     try {
       const result =
@@ -71,18 +68,27 @@ export function VeriFactAuthPage(props: {
           : await authClient.signIn.email({ email, password })
 
       if (result.error) {
-        setError(result.error.message ?? 'Authentification impossible')
+        // Generic on purpose: never reveal whether the email exists or which
+        // field is wrong.
+        toast.error(
+          mode === 'sign-up'
+            ? 'Inscription impossible. Vérifiez vos informations.'
+            : 'Email ou mot de passe invalide.',
+        )
         return
       }
 
-      setMessage('Session ouverte.')
+      toast.success('Session ouverte.')
       setPassword('')
-      const refreshedSession = await authClient.getSession()
+      // If the session refresh fails, still navigate using the sign-in result.
+      const refreshedSession = await authClient.getSession().catch(() => null)
       await navigate({
         to: dashboardPathForSession(
-          (refreshedSession.data ?? result.data) as unknown as AppSession,
+          (refreshedSession?.data ?? result.data) as unknown as AppSession,
         ),
       })
+    } catch {
+      toast.error('Une erreur inattendue est survenue. Veuillez réessayer.')
     } finally {
       setPending(false)
     }
@@ -236,18 +242,6 @@ export function VeriFactAuthPage(props: {
                   </button>
                 </div>
               </div>
-              {error ? (
-                <Alert variant="destructive">
-                  <AlertTitle>Erreur</AlertTitle>
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              ) : null}
-              {message ? (
-                <Alert>
-                  <AlertTitle>Succes</AlertTitle>
-                  <AlertDescription>{message}</AlertDescription>
-                </Alert>
-              ) : null}
               <Button className="w-full" loading={pending} type="submit">
                 {mode === 'sign-up' ? 'Créer un compte' : 'Connexion'}
               </Button>
