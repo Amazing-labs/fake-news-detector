@@ -1,7 +1,9 @@
-// Adapts the enriched investigation read models into the dossier view props.
-// Enum-like fields arrive as plain strings from the API, so they are validated
-// against the entity schemas here, at the single API→UI boundary, rather than
-// force-cast. Unknown values fall back to a benign default (or null).
+/**
+ * Adapts the enriched investigation read models into the dossier view props.
+ * Enum-like fields arrive as plain strings from the API, so they are validated
+ * against the entity schemas here — the single API→UI boundary — rather than
+ * force-cast; unknown values fall back to a benign default (or null).
+ */
 import type {
   EvidenceList,
   InvestigationItem,

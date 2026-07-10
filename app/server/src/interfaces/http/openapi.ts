@@ -1,6 +1,8 @@
-// Shared building blocks for schema-driven routes (@hono/zod-openapi).
-// Every route module is an OpenAPIHono sub-app created here so request params
-// and bodies are validated at the route layer, before the controller runs.
+/**
+ * Shared building blocks for schema-driven routes (@hono/zod-openapi). Every
+ * route module is an OpenAPIHono sub-app created here, so request params and
+ * bodies are validated at the route layer, before the controller runs.
+ */
 
 import { OpenAPIHono } from '@hono/zod-openapi'
 import type { Hook } from '@hono/zod-openapi'
