@@ -8,6 +8,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { toast } from 'sonner'
 import {
   localAuthActors,
   signInLocalActor,
@@ -46,7 +47,6 @@ export function VeriFactAuthPage(props: {
   const [showPassword, setShowPassword] = useState(false)
   const [pending, setPending] = useState(false)
   const [message, setMessage] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     setMode(props.initialMode ?? 'sign-in')
@@ -61,7 +61,6 @@ export function VeriFactAuthPage(props: {
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
     setPending(true)
-    setError(null)
     setMessage(null)
 
     try {
@@ -71,7 +70,13 @@ export function VeriFactAuthPage(props: {
           : await authClient.signIn.email({ email, password })
 
       if (result.error) {
-        setError(result.error.message ?? 'Authentification impossible')
+        // Generic on purpose: never reveal whether the email exists or which
+        // field is wrong.
+        toast.error(
+          mode === 'sign-up'
+            ? 'Inscription impossible. Vérifiez vos informations.'
+            : 'Email ou mot de passe invalide.',
+        )
         return
       }
 
@@ -236,12 +241,6 @@ export function VeriFactAuthPage(props: {
                   </button>
                 </div>
               </div>
-              {error ? (
-                <Alert variant="destructive">
-                  <AlertTitle>Erreur</AlertTitle>
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              ) : null}
               {message ? (
                 <Alert>
                   <AlertTitle>Succes</AlertTitle>
