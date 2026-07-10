@@ -1,4 +1,3 @@
-// domain/factories/NotificationFactory.ts
 import {
   Notification,
   NotificationLevel,

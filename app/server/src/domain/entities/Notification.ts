@@ -1,5 +1,3 @@
-// domain/entities/Notification.ts
-
 import { randomUUID } from 'node:crypto'
 import { DomainError } from '../../shared'
 

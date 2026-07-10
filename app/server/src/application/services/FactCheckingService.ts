@@ -1,5 +1,3 @@
-// application/services/FactCheckingService.ts
-//
 // Public application facade for the fact-checking workflow.
 // The detailed orchestration is delegated to smaller workflow services so this
 // entrypoint stays readable and focused on use-case boundaries.

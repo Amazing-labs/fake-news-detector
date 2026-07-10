@@ -1,4 +1,3 @@
-// domain/repositories/IDirectorRepository.ts
 import type { Director } from '../entities/Director'
 
 export interface IDirectorRepository {

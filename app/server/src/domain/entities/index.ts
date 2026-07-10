@@ -1,4 +1,3 @@
-// domain/entities/index.ts
 export { Citizen } from './Citizen'
 export type { CitizenStatus, CitizenType, CitizenStatusReason } from './Citizen'
 export { Journalist } from './Journalist'

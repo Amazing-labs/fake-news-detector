@@ -1,4 +1,3 @@
-// domain/factories/WorkflowAuditFactory.ts
 import { WorkflowAudit } from '../entities/WorkflowAudit'
 import type { InvestigationStatus } from '../entities/Investigation'
 import { randomUUID } from 'node:crypto'

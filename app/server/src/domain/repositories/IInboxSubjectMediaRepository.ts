@@ -1,4 +1,3 @@
-// domain/repositories/IInboxSubjectMediaRepository.ts
 import type { InboxSubjectMedia } from '../value-objects/Media'
 import type { MediaType } from '../value-objects'
 import type { InboxSubjectMediaOrigin } from '../value-objects'

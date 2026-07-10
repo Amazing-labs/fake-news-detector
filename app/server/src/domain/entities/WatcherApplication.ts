@@ -1,5 +1,3 @@
-// domain/entities/WatcherApplication.ts
-
 export type WatcherApplicationStatus = 'PENDING' | 'APPROVED' | 'REJECTED'
 
 export class WatcherApplication {

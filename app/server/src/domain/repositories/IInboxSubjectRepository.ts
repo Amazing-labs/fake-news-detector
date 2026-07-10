@@ -1,4 +1,3 @@
-// domain/repositories/IInboxSubjectRepository.ts
 import {
   InboxSubject,
   type InboxSubjectOrigin,

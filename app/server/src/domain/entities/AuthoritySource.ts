@@ -1,5 +1,3 @@
-// domain/entities/AuthoritySource.ts
-
 export type SourceType =
   | 'OFFICIAL_DECREE'
   | 'ORIGINAL_RETRACTION'

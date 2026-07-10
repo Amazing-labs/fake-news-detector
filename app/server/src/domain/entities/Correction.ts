@@ -1,5 +1,3 @@
-// domain/entities/Correction.ts
-
 export class Correction {
   constructor(
     public readonly id: string,

@@ -1,4 +1,3 @@
-// domain/factories/CitizenFactory.ts
 import {
   Citizen,
   CitizenType,

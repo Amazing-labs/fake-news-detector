@@ -1,4 +1,3 @@
-// domain/repositories/ICitizenRepository.ts
 import type { Citizen, CitizenStatus, CitizenType } from '../entities/Citizen'
 
 export interface ICitizenRepository {

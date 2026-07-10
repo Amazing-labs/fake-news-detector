@@ -1,4 +1,3 @@
-// domain/repositories/IPublicationRepository.ts
 import { Publication } from '../entities/Publication'
 
 // Lightweight projection for read paths that only need to know which

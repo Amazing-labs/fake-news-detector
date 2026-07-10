@@ -1,4 +1,3 @@
-// domain/repositories/index.ts
 export type { ICitizenRepository } from './ICitizenRepository'
 export type { IJournalistRepository } from './IJournalistRepository'
 export type { IDirectorRepository } from './IDirectorRepository'

@@ -1,4 +1,3 @@
-// domain/processes/investigationMediaCopy.ts
 // Build InvestigationMedia rows (id placeholders) copied from report or director inbox.
 
 import type {

@@ -1,4 +1,3 @@
-// shared/types.ts
 export interface ApiResponse<T = unknown> {
   success: boolean
   data?: T

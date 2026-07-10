@@ -1,4 +1,3 @@
-// domain/entities/Director.ts
 // Bounded Context: Editorial Management
 
 import type { Investigation, InvestigationStatus } from './Investigation'

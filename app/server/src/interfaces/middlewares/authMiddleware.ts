@@ -1,4 +1,3 @@
-// interfaces/middlewares/authMiddleware.ts
 import type { MiddlewareHandler } from 'hono'
 import {
   type Permission,

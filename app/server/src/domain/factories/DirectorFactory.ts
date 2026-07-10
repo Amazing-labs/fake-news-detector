@@ -1,4 +1,3 @@
-// domain/factories/DirectorFactory.ts
 import { Director, DirectorStatus } from '../entities/Director'
 import { randomUUID } from 'node:crypto'
 import { DirectorRole } from '../entities/Director'

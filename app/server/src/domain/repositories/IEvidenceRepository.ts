@@ -1,4 +1,3 @@
-// domain/repositories/IEvidenceRepository.ts
 import { Evidence } from '../entities/Evidence'
 import type { EvidenceWithMedia } from '../processes/investigationReviewReadiness'
 import type { EvidenceMedia } from '../value-objects/Media'

@@ -1,5 +1,3 @@
-// application/services/SecurityService.ts
-//
 // Authentication adapter contract + deterministic role/action policy.
 // Real token verification is delegated to an injected adapter; the service
 // itself is concerned with policy enforcement.

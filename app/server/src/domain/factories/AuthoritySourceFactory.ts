@@ -1,4 +1,3 @@
-// domain/factories/AuthoritySourceFactory.ts
 import { AuthoritySource, SourceType } from '../entities/AuthoritySource'
 import { randomUUID } from 'node:crypto'
 

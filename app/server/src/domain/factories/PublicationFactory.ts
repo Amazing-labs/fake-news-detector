@@ -1,4 +1,3 @@
-// domain/factories/PublicationFactory.ts
 import { Publication } from '../entities/Publication'
 import { randomUUID } from 'node:crypto'
 import {

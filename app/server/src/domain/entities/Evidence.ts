@@ -1,5 +1,3 @@
-// domain/entities/Evidence.ts
-
 import type { EvidenceMedia } from '../value-objects/Media'
 
 export class Evidence {

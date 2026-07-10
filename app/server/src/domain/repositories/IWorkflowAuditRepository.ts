@@ -1,4 +1,3 @@
-// domain/repositories/IWorkflowAuditRepository.ts
 import { WorkflowAudit } from '../entities/WorkflowAudit'
 
 export interface IWorkflowAuditRepository {
