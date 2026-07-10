@@ -60,7 +60,7 @@ export function assertWatcherEvidenceMediaCompleteForReview(
   for (const { media } of bundles) {
     if (media.length === 0) {
       throw new BusinessRuleError(
-        'Chaque preuve doit contenir au moins un média avant la revue.',
+        'Each evidence must include at least one media item before review',
       )
     }
     for (const row of media) {

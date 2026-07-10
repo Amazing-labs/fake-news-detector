@@ -30,6 +30,8 @@ export const frErrorMessages: Record<string, string> = {
     'Une preuve doit contenir au moins un média.',
   'Watcher evidence requires at least one media item':
     'Une preuve de vigie doit contenir au moins un média.',
+  'Each evidence must include at least one media item before review':
+    'Chaque preuve doit contenir au moins un média avant la revue.',
   'Watcher evidence media must have category set by the journalist before review':
     'Le média de preuve de la vigie doit avoir une catégorie définie par le journaliste avant la revue.',
   'Watcher evidence media must have justification set by the journalist before review':
