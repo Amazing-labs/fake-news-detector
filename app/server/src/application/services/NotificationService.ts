@@ -1,4 +1,5 @@
 /**
+ * @module
  * Application service for the per-actor notification inbox. Controllers delegate
  * here, so the interface layer never touches the repository directly.
  */

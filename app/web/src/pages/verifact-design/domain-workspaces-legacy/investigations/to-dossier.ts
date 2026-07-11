@@ -1,4 +1,5 @@
 /**
+ * @module
  * Adapts the enriched investigation read models into the dossier view props.
  * Enum-like fields arrive as plain strings from the API, so they are validated
  * against the entity schemas here — the single API→UI boundary — rather than

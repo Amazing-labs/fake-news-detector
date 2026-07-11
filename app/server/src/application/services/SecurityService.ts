@@ -1,4 +1,5 @@
 /**
+ * @module
  * Authentication adapter contract and deterministic role/action policy. Real
  * token verification is delegated to an injected adapter; this service is
  * concerned with policy enforcement.
