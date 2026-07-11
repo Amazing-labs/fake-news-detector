@@ -1,73 +1,59 @@
-# React + TypeScript + Vite
+# Web — Fake News Detector SPA
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React 19 single-page app built with Vite and a Feature-Sliced Design layout. See
+the root [`README.md`](../../README.md) for the project overview and
+[`doc/art-direction.md`](../../doc/art-direction.md) for the visual identity.
 
-Currently, two official plugins are available:
+## Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React 19** with **TanStack Router** (file-based routes) and **TanStack Query** (server state)
+- **Zustand** for client state
+- **Tailwind v4** + **shadcn/ui** (Radix) components, **sonner** for toasts
+- **better-auth** React client, **Zod v4** for validation
+- **Vite** dev server and build
 
-## React Compiler
+## Layout (Feature-Sliced Design)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
-
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+src/
+  routes/     TanStack Router file-based routes
+  pages/      Page-level components
+  features/   Self-contained feature forms (create-report, auth, …)
+  entities/   Domain entity API calls + Zustand stores + Zod schemas
+  shared/api/ Base HTTP client and React Query setup
+  shared/ui/  shadcn/ui component library
+  lib/        auth-client, auth-config
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+Conventions worth knowing:
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+- Client-side Zod schemas in `entities/<name>/schemas.ts` **mirror the server**
+  for every enum/union field (verdicts, statuses, media types, …). Never type a
+  constrained field as a plain `string`; derive TS types with `z.infer<>`.
+- `entities/` must not import from `pages/`. Fixture data belongs in
+  `entities/<name>/fixtures.ts`.
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Getting started
+
+```bash
+bun install
+cp .env.example .env   # Supabase + auth/API base URLs — see the file
+bun run dev            # Vite dev server
 ```
+
+The dev server proxies API calls to the backend; set `VITE_SERVER_PROXY_TARGET`
+in `.env` to point at your running server.
+
+## Scripts
+
+```bash
+bun run dev      # Vite dev server
+bun run build    # vite build + tsc -b typecheck
+bun run preview  # preview the production build locally
+bun run test     # bun test
+bun run lint     # ESLint
+```
+
+## Deployment
+
+Vercel (`@vercel/analytics` in use).
