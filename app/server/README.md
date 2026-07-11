@@ -80,4 +80,4 @@ with check (
 ## Deployment
 
 Cloudflare Workers via `wrangler.jsonc` at the repo root (entry
-`src/index.ts`).
+`app/server/src/index.ts`).

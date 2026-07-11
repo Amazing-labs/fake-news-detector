@@ -1,9 +1,10 @@
 # API Reference
 
-All routes are served under `/api`. Unless noted otherwise, a request must carry
-a valid better-auth session. Endpoints that enforce a role capability list the
-required permission (see the permission matrix in
-[`ddd-summary.md`](ddd-summary.md)).
+All routes are served under `/api`. Every route requires a valid better-auth
+session; the **Permission** column lists the additional role capability enforced
+by the route middleware (`auth` means an authenticated session is sufficient).
+See the permission matrix in [`ddd-summary.md`](ddd-summary.md) for how
+capabilities map to roles.
 
 ## Authentication — `/api/auth/*`
 
@@ -11,78 +12,113 @@ Handled by better-auth (`GET` and `POST /api/auth/*`): sign-up, sign-in,
 sign-out, session. The session carries the custom fields `actorId`, `actorRole`,
 `actorStatus`, and `citizenType`.
 
-## Reports
+## Reports — `/api/reports`
 
-| Method & path        | Permission      | Description         |
-| -------------------- | --------------- | ------------------- |
-| `GET /api/reports/`  | auth            | List reports        |
-| `POST /api/reports/` | `report.submit` | Submit a new report |
+| Method & path           | Permission      | Description           |
+| ----------------------- | --------------- | --------------------- |
+| `GET /`                 | auth            | List reports          |
+| `GET /{reportId}`       | auth            | Get a single report   |
+| `GET /{reportId}/media` | auth            | List a report's media |
+| `POST /`                | `report.submit` | Submit a new report   |
 
-## Inbox subjects
+## Inbox subjects — `/api/inbox-subjects`
 
-| Method & path                                   | Permission     | Description                                           |
-| ----------------------------------------------- | -------------- | ----------------------------------------------------- |
-| `GET /api/inbox-subjects/`                      | auth           | List inbox subjects                                   |
-| `GET /api/inbox-subjects/report-inbox`          | `report.pick`  | List open reports for journalists                     |
-| `POST /api/inbox-subjects/`                     | `inbox.manage` | Create a director-initiated subject                   |
-| `POST /api/inbox-subjects/:inboxSubjectId/pick` | `report.pick`  | Journalist picks a subject and opens an investigation |
-| `DELETE /api/inbox-subjects/:inboxSubjectId`    | `inbox.manage` | Delete a subject (server also purges its media)       |
+| Method & path                 | Permission     | Description                                           |
+| ----------------------------- | -------------- | ----------------------------------------------------- |
+| `GET /`                       | `inbox.read`   | List inbox subjects                                   |
+| `GET /report-inbox`           | `report.pick`  | List open reports for journalists                     |
+| `GET /{inboxSubjectId}`       | `inbox.read`   | Get a single inbox subject                            |
+| `GET /{inboxSubjectId}/media` | `inbox.read`   | List an inbox subject's media                         |
+| `POST /`                      | `inbox.manage` | Create a director-initiated subject                   |
+| `POST /{inboxSubjectId}/pick` | `report.pick`  | Journalist picks a subject and opens an investigation |
+| `DELETE /{inboxSubjectId}`    | `inbox.manage` | Delete a subject (server also purges its media)       |
 
-## Investigations
+## Investigations — `/api/investigations`
 
-| Method & path                                                                   | Permission                      | Description                            |
-| ------------------------------------------------------------------------------- | ------------------------------- | -------------------------------------- |
-| `GET /api/investigations/`                                                      | auth                            | List investigations                    |
-| `POST /api/investigations/:investigationId/review`                              | `investigation.submitForReview` | Submit for director review             |
-| `POST /api/investigations/:investigationId/source-media/:mediaId`               | `investigation.update`          | Classify a source media item           |
-| `POST /api/investigations/:investigationId/evidence/:evidenceId/media/:mediaId` | `investigation.update`          | Classify a watcher evidence media item |
-| `POST /api/investigations/:investigationId/proof-media`                         | `investigation.update`          | Add journalist proof media             |
-| `POST /api/investigations/:investigationId/evidence`                            | `evidence.submit`               | Submit watcher evidence                |
-| `POST /api/investigations/:investigationId/approve`                             | `investigation.approve`         | Approve → PUBLISHED                    |
-| `POST /api/investigations/:investigationId/reject`                              | `investigation.reject`          | Reject → NEEDS_REVISION or CANCELED    |
-| `POST /api/investigations/:investigationId/archive`                             | `investigation.archive`         | Archive an UNVERIFIABLE investigation  |
-| `POST /api/investigations/:investigationId/cancel`                              | `investigation.cancel`          | Cancel an investigation                |
+| Method & path                                                   | Permission                      | Description                                 |
+| --------------------------------------------------------------- | ------------------------------- | ------------------------------------------- |
+| `GET /`                                                         | auth                            | List investigations                         |
+| `GET /{investigationId}`                                        | auth                            | Get a single investigation                  |
+| `GET /{investigationId}/source-media`                           | auth                            | List the investigation's source media       |
+| `GET /{investigationId}/evidence`                               | auth                            | List the investigation's evidence           |
+| `POST /{investigationId}/review`                                | `investigation.submitForReview` | Submit for director review                  |
+| `POST /{investigationId}/draft`                                 | `investigation.update`          | Update the draft (category, verdict, notes) |
+| `POST /{investigationId}/source-media/{mediaId}`                | `investigation.update`          | Classify a source media item                |
+| `POST /{investigationId}/evidence/{evidenceId}/media/{mediaId}` | `investigation.update`          | Classify a watcher evidence media item      |
+| `POST /{investigationId}/proof-media`                           | `investigation.update`          | Add journalist proof media                  |
+| `POST /{investigationId}/evidence`                              | `evidence.submit`               | Submit watcher evidence                     |
+| `POST /{investigationId}/approve`                               | `investigation.approve`         | Approve → PUBLISHED                         |
+| `POST /{investigationId}/reject`                                | `investigation.reject`          | Reject → NEEDS_REVISION or CANCELED         |
+| `POST /{investigationId}/archive`                               | `investigation.archive`         | Archive an UNVERIFIABLE investigation       |
+| `POST /{investigationId}/cancel`                                | `investigation.cancel`          | Cancel an investigation                     |
 
-## Publications
+## Publications — `/api/publications`
 
-| Method & path                                       | Permission            | Description          |
-| --------------------------------------------------- | --------------------- | -------------------- |
-| `GET /api/publications/`                            | auth                  | List publications    |
-| `POST /api/publications/:publicationId/corrections` | `publication.correct` | Publish a correction |
+| Method & path                       | Permission            | Description                      |
+| ----------------------------------- | --------------------- | -------------------------------- |
+| `GET /`                             | auth                  | List publications                |
+| `GET /{publicationId}`              | auth                  | Get a single publication         |
+| `GET /{publicationId}/corrections`  | auth                  | List a publication's corrections |
+| `POST /{publicationId}/corrections` | `publication.correct` | Publish a correction             |
 
-## Watcher applications
+## Watcher applications — `/api/watcher-applications`
 
-| Method & path                                           | Permission                  | Description              |
-| ------------------------------------------------------- | --------------------------- | ------------------------ |
-| `GET /api/watcher-applications/`                        | `watcherApplication.decide` | List applications        |
-| `POST /api/watcher-applications/`                       | `watcher.apply`             | Apply for watcher status |
-| `POST /api/watcher-applications/:applicationId/approve` | `watcherApplication.decide` | Approve an application   |
-| `POST /api/watcher-applications/:applicationId/reject`  | `watcherApplication.decide` | Reject an application    |
+| Method & path                   | Permission                  | Description              |
+| ------------------------------- | --------------------------- | ------------------------ |
+| `GET /`                         | `watcherApplication.decide` | List applications        |
+| `GET /{applicationId}`          | `watcherApplication.decide` | Get a single application |
+| `POST /`                        | `watcher.apply`             | Apply for watcher status |
+| `POST /{applicationId}/approve` | `watcherApplication.decide` | Approve an application   |
+| `POST /{applicationId}/reject`  | `watcherApplication.decide` | Reject an application    |
 
-## Journalists & user management
+## Journalists — `/api/journalists`
 
-| Method & path                                  | Permission          | Description                 |
-| ---------------------------------------------- | ------------------- | --------------------------- |
-| `GET /api/journalists/`                        | `journalist.manage` | List journalists            |
-| `POST /api/journalists/`                       | `journalist.manage` | Create a journalist account |
-| `POST /api/journalists/:journalistId/ban`      | `journalist.manage` | Ban a journalist            |
-| `POST /api/journalists/:journalistId/disable`  | `journalist.manage` | Disable a journalist        |
-| `POST /api/journalists/:journalistId/activate` | `journalist.manage` | Activate a journalist       |
+| Method & path                   | Permission          | Description                 |
+| ------------------------------- | ------------------- | --------------------------- |
+| `GET /`                         | `journalist.manage` | List journalists            |
+| `POST /`                        | `journalist.manage` | Create a journalist account |
+| `POST /{journalistId}/ban`      | `journalist.manage` | Ban a journalist            |
+| `POST /{journalistId}/disable`  | `journalist.manage` | Disable a journalist        |
+| `POST /{journalistId}/activate` | `journalist.manage` | Activate a journalist       |
 
-## Director
+## Director — `/api/director`
 
-| Method & path                 | Permission                | Description              |
-| ----------------------------- | ------------------------- | ------------------------ |
-| `GET /api/director/dashboard` | `director.dashboard.read` | Director dashboard stats |
-| `GET /api/director/citizens`  | `journalist.manage`       | List citizens            |
+| Method & path                         | Permission                | Description               |
+| ------------------------------------- | ------------------------- | ------------------------- |
+| `GET /dashboard`                      | `director.dashboard.read` | Director dashboard stats  |
+| `GET /decisions`                      | `director.dashboard.read` | Director decision history |
+| `GET /citizens`                       | `citizen.manage`          | List citizens             |
+| `POST /citizens/{citizenId}/ban`      | `citizen.manage`          | Ban a citizen             |
+| `POST /citizens/{citizenId}/disable`  | `citizen.manage`          | Disable a citizen         |
+| `POST /citizens/{citizenId}/activate` | `citizen.manage`          | Activate a citizen        |
 
-## Notifications
+## Current actor — `/api/me`
 
-| Method & path                                  | Permission           | Description                            |
-| ---------------------------------------------- | -------------------- | -------------------------------------- |
-| `GET /api/notifications/`                      | `notifications.read` | List the current actor's notifications |
-| `POST /api/notifications/:notificationId/read` | `notifications.read` | Mark one as read                       |
-| `POST /api/notifications/read-all`             | `notifications.read` | Mark all as read                       |
+| Method & path        | Permission | Description                                |
+| -------------------- | ---------- | ------------------------------------------ |
+| `GET /`              | auth       | Get the current actor's profile            |
+| `GET /contributions` | auth       | Get the current actor's contribution stats |
+
+## Dashboard — `/api/dashboard`
+
+| Method & path  | Permission | Description                  |
+| -------------- | ---------- | ---------------------------- |
+| `GET /metrics` | auth       | Role-aware dashboard metrics |
+
+## Notifications — `/api/notifications`
+
+| Method & path                 | Permission           | Description                            |
+| ----------------------------- | -------------------- | -------------------------------------- |
+| `GET /`                       | `notifications.read` | List the current actor's notifications |
+| `POST /read-all`              | `notifications.read` | Mark all as read                       |
+| `POST /{notificationId}/read` | `notifications.read` | Mark one as read                       |
+
+## Media — `/api/media`
+
+| Method & path   | Permission      | Description                                   |
+| --------------- | --------------- | --------------------------------------------- |
+| `POST /cleanup` | auth            | Remove specified bucket objects               |
+| `POST /sweep`   | `storage.sweep` | Reconciliation sweep of orphaned bucket media |
 
 ## Health
 
