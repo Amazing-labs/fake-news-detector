@@ -1,4 +1,3 @@
-// domain/repositories/IReportRepository.ts
 import { Report, ReportStatus } from '../entities/Report'
 
 export interface IReportRepository {

@@ -1,5 +1,3 @@
-// domain/entities/Publication.ts
-
 import type { Verdict } from './Investigation'
 import { VerifiedLink, VerifiedMedia } from '../value-objects'
 

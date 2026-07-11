@@ -1,4 +1,3 @@
-// domain/factories/InvestigationFactory.ts
 import { Investigation } from '../entities/Investigation'
 import type { MediaCategory, Verdict } from '../entities/Investigation'
 import { randomUUID } from 'node:crypto'

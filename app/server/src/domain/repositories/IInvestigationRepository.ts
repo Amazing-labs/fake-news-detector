@@ -1,4 +1,3 @@
-// domain/repositories/IInvestigationRepository.ts
 import { Investigation } from '../entities/Investigation'
 import { Evidence } from '../entities/Evidence'
 

@@ -1,8 +1,9 @@
-// application/services/SecurityService.ts
-//
-// Authentication adapter contract + deterministic role/action policy.
-// Real token verification is delegated to an injected adapter; the service
-// itself is concerned with policy enforcement.
+/**
+ * @module
+ * Authentication adapter contract and deterministic role/action policy. Real
+ * token verification is delegated to an injected adapter; this service is
+ * concerned with policy enforcement.
+ */
 
 import { ActorRole } from '../../shared/types'
 import { BusinessRuleError } from '../../shared/errors'

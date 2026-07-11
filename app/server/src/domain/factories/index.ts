@@ -1,4 +1,3 @@
-// domain/factories/index.ts
 export { CitizenFactory } from './CitizenFactory'
 export { JournalistFactory } from './JournalistFactory'
 export { DirectorFactory } from './DirectorFactory'

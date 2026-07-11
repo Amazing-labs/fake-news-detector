@@ -1,5 +1,3 @@
-// application/services/ActorManagementService.ts
-//
 // Director-driven journalist and citizen lifecycle (create, ban, disable, activate).
 
 import {

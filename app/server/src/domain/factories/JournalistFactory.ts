@@ -1,4 +1,3 @@
-// domain/factories/JournalistFactory.ts
 import {
   Journalist,
   JournalistStatus,

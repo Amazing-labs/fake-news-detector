@@ -1,4 +1,3 @@
-// domain/factories/CorrectionFactory.ts
 import { Correction } from '../entities/Correction'
 import { randomUUID } from 'node:crypto'
 

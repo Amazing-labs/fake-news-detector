@@ -1,4 +1,3 @@
-// domain/factories/ReportFactory.ts
 import { Report, ReportStatus } from '../entities/Report'
 import { randomUUID } from 'node:crypto'
 

@@ -1,4 +1,3 @@
-// domain/value-objects/index.ts
 export type {
   MediaType,
   MediaCategory,

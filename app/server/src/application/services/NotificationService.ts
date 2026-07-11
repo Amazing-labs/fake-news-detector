@@ -1,7 +1,8 @@
-// application/services/NotificationService.ts
-//
-// Application service for the per-actor notification inbox. Controllers delegate
-// here so the interface layer never touches the repository directly.
+/**
+ * @module
+ * Application service for the per-actor notification inbox. Controllers delegate
+ * here, so the interface layer never touches the repository directly.
+ */
 
 import type { INotificationRepository } from '../../domain/repositories'
 import type { Notification } from '../../domain/entities/Notification'

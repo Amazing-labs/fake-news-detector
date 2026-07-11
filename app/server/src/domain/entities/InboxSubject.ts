@@ -1,5 +1,3 @@
-// domain/entities/InboxSubject.ts
-
 import { BusinessRuleError } from '../../shared/errors'
 
 export type InboxSubjectStatus = 'OPEN' | 'IN_PROGRESS' | 'ARCHIVED'

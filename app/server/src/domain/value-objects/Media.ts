@@ -1,5 +1,3 @@
-// domain/value-objects/Media.ts
-
 import { BusinessRuleError } from '../../shared'
 
 export type MediaType =

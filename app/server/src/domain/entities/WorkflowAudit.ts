@@ -1,5 +1,3 @@
-// domain/entities/WorkflowAudit.ts
-
 import type { InvestigationStatus } from './Investigation'
 
 export class WorkflowAudit {

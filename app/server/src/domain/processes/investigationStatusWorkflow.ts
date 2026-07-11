@@ -1,4 +1,3 @@
-// domain/processes/investigationStatusWorkflow.ts
 // Orchestrates investigation status transitions and WorkflowAudit records (director ↔ journalist).
 
 import { Director } from '../entities/Director'

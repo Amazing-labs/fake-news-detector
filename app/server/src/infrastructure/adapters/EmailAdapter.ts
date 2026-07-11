@@ -1,5 +1,3 @@
-// infrastructure/adapters/EmailAdapter.ts
-
 import { IEmailService } from '../../domain/interfaces/IEmailService'
 
 export class EmailAdapter implements IEmailService {

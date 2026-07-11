@@ -1,4 +1,3 @@
-// domain/processes/investigationReviewReadiness.ts
 // Pure validation: investigation + media ready for director review.
 
 import { Investigation } from '../entities/Investigation'

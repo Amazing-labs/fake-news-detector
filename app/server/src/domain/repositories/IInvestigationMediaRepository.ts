@@ -1,4 +1,3 @@
-// domain/repositories/IInvestigationMediaRepository.ts
 import type { InvestigationMedia } from '../value-objects/Media'
 
 export interface IInvestigationMediaRepository {

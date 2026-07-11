@@ -1,4 +1,3 @@
-// domain/repositories/IJournalistRepository.ts
 import type { Journalist } from '../entities/Journalist'
 
 export interface IJournalistRepository {

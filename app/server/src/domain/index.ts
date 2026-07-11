@@ -1,4 +1,3 @@
-// domain/index.ts
 // Entities (exports MediaCategory and Verdict)
 export * from './entities'
 

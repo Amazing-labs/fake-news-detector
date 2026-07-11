@@ -1,4 +1,3 @@
-// domain/entities/Journalist.ts
 // Bounded Context: Investigation Management
 
 import { Investigation } from './Investigation'

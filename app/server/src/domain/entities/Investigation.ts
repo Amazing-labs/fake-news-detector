@@ -1,4 +1,3 @@
-// domain/entities/Investigation.ts
 import { BusinessRuleError } from '../../shared/errors'
 import { MAX_REVISION_ATTEMPTS } from '../../shared/constants'
 

@@ -1,5 +1,3 @@
-// domain/entities/Report.ts
-
 export type ReportStatus = 'OPEN' | 'ARCHIVED'
 
 export class Report {

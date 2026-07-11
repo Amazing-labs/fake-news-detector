@@ -1,4 +1,3 @@
-// domain/repositories/ICorrectionRepository.ts
 import { Correction } from '../entities/Correction'
 
 export interface ICorrectionRepository {

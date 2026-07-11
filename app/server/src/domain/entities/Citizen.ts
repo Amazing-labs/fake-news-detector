@@ -1,4 +1,3 @@
-// domain/entities/Citizen.ts
 // Bounded Context: Citizen Management
 
 import { Report } from './Report'

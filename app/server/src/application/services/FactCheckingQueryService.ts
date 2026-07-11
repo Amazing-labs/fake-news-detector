@@ -1,9 +1,10 @@
-// application/services/FactCheckingQueryService.ts
-//
-// Read side of the fact-checking context: collection listings, single-resource
-// fetch-by-id / sub-resource reads, and the director dashboard aggregation.
-// Controllers delegate every read here so the interface layer stays transport
-// only and the not-found rules live in the application layer.
+/**
+ * @module
+ * Read side of the fact-checking context: collection listings, single-resource
+ * fetch-by-id / sub-resource reads, and the director dashboard aggregation.
+ * Controllers delegate every read here, so the interface layer stays
+ * transport-only and the not-found rules live in the application layer.
+ */
 
 import type {
   IAuthoritySourceRepository,

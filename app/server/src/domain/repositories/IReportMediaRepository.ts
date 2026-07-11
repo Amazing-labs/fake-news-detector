@@ -1,4 +1,3 @@
-// domain/repositories/IReportMediaRepository.ts
 import type { ReportMedia } from '../value-objects/Media'
 import type { MediaType } from '../value-objects'
 

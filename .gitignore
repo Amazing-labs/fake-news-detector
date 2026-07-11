@@ -37,6 +37,7 @@ app/web/src/routeTree.gen.ts
 !.agents/skills/
 !.agents/skills/**
 skills-lock.json
+.codex
 
 # IntelliJ based IDEs
 .idea

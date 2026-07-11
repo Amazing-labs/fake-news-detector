@@ -1,4 +1,3 @@
-// domain/repositories/IAuthoritySourceRepository.ts
 import { AuthoritySource, type SourceType } from '../entities/AuthoritySource'
 
 export interface IAuthoritySourceRepository {
