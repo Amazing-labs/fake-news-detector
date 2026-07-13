@@ -1,4 +1,6 @@
-import type { ComponentType, ReactNode } from 'react'
+import type { ComponentType } from 'react'
+import { AlertTriangle } from 'lucide-react'
+import { toApiErrorMessage } from '@shared/api/http'
 import { cn } from '@shared/lib/utils'
 import { Badge } from '@shared/ui/shadcn/badge'
 import {
@@ -9,37 +11,43 @@ import {
 } from '@shared/ui/shadcn/card'
 import { domainLabel } from './workspace-labels'
 
-// Consistent page-level header: title, optional context line and trailing
-// actions. Frames every workspace so pages share one premium masthead.
-export function PageHeader({
-  title,
-  description,
-  actions,
-}: {
-  title: string
-  description?: string
-  actions?: ReactNode
-}) {
-  return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-      <div className="min-w-0">
-        <h1 className="text-2xl font-semibold tracking-tight text-balance">
-          {title}
-        </h1>
-        {description ? (
-          <p className="text-muted-foreground mt-1.5 max-w-2xl leading-relaxed text-pretty">
-            {description}
-          </p>
-        ) : null}
-      </div>
-      {actions ? (
-        <div className="flex flex-wrap items-center gap-2">{actions}</div>
-      ) : null}
-    </div>
-  )
-}
+const STATUS_PILL = 'h-6 rounded-full border-transparent px-2.5 font-medium'
 
-const STATUS_PILL = 'h-6 rounded-full px-2.5 font-medium'
+// One tone per meaning, so a colour says the same thing everywhere it appears:
+// where the work stands, not which enum it came from.
+const TONE = {
+  idle: '', // keeps the neutral `secondary` pill: nothing is expected yet
+  active: 'bg-blue-500/15 text-blue-700 dark:text-blue-400',
+  waiting: 'bg-amber-500/15 text-amber-700 dark:text-amber-400',
+  rework: 'bg-rose-500/15 text-rose-700 dark:text-rose-400',
+  done: 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
+  refused: 'bg-red-500/15 text-red-700 dark:text-red-400',
+  closed: 'bg-muted text-muted-foreground',
+} as const
+
+const STATUS_TONE: Record<string, keyof typeof TONE> = {
+  // Lifecycle: OPEN → IN_PROGRESS → PENDING_REVIEW → PUBLISHED | NEEDS_REVISION
+  OPEN: 'idle',
+  IN_PROGRESS: 'active',
+  PENDING: 'waiting',
+  PENDING_REVIEW: 'waiting',
+  NEEDS_REVISION: 'rework',
+  PUBLISHED: 'done',
+  ARCHIVED: 'closed',
+  ARCHIVED_PUBLICATION: 'closed',
+  CANCELED: 'refused',
+  // Accounts and watcher applications
+  ACTIVE: 'done',
+  APPROVED: 'done',
+  REJECTED: 'refused',
+  DISABLED: 'closed',
+  BANNED: 'refused',
+  // Verdicts
+  TRUE: 'done',
+  FALSE: 'refused',
+  MISLEADING: 'waiting',
+  UNVERIFIABLE: 'idle',
+}
 
 export function StatusBadge({
   status,
@@ -48,44 +56,13 @@ export function StatusBadge({
   status: string
   className?: string
 }) {
-  // Verified / healthy states carry the emerald "verified" accent used across
-  // the product; pending is neutral, terminal-negative is destructive.
-  if (status === 'PUBLISHED' || status === 'APPROVED' || status === 'ACTIVE') {
-    return (
-      <Badge
-        className={cn(
-          STATUS_PILL,
-          'border-transparent bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
-          className,
-        )}
-      >
-        {domainLabel(status)}
-      </Badge>
-    )
-  }
-
-  if (
-    status === 'PENDING' ||
-    status === 'OPEN' ||
-    status === 'PENDING_REVIEW'
-  ) {
-    return (
-      <Badge variant="secondary" className={cn(STATUS_PILL, className)}>
-        {domainLabel(status)}
-      </Badge>
-    )
-  }
-
-  if (status === 'DISABLED' || status === 'REJECTED') {
-    return (
-      <Badge variant="destructive" className={cn(STATUS_PILL, className)}>
-        {domainLabel(status)}
-      </Badge>
-    )
-  }
+  const tone = STATUS_TONE[status]
 
   return (
-    <Badge variant="outline" className={cn(STATUS_PILL, className)}>
+    <Badge
+      variant="secondary"
+      className={cn(STATUS_PILL, tone ? TONE[tone] : '', className)}
+    >
       {domainLabel(status)}
     </Badge>
   )
@@ -131,6 +108,37 @@ export function EmptyState({
           {description}
         </p>
       ) : null}
+    </div>
+  )
+}
+
+// Failed fetches read as a state of the panel, like EmptyState — never as a bare
+// red sentence. The destructive tone is carried by the icon and the frame so the
+// message itself keeps full contrast.
+export function ErrorState({
+  error,
+  className,
+}: {
+  error: unknown
+  className?: string
+}) {
+  return (
+    <div
+      role="alert"
+      className={cn(
+        'border-destructive/30 bg-destructive/5 flex flex-col items-center justify-center rounded-xl border border-dashed p-10 text-center',
+        className,
+      )}
+    >
+      <span className="bg-destructive/10 text-destructive mb-4 grid size-12 place-items-center rounded-full">
+        <AlertTriangle className="size-6" />
+      </span>
+      <p className="font-medium tracking-tight text-balance">
+        Chargement impossible
+      </p>
+      <p className="text-muted-foreground mt-1.5 max-w-sm text-sm leading-relaxed text-pretty">
+        {toApiErrorMessage(error)}
+      </p>
     </div>
   )
 }

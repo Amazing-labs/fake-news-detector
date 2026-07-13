@@ -16,10 +16,7 @@ import {
 } from '@entities/investigation/api'
 import { listReports, reportQueryKeys } from '@entities/report/api'
 import { useAppSession } from '@entities/session/model'
-import { toApiErrorMessage } from '@shared/api/http'
-import { cn } from '@shared/lib/utils'
 import { LoadingRow } from '@shared/ui/loader'
-import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
@@ -37,8 +34,8 @@ import {
   TableHeader,
   TableRow,
 } from '@shared/ui/shadcn/table'
-import { domainLabel } from './workspace-labels'
 import type { Actor } from './types'
+import { ErrorState, StatusBadge } from './workspace-ui'
 
 // A normalized, display-ready history row. `link` is a discriminated union so
 // the TanStack Router <Link> stays type-safe across the report/investigation
@@ -70,39 +67,6 @@ function formatHistoryDate(iso: string): string {
       })
 }
 
-// Maps a decision's resulting investigation status to a coloured badge. Other
-// roles render a neutral badge with the humanized status label.
-const DECISION_STYLE: Record<string, string> = {
-  PUBLISHED: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  NEEDS_REVISION: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
-  ARCHIVED: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20',
-  CANCELED: 'bg-red-500/10 text-red-400 border-red-500/20',
-  PENDING_REVIEW: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-}
-
-function StatusCell({
-  status,
-  kind,
-}: {
-  status: string
-  kind: 'decision' | 'plain'
-}) {
-  if (kind === 'decision') {
-    return (
-      <span
-        className={cn(
-          'inline-flex items-center rounded-md border px-2 py-0.5 text-xs font-medium',
-          DECISION_STYLE[status] ??
-            'bg-muted text-muted-foreground border-transparent',
-        )}
-      >
-        {domainLabel(status)}
-      </span>
-    )
-  }
-  return <Badge variant="secondary">{domainLabel(status)}</Badge>
-}
-
 function DetailLink({ link, label }: { link: HistoryLink; label: string }) {
   return (
     <Button
@@ -130,7 +94,6 @@ function HistoryTableCard(props: {
   title: string
   description: string
   contextLabel: string
-  statusKind: 'decision' | 'plain'
   isPending: boolean
   isError: boolean
   error: unknown
@@ -146,54 +109,64 @@ function HistoryTableCard(props: {
         {props.action ? <CardAction>{props.action}</CardAction> : null}
       </CardHeader>
       <CardContent>
-        {props.isPending ? (
-          <LoadingRow />
-        ) : props.isError ? (
-          <p className="text-sm text-red-400">
-            {toApiErrorMessage(props.error)}
-          </p>
-        ) : props.rows.length === 0 ? (
-          <p className="text-muted-foreground text-sm">{props.emptyLabel}</p>
-        ) : (
-          <Table>
-            <TableHeader>
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Dossier</TableHead>
+              <TableHead>{props.contextLabel}</TableHead>
+              <TableHead>Statut</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead className="text-right">Détails</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {props.isPending ? (
               <TableRow>
-                <TableHead>Dossier</TableHead>
-                <TableHead>{props.contextLabel}</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead className="text-right">Détails</TableHead>
+                <TableCell colSpan={5}>
+                  <LoadingRow />
+                </TableCell>
               </TableRow>
-            </TableHeader>
-            <TableBody>
-              {props.rows.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell
-                    className="max-w-[16rem] truncate font-medium"
-                    title={row.title}
-                  >
-                    {row.title}
-                  </TableCell>
-                  <TableCell
-                    className="text-muted-foreground max-w-xs truncate"
-                    title={row.context}
-                  >
-                    {row.context}
-                  </TableCell>
-                  <TableCell>
-                    <StatusCell status={row.status} kind={props.statusKind} />
-                  </TableCell>
-                  <TableCell className="text-muted-foreground">
-                    {row.date}
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <DetailLink link={row.link} label={`Voir ${row.title}`} />
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
+            ) : props.isError ? (
+              <TableRow>
+                <TableCell colSpan={5} className="p-0">
+                  <ErrorState
+                    error={props.error}
+                    className="border-0 bg-transparent"
+                  />
+                </TableCell>
+              </TableRow>
+            ) : props.rows.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5}>{props.emptyLabel}</TableCell>
+              </TableRow>
+            ) : null}
+            {props.rows.map((row) => (
+              <TableRow key={row.id}>
+                <TableCell
+                  className="max-w-[16rem] truncate font-medium"
+                  title={row.title}
+                >
+                  {row.title}
+                </TableCell>
+                <TableCell
+                  className="text-muted-foreground max-w-xs truncate"
+                  title={row.context}
+                >
+                  {row.context}
+                </TableCell>
+                <TableCell>
+                  <StatusBadge status={row.status} />
+                </TableCell>
+                <TableCell className="text-muted-foreground">
+                  {row.date}
+                </TableCell>
+                <TableCell className="text-right">
+                  <DetailLink link={row.link} label={`Voir ${row.title}`} />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </CardContent>
     </Card>
   )
@@ -226,12 +199,11 @@ function DirectorHistory(props: {
       title={props.title}
       description={props.description}
       contextLabel="Motif"
-      statusKind="decision"
       isPending={query.isPending}
       isError={query.isError}
       error={query.error}
       rows={rows}
-      emptyLabel="Aucune décision pour l'instant."
+      emptyLabel="Aucune décision pour l'instant"
       action={props.action}
     />
   )
@@ -267,12 +239,11 @@ function JournalistHistory(props: {
       title={props.title}
       description={props.description}
       contextLabel="Sujet"
-      statusKind="plain"
       isPending={query.isPending || !journalistId}
       isError={query.isError}
       error={query.error}
       rows={rows}
-      emptyLabel="Aucune enquête pour l'instant."
+      emptyLabel="Aucune enquête pour l'instant"
       action={props.action}
     />
   )
@@ -302,7 +273,6 @@ function ReportsHistory(props: {
       title={props.title}
       description={props.description}
       contextLabel="Thème"
-      statusKind="plain"
       isPending={query.isPending}
       isError={query.isError}
       error={query.error}
@@ -335,12 +305,11 @@ function ContributionsHistory(props: { title: string; description: string }) {
       title={props.title}
       description={props.description}
       contextLabel="Enquête"
-      statusKind="plain"
       isPending={query.isPending}
       isError={query.isError}
       error={query.error}
       rows={rows}
-      emptyLabel="Aucune contribution pour l'instant."
+      emptyLabel="Aucune contribution pour l'instant"
     />
   )
 }
@@ -391,7 +360,7 @@ export function WorkTable(props: {
         <ReportsHistory
           title="Historique des signalements"
           description="Signalements envoyés avant ou pendant le rôle vigie."
-          emptyLabel="Aucun signalement pour l'instant."
+          emptyLabel="Aucun signalement pour l'instant"
         />
       </div>
     )
@@ -404,7 +373,7 @@ export function WorkTable(props: {
         props.description ??
         'Signalements envoyés au desk et suivi éditorial associé.'
       }
-      emptyLabel="Aucun signalement pour l'instant."
+      emptyLabel="Aucun signalement pour l'instant"
     />
   )
 }

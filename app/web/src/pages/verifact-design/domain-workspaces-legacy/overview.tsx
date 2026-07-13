@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   ExternalLink,
   FileSearch,
+  Megaphone,
   Paperclip,
   PenLine,
   RotateCcw,
@@ -38,8 +39,8 @@ import { useResolvedActor } from '../session-routing'
 import { domainLabel } from '../workspace-labels'
 import {
   EmptyState,
+  ErrorState,
   MetaCell,
-  PageHeader,
   StatCard,
   StatusBadge,
 } from '../workspace-ui'
@@ -128,11 +129,6 @@ export function JournalistWorkspacePage() {
 
   return (
     <AppLayout actor="journalist" page="dashboard">
-      <PageHeader
-        title="Espace journaliste"
-        description="Reprenez votre dossier en cours, classez les médias et soumettez vos enquêtes à la revue."
-      />
-
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
           title="Dossier courant"
@@ -272,11 +268,7 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
   if (reportQuery.isError) {
     return (
       <AppLayout actor={actor} page="reports">
-        <Card>
-          <CardContent className="text-destructive pt-6">
-            {toApiErrorMessage(reportQuery.error)}
-          </CardContent>
-        </Card>
+        <ErrorState error={reportQuery.error} />
       </AppLayout>
     )
   }
@@ -362,11 +354,7 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
           {mediaQuery.isPending ? (
             <PageLoader label="Chargement des médias…" />
           ) : mediaQuery.isError ? (
-            <Card>
-              <CardContent className="text-destructive pt-6">
-                {toApiErrorMessage(mediaQuery.error)}
-              </CardContent>
-            </Card>
+            <ErrorState error={mediaQuery.error} />
           ) : media.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2">
               {media.map((item) => (
@@ -431,11 +419,6 @@ export function CitizenDashboardPage() {
 
   return (
     <AppLayout actor="citizen" page="dashboard">
-      <PageHeader
-        title="Mon espace citoyen"
-        description="Suivez vos signalements, les retours de la rédaction et les corrections publiées."
-      />
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Signalements actifs"
@@ -473,9 +456,11 @@ export function CitizenDashboardPage() {
           </CardHeader>
           <CardContent className="grid gap-3">
             {recentPublications.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                Aucun retour public pour le moment.
-              </p>
+              <EmptyState
+                icon={Megaphone}
+                title="Aucun retour public"
+                description="Les publications et correctifs liés à vos signalements vérifiés apparaîtront ici."
+              />
             ) : null}
             {recentPublications.map((item) => (
               <div
@@ -486,9 +471,9 @@ export function CitizenDashboardPage() {
                   <p className="truncate font-medium">
                     {item.title ?? 'Publication sans titre'}
                   </p>
-                  <p className="text-muted-foreground mt-1 text-sm">
-                    Verdict: {domainLabel(item.finalVerdict)}
-                  </p>
+                  <div className="mt-2">
+                    <StatusBadge status={item.finalVerdict} />
+                  </div>
                 </div>
                 <Button
                   variant="ghost"
@@ -524,11 +509,6 @@ export function WatcherWorkspacePage() {
 
   return (
     <AppLayout actor="watcher" page="dashboard">
-      <PageHeader
-        title="Espace vigie"
-        description="Suivez les enquêtes ouvertes à contribution et apportez des preuves qualifiées."
-      />
-
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
           title="Enquêtes suivies"
@@ -560,9 +540,11 @@ export function WatcherWorkspacePage() {
         </CardHeader>
         <CardContent className="space-y-3">
           {enrichable.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
-              Aucune enquête à enrichir pour le moment.
-            </p>
+            <EmptyState
+              icon={FileSearch}
+              title="Aucune enquête à enrichir"
+              description="Les enquêtes ouvertes à contribution apparaîtront ici."
+            />
           ) : null}
           {enrichable.map((item) => (
             <Link

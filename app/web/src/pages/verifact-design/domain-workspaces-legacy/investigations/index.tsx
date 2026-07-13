@@ -1,16 +1,14 @@
 import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { RotateCcw } from 'lucide-react'
+import { FileSearch, RotateCcw } from 'lucide-react'
 import {
   getInvestigation,
   getInvestigationEvidence,
   getInvestigationSourceMedia,
   investigationQueryKeys,
 } from '@entities/investigation/api'
-import { toApiErrorMessage } from '@shared/api/http'
 import { PageLoader } from '@shared/ui/loader'
 import { Button } from '@shared/ui/shadcn/button'
-import { Card, CardContent } from '@shared/ui/shadcn/card'
 import {
   Tabs,
   TabsContent,
@@ -19,6 +17,7 @@ import {
 } from '@shared/ui/shadcn/tabs'
 import { AppLayout } from '../../app-layout'
 import { useResolvedActor } from '../../session-routing'
+import { EmptyState, ErrorState } from '../../workspace-ui'
 import { DirectorInvestigationWorkspace } from './director-workspace'
 import { InvestigationList } from './investigation-list'
 import { JournalistInvestigationWorkspace } from './journalist-workspace'
@@ -103,11 +102,11 @@ export function InvestigationDetailWorkspacePage({
   if (!id) {
     return (
       <AppLayout actor={actor} page="investigations">
-        <Card>
-          <CardContent className="text-muted-foreground pt-6">
-            Aucun dossier sélectionné.
-          </CardContent>
-        </Card>
+        <EmptyState
+          icon={FileSearch}
+          title="Aucun dossier sélectionné"
+          description="Choisissez une enquête dans la liste pour ouvrir son dossier."
+        />
       </AppLayout>
     )
   }
@@ -129,11 +128,7 @@ export function InvestigationDetailWorkspacePage({
     return (
       <AppLayout actor={actor} page="investigations">
         {error ? (
-          <Card>
-            <CardContent className="text-destructive pt-6">
-              {toApiErrorMessage(error)}
-            </CardContent>
-          </Card>
+          <ErrorState error={error} />
         ) : (
           <PageLoader label="Chargement du dossier…" />
         )}

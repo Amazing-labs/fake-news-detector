@@ -1,5 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { FileSearch } from 'lucide-react'
 import { PageLoader } from '@shared/ui/loader'
 import { Button } from '@shared/ui/shadcn/button'
 import {
@@ -14,8 +15,7 @@ import {
   listInvestigations,
   type InvestigationScope,
 } from '@entities/investigation/api'
-import { toApiErrorMessage } from '@shared/api/http'
-import { StatusBadge } from '../../workspace-ui'
+import { EmptyState, ErrorState, StatusBadge } from '../../workspace-ui'
 
 const STATUS_TO_SCOPE: Record<string, InvestigationScope> = {
   PENDING_REVIEW: 'pending-review',
@@ -72,20 +72,15 @@ export function InvestigationList({ status }: { status: string }) {
             </div>
           ))
         ) : investigationsQuery.isError ? (
-          <div className="rounded-lg border border-dashed p-8 text-center">
-            <p className="text-destructive font-medium">
-              {toApiErrorMessage(investigationsQuery.error)}
-            </p>
-          </div>
+          <ErrorState error={investigationsQuery.error} />
         ) : investigationsQuery.isPending ? (
           <PageLoader label="Chargement des enquêtes…" />
         ) : (
-          <div className="rounded-lg border border-dashed p-8 text-center">
-            <p className="font-medium">Aucun dossier pour ce filtre</p>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Les enquêtes apparaîtront ici quand leur statut changera.
-            </p>
-          </div>
+          <EmptyState
+            icon={FileSearch}
+            title="Aucun dossier pour ce filtre"
+            description="Les enquêtes apparaîtront ici quand leur statut changera."
+          />
         )}
       </CardContent>
     </Card>

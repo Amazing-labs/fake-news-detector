@@ -20,7 +20,6 @@ import {
   listWatcherApplications,
   watcherApplicationQueryKeys,
 } from '@entities/watcher-application/api'
-import { toApiErrorMessage } from '@shared/api/http'
 import { LoadingRow } from '@shared/ui/loader'
 import { Button } from '@shared/ui/shadcn/button'
 import {
@@ -39,8 +38,7 @@ import {
   TableRow,
 } from '@shared/ui/shadcn/table'
 import { AppLayout } from '../app-layout'
-import { domainLabel } from '../workspace-labels'
-import { PageHeader, StatCard, StatusBadge } from '../workspace-ui'
+import { ErrorState, StatCard, StatusBadge } from '../workspace-ui'
 
 export function DirectorHomePage() {
   const pendingReviewsQuery = useQuery({
@@ -67,27 +65,6 @@ export function DirectorHomePage() {
 
   return (
     <AppLayout actor="director" page="dashboard">
-      <PageHeader
-        title="Desk direction"
-        description="Arbitrez les enquêtes en revue, suivez la file éditoriale et statuez sur les candidatures vigies."
-        actions={
-          <>
-            <Button asChild variant="outline">
-              <Link to="/inbox-subjects/create">
-                <FilePlus2 />
-                Nouveau sujet
-              </Link>
-            </Button>
-            <Button asChild variant="outline">
-              <Link to="/watcher-applications">
-                <UserCheck />
-                Candidatures
-              </Link>
-            </Button>
-          </>
-        }
-      />
-
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="À arbitrer"
@@ -115,6 +92,21 @@ export function DirectorHomePage() {
         />
       </div>
 
+      <div className="flex flex-wrap items-center gap-2">
+        <Button asChild>
+          <Link to="/inbox-subjects/create">
+            <FilePlus2 />
+            Nouveau sujet
+          </Link>
+        </Button>
+        <Button asChild variant="outline">
+          <Link to="/watcher-applications">
+            <UserCheck />
+            Candidatures
+          </Link>
+        </Button>
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle>Revue des enquêtes</CardTitle>
@@ -140,16 +132,16 @@ export function DirectorHomePage() {
                     <LoadingRow label="Chargement des enquêtes…" />
                   </TableCell>
                 </TableRow>
-              ) : null}
-              {pendingReviewsQuery.isError ? (
+              ) : pendingReviewsQuery.isError ? (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-destructive">
-                    {toApiErrorMessage(pendingReviewsQuery.error)}
+                  <TableCell colSpan={4} className="p-0">
+                    <ErrorState
+                      error={pendingReviewsQuery.error}
+                      className="border-0 bg-transparent"
+                    />
                   </TableCell>
                 </TableRow>
-              ) : null}
-              {!pendingReviewsQuery.isPending &&
-              pendingInvestigations.length === 0 ? (
+              ) : pendingInvestigations.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={4}>
                     Aucune enquête en revue direction.
@@ -165,7 +157,11 @@ export function DirectorHomePage() {
                     {item.title ?? 'Sujet sans titre'}
                   </TableCell>
                   <TableCell>
-                    {item.draftVerdict ? domainLabel(item.draftVerdict) : '-'}
+                    {item.draftVerdict ? (
+                      <StatusBadge status={item.draftVerdict} />
+                    ) : (
+                      <span className="text-muted-foreground">—</span>
+                    )}
                   </TableCell>
                   <TableCell>
                     <StatusBadge status={item.status} />

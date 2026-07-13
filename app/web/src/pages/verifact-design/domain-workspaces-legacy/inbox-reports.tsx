@@ -1,7 +1,14 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { ExternalLink, FilePlus2, Trash2 } from 'lucide-react'
+import {
+  ExternalLink,
+  FilePlus2,
+  FileSearch,
+  Inbox,
+  Paperclip,
+  Trash2,
+} from 'lucide-react'
 import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
@@ -35,7 +42,7 @@ import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { toApiErrorMessage } from '@shared/api/http'
 import { domainLabel } from '../workspace-labels'
-import { MetaCell, StatusBadge } from '../workspace-ui'
+import { EmptyState, MetaCell, StatusBadge } from '../workspace-ui'
 import { listReports, reportQueryKeys } from '@entities/report/api'
 import type { ReportItem } from '@entities/report/model'
 import {
@@ -245,12 +252,11 @@ function ReportList({ items }: { items: ReportItem[] }) {
             </div>
           ))
         ) : (
-          <div className="rounded-lg border border-dashed p-8 text-center">
-            <p className="font-medium">Aucun signalement ici</p>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Les signalements apparaîtront ici une fois déposés.
-            </p>
-          </div>
+          <EmptyState
+            icon={FileSearch}
+            title="Aucun signalement ici"
+            description="Les signalements apparaîtront ici une fois déposés."
+          />
         )}
       </CardContent>
     </Card>
@@ -430,12 +436,11 @@ function InboxList(props: {
             )
           })
         ) : (
-          <div className="rounded-lg border border-dashed p-8 text-center">
-            <p className="font-medium">Aucun sujet ici</p>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Les sujets apparaîtront ici une fois créés ou reçus.
-            </p>
-          </div>
+          <EmptyState
+            icon={Inbox}
+            title="Aucun sujet ici"
+            description="Les sujets apparaîtront ici une fois créés ou reçus."
+          />
         )}
       </CardContent>
     </Card>
@@ -568,12 +573,11 @@ export function InboxSubjectDetailWorkspacePage({
               ))}
             </div>
           ) : (
-            <div className="rounded-lg border border-dashed p-8 text-center">
-              <p className="font-medium">Aucun média joint</p>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Le créateur du sujet n'a pas joint de média.
-              </p>
-            </div>
+            <EmptyState
+              icon={Paperclip}
+              title="Aucun média joint"
+              description="Le créateur du sujet n'a pas joint de média."
+            />
           )}
         </TabsContent>
       </Tabs>

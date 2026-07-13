@@ -1,7 +1,8 @@
 import { useState, type ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { UserPlus } from 'lucide-react'
+import { toast } from 'sonner'
+import { UserPlus, Users } from 'lucide-react'
 import {
   activateCitizen,
   banCitizen,
@@ -45,7 +46,7 @@ import {
 } from '@shared/ui/shadcn/tabs'
 import { LoadingRow } from '@shared/ui/loader'
 import { AppLayout } from '../app-layout'
-import { StatusBadge } from '../workspace-ui'
+import { EmptyState, ErrorState, StatusBadge } from '../workspace-ui'
 
 // Mirrors the server journalistStatusReasonSchema / citizenManagementSchema.
 type StatusReason =
@@ -251,6 +252,10 @@ function JournalistsList() {
       void queryClient.invalidateQueries({ queryKey: journalistQueryKeys.all })
       setPending(null)
     },
+    // The dialog renders its own error; direct actions have nowhere to show one.
+    onError: (error) => {
+      if (!pending) toast.error(toApiErrorMessage(error))
+    },
   })
   const rows = journalistsQuery.data?.items ?? []
 
@@ -258,18 +263,14 @@ function JournalistsList() {
     <PeopleCard>
       {journalistsQuery.isPending ? (
         <LoadingRow label="Chargement des journalistes…" />
-      ) : null}
-      {journalistsQuery.isError ? (
-        <p className="text-destructive text-sm">
-          {toApiErrorMessage(journalistsQuery.error)}
-        </p>
-      ) : null}
-      {!journalistsQuery.isPending &&
-      !journalistsQuery.isError &&
-      rows.length === 0 ? (
-        <p className="text-muted-foreground text-sm">
-          Aucun journaliste provisionné.
-        </p>
+      ) : journalistsQuery.isError ? (
+        <ErrorState error={journalistsQuery.error} />
+      ) : rows.length === 0 ? (
+        <EmptyState
+          icon={UserPlus}
+          title="Aucun journaliste provisionné"
+          description="Créez un compte journaliste pour lui confier des dossiers."
+        />
       ) : null}
       {rows.map((journalist) => (
         <div
@@ -337,11 +338,6 @@ function JournalistsList() {
           </div>
         </div>
       ))}
-      {statusMutation.isError && pending === null ? (
-        <p className="text-destructive text-sm">
-          {toApiErrorMessage(statusMutation.error)}
-        </p>
-      ) : null}
       <StatusReasonDialog
         pending={pending}
         isPending={statusMutation.isPending}
@@ -392,14 +388,15 @@ function CitizensList({ watcherOnly = false }: { watcherOnly?: boolean }) {
       void queryClient.invalidateQueries({ queryKey: citizenQueryKeys.all })
       setPending(null)
     },
+    // The dialog renders its own error; direct actions have nowhere to show one.
+    onError: (error) => {
+      if (!pending) toast.error(toApiErrorMessage(error))
+    },
   })
   const allRows = citizensQuery.data?.items ?? []
   const rows = watcherOnly
     ? allRows.filter((citizen) => citizen.citizenType === 'WATCHER')
     : allRows
-  const emptyLabel = watcherOnly
-    ? 'Aucune vigie pour le moment.'
-    : 'Aucun citoyen pour le moment.'
 
   return (
     <PeopleCard>
@@ -409,16 +406,22 @@ function CitizensList({ watcherOnly = false }: { watcherOnly?: boolean }) {
             watcherOnly ? 'Chargement des vigies…' : 'Chargement des citoyens…'
           }
         />
-      ) : null}
-      {citizensQuery.isError ? (
-        <p className="text-destructive text-sm">
-          {toApiErrorMessage(citizensQuery.error)}
-        </p>
-      ) : null}
-      {!citizensQuery.isPending &&
-      !citizensQuery.isError &&
-      rows.length === 0 ? (
-        <p className="text-muted-foreground text-sm">{emptyLabel}</p>
+      ) : citizensQuery.isError ? (
+        <ErrorState error={citizensQuery.error} />
+      ) : rows.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title={
+            watcherOnly
+              ? 'Aucune vigie pour le moment'
+              : 'Aucun citoyen inscrit'
+          }
+          description={
+            watcherOnly
+              ? 'Les citoyens dont la candidature vigie est approuvée apparaîtront ici.'
+              : 'Les comptes citoyens créés sur la plateforme apparaîtront ici.'
+          }
+        />
       ) : null}
       {rows.map((citizen) => (
         <div
@@ -486,11 +489,6 @@ function CitizensList({ watcherOnly = false }: { watcherOnly?: boolean }) {
           </div>
         </div>
       ))}
-      {statusMutation.isError && pending === null ? (
-        <p className="text-destructive text-sm">
-          {toApiErrorMessage(statusMutation.error)}
-        </p>
-      ) : null}
       <StatusReasonDialog
         pending={pending}
         isPending={statusMutation.isPending}

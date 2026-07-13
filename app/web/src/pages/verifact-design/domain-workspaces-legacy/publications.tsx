@@ -3,6 +3,8 @@ import {
   ExternalLink,
   FileSearch,
   Link2,
+  Megaphone,
+  Paperclip,
   RotateCcw,
   ShieldCheck,
 } from 'lucide-react'
@@ -31,7 +33,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { domainLabel } from '../workspace-labels'
-import { MetaCell } from '../workspace-ui'
+import { EmptyState, ErrorState, MetaCell } from '../workspace-ui'
 import {
   createPublicationCorrection,
   getPublication,
@@ -151,12 +153,11 @@ function PublicationList({
             )
           })
         ) : (
-          <div className="rounded-lg border border-dashed p-8 text-center">
-            <p className="font-medium">Aucune publication ici</p>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Les publications apparaîtront ici une fois validées.
-            </p>
-          </div>
+          <EmptyState
+            icon={Megaphone}
+            title="Aucune publication ici"
+            description="Les publications apparaîtront ici une fois validées."
+          />
         )}
       </CardContent>
     </Card>
@@ -197,11 +198,7 @@ export function PublicationDetailWorkspacePage({
   if (publicationQuery.isError) {
     return (
       <AppLayout actor={actor} page="publications">
-        <Card>
-          <CardContent className="text-destructive pt-6">
-            {toApiErrorMessage(publicationQuery.error)}
-          </CardContent>
-        </Card>
+        <ErrorState error={publicationQuery.error} />
       </AppLayout>
     )
   }
@@ -301,9 +298,10 @@ export function PublicationDetailWorkspacePage({
                 </CardContent>
               </Card>
             ) : (
-              <EmptyPanel
+              <EmptyState
+                icon={Link2}
                 title="Aucune source attachée"
-                hint="Les sources seront disponibles une fois la publication complète."
+                description="Les sources seront disponibles une fois la publication complète."
               />
             )}
           </TabsContent>
@@ -324,9 +322,10 @@ export function PublicationDetailWorkspacePage({
                 </CardContent>
               </Card>
             ) : (
-              <EmptyPanel
+              <EmptyState
+                icon={Paperclip}
                 title="Aucun média joint"
-                hint="Les médias seront disponibles une fois la publication complète."
+                description="Les médias seront disponibles une fois la publication complète."
               />
             )}
           </TabsContent>
@@ -352,15 +351,6 @@ export function PublicationDetailWorkspacePage({
         </Card>
       )}
     </AppLayout>
-  )
-}
-
-function EmptyPanel({ title, hint }: { title: string; hint: string }) {
-  return (
-    <div className="rounded-lg border border-dashed p-8 text-center">
-      <p className="font-medium">{title}</p>
-      <p className="text-muted-foreground mt-1 text-sm">{hint}</p>
-    </div>
   )
 }
 
@@ -544,13 +534,12 @@ export function PublicationCorrectionsWorkspacePage({
               />
             </div>
           ) : (
-            <div className="rounded-lg border border-dashed p-4">
-              <p className="font-medium">Aucune publication sélectionnée</p>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Choisis une publication dans la liste pour préparer le
-                correctif.
-              </p>
-            </div>
+            <EmptyState
+              icon={Megaphone}
+              title="Aucune publication sélectionnée"
+              description="Choisissez une publication dans la liste pour préparer le correctif."
+              className="p-6"
+            />
           )}
           <Label className="grid gap-2">
             Titre du correctif
