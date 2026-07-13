@@ -46,7 +46,7 @@ export function InvestigationList({ status }: { status: string }) {
           rows.map((item) => (
             <div
               key={item.id}
-              className="grid gap-4 rounded-lg border p-4 lg:grid-cols-[1fr_auto]"
+              className="border-border/60 hover:border-border hover:bg-muted/30 grid gap-4 rounded-lg border p-4 transition-colors lg:grid-cols-[1fr_auto]"
             >
               <div>
                 <div className="flex flex-wrap items-center gap-2">

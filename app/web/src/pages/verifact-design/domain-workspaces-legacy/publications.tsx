@@ -103,7 +103,7 @@ function PublicationList({
             return (
               <div
                 key={item.id}
-                className="grid gap-3 rounded-lg border p-4 sm:grid-cols-[1fr_auto] sm:items-start"
+                className="border-border/60 hover:border-border hover:bg-muted/30 grid gap-3 rounded-lg border p-4 transition-colors sm:grid-cols-[1fr_auto] sm:items-start"
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">

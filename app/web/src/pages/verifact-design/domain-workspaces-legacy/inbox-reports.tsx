@@ -229,7 +229,10 @@ function ReportList({ items }: { items: ReportItem[] }) {
       <CardContent className="grid gap-3">
         {items.length ? (
           items.map((item) => (
-            <div key={item.id} className="rounded-lg border p-4">
+            <div
+              key={item.id}
+              className="border-border/60 hover:border-border hover:bg-muted/30 rounded-lg border p-4 transition-colors"
+            >
               <div className="flex flex-wrap items-center gap-2">
                 <p className="font-medium">{item.title}</p>
                 <StatusBadge status={item.status} />
@@ -345,7 +348,7 @@ function InboxList(props: {
             return (
               <div
                 key={item.id}
-                className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
+                className="border-border/60 hover:border-border hover:bg-muted/30 grid gap-3 rounded-lg border p-4 transition-colors md:grid-cols-[1fr_auto]"
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium" title={item.theme}>
