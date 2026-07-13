@@ -31,15 +31,34 @@ export const MEDIA_TYPE_ICONS: Record<string, ElementType> = {
   TEXT: AlignLeft,
 }
 
-export const CATEGORY_OPTIONS = [
-  ['CONTEXT_COLLAPSE', 'Contexte déplacé'],
-  ['MANIPULATED', 'Manipulé'],
-  ['FABRICATED', 'Fabriqué'],
-  ['SATIRE', 'Satire'],
-  ['MISLEADING', 'Trompeur'],
-  ['IMPOSTOR', 'Usurpation'],
-  ['OTHER', 'Autre'],
+// Deceptive and trustworthy categories sit at opposite poles: grouping them
+// keeps a mis-click from filing an authentic media under "Fabriqué".
+export const CATEGORY_GROUPS: {
+  label: string
+  options: [string, string][]
+}[] = [
+  {
+    label: 'Contenu trompeur',
+    options: [
+      ['CONTEXT_COLLAPSE', 'Contexte déplacé'],
+      ['MANIPULATED', 'Manipulé'],
+      ['FABRICATED', 'Fabriqué'],
+      ['SATIRE', 'Satire'],
+      ['MISLEADING', 'Trompeur'],
+      ['IMPOSTOR', 'Usurpation'],
+    ],
+  },
+  {
+    label: 'Contenu fiable',
+    options: [
+      ['AUTHENTIC', 'Contenu avéré'],
+      ['CORROBORATED', 'Recoupé'],
+      ['OFFICIAL_SOURCE', 'Source officielle'],
+    ],
+  },
 ]
+
+export const CATEGORY_FALLBACK: [string, string] = ['OTHER', 'Autre']
 
 export const RELIABILITY_OPTIONS = [
   ['TRUE', 'Vrai'],

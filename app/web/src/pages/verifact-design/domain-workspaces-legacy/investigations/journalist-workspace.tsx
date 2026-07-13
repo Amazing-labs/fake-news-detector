@@ -34,7 +34,6 @@ import {
 } from '@shared/ui/media-fields.model'
 import { AppLayout } from '../../app-layout'
 import {
-  CATEGORY_OPTIONS,
   RELIABILITY_OPTIONS,
   SELECT_CLASS,
   SOURCE_TYPE_OPTIONS,
@@ -44,7 +43,12 @@ import {
   SourceMediaCard,
   WatcherEvidenceCard,
 } from './media-cards'
-import { DossierHeader, MetaCell, OriginBadge } from './primitives'
+import {
+  CategorySelect,
+  DossierHeader,
+  MetaCell,
+  OriginBadge,
+} from './primitives'
 import { EmptyState } from '../../workspace-ui'
 import type {
   MediaCategory,
@@ -401,22 +405,13 @@ export function JournalistInvestigationWorkspace({
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Label className="grid gap-1.5 text-sm">
                     Catégorie dominante
-                    <select
+                    <CategorySelect
                       value={mediaCategory}
-                      onChange={(e) =>
-                        setMediaCategory(e.target.value as MediaCategory)
+                      onChange={(value) =>
+                        setMediaCategory(value as MediaCategory)
                       }
-                      className={SELECT_CLASS}
-                    >
-                      <option value="" disabled>
-                        Choisir une catégorie
-                      </option>
-                      {CATEGORY_OPTIONS.map(([v, l]) => (
-                        <option key={v} value={v}>
-                          {l}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="Choisir une catégorie"
+                    />
                   </Label>
                   <Label className="grid gap-1.5 text-sm">
                     Verdict brouillon

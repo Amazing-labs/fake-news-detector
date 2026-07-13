@@ -73,6 +73,11 @@ enum MediaCategory {
   MISLEADING
   IMPOSTOR
   OTHER
+  // Trusted content: the counterpart of the deception categories above, so a
+  // media found reliable can be classified for what it is instead of "OTHER".
+  AUTHENTIC
+  CORROBORATED
+  OFFICIAL_SOURCE
 }
 
 enum InboxSubjectOrigin {

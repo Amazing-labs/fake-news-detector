@@ -7,7 +7,8 @@ import { EmptyState, MetaCell, StatusBadge } from '../../workspace-ui'
 
 export { MetaCell }
 import {
-  CATEGORY_OPTIONS,
+  CATEGORY_FALLBACK,
+  CATEGORY_GROUPS,
   MEDIA_TYPE_ICONS,
   ORIGIN_CONFIG,
   RELIABILITY_OPTIONS,
@@ -71,9 +72,11 @@ export function DossierHeader({
 export function CategorySelect({
   value,
   onChange,
+  placeholder = 'Catégorie',
 }: {
   value: string
   onChange: (value: string) => void
+  placeholder?: string
 }) {
   return (
     <select
@@ -82,13 +85,18 @@ export function CategorySelect({
       className={SELECT_CLASS}
     >
       <option value="" disabled>
-        Catégorie
+        {placeholder}
       </option>
-      {CATEGORY_OPTIONS.map(([v, l]) => (
-        <option key={v} value={v}>
-          {l}
-        </option>
+      {CATEGORY_GROUPS.map((group) => (
+        <optgroup key={group.label} label={group.label}>
+          {group.options.map(([v, l]) => (
+            <option key={v} value={v}>
+              {l}
+            </option>
+          ))}
+        </optgroup>
       ))}
+      <option value={CATEGORY_FALLBACK[0]}>{CATEGORY_FALLBACK[1]}</option>
     </select>
   )
 }

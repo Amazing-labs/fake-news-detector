@@ -15,6 +15,9 @@ export type MediaCategory =
   | 'MISLEADING'
   | 'IMPOSTOR'
   | 'OTHER'
+  | 'AUTHENTIC'
+  | 'CORROBORATED'
+  | 'OFFICIAL_SOURCE'
 export type MediaOrigin =
   | 'CITIZEN_REPORT'
   | 'JOURNALIST_PROOF'

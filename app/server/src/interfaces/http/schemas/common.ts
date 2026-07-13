@@ -26,6 +26,9 @@ export const mediaCategorySchema = z.enum([
   'MISLEADING',
   'IMPOSTOR',
   'OTHER',
+  'AUTHENTIC',
+  'CORROBORATED',
+  'OFFICIAL_SOURCE',
 ])
 
 export const sourceTypeSchema = z.enum([
