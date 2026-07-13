@@ -35,6 +35,8 @@ export function WatcherInvestigationWorkspace({
   journalistProofMedia: JournalistProofMedia[]
   watcherEvidence: WatcherEvidenceItem[]
 }) {
+  const sourceCount = sourceGroups.flatMap((g) => g.media).length
+
   return (
     <AppLayout actor="watcher" page="investigations">
       <div className="grid gap-4">
@@ -70,9 +72,7 @@ export function WatcherInvestigationWorkspace({
         <Tabs defaultValue="source">
           <div className="overflow-x-auto pb-px">
             <TabsList>
-              <TabsTrigger value="source">
-                Source ({sourceGroups.flatMap((g) => g.media).length})
-              </TabsTrigger>
+              <TabsTrigger value="source">Source ({sourceCount})</TabsTrigger>
               <TabsTrigger value="proof">
                 Preuves journaliste ({journalistProofMedia.length})
               </TabsTrigger>
@@ -85,7 +85,7 @@ export function WatcherInvestigationWorkspace({
 
           {/* SOURCE — read-only, watcher can view/download to understand context */}
           <TabsContent value="source" className="mt-4">
-            {sourceGroups.flatMap((g) => g.media).length > 0 ? (
+            {sourceCount > 0 ? (
               <div className="grid gap-6">
                 {sourceGroups
                   .filter((g) => g.media.length > 0)
@@ -148,7 +148,7 @@ export function WatcherInvestigationWorkspace({
           </TabsContent>
 
           <TabsContent value="notes" className="mt-4">
-            <NotesBlock notes={dossier.notes} readOnly />
+            <NotesBlock notes={dossier.notes} />
           </TabsContent>
         </Tabs>
       </div>

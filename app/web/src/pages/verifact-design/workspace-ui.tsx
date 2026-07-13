@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react'
+import type { ComponentType, ReactNode } from 'react'
 import { AlertTriangle } from 'lucide-react'
 import { toApiErrorMessage } from '@shared/api/http'
 import { cn } from '@shared/lib/utils'
@@ -68,11 +68,17 @@ export function StatusBadge({
   )
 }
 
-export function MetaCell({ label, value }: { label: string; value: string }) {
+export function MetaCell({
+  label,
+  value,
+}: {
+  label: string
+  value: ReactNode
+}) {
   return (
     <div className="bg-muted/40 rounded-xl p-3.5">
       <p className="text-muted-foreground text-xs font-medium">{label}</p>
-      <p className="mt-1 font-medium tracking-tight">{value}</p>
+      <div className="mt-1 font-medium tracking-tight">{value}</div>
     </div>
   )
 }
