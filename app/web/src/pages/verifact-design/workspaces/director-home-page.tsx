@@ -25,7 +25,6 @@ import { LoadingRow } from '@shared/ui/loader'
 import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardHeader,
@@ -41,7 +40,7 @@ import {
 } from '@shared/ui/shadcn/table'
 import { AppLayout } from '../app-layout'
 import { domainLabel } from '../workspace-labels'
-import { StatCard, StatusBadge } from '../workspace-ui'
+import { PageHeader, StatCard, StatusBadge } from '../workspace-ui'
 
 export function DirectorHomePage() {
   const pendingReviewsQuery = useQuery({
@@ -68,6 +67,27 @@ export function DirectorHomePage() {
 
   return (
     <AppLayout actor="director" page="dashboard">
+      <PageHeader
+        title="Desk direction"
+        description="Arbitrez les enquêtes en revue, suivez la file éditoriale et statuez sur les candidatures vigies."
+        actions={
+          <>
+            <Button asChild variant="outline">
+              <Link to="/inbox-subjects/create">
+                <FilePlus2 />
+                Nouveau sujet
+              </Link>
+            </Button>
+            <Button asChild variant="outline">
+              <Link to="/watcher-applications">
+                <UserCheck />
+                Candidatures
+              </Link>
+            </Button>
+          </>
+        }
+      />
+
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="À arbitrer"
@@ -102,20 +122,6 @@ export function DirectorHomePage() {
             Les actions visibles suivent les permissions du directeur de
             publication.
           </CardDescription>
-          <CardAction className="flex flex-wrap gap-2">
-            <Button asChild size="sm" variant="outline">
-              <Link to="/inbox-subjects/create">
-                <FilePlus2 />
-                Nouveau sujet
-              </Link>
-            </Button>
-            <Button asChild size="sm" variant="outline">
-              <Link to="/watcher-applications">
-                <UserCheck />
-                Candidatures
-              </Link>
-            </Button>
-          </CardAction>
         </CardHeader>
         <CardContent>
           <Table>

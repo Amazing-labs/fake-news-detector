@@ -36,7 +36,13 @@ import {
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { domainLabel } from '../workspace-labels'
-import { EmptyState, MetaCell, StatCard, StatusBadge } from '../workspace-ui'
+import {
+  EmptyState,
+  MetaCell,
+  PageHeader,
+  StatCard,
+  StatusBadge,
+} from '../workspace-ui'
 import {
   CitizenReportCreateWorkspacePage as CitizenReportCreateWorkspace,
   CitizenWorkspacePage as CitizenWorkspace,
@@ -122,6 +128,11 @@ export function JournalistWorkspacePage() {
 
   return (
     <AppLayout actor="journalist" page="dashboard">
+      <PageHeader
+        title="Espace journaliste"
+        description="Reprenez votre dossier en cours, classez les médias et soumettez vos enquêtes à la revue."
+      />
+
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
           title="Dossier courant"
@@ -418,6 +429,11 @@ export function CitizenDashboardPage() {
 
   return (
     <AppLayout actor="citizen" page="dashboard">
+      <PageHeader
+        title="Mon espace citoyen"
+        description="Suivez vos signalements, les retours de la rédaction et les corrections publiées."
+      />
+
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Signalements actifs"
@@ -506,6 +522,11 @@ export function WatcherWorkspacePage() {
 
   return (
     <AppLayout actor="watcher" page="dashboard">
+      <PageHeader
+        title="Espace vigie"
+        description="Suivez les enquêtes ouvertes à contribution et apportez des preuves qualifiées."
+      />
+
       <div className="grid gap-4 md:grid-cols-3">
         <StatCard
           title="Enquêtes suivies"

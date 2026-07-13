@@ -1,4 +1,4 @@
-import type { ComponentType } from 'react'
+import type { ComponentType, ReactNode } from 'react'
 import { cn } from '@shared/lib/utils'
 import { Badge } from '@shared/ui/shadcn/badge'
 import {
@@ -8,6 +8,36 @@ import {
   CardTitle,
 } from '@shared/ui/shadcn/card'
 import { domainLabel } from './workspace-labels'
+
+// Consistent page-level header: title, optional context line and trailing
+// actions. Frames every workspace so pages share one premium masthead.
+export function PageHeader({
+  title,
+  description,
+  actions,
+}: {
+  title: string
+  description?: string
+  actions?: ReactNode
+}) {
+  return (
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0">
+        <h1 className="text-2xl font-semibold tracking-tight text-balance">
+          {title}
+        </h1>
+        {description ? (
+          <p className="text-muted-foreground mt-1.5 max-w-2xl leading-relaxed text-pretty">
+            {description}
+          </p>
+        ) : null}
+      </div>
+      {actions ? (
+        <div className="flex flex-wrap items-center gap-2">{actions}</div>
+      ) : null}
+    </div>
+  )
+}
 
 const STATUS_PILL = 'h-6 rounded-full px-2.5 font-medium'
 
