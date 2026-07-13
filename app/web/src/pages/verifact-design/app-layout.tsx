@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import type { ComponentType, ReactNode } from 'react'
 import { useLayoutEffect, useRef, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   listNotifications,
   notificationQueryKeys,
@@ -170,6 +170,7 @@ export function AppLayout(props: {
 }) {
   const location = useLocation()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const tabletNavRef = useRef<HTMLDivElement>(null)
   const { isDark, setIsDark } = useTheme()
   const { session } = useAppSession()
@@ -185,8 +186,12 @@ export function AppLayout(props: {
     setIsSigningOut(true)
     try {
       await signOutAppSession()
-      // Back to the guest landing page after logout, not the auth screen.
-      await navigate({ to: '/' })
+      // Drop every cached query: they hold the previous account's data and
+      // would be served to whoever signs in next.
+      queryClient.clear()
+      // Back to the public landing page, replacing history so "back" cannot
+      // return to a workspace the visitor is no longer allowed to see.
+      await navigate({ to: '/', replace: true })
     } finally {
       setIsSigningOut(false)
     }
