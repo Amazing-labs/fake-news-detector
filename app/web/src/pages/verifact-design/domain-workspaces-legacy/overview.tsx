@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import { Link, Navigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
@@ -59,7 +59,6 @@ import {
 import { toApiErrorMessage } from '@shared/api/http'
 import { MediaPreviewItem } from './media-preview'
 import { toPreviewMedia } from './media-preview-utils'
-import { GuestHomePage } from './admin'
 
 function useActorMetrics() {
   return useQuery({
@@ -82,14 +81,16 @@ function statValue(value: number | undefined) {
 }
 
 export function RoleAwareDashboardPage() {
-  const { actor } = useResolvedActor('guest')
+  const { actor, isActorPending } = useResolvedActor('guest')
 
+  if (isActorPending) return null
   if (actor === 'director') return <DirectorHomePage />
   if (actor === 'journalist') return <JournalistWorkspacePage />
   if (actor === 'watcher') return <WatcherWorkspacePage />
   if (actor === 'citizen') return <CitizenDashboardPage />
 
-  return <GuestHomePage />
+  // No session: the public landing at `/` is the guest surface now.
+  return <Navigate to="/" />
 }
 
 export function DirectorHomePage() {

@@ -24,7 +24,6 @@ export {
   PublicationsWorkspacePage,
 } from './domain-workspaces-legacy/publications'
 export {
-  GuestHomePage,
   NotificationDetailWorkspacePage,
   NotificationsWorkspacePage,
   PeopleManagementPage,
