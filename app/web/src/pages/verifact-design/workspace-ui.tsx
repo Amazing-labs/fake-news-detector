@@ -9,6 +9,8 @@ import {
 } from '@shared/ui/shadcn/card'
 import { domainLabel } from './workspace-labels'
 
+const STATUS_PILL = 'h-6 rounded-full px-2.5 font-medium'
+
 export function StatusBadge({
   status,
   className,
@@ -16,9 +18,17 @@ export function StatusBadge({
   status: string
   className?: string
 }) {
+  // Verified / healthy states carry the emerald "verified" accent used across
+  // the product; pending is neutral, terminal-negative is destructive.
   if (status === 'PUBLISHED' || status === 'APPROVED' || status === 'ACTIVE') {
     return (
-      <Badge className={cn('h-6 rounded-full px-2.5', className)}>
+      <Badge
+        className={cn(
+          STATUS_PILL,
+          'border-transparent bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
+          className,
+        )}
+      >
         {domainLabel(status)}
       </Badge>
     )
@@ -30,10 +40,7 @@ export function StatusBadge({
     status === 'PENDING_REVIEW'
   ) {
     return (
-      <Badge
-        variant="secondary"
-        className={cn('h-6 rounded-full px-2.5', className)}
-      >
+      <Badge variant="secondary" className={cn(STATUS_PILL, className)}>
         {domainLabel(status)}
       </Badge>
     )
@@ -41,20 +48,14 @@ export function StatusBadge({
 
   if (status === 'DISABLED' || status === 'REJECTED') {
     return (
-      <Badge
-        variant="destructive"
-        className={cn('h-6 rounded-full px-2.5', className)}
-      >
+      <Badge variant="destructive" className={cn(STATUS_PILL, className)}>
         {domainLabel(status)}
       </Badge>
     )
   }
 
   return (
-    <Badge
-      variant="outline"
-      className={cn('h-6 rounded-full px-2.5', className)}
-    >
+    <Badge variant="outline" className={cn(STATUS_PILL, className)}>
       {domainLabel(status)}
     </Badge>
   )
@@ -62,11 +63,9 @@ export function StatusBadge({
 
 export function MetaCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border p-3">
-      <p className="text-muted-foreground text-xs font-medium uppercase">
-        {label}
-      </p>
-      <p className="mt-1 font-medium">{value}</p>
+    <div className="bg-muted/40 rounded-xl p-3.5">
+      <p className="text-muted-foreground text-xs font-medium">{label}</p>
+      <p className="mt-1 font-medium tracking-tight">{value}</p>
     </div>
   )
 }
@@ -87,14 +86,18 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        'flex flex-col items-center justify-center rounded-lg border border-dashed p-8 text-center',
+        'border-border/60 bg-muted/20 flex flex-col items-center justify-center rounded-xl border border-dashed p-10 text-center',
         className,
       )}
     >
-      {Icon ? <Icon className="text-muted-foreground/60 mb-3 size-8" /> : null}
-      <p className="font-medium">{title}</p>
+      {Icon ? (
+        <span className="bg-muted text-muted-foreground/70 mb-4 grid size-12 place-items-center rounded-full">
+          <Icon className="size-6" />
+        </span>
+      ) : null}
+      <p className="font-medium tracking-tight text-balance">{title}</p>
       {description ? (
-        <p className="text-muted-foreground mt-1 max-w-sm text-sm">
+        <p className="text-muted-foreground mt-1.5 max-w-sm text-sm leading-relaxed text-pretty">
           {description}
         </p>
       ) : null}
@@ -111,17 +114,21 @@ export function StatCard(props: {
   const Icon = props.icon
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="text-muted-foreground flex items-center justify-between text-sm font-medium">
-          {props.title}
-          <Icon className="size-4" />
-        </CardTitle>
-        <CardDescription>
-          <span className="text-foreground text-3xl font-semibold">
+    <Card className="gap-0 py-5 transition-shadow duration-200 hover:shadow-[0_2px_4px_rgba(0,0,0,0.05),0_18px_44px_-24px_rgba(0,0,0,0.22)]">
+      <CardHeader className="gap-4">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-muted-foreground text-sm font-medium">
+            {props.title}
+          </CardTitle>
+          <span className="bg-muted/60 text-muted-foreground/70 grid size-8 place-items-center rounded-lg">
+            <Icon className="size-4" />
+          </span>
+        </div>
+        <CardDescription className="flex items-baseline gap-2">
+          <span className="text-foreground text-3xl font-semibold tracking-tight tabular-nums">
             {props.value}
           </span>
-          <span className="ml-2">{props.hint}</span>
+          <span className="text-sm">{props.hint}</span>
         </CardDescription>
       </CardHeader>
     </Card>
