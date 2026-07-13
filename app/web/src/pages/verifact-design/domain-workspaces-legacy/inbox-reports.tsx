@@ -42,7 +42,7 @@ import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { toApiErrorMessage } from '@shared/api/http'
 import { domainLabel } from '../workspace-labels'
-import { EmptyState, MetaCell, StatusBadge } from '../workspace-ui'
+import { EmptyState, ErrorState, MetaCell, StatusBadge } from '../workspace-ui'
 import { listReports, reportQueryKeys } from '@entities/report/api'
 import type { ReportItem } from '@entities/report/model'
 import {
@@ -213,17 +213,23 @@ export function ReportsWorkspacePage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="open" className="mt-4">
-          <ReportList items={openItems} />
+          <ReportList items={openItems} query={reportsQuery} />
         </TabsContent>
         <TabsContent value="archived" className="mt-4">
-          <ReportList items={archivedItems} />
+          <ReportList items={archivedItems} query={reportsQuery} />
         </TabsContent>
       </Tabs>
     </AppLayout>
   )
 }
 
-function ReportList({ items }: { items: ReportItem[] }) {
+function ReportList({
+  items,
+  query,
+}: {
+  items: ReportItem[]
+  query: { isPending: boolean; isError: boolean; error: unknown }
+}) {
   return (
     <Card>
       <CardHeader>
@@ -234,7 +240,11 @@ function ReportList({ items }: { items: ReportItem[] }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
-        {items.length ? (
+        {query.isError ? (
+          <ErrorState error={query.error} />
+        ) : query.isPending ? (
+          <LoadingRow label="Chargement des signalements…" />
+        ) : items.length ? (
           items.map((item) => (
             <div
               key={item.id}
@@ -347,7 +357,9 @@ function InboxList(props: {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
-        {inboxSubjectsQuery.isPending ? (
+        {inboxSubjectsQuery.isError ? (
+          <ErrorState error={inboxSubjectsQuery.error} />
+        ) : inboxSubjectsQuery.isPending ? (
           <LoadingRow label="Chargement des sujets…" />
         ) : rows.length ? (
           rows.map((item) => {

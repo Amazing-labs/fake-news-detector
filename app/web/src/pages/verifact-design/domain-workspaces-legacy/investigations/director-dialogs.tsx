@@ -145,6 +145,11 @@ export function PublishInvestigationDialog({
   const { session } = useAppSession()
   const ownerId = session?.user.actorId ?? ''
 
+  // Publishing is hard to walk back: a director who asked to attach evidence
+  // must not publish an empty payload by clicking through.
+  const hasEvidence =
+    linkUrl.trim() !== '' || normalizeMediaDrafts(media).length > 0
+
   function resetEvidence() {
     setWithEvidence(false)
     setLinkUrl('')
@@ -285,7 +290,11 @@ export function PublishInvestigationDialog({
             </Button>
           </DialogClose>
           {withEvidence ? (
-            <Button onClick={handlePublish} loading={mutation.isPending}>
+            <Button
+              onClick={handlePublish}
+              disabled={!hasEvidence}
+              loading={mutation.isPending}
+            >
               {!mutation.isPending && <BadgeCheck />}
               Publier avec preuves
             </Button>

@@ -113,7 +113,9 @@ export function MediaFields(props: {
   }
 
   function removeItem(index: number) {
-    if (props.disabled) return
+    // An upload in flight will commit the item list it captured when it started,
+    // so removing an item mid-upload would see it reappear.
+    if (inputsDisabled) return
     const url = props.items[index]?.url
     if (url) {
       // Only delete files this session uploaded, never an already-submitted URL.
@@ -171,7 +173,7 @@ export function MediaFields(props: {
                 <button
                   type="button"
                   onClick={() => removeItem(index)}
-                  disabled={props.disabled}
+                  disabled={inputsDisabled}
                   className="border-border bg-background text-foreground focus-visible:ring-ring absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border opacity-0 shadow-sm transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed"
                   aria-label={`Retirer le média ${index + 1}`}
                 >

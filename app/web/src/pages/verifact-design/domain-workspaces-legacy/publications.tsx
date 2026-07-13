@@ -10,7 +10,7 @@ import {
 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { PageLoader } from '@shared/ui/loader'
+import { LoadingRow, PageLoader } from '@shared/ui/loader'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
 import {
@@ -70,13 +70,25 @@ export function PublicationsWorkspacePage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="all" className="mt-4">
-          <PublicationList items={items} canManage={canManage} />
+          <PublicationList
+            items={items}
+            canManage={canManage}
+            query={publicationsQuery}
+          />
         </TabsContent>
         <TabsContent value="publications" className="mt-4">
-          <PublicationList items={mainItems} canManage={canManage} />
+          <PublicationList
+            items={mainItems}
+            canManage={canManage}
+            query={publicationsQuery}
+          />
         </TabsContent>
         <TabsContent value="corrections" className="mt-4">
-          <PublicationList items={correctionItems} canManage={canManage} />
+          <PublicationList
+            items={correctionItems}
+            canManage={canManage}
+            query={publicationsQuery}
+          />
         </TabsContent>
       </Tabs>
     </AppLayout>
@@ -86,9 +98,11 @@ export function PublicationsWorkspacePage() {
 function PublicationList({
   items,
   canManage,
+  query,
 }: {
   items: PublicationItem[]
   canManage: boolean
+  query: { isPending: boolean; isError: boolean; error: unknown }
 }) {
   return (
     <Card>
@@ -99,7 +113,11 @@ function PublicationList({
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
-        {items.length ? (
+        {query.isError ? (
+          <ErrorState error={query.error} />
+        ) : query.isPending ? (
+          <LoadingRow label="Chargement des publications…" />
+        ) : items.length ? (
           items.map((item) => {
             const publicationId = item.id
             return (

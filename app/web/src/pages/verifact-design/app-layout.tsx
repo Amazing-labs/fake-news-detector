@@ -189,8 +189,9 @@ export function AppLayout(props: {
       // Drop every cached query: they hold the previous account's data and
       // would be served to whoever signs in next.
       queryClient.clear()
-      // Back to the public landing page, replacing history so "back" cannot
-      // return to a workspace the visitor is no longer allowed to see.
+      // Back to the public landing page, replacing the current entry so it does
+      // not sit in the history. Earlier workspace URLs are still reachable with
+      // "back": the AppShell guard is what turns them away.
       await navigate({ to: '/', replace: true })
     } finally {
       setIsSigningOut(false)
