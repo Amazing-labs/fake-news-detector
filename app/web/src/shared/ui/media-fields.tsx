@@ -62,19 +62,23 @@ export function MediaFields(props: {
   ownerId: string
   /** Locks all controls (e.g. during submit). */
   disabled?: boolean
+  /** Upper bound on media; 1 turns the field into a single-file picker. */
+  maxItems?: number
 }) {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const sessionUploadsRef = useRef<string[]>([])
   const isDark = props.variant === 'dark'
   const canUpload = isSupabaseUploadConfigured()
-  const isFull = props.items.length >= MAX_MEDIA
+  const maxItems = props.maxItems ?? MAX_MEDIA
+  const isSingle = maxItems === 1
+  const isFull = props.items.length >= maxItems
   // Locked while uploading or when the parent disables the field.
   const inputsDisabled = isUploading || (props.disabled ?? false)
 
   async function handleFiles(files: FileList | null) {
     if (props.disabled || isUploading || !files?.length || !canUpload) return
-    const slots = MAX_MEDIA - props.items.length
+    const slots = maxItems - props.items.length
     if (slots <= 0) return
 
     setIsUploading(true)
@@ -145,7 +149,7 @@ export function MediaFields(props: {
               {props.description ?? 'Ajoute un ou plusieurs médias via upload.'}
             </p>
             <span className="text-muted-foreground shrink-0 text-xs">
-              {props.items.length} / {MAX_MEDIA}
+              {props.items.length} / {maxItems}
             </span>
           </div>
         </div>
@@ -214,17 +218,23 @@ export function MediaFields(props: {
               <Loader2 className="text-muted-foreground size-5 animate-spin" />
             ) : null}
             <span className="text-foreground text-sm font-semibold">
-              {isUploading ? 'Upload en cours...' : 'Glisse les médias ici'}
+              {isUploading
+                ? 'Upload en cours…'
+                : isSingle
+                  ? 'Glissez un média ici'
+                  : 'Glissez les médias ici'}
             </span>
             <span className="text-muted-foreground mt-2 text-sm">
-              {canUpload
-                ? `ou clique pour les sélectionner · max ${MAX_MEDIA}`
-                : "configure Supabase pour activer l'upload"}
+              {!canUpload
+                ? "configure Supabase pour activer l'upload"
+                : isSingle
+                  ? 'ou cliquez pour le sélectionner'
+                  : `ou cliquez pour les sélectionner · max ${maxItems}`}
             </span>
             <input
               ref={fileInputRef}
               type="file"
-              multiple
+              multiple={!isSingle}
               accept={acceptedMediaFileTypes}
               className="hidden"
               disabled={inputsDisabled}
@@ -323,17 +333,23 @@ export function MediaFields(props: {
               <Loader2 className="text-muted-foreground size-5 animate-spin" />
             ) : null}
             <span className="text-foreground text-sm font-black">
-              {isUploading ? 'Upload en cours...' : 'Glisse les fichiers ici'}
+              {isUploading
+                ? 'Upload en cours…'
+                : isSingle
+                  ? 'Glissez un fichier ici'
+                  : 'Glissez les fichiers ici'}
             </span>
             <span className="text-muted-foreground mt-2 text-sm">
-              {canUpload
-                ? `ou clique pour uploader · max ${MAX_MEDIA}`
-                : "configure Supabase pour activer l'upload de fichiers"}
+              {!canUpload
+                ? "configure Supabase pour activer l'upload de fichiers"
+                : isSingle
+                  ? 'ou cliquez pour le sélectionner'
+                  : `ou cliquez pour uploader · max ${maxItems}`}
             </span>
             <input
               ref={fileInputRef}
               type="file"
-              multiple
+              multiple={!isSingle}
               accept={acceptedMediaFileTypes}
               className="hidden"
               disabled={inputsDisabled}

@@ -18,7 +18,10 @@ import {
 import { AppLayout } from '../../app-layout'
 import { domainLabel } from '../../workspace-labels'
 import { EmptyState, StatusBadge } from '../../workspace-ui'
-import { ArbitrationReasonDialog, PublishInvestigationDialog } from '../shared'
+import {
+  ArbitrationReasonDialog,
+  PublishInvestigationDialog,
+} from './director-dialogs'
 import {
   JournalistProofList,
   SourceMediaReadRow,

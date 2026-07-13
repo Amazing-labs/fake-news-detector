@@ -10,7 +10,7 @@ import {
 import { AppLayout } from '../../app-layout'
 import { domainLabel } from '../../workspace-labels'
 import { EmptyState } from '../../workspace-ui'
-import { WatcherContributeDialog } from '../shared'
+import { WatcherContributeDialog } from './watcher-contribute-dialog'
 import {
   JournalistProofList,
   SourceMediaReadRow,
