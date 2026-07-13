@@ -18,7 +18,10 @@ import {
 import { AppLayout } from '../../app-layout'
 import { domainLabel } from '../../workspace-labels'
 import { EmptyState, StatusBadge } from '../../workspace-ui'
-import { ArbitrationReasonDialog, PublishInvestigationDialog } from '../shared'
+import {
+  ArbitrationReasonDialog,
+  PublishInvestigationDialog,
+} from './director-dialogs'
 import {
   JournalistProofList,
   SourceMediaReadRow,
@@ -77,7 +80,7 @@ export function DirectorInvestigationWorkspace({
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <MetaCell
                 label="Verdict brouillon"
-                value={domainLabel(dossier.verdict)}
+                value={<StatusBadge status={dossier.verdict} />}
               />
               <MetaCell
                 label="Catégorie"
@@ -98,7 +101,7 @@ export function DirectorInvestigationWorkspace({
             <div className="overflow-x-auto pb-px">
               <TabsList>
                 <TabsTrigger value="source">
-                  Médias source ({sourceGroups.flatMap((g) => g.media).length})
+                  Médias source ({sourceCount})
                 </TabsTrigger>
                 <TabsTrigger value="proof">
                   Preuves journaliste ({journalistProofMedia.length})
@@ -222,7 +225,7 @@ export function DirectorInvestigationWorkspace({
           </TabsContent>
 
           <TabsContent value="notes" className="mt-4">
-            <NotesBlock notes={dossier.notes} readOnly />
+            <NotesBlock notes={dossier.notes} />
           </TabsContent>
         </Tabs>
       </div>

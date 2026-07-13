@@ -21,6 +21,24 @@ describe('verification theme schemas', () => {
     ).toBe('Économie')
   })
 
+  test('accept the catch-all "Autre" theme on both entry points', () => {
+    expect(
+      submitReportSchema.parse({
+        theme: 'Autre',
+        title: 'Rumeur',
+        content: 'Message reçu',
+      }).theme,
+    ).toBe('Autre')
+
+    expect(
+      createDirectorInboxSubjectSchema.parse({
+        theme: 'Autre',
+        description: 'Sujet ouvert par la rédaction',
+        media: [{ url: 'https://example.com/proof.jpg', type: 'IMAGE' }],
+      }).theme,
+    ).toBe('Autre')
+  })
+
   test('reject unsupported themes for report submission and director subjects', () => {
     expect(() =>
       submitReportSchema.parse({

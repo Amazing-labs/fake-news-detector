@@ -1,14 +1,14 @@
 import { FileText } from 'lucide-react'
 import type { ReactNode } from 'react'
-import { cn } from '@shared/lib/utils'
 import { Badge } from '@shared/ui/shadcn/badge'
-import { Button } from '@shared/ui/shadcn/button'
 import { Card, CardContent } from '@shared/ui/shadcn/card'
-import { Textarea } from '@shared/ui/shadcn/textarea'
 import { domainLabel } from '../../workspace-labels'
-import { EmptyState, StatusBadge } from '../../workspace-ui'
+import { EmptyState, MetaCell, StatusBadge } from '../../workspace-ui'
+
+export { MetaCell }
 import {
-  CATEGORY_OPTIONS,
+  CATEGORY_FALLBACK,
+  CATEGORY_GROUPS,
   MEDIA_TYPE_ICONS,
   ORIGIN_CONFIG,
   RELIABILITY_OPTIONS,
@@ -17,24 +17,13 @@ import {
 import type { Dossier } from './types'
 
 export function OriginBadge({ origin }: { origin: string }) {
-  const cfg = ORIGIN_CONFIG[origin as keyof typeof ORIGIN_CONFIG]
-  if (!cfg)
-    return (
-      <Badge variant="outline" className="text-xs">
-        {domainLabel(origin)}
-      </Badge>
-    )
-  const { Icon, badgeClass } = cfg
+  const Icon = ORIGIN_CONFIG[origin as keyof typeof ORIGIN_CONFIG]?.Icon
+
   return (
-    <span
-      className={cn(
-        'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-xs font-medium',
-        badgeClass,
-      )}
-    >
-      <Icon className="size-3" />
+    <Badge variant="outline" className="h-6 gap-1 rounded-full px-2.5 text-xs">
+      {Icon ? <Icon className="size-3" /> : null}
       {domainLabel(origin)}
-    </span>
+    </Badge>
   )
 }
 
@@ -43,23 +32,12 @@ export function MediaTypeIcon({ type }: { type: string }) {
   return <Icon className="text-muted-foreground size-4 shrink-0" />
 }
 
-export function MetaCell({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-lg border p-3">
-      <p className="text-muted-foreground text-xs font-medium uppercase">
-        {label}
-      </p>
-      <p className="mt-1 font-medium">{value}</p>
-    </div>
-  )
-}
-
 // Inbox-subject content the investigation was opened on, elevated into a quoted
 // italic block. Shared by the director view and the DossierHeader (journalist /
 // watcher) so every role reads the source context the same way.
 export function SubjectContextQuote({ subject }: { subject: string }) {
   return (
-    <blockquote className="border-primary/50 bg-muted/40 rounded-r-lg border-l-2 px-4 py-3">
+    <blockquote className="bg-muted/40 rounded-lg px-4 py-3">
       <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
         Contexte du sujet
       </p>
@@ -94,9 +72,11 @@ export function DossierHeader({
 export function CategorySelect({
   value,
   onChange,
+  placeholder = 'Catégorie',
 }: {
   value: string
   onChange: (value: string) => void
+  placeholder?: string
 }) {
   return (
     <select
@@ -105,13 +85,18 @@ export function CategorySelect({
       className={SELECT_CLASS}
     >
       <option value="" disabled>
-        Catégorie
+        {placeholder}
       </option>
-      {CATEGORY_OPTIONS.map(([v, l]) => (
-        <option key={v} value={v}>
-          {l}
-        </option>
+      {CATEGORY_GROUPS.map((group) => (
+        <optgroup key={group.label} label={group.label}>
+          {group.options.map(([v, l]) => (
+            <option key={v} value={v}>
+              {l}
+            </option>
+          ))}
+        </optgroup>
       ))}
+      <option value={CATEGORY_FALLBACK[0]}>{CATEGORY_FALLBACK[1]}</option>
     </select>
   )
 }
@@ -141,35 +126,20 @@ export function ReliabilitySelect({
   )
 }
 
-export function NotesBlock({
-  notes,
-  readOnly,
-}: {
-  notes: string
-  readOnly: boolean
-}) {
+export function NotesBlock({ notes }: { notes: string }) {
   return (
     <Card>
       <CardContent>
-        {readOnly ? (
-          notes.trim() ? (
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              {notes}
-            </p>
-          ) : (
-            <EmptyState
-              icon={FileText}
-              title="Aucune note d'enquête"
-              description="Le journaliste n'a pas encore rédigé de note sur ce dossier."
-            />
-          )
+        {notes.trim() ? (
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            {notes}
+          </p>
         ) : (
-          <div className="grid gap-3">
-            <Textarea defaultValue={notes} rows={5} className="resize-none" />
-            <Button size="sm" className="w-fit">
-              Enregistrer
-            </Button>
-          </div>
+          <EmptyState
+            icon={FileText}
+            title="Aucune note d'enquête"
+            description="Le journaliste n'a pas encore rédigé de note sur ce dossier."
+          />
         )}
       </CardContent>
     </Card>

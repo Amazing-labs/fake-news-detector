@@ -1,6 +1,14 @@
 import { Link } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, ExternalLink, FilePlus2 } from 'lucide-react'
+import { toast } from 'sonner'
+import {
+  CheckCircle2,
+  ExternalLink,
+  FilePlus2,
+  FileSearch,
+  History,
+  UserCheck,
+} from 'lucide-react'
 import {
   investigationQueryKeys,
   listInvestigations,
@@ -13,8 +21,7 @@ import {
 } from '@entities/watcher-application/api'
 import { WatcherApplicationForm } from '@features/watcher-applications/watcher-application-form'
 import { toApiErrorMessage } from '@shared/api/http'
-import { LoadingRow } from '@shared/ui/loader'
-import { Badge } from '@shared/ui/shadcn/badge'
+import { LoadingRow, PageLoader } from '@shared/ui/loader'
 import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
@@ -31,8 +38,7 @@ import {
 } from '@shared/ui/shadcn/tabs'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
-import { domainLabel } from '../workspace-labels'
-import { StatusBadge } from '../workspace-ui'
+import { EmptyState, ErrorState, StatusBadge } from '../workspace-ui'
 
 export function WatcherApplicationsReviewPage() {
   const { actor, isActorPending } = useResolvedActor('citizen')
@@ -52,6 +58,7 @@ export function WatcherApplicationsReviewPage() {
         queryKey: watcherApplicationQueryKeys.all,
       })
     },
+    onError: (error) => toast.error(toApiErrorMessage(error)),
   })
   const applications = applicationsQuery.data?.items ?? []
   const pendingApplications = applications.filter(
@@ -64,14 +71,7 @@ export function WatcherApplicationsReviewPage() {
   if (isActorPending) {
     return (
       <AppLayout actor="guest" page="people">
-        <Card role="status" aria-live="polite" aria-busy="true">
-          <CardHeader>
-            <CardTitle>Vérification de session</CardTitle>
-            <CardDescription>
-              Lecture du rôle avant d’afficher l’espace vigie.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+        <PageLoader label="Chargement de la session…" />
       </AppLayout>
     )
   }
@@ -96,17 +96,14 @@ export function WatcherApplicationsReviewPage() {
             <CardContent className="grid gap-3 p-5">
               {applicationsQuery.isPending ? (
                 <LoadingRow label="Chargement des candidatures…" />
-              ) : null}
-              {applicationsQuery.isError ? (
-                <p className="text-destructive text-sm">
-                  {toApiErrorMessage(applicationsQuery.error)}
-                </p>
-              ) : null}
-              {!applicationsQuery.isPending &&
-              pendingApplications.length === 0 ? (
-                <p className="text-muted-foreground text-sm">
-                  Aucune candidature vigie.
-                </p>
+              ) : applicationsQuery.isError ? (
+                <ErrorState error={applicationsQuery.error} />
+              ) : pendingApplications.length === 0 ? (
+                <EmptyState
+                  icon={UserCheck}
+                  title="Aucune candidature à traiter"
+                  description="Les demandes de statut vigie déposées par les citoyens arriveront ici."
+                />
               ) : null}
               {pendingApplications.map((item) => (
                 <div
@@ -168,11 +165,6 @@ export function WatcherApplicationsReviewPage() {
                   </div>
                 </div>
               ))}
-              {decisionMutation.isError ? (
-                <p className="text-destructive text-sm">
-                  {toApiErrorMessage(decisionMutation.error)}
-                </p>
-              ) : null}
             </CardContent>
           </Card>
         </TabsContent>
@@ -181,17 +173,14 @@ export function WatcherApplicationsReviewPage() {
             <CardContent className="grid gap-3 p-5">
               {applicationsQuery.isPending ? (
                 <LoadingRow label="Chargement de l'historique…" />
-              ) : null}
-              {applicationsQuery.isError ? (
-                <p className="text-destructive text-sm">
-                  {toApiErrorMessage(applicationsQuery.error)}
-                </p>
-              ) : null}
-              {!applicationsQuery.isPending &&
-              decidedApplications.length === 0 ? (
-                <p className="text-muted-foreground text-sm">
-                  Aucune décision passée pour l&apos;instant.
-                </p>
+              ) : applicationsQuery.isError ? (
+                <ErrorState error={applicationsQuery.error} />
+              ) : decidedApplications.length === 0 ? (
+                <EmptyState
+                  icon={History}
+                  title="Aucune décision passée"
+                  description="Les candidatures approuvées ou rejetées seront archivées ici."
+                />
               ) : null}
               {decidedApplications.map((item) => (
                 <div key={item.id} className="grid gap-2 rounded-lg border p-4">
@@ -249,17 +238,14 @@ function WatcherContributionWorkspacePage() {
         <CardContent className="grid gap-3">
           {investigationsQuery.isPending ? (
             <LoadingRow label="Chargement des enquêtes…" />
-          ) : null}
-          {investigationsQuery.isError ? (
-            <p className="text-destructive text-sm">
-              {toApiErrorMessage(investigationsQuery.error)}
-            </p>
-          ) : null}
-          {!investigationsQuery.isPending &&
-          activeInvestigations.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
-              Aucune enquête à enrichir pour le moment.
-            </p>
+          ) : investigationsQuery.isError ? (
+            <ErrorState error={investigationsQuery.error} />
+          ) : activeInvestigations.length === 0 ? (
+            <EmptyState
+              icon={FileSearch}
+              title="Aucune enquête à enrichir"
+              description="Les enquêtes ouvertes à contribution apparaîtront ici."
+            />
           ) : null}
           {activeInvestigations.map((item) => (
             <div
@@ -271,7 +257,7 @@ function WatcherContributionWorkspacePage() {
                   <p className="font-medium">
                     {item.title ?? 'Sujet sans titre'}
                   </p>
-                  <Badge variant="secondary">{domainLabel(item.status)}</Badge>
+                  <StatusBadge status={item.status} />
                 </div>
                 {item.subject && (
                   <p className="text-muted-foreground mt-1 line-clamp-2 text-sm">

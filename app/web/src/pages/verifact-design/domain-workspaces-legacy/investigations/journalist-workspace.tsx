@@ -27,11 +27,13 @@ import {
   TabsList,
   TabsTrigger,
 } from '@shared/ui/shadcn/tabs'
-import { AppLayout } from '../../app-layout'
-import { MediaDropzone } from '../shared'
+import { MediaFields } from '@shared/ui/media-fields'
 import {
-  CATEGORY_OPTIONS,
-  MEDIA_TYPE_OPTIONS,
+  normalizeMediaDrafts,
+  type MediaDraft,
+} from '@shared/ui/media-fields.model'
+import { AppLayout } from '../../app-layout'
+import {
   RELIABILITY_OPTIONS,
   SELECT_CLASS,
   SOURCE_TYPE_OPTIONS,
@@ -41,7 +43,12 @@ import {
   SourceMediaCard,
   WatcherEvidenceCard,
 } from './media-cards'
-import { DossierHeader, MetaCell, OriginBadge } from './primitives'
+import {
+  CategorySelect,
+  DossierHeader,
+  MetaCell,
+  OriginBadge,
+} from './primitives'
 import { EmptyState } from '../../workspace-ui'
 import type {
   MediaCategory,
@@ -71,13 +78,12 @@ export function JournalistInvestigationWorkspace({
   const { session } = useAppSession()
   const ownerId = session?.user.actorId ?? ''
 
-  const [proofType, setProofType] = useState<MediaType>('LINK')
   const [proofAuthorityName, setProofAuthorityName] = useState('')
   const [proofSourceType, setProofSourceType] = useState<SourceType>(
     SOURCE_TYPE_OPTIONS[0][0] as SourceType,
   )
   const [proofUrl, setProofUrl] = useState('')
-  const [proofUploadedUrls, setProofUploadedUrls] = useState<string[]>([])
+  const [proofMedia, setProofMedia] = useState<MediaDraft[]>([])
 
   const [mediaCategory, setMediaCategory] = useState<MediaCategory | ''>(
     dossier.category ?? '',
@@ -121,24 +127,33 @@ export function JournalistInvestigationWorkspace({
     onError: (error) => toast.error(toApiErrorMessage(error)),
   })
 
-  // A LINK proof comes from the typed URL field; every other type comes from an
-  // uploaded asset. Keep them strictly separated so switching type can never
-  // submit a stale URL that belongs to the other input.
-  const proofUrlValue =
-    proofType === 'LINK' ? proofUrl.trim() : (proofUploadedUrls[0] ?? '')
+  // One proof = one media + its own authority source, because the journalist
+  // must be able to credit a different source on each one. The proof is either
+  // an uploaded file (its type comes from the upload) or a link.
+  const trimmedProofUrl = proofUrl.trim()
+  const uploadedProof = normalizeMediaDrafts(proofMedia)[0]
+  const pendingProof: { url: string; type: MediaType } | null = uploadedProof
+    ? { url: uploadedProof.url, type: uploadedProof.type }
+    : trimmedProofUrl
+      ? { url: trimmedProofUrl, type: 'LINK' }
+      : null
+  const canAddProof = proofAuthorityName.trim() !== '' && pendingProof !== null
+
   const addProofMutation = useMutation({
-    mutationFn: () =>
-      addJournalistProofMedia(dossier.id, {
-        url: proofUrlValue,
-        type: proofType,
+    mutationFn: () => {
+      if (!pendingProof) throw new Error('Aucune preuve à ajouter.')
+      return addJournalistProofMedia(dossier.id, {
+        url: pendingProof.url,
+        type: pendingProof.type,
         authoritySourceName: proofAuthorityName.trim(),
         authoritySourceType: proofSourceType,
-      }),
+      })
+    },
     onSuccess: () => {
       toast.success('Preuve ajoutée.')
       setProofAuthorityName('')
       setProofUrl('')
-      setProofUploadedUrls([])
+      setProofMedia([])
       void queryClient.invalidateQueries({
         queryKey: investigationQueryKeys.sourceMedia(dossier.id),
       })
@@ -173,19 +188,13 @@ export function JournalistInvestigationWorkspace({
   }
 
   function handleAddProof() {
-    if (!proofAuthorityName.trim()) {
-      toast.error("La source d'autorité est obligatoire.")
-      return
-    }
-    if (!proofUrlValue) {
-      toast.error('Ajoute un fichier ou une URL pour la preuve.')
-      return
-    }
-    try {
-      new URL(proofUrlValue)
-    } catch {
-      toast.error('La preuve doit être une URL valide.')
-      return
+    if (trimmedProofUrl) {
+      try {
+        new URL(trimmedProofUrl)
+      } catch {
+        toast.error('Le lien doit être une URL valide (ex: https://…).')
+        return
+      }
     }
     addProofMutation.mutate()
   }
@@ -289,25 +298,7 @@ export function JournalistInvestigationWorkspace({
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="grid gap-4">
-                  <div className="grid gap-3 md:grid-cols-3">
-                    <Label className="grid gap-1.5 text-sm">
-                      Type
-                      <select
-                        value={proofType}
-                        onChange={(e) => {
-                          setProofType(e.target.value as MediaType)
-                          setProofUrl('')
-                          setProofUploadedUrls([])
-                        }}
-                        className={SELECT_CLASS}
-                      >
-                        {MEDIA_TYPE_OPTIONS.map(([v, l]) => (
-                          <option key={v} value={v}>
-                            {l}
-                          </option>
-                        ))}
-                      </select>
-                    </Label>
+                  <div className="grid gap-3 md:grid-cols-2">
                     <Label className="grid gap-1.5 text-sm">
                       Source d'autorité
                       <Input
@@ -333,36 +324,43 @@ export function JournalistInvestigationWorkspace({
                       </select>
                     </Label>
                   </div>
-                  {/* Always show drag-and-drop — URL field additionally for LINK type */}
-                  <MediaDropzone
-                    key={proofType}
-                    inputId="journalist-proof-media"
-                    description="Glissez un fichier ou collez une URL ci-dessous pour les liens."
+                  <MediaFields
+                    title="Média de la preuve"
+                    description="Un fichier par preuve — son type est détecté automatiquement."
+                    items={proofMedia}
+                    onChange={setProofMedia}
                     ownerId={ownerId}
-                    onUrlsChange={setProofUploadedUrls}
+                    maxItems={1}
+                    disabled={
+                      addProofMutation.isPending || trimmedProofUrl !== ''
+                    }
                   />
-                  {proofType === 'LINK' && (
-                    <Label className="grid gap-1.5 text-sm">
-                      URL
-                      <Input
-                        placeholder="https://…"
-                        type="url"
-                        value={proofUrl}
-                        onChange={(e) => setProofUrl(e.target.value)}
-                      />
-                    </Label>
-                  )}
+                  <Label className="grid gap-1.5 text-sm">
+                    Lien
+                    <Input
+                      placeholder="https://…"
+                      type="url"
+                      value={proofUrl}
+                      onChange={(e) => setProofUrl(e.target.value)}
+                      disabled={
+                        addProofMutation.isPending ||
+                        uploadedProof !== undefined
+                      }
+                    />
+                    <span className="text-muted-foreground text-xs">
+                      Une preuve est soit un fichier, soit un lien.
+                    </span>
+                  </Label>
                   <Button
                     className="w-fit"
                     onClick={handleAddProof}
+                    disabled={!canAddProof}
                     loading={addProofMutation.isPending}
                   >
                     {!addProofMutation.isPending && (
                       <FilePlus2 className="size-4" />
                     )}
-                    {addProofMutation.isPending
-                      ? 'Ajout…'
-                      : 'Ajouter la preuve'}
+                    Ajouter la preuve
                   </Button>
                 </CardContent>
               </Card>
@@ -407,22 +405,13 @@ export function JournalistInvestigationWorkspace({
                 <div className="grid gap-3 sm:grid-cols-2">
                   <Label className="grid gap-1.5 text-sm">
                     Catégorie dominante
-                    <select
+                    <CategorySelect
                       value={mediaCategory}
-                      onChange={(e) =>
-                        setMediaCategory(e.target.value as MediaCategory)
+                      onChange={(value) =>
+                        setMediaCategory(value as MediaCategory)
                       }
-                      className={SELECT_CLASS}
-                    >
-                      <option value="" disabled>
-                        Choisir une catégorie
-                      </option>
-                      {CATEGORY_OPTIONS.map(([v, l]) => (
-                        <option key={v} value={v}>
-                          {l}
-                        </option>
-                      ))}
-                    </select>
+                      placeholder="Choisir une catégorie"
+                    />
                   </Label>
                   <Label className="grid gap-1.5 text-sm">
                     Verdict brouillon

@@ -3,7 +3,6 @@ export {
   CitizenReportCreateWorkspacePage,
   CitizenWorkspacePage,
   DirectorHomePage,
-  GuestHomePage,
   InboxCreateWorkspacePage,
   InboxSubjectDetailWorkspacePage,
   InboxWorkspacePage,

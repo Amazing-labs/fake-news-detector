@@ -1,9 +1,8 @@
 import { Link } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
-import { FilePlus2 } from 'lucide-react'
+import { FilePlus2, FileSearch } from 'lucide-react'
 import { listReports, reportQueryKeys } from '@entities/report/api'
 import { CreateReportForm } from '@features/reports/create-report-form'
-import { toApiErrorMessage } from '@shared/api/http'
 import { LoadingRow } from '@shared/ui/loader'
 import { Button } from '@shared/ui/shadcn/button'
 import {
@@ -16,7 +15,7 @@ import {
 } from '@shared/ui/shadcn/card'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
-import { StatusBadge } from '../workspace-ui'
+import { EmptyState, ErrorState, StatusBadge } from '../workspace-ui'
 
 export function CitizenWorkspacePage() {
   const { session } = useResolvedActor('citizen')
@@ -49,16 +48,14 @@ export function CitizenWorkspacePage() {
           <CardContent className="grid gap-3">
             {reportsQuery.isPending ? (
               <LoadingRow label="Chargement des signalements…" />
-            ) : null}
-            {reportsQuery.isError ? (
-              <p className="text-destructive text-sm">
-                {toApiErrorMessage(reportsQuery.error)}
-              </p>
-            ) : null}
-            {!reportsQuery.isPending && reportRows.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                Aucun signalement pour le moment.
-              </p>
+            ) : reportsQuery.isError ? (
+              <ErrorState error={reportsQuery.error} />
+            ) : reportRows.length === 0 ? (
+              <EmptyState
+                icon={FileSearch}
+                title="Aucun signalement pour le moment"
+                description="Signalez un contenu douteux : il rejoint le desk et vous suivez son traitement ici."
+              />
             ) : null}
             {reportRows.map((item) => (
               <div

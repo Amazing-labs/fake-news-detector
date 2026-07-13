@@ -4,12 +4,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   AlertTriangle,
   ArrowLeft,
+  Bell,
   CheckCheck,
   CheckCircle2,
   ExternalLink,
   Info,
 } from 'lucide-react'
-import { toApiErrorMessage } from '@shared/api/http'
 import { cn } from '@shared/lib/utils'
 import type { NotificationItem } from '@entities/notification/model'
 import {
@@ -30,6 +30,7 @@ import {
 } from '@shared/ui/shadcn/tabs'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
+import { EmptyState, ErrorState } from '../workspace-ui'
 
 // Visual tone is driven by `level` (success / warning / info), so a pleasant
 // event no longer looks like an alarm. `type` only decides where the action
@@ -149,17 +150,6 @@ function NotificationRow({ item }: { item: NotifItem }) {
   )
 }
 
-function EmptyState({ label }: { label: string }) {
-  return (
-    <div className="rounded-xl border border-dashed p-10 text-center">
-      <p className="font-medium">{label}</p>
-      <p className="text-muted-foreground mt-1 text-sm">
-        Elles apparaîtront ici dès que quelque chose change dans tes dossiers.
-      </p>
-    </div>
-  )
-}
-
 export function NotificationsWorkspacePage() {
   const { actor } = useResolvedActor('journalist')
   const queryClient = useQueryClient()
@@ -180,17 +170,8 @@ export function NotificationsWorkspacePage() {
   return (
     <AppLayout actor={actor} page="notifications">
       <div className="grid gap-4">
-        {/* Header */}
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h1 className="text-lg font-semibold">Notifications</h1>
-            <p className="text-muted-foreground text-sm">
-              {unread.length > 0
-                ? `${unread.length} non lue${unread.length > 1 ? 's' : ''}`
-                : 'Tout est lu'}
-            </p>
-          </div>
-          {unread.length > 0 && (
+        {unread.length > 0 ? (
+          <div className="flex justify-end">
             <Button
               variant="outline"
               size="sm"
@@ -200,10 +181,9 @@ export function NotificationsWorkspacePage() {
               {!markAll.isPending && <CheckCheck className="size-4" />}
               Tout lire
             </Button>
-          )}
-        </div>
+          </div>
+        ) : null}
 
-        {/* Tabs */}
         <Tabs defaultValue="all">
           <TabsList>
             <TabsTrigger value="all">Toutes ({items.length})</TabsTrigger>
@@ -215,9 +195,7 @@ export function NotificationsWorkspacePage() {
             {notificationsQuery.isPending ? (
               <LoadingRow label="Chargement des notifications…" />
             ) : notificationsQuery.isError ? (
-              <p className="text-destructive text-sm">
-                {toApiErrorMessage(notificationsQuery.error)}
-              </p>
+              <ErrorState error={notificationsQuery.error} />
             ) : items.length > 0 ? (
               <div className="grid gap-2">
                 {items.map((item) => (
@@ -225,13 +203,19 @@ export function NotificationsWorkspacePage() {
                 ))}
               </div>
             ) : (
-              <EmptyState label="Aucune notification disponible" />
+              <EmptyState
+                icon={Bell}
+                title="Aucune notification"
+                description="Elles apparaîtront ici dès que quelque chose bouge dans vos dossiers."
+              />
             )}
           </TabsContent>
 
           <TabsContent value="unread" className="mt-4">
             {notificationsQuery.isPending ? (
               <LoadingRow label="Chargement des notifications…" />
+            ) : notificationsQuery.isError ? (
+              <ErrorState error={notificationsQuery.error} />
             ) : unread.length > 0 ? (
               <div className="grid gap-2">
                 {unread.map((item) => (
@@ -239,13 +223,19 @@ export function NotificationsWorkspacePage() {
                 ))}
               </div>
             ) : (
-              <EmptyState label="Aucune notification non lue" />
+              <EmptyState
+                icon={CheckCheck}
+                title="Aucune notification non lue"
+                description="Vous êtes à jour."
+              />
             )}
           </TabsContent>
 
           <TabsContent value="read" className="mt-4">
             {notificationsQuery.isPending ? (
               <LoadingRow label="Chargement des notifications…" />
+            ) : notificationsQuery.isError ? (
+              <ErrorState error={notificationsQuery.error} />
             ) : read.length > 0 ? (
               <div className="grid gap-2">
                 {read.map((item) => (
@@ -253,7 +243,11 @@ export function NotificationsWorkspacePage() {
                 ))}
               </div>
             ) : (
-              <EmptyState label="Aucune notification lue" />
+              <EmptyState
+                icon={Bell}
+                title="Aucune notification lue"
+                description="Les notifications que vous ouvrez seront archivées ici."
+              />
             )}
           </TabsContent>
         </Tabs>
@@ -293,19 +287,14 @@ export function NotificationDetailWorkspacePage({
       <AppLayout actor={actor} page="notifications">
         {notificationsQuery.isPending ? (
           <PageLoader label="Chargement de la notification…" />
+        ) : notificationsQuery.isError ? (
+          <ErrorState error={notificationsQuery.error} />
         ) : (
-          <div className="rounded-xl border p-8 text-center">
-            <p
-              className={cn(
-                'font-medium',
-                notificationsQuery.isError && 'text-destructive',
-              )}
-            >
-              {notificationsQuery.isError
-                ? toApiErrorMessage(notificationsQuery.error)
-                : 'Notification introuvable'}
-            </p>
-          </div>
+          <EmptyState
+            icon={Bell}
+            title="Notification introuvable"
+            description="Elle a peut-être été supprimée, ou le lien est incorrect."
+          />
         )}
       </AppLayout>
     )

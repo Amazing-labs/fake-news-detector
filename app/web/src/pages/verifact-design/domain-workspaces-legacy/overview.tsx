@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router'
+import { Link, Navigate } from '@tanstack/react-router'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   ExternalLink,
   FileSearch,
+  Megaphone,
   Paperclip,
   PenLine,
   RotateCcw,
@@ -36,7 +37,13 @@ import {
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { domainLabel } from '../workspace-labels'
-import { EmptyState, MetaCell, StatCard, StatusBadge } from '../workspace-ui'
+import {
+  EmptyState,
+  ErrorState,
+  MetaCell,
+  StatCard,
+  StatusBadge,
+} from '../workspace-ui'
 import {
   CitizenReportCreateWorkspacePage as CitizenReportCreateWorkspace,
   CitizenWorkspacePage as CitizenWorkspace,
@@ -59,7 +66,6 @@ import {
 import { toApiErrorMessage } from '@shared/api/http'
 import { MediaPreviewItem } from './media-preview'
 import { toPreviewMedia } from './media-preview-utils'
-import { GuestHomePage } from './admin'
 
 function useActorMetrics() {
   return useQuery({
@@ -82,14 +88,16 @@ function statValue(value: number | undefined) {
 }
 
 export function RoleAwareDashboardPage() {
-  const { actor } = useResolvedActor('guest')
+  const { actor, isActorPending } = useResolvedActor('guest')
 
+  if (isActorPending) return null
   if (actor === 'director') return <DirectorHomePage />
   if (actor === 'journalist') return <JournalistWorkspacePage />
   if (actor === 'watcher') return <WatcherWorkspacePage />
   if (actor === 'citizen') return <CitizenDashboardPage />
 
-  return <GuestHomePage />
+  // No session: the public landing at `/` is the guest surface now.
+  return <Navigate to="/" />
 }
 
 export function DirectorHomePage() {
@@ -260,11 +268,7 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
   if (reportQuery.isError) {
     return (
       <AppLayout actor={actor} page="reports">
-        <Card>
-          <CardContent className="text-destructive pt-6">
-            {toApiErrorMessage(reportQuery.error)}
-          </CardContent>
-        </Card>
+        <ErrorState error={reportQuery.error} />
       </AppLayout>
     )
   }
@@ -302,7 +306,9 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <h1 className="text-lg font-semibold">{report.title}</h1>
+              <h1 className="text-xl font-semibold tracking-tight text-balance">
+                {report.title}
+              </h1>
               <p className="text-muted-foreground mt-1 text-sm">
                 Historique du signalement et suivi éditorial.
               </p>
@@ -348,11 +354,7 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
           {mediaQuery.isPending ? (
             <PageLoader label="Chargement des médias…" />
           ) : mediaQuery.isError ? (
-            <Card>
-              <CardContent className="text-destructive pt-6">
-                {toApiErrorMessage(mediaQuery.error)}
-              </CardContent>
-            </Card>
+            <ErrorState error={mediaQuery.error} />
           ) : media.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2">
               {media.map((item) => (
@@ -454,9 +456,11 @@ export function CitizenDashboardPage() {
           </CardHeader>
           <CardContent className="grid gap-3">
             {recentPublications.length === 0 ? (
-              <p className="text-muted-foreground text-sm">
-                Aucun retour public pour le moment.
-              </p>
+              <EmptyState
+                icon={Megaphone}
+                title="Aucun retour public"
+                description="Les publications et correctifs liés à vos signalements vérifiés apparaîtront ici."
+              />
             ) : null}
             {recentPublications.map((item) => (
               <div
@@ -467,9 +471,9 @@ export function CitizenDashboardPage() {
                   <p className="truncate font-medium">
                     {item.title ?? 'Publication sans titre'}
                   </p>
-                  <p className="text-muted-foreground mt-1 text-sm">
-                    Verdict: {domainLabel(item.finalVerdict)}
-                  </p>
+                  <div className="mt-2">
+                    <StatusBadge status={item.finalVerdict} />
+                  </div>
                 </div>
                 <Button
                   variant="ghost"
@@ -536,9 +540,11 @@ export function WatcherWorkspacePage() {
         </CardHeader>
         <CardContent className="space-y-3">
           {enrichable.length === 0 ? (
-            <p className="text-muted-foreground text-sm">
-              Aucune enquête à enrichir pour le moment.
-            </p>
+            <EmptyState
+              icon={FileSearch}
+              title="Aucune enquête à enrichir"
+              description="Les enquêtes ouvertes à contribution apparaîtront ici."
+            />
           ) : null}
           {enrichable.map((item) => (
             <Link

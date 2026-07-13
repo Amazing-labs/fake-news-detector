@@ -5,22 +5,6 @@ export type MediaDraft = {
   name?: string
 }
 
-export const mediaTypes: MediaDraft['type'][] = [
-  'AUDIO',
-  'LINK',
-  'TEXT',
-  'IMAGE',
-  'VIDEO',
-  'DOCUMENT',
-]
-
-export function createEmptyMediaDraft(): MediaDraft {
-  return {
-    url: '',
-    type: 'LINK',
-  }
-}
-
 export function normalizeMediaDrafts(items: MediaDraft[]) {
   return items
     .map((item, index) => ({

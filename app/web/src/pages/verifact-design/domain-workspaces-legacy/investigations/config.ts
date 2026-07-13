@@ -12,27 +12,14 @@ import {
   Users,
 } from 'lucide-react'
 
+// Origin is context, not state: it is told by an icon and a label. Colour stays
+// reserved for where the work stands (see StatusBadge), so the two vocabularies
+// never contradict each other on the same media card.
 export const ORIGIN_CONFIG = {
-  CITIZEN_REPORT: {
-    badgeClass:
-      'border-blue-200 bg-blue-50 text-blue-700 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300',
-    Icon: User,
-  },
-  DIRECTOR_INITIATED: {
-    badgeClass:
-      'border-purple-200 bg-purple-50 text-purple-700 dark:border-purple-800 dark:bg-purple-950 dark:text-purple-300',
-    Icon: Shield,
-  },
-  JOURNALIST_PROOF: {
-    badgeClass:
-      'border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300',
-    Icon: Newspaper,
-  },
-  WATCHER: {
-    badgeClass:
-      'border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-800 dark:bg-orange-950 dark:text-orange-300',
-    Icon: Users,
-  },
+  CITIZEN_REPORT: { Icon: User },
+  DIRECTOR_INITIATED: { Icon: Shield },
+  JOURNALIST_PROOF: { Icon: Newspaper },
+  WATCHER: { Icon: Users },
 } as const
 
 export const MEDIA_TYPE_ICONS: Record<string, ElementType> = {
@@ -44,15 +31,34 @@ export const MEDIA_TYPE_ICONS: Record<string, ElementType> = {
   TEXT: AlignLeft,
 }
 
-export const CATEGORY_OPTIONS = [
-  ['CONTEXT_COLLAPSE', 'Contexte déplacé'],
-  ['MANIPULATED', 'Manipulé'],
-  ['FABRICATED', 'Fabriqué'],
-  ['SATIRE', 'Satire'],
-  ['MISLEADING', 'Trompeur'],
-  ['IMPOSTOR', 'Usurpation'],
-  ['OTHER', 'Autre'],
+// Deceptive and trustworthy categories sit at opposite poles: grouping them
+// keeps a mis-click from filing an authentic media under "Fabriqué".
+export const CATEGORY_GROUPS: {
+  label: string
+  options: [string, string][]
+}[] = [
+  {
+    label: 'Contenu trompeur',
+    options: [
+      ['CONTEXT_COLLAPSE', 'Contexte déplacé'],
+      ['MANIPULATED', 'Manipulé'],
+      ['FABRICATED', 'Fabriqué'],
+      ['SATIRE', 'Satire'],
+      ['MISLEADING', 'Trompeur'],
+      ['IMPOSTOR', 'Usurpation'],
+    ],
+  },
+  {
+    label: 'Contenu fiable',
+    options: [
+      ['AUTHENTIC', 'Contenu avéré'],
+      ['CORROBORATED', 'Recoupé'],
+      ['OFFICIAL_SOURCE', 'Source officielle'],
+    ],
+  },
 ]
+
+export const CATEGORY_FALLBACK: [string, string] = ['OTHER', 'Autre']
 
 export const RELIABILITY_OPTIONS = [
   ['TRUE', 'Vrai'],

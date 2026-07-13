@@ -9,6 +9,9 @@ export type MediaCategory =
   | 'MISLEADING'
   | 'IMPOSTOR'
   | 'OTHER'
+  | 'AUTHENTIC'
+  | 'CORROBORATED'
+  | 'OFFICIAL_SOURCE'
 export type Verdict = 'TRUE' | 'FALSE' | 'MISLEADING' | 'UNVERIFIABLE'
 
 /** Verdicts allowed for a standard official publication after director approval */

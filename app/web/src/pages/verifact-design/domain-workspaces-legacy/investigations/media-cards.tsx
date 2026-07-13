@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader } from '@shared/ui/shadcn/card'
 import { Label } from '@shared/ui/shadcn/label'
 import { Textarea } from '@shared/ui/shadcn/textarea'
 import { domainLabel } from '../../workspace-labels'
+import { StatusBadge } from '../../workspace-ui'
 import {
   CategorySelect,
   MediaTypeIcon,
@@ -31,6 +32,16 @@ import type {
   WatcherEvidenceItem,
   WatcherEvidenceMedia,
 } from './types'
+
+// Carries the same emerald "done" tone as a resolved StatusBadge, so a
+// classified media reads like any other finished thing in the product.
+function ClassifiedBadge({ children }: { children: string }) {
+  return (
+    <Badge className="border-transparent bg-emerald-500/15 text-emerald-700 dark:text-emerald-400">
+      {children}
+    </Badge>
+  )
+}
 
 // Shared classification form (category + reliability + justification) used by
 // the journalist to classify source media and watcher evidence media.
@@ -55,11 +66,11 @@ function MediaClassificationForm({
     <div className="grid gap-3">
       <div className="grid gap-3 md:grid-cols-2">
         <Label className="grid gap-1.5 text-sm">
-          Categorie
+          Catégorie
           <CategorySelect value={category} onChange={setCategory} />
         </Label>
         <Label className="grid gap-1.5 text-sm">
-          Fiabilite
+          Fiabilité
           <ReliabilitySelect value={reliability} onChange={setReliability} />
         </Label>
       </div>
@@ -70,11 +81,11 @@ function MediaClassificationForm({
           onChange={(e) => setJustification(e.target.value)}
           rows={2}
           className="resize-none"
-          placeholder="Pourquoi ce media est-il fiable ou non ?"
+          placeholder="Pourquoi ce média est-il fiable ou non ?"
         />
       </Label>
       {error ? (
-        <p className="text-xs text-red-400">{toApiErrorMessage(error)}</p>
+        <p className="text-destructive text-sm">{toApiErrorMessage(error)}</p>
       ) : null}
       <Button
         size="sm"
@@ -154,7 +165,7 @@ function MediaArtifact({
           target="_blank"
           rel="noopener noreferrer"
           className="block overflow-hidden rounded-lg border"
-          title="Ouvrir en plein ecran"
+          title="Ouvrir en plein écran"
         >
           <img src={href} alt={title} className="size-16 object-cover" />
         </a>
@@ -167,7 +178,7 @@ function MediaArtifact({
           target="_blank"
           rel="noopener noreferrer"
           className="block overflow-hidden rounded-lg border"
-          title="Ouvrir en plein ecran"
+          title="Ouvrir en plein écran"
         >
           <img
             src={href}
@@ -175,7 +186,7 @@ function MediaArtifact({
             className="max-h-56 w-full object-cover"
           />
         </a>
-        <DownloadButton href={href} label="Telecharger l'image" />
+        <DownloadButton href={href} label="Télécharger l'image" />
       </div>
     )
   }
@@ -200,16 +211,16 @@ function MediaArtifact({
           className="max-h-56 w-full rounded-lg border bg-black"
         >
           <a href={href} target="_blank" rel="noopener noreferrer">
-            Ouvrir la video
+            Ouvrir la vidéo
           </a>
         </video>
-        <DownloadButton href={href} label="Telecharger la video" />
+        <DownloadButton href={href} label="Télécharger la vidéo" />
       </div>
     )
   }
 
   if (type === 'AUDIO') {
-    return <DownloadButton href={href} label="Ecouter / Telecharger" />
+    return <DownloadButton href={href} label="Écouter / Télécharger" />
   }
 
   if (type === 'LINK') {
@@ -223,7 +234,7 @@ function MediaArtifact({
     )
   }
 
-  return <DownloadButton href={href} label="Telecharger" />
+  return <DownloadButton href={href} label="Télécharger" />
 }
 
 // ── Source media card (journalist classifies) ──────────────────────────────────
@@ -262,11 +273,7 @@ export function SourceMediaCard({
           </div>
           <div className="flex shrink-0 flex-wrap items-center gap-2">
             <OriginBadge origin={media.origin} />
-            {isClassified && (
-              <Badge className="border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300">
-                Classe
-              </Badge>
-            )}
+            {isClassified && <ClassifiedBadge>Classé</ClassifiedBadge>}
           </div>
         </div>
       </CardHeader>
@@ -316,11 +323,7 @@ export function SourceMediaReadRow({ media }: { media: SourceMedia }) {
             {media.category && (
               <Badge variant="outline">{domainLabel(media.category)}</Badge>
             )}
-            {media.reliability && (
-              <Badge variant="secondary">
-                {domainLabel(media.reliability)}
-              </Badge>
-            )}
+            {media.reliability && <StatusBadge status={media.reliability} />}
             {showButton && (
               <MediaArtifact
                 url={media.url!}
@@ -447,18 +450,14 @@ function EvidenceMediaClassificationRow({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           <MediaTypeIcon type={media.type} />
-          <span className="text-sm font-medium">Media {index + 1}</span>
+          <span className="text-sm font-medium">Média {index + 1}</span>
         </div>
-        {isClassified && (
-          <Badge className="border-green-200 bg-green-50 text-xs text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300">
-            Classe
-          </Badge>
-        )}
+        {isClassified && <ClassifiedBadge>Classé</ClassifiedBadge>}
       </div>
       <MediaArtifact
         url={media.url}
         type={media.type}
-        title={`Media ${index + 1}`}
+        title={`Média ${index + 1}`}
       />
       <MediaClassificationForm
         key={`${media.id}-${media.category ?? ''}-${media.reliability ?? ''}`}
@@ -498,6 +497,7 @@ export function WatcherEvidenceCard({
       <button
         type="button"
         className="w-full text-left"
+        aria-expanded={isOpen}
         onClick={() => setIsOpen((v) => !v)}
       >
         <CardHeader className="pb-3">
@@ -516,9 +516,7 @@ export function WatcherEvidenceCard({
             <div className="flex shrink-0 items-center gap-2">
               {withClassification &&
                 (allClassified ? (
-                  <Badge className="border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950 dark:text-green-300">
-                    Tous classés
-                  </Badge>
+                  <ClassifiedBadge>Tous classés</ClassifiedBadge>
                 ) : (
                   <Badge variant="outline">
                     {classifiedCount}/{evidence.media.length} classé
@@ -539,12 +537,12 @@ export function WatcherEvidenceCard({
       {isOpen && (
         <CardContent className="grid gap-4 pt-0">
           {evidence.note && (
-            <div className="border-l-2 pl-3">
-              <p className="text-muted-foreground mb-1 text-xs font-medium tracking-wide uppercase">
+            <blockquote className="bg-muted/40 rounded-lg px-4 py-3">
+              <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
                 Observation
               </p>
-              <p className="text-sm">{evidence.note}</p>
-            </div>
+              <p className="mt-1.5 text-sm leading-relaxed">{evidence.note}</p>
+            </blockquote>
           )}
 
           <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
@@ -572,7 +570,7 @@ export function WatcherEvidenceCard({
                       <div className="flex items-center gap-2">
                         <MediaTypeIcon type={m.type} />
                         <span className="text-sm font-medium">
-                          Media {i + 1}
+                          Média {i + 1}
                         </span>
                       </div>
                       {classified && (
@@ -580,16 +578,14 @@ export function WatcherEvidenceCard({
                           <Badge variant="outline" className="text-xs">
                             {domainLabel(m.category!)}
                           </Badge>
-                          <Badge variant="secondary" className="text-xs">
-                            {domainLabel(m.reliability!)}
-                          </Badge>
+                          <StatusBadge status={m.reliability!} />
                         </div>
                       )}
                     </div>
                     <MediaArtifact
                       url={m.url}
                       type={m.type}
-                      title={`Media ${i + 1}`}
+                      title={`Média ${i + 1}`}
                     />
                   </div>
                 )

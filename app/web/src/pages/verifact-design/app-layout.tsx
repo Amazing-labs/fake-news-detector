@@ -11,7 +11,7 @@ import {
 } from 'lucide-react'
 import type { ComponentType, ReactNode } from 'react'
 import { useLayoutEffect, useRef, useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
 import {
   listNotifications,
   notificationQueryKeys,
@@ -101,7 +101,7 @@ function NotificationPopover() {
           </span>
         </Button>
       </HoverCardTrigger>
-      <HoverCardContent align="end" className="w-[380px] p-0">
+      <HoverCardContent align="end" className="w-95 p-0">
         {/* Header */}
         <div className="flex items-center gap-2 px-4 py-3">
           <span className="text-sm font-semibold">Notifications</span>
@@ -113,7 +113,7 @@ function NotificationPopover() {
         </div>
         <Separator />
         {/* Notification rows */}
-        <div className="max-h-[340px] overflow-y-auto">
+        <div className="max-h-85 overflow-y-auto">
           {notifications.map((item) => {
             const Icon = LEVEL_ICONS[item.level] ?? Bell
             const isRead = item.isRead
@@ -170,6 +170,7 @@ export function AppLayout(props: {
 }) {
   const location = useLocation()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const tabletNavRef = useRef<HTMLDivElement>(null)
   const { isDark, setIsDark } = useTheme()
   const { session } = useAppSession()
@@ -185,8 +186,13 @@ export function AppLayout(props: {
     setIsSigningOut(true)
     try {
       await signOutAppSession()
-      // Back to the guest landing page after logout, not the auth screen.
-      await navigate({ to: '/' })
+      // Drop every cached query: they hold the previous account's data and
+      // would be served to whoever signs in next.
+      queryClient.clear()
+      // Back to the public landing page, replacing the current entry so it does
+      // not sit in the history. Earlier workspace URLs are still reachable with
+      // "back": the AppShell guard is what turns them away.
+      await navigate({ to: '/', replace: true })
     } finally {
       setIsSigningOut(false)
     }
@@ -235,10 +241,10 @@ export function AppLayout(props: {
                 key={item.label}
                 to={item.to}
                 className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors',
+                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-200',
                   active
-                    ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium'
-                    : 'text-muted-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                    ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
+                    : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
                 )}
               >
                 <Icon className="size-4" />
@@ -254,7 +260,7 @@ export function AppLayout(props: {
         </nav>
         <Separator />
         <div className="p-3">
-          <div className="bg-sidebar-accent/50 flex items-center gap-3 rounded-lg p-3">
+          <div className="bg-sidebar-accent/50 flex items-center gap-3 rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
             <Avatar>
               <AvatarImage src={session?.user.image ?? ''} alt={displayName} />
               <AvatarFallback>{initials(displayName)}</AvatarFallback>
@@ -270,7 +276,7 @@ export function AppLayout(props: {
       </aside>
 
       <div className="overflow-x-hidden lg:pl-72">
-        <header className="bg-background/90 supports-[backdrop-filter]:bg-background/60 sticky top-0 z-20 border-b backdrop-blur">
+        <header className="bg-background/90 supports-backdrop-filter:bg-background/60 sticky top-0 z-20 border-b backdrop-blur">
           <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
             <div className="flex items-center gap-2 lg:hidden">
               <div className="bg-sidebar-primary text-sidebar-primary-foreground flex size-9 items-center justify-center rounded-lg">

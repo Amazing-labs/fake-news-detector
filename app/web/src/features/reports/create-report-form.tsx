@@ -107,7 +107,6 @@ export function CreateReportForm() {
           items={media}
           onChange={setMedia}
           ownerId={ownerId}
-          variant="dark"
         />
         {normalizeMediaDrafts(media).length === 0 && (
           <p className="text-xs text-red-400">

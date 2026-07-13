@@ -1,7 +1,14 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { ExternalLink, FilePlus2, Trash2 } from 'lucide-react'
+import {
+  ExternalLink,
+  FilePlus2,
+  FileSearch,
+  Inbox,
+  Paperclip,
+  Trash2,
+} from 'lucide-react'
 import { Button } from '@shared/ui/shadcn/button'
 import {
   Card,
@@ -35,7 +42,7 @@ import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { toApiErrorMessage } from '@shared/api/http'
 import { domainLabel } from '../workspace-labels'
-import { MetaCell, StatusBadge } from '../workspace-ui'
+import { EmptyState, ErrorState, MetaCell, StatusBadge } from '../workspace-ui'
 import { listReports, reportQueryKeys } from '@entities/report/api'
 import type { ReportItem } from '@entities/report/model'
 import {
@@ -206,17 +213,23 @@ export function ReportsWorkspacePage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="open" className="mt-4">
-          <ReportList items={openItems} />
+          <ReportList items={openItems} query={reportsQuery} />
         </TabsContent>
         <TabsContent value="archived" className="mt-4">
-          <ReportList items={archivedItems} />
+          <ReportList items={archivedItems} query={reportsQuery} />
         </TabsContent>
       </Tabs>
     </AppLayout>
   )
 }
 
-function ReportList({ items }: { items: ReportItem[] }) {
+function ReportList({
+  items,
+  query,
+}: {
+  items: ReportItem[]
+  query: { isPending: boolean; isError: boolean; error: unknown }
+}) {
   return (
     <Card>
       <CardHeader>
@@ -227,9 +240,16 @@ function ReportList({ items }: { items: ReportItem[] }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
-        {items.length ? (
+        {query.isError ? (
+          <ErrorState error={query.error} />
+        ) : query.isPending ? (
+          <LoadingRow label="Chargement des signalements…" />
+        ) : items.length ? (
           items.map((item) => (
-            <div key={item.id} className="rounded-lg border p-4">
+            <div
+              key={item.id}
+              className="border-border/60 hover:border-border hover:bg-muted/30 rounded-lg border p-4 transition-colors"
+            >
               <div className="flex flex-wrap items-center gap-2">
                 <p className="font-medium">{item.title}</p>
                 <StatusBadge status={item.status} />
@@ -242,12 +262,11 @@ function ReportList({ items }: { items: ReportItem[] }) {
             </div>
           ))
         ) : (
-          <div className="rounded-lg border border-dashed p-8 text-center">
-            <p className="font-medium">Aucun signalement ici</p>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Les signalements apparaîtront ici une fois déposés.
-            </p>
-          </div>
+          <EmptyState
+            icon={FileSearch}
+            title="Aucun signalement ici"
+            description="Les signalements apparaîtront ici une fois déposés."
+          />
         )}
       </CardContent>
     </Card>
@@ -338,14 +357,16 @@ function InboxList(props: {
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
-        {inboxSubjectsQuery.isPending ? (
+        {inboxSubjectsQuery.isError ? (
+          <ErrorState error={inboxSubjectsQuery.error} />
+        ) : inboxSubjectsQuery.isPending ? (
           <LoadingRow label="Chargement des sujets…" />
         ) : rows.length ? (
           rows.map((item) => {
             return (
               <div
                 key={item.id}
-                className="grid gap-3 rounded-lg border p-4 md:grid-cols-[1fr_auto]"
+                className="border-border/60 hover:border-border hover:bg-muted/30 grid gap-3 rounded-lg border p-4 transition-colors md:grid-cols-[1fr_auto]"
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium" title={item.theme}>
@@ -427,12 +448,11 @@ function InboxList(props: {
             )
           })
         ) : (
-          <div className="rounded-lg border border-dashed p-8 text-center">
-            <p className="font-medium">Aucun sujet ici</p>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Les sujets apparaîtront ici une fois créés ou reçus.
-            </p>
-          </div>
+          <EmptyState
+            icon={Inbox}
+            title="Aucun sujet ici"
+            description="Les sujets apparaîtront ici une fois créés ou reçus."
+          />
         )}
       </CardContent>
     </Card>
@@ -473,7 +493,9 @@ export function InboxSubjectDetailWorkspacePage({
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <h1 className="text-lg font-semibold">{subject.theme}</h1>
+              <h1 className="text-xl font-semibold tracking-tight text-balance">
+                {subject.theme}
+              </h1>
               <p className="text-muted-foreground mt-1 text-sm">
                 Détail du sujet avant prise en charge journalistique.
               </p>
@@ -563,12 +585,11 @@ export function InboxSubjectDetailWorkspacePage({
               ))}
             </div>
           ) : (
-            <div className="rounded-lg border border-dashed p-8 text-center">
-              <p className="font-medium">Aucun média joint</p>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Le créateur du sujet n'a pas joint de média.
-              </p>
-            </div>
+            <EmptyState
+              icon={Paperclip}
+              title="Aucun média joint"
+              description="Le créateur du sujet n'a pas joint de média."
+            />
           )}
         </TabsContent>
       </Tabs>

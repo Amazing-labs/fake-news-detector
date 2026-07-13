@@ -3,12 +3,14 @@ import {
   ExternalLink,
   FileSearch,
   Link2,
+  Megaphone,
+  Paperclip,
   RotateCcw,
   ShieldCheck,
 } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { PageLoader } from '@shared/ui/loader'
+import { LoadingRow, PageLoader } from '@shared/ui/loader'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
 import {
@@ -31,7 +33,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
 import { domainLabel } from '../workspace-labels'
-import { MetaCell } from '../workspace-ui'
+import { EmptyState, ErrorState, MetaCell } from '../workspace-ui'
 import {
   createPublicationCorrection,
   getPublication,
@@ -68,13 +70,25 @@ export function PublicationsWorkspacePage() {
           </TabsTrigger>
         </TabsList>
         <TabsContent value="all" className="mt-4">
-          <PublicationList items={items} canManage={canManage} />
+          <PublicationList
+            items={items}
+            canManage={canManage}
+            query={publicationsQuery}
+          />
         </TabsContent>
         <TabsContent value="publications" className="mt-4">
-          <PublicationList items={mainItems} canManage={canManage} />
+          <PublicationList
+            items={mainItems}
+            canManage={canManage}
+            query={publicationsQuery}
+          />
         </TabsContent>
         <TabsContent value="corrections" className="mt-4">
-          <PublicationList items={correctionItems} canManage={canManage} />
+          <PublicationList
+            items={correctionItems}
+            canManage={canManage}
+            query={publicationsQuery}
+          />
         </TabsContent>
       </Tabs>
     </AppLayout>
@@ -84,9 +98,11 @@ export function PublicationsWorkspacePage() {
 function PublicationList({
   items,
   canManage,
+  query,
 }: {
   items: PublicationItem[]
   canManage: boolean
+  query: { isPending: boolean; isError: boolean; error: unknown }
 }) {
   return (
     <Card>
@@ -97,13 +113,17 @@ function PublicationList({
         </CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
-        {items.length ? (
+        {query.isError ? (
+          <ErrorState error={query.error} />
+        ) : query.isPending ? (
+          <LoadingRow label="Chargement des publications…" />
+        ) : items.length ? (
           items.map((item) => {
             const publicationId = item.id
             return (
               <div
                 key={item.id}
-                className="grid gap-3 rounded-lg border p-4 sm:grid-cols-[1fr_auto] sm:items-start"
+                className="border-border/60 hover:border-border hover:bg-muted/30 grid gap-3 rounded-lg border p-4 transition-colors sm:grid-cols-[1fr_auto] sm:items-start"
               >
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
@@ -151,12 +171,11 @@ function PublicationList({
             )
           })
         ) : (
-          <div className="rounded-lg border border-dashed p-8 text-center">
-            <p className="font-medium">Aucune publication ici</p>
-            <p className="text-muted-foreground mt-1 text-sm">
-              Les publications apparaîtront ici une fois validées.
-            </p>
-          </div>
+          <EmptyState
+            icon={Megaphone}
+            title="Aucune publication ici"
+            description="Les publications apparaîtront ici une fois validées."
+          />
         )}
       </CardContent>
     </Card>
@@ -197,11 +216,7 @@ export function PublicationDetailWorkspacePage({
   if (publicationQuery.isError) {
     return (
       <AppLayout actor={actor} page="publications">
-        <Card>
-          <CardContent className="text-destructive pt-6">
-            {toApiErrorMessage(publicationQuery.error)}
-          </CardContent>
-        </Card>
+        <ErrorState error={publicationQuery.error} />
       </AppLayout>
     )
   }
@@ -218,7 +233,7 @@ export function PublicationDetailWorkspacePage({
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <h1 className="text-lg font-semibold">
+              <h1 className="text-xl font-semibold tracking-tight text-balance">
                 {publication.title ?? 'Publication sans titre'}
               </h1>
               <p className="text-muted-foreground mt-1 text-sm">
@@ -301,9 +316,10 @@ export function PublicationDetailWorkspacePage({
                 </CardContent>
               </Card>
             ) : (
-              <EmptyPanel
+              <EmptyState
+                icon={Link2}
                 title="Aucune source attachée"
-                hint="Les sources seront disponibles une fois la publication complète."
+                description="Les sources seront disponibles une fois la publication complète."
               />
             )}
           </TabsContent>
@@ -324,9 +340,10 @@ export function PublicationDetailWorkspacePage({
                 </CardContent>
               </Card>
             ) : (
-              <EmptyPanel
+              <EmptyState
+                icon={Paperclip}
                 title="Aucun média joint"
-                hint="Les médias seront disponibles une fois la publication complète."
+                description="Les médias seront disponibles une fois la publication complète."
               />
             )}
           </TabsContent>
@@ -352,15 +369,6 @@ export function PublicationDetailWorkspacePage({
         </Card>
       )}
     </AppLayout>
-  )
-}
-
-function EmptyPanel({ title, hint }: { title: string; hint: string }) {
-  return (
-    <div className="rounded-lg border border-dashed p-8 text-center">
-      <p className="font-medium">{title}</p>
-      <p className="text-muted-foreground mt-1 text-sm">{hint}</p>
-    </div>
   )
 }
 
@@ -544,13 +552,12 @@ export function PublicationCorrectionsWorkspacePage({
               />
             </div>
           ) : (
-            <div className="rounded-lg border border-dashed p-4">
-              <p className="font-medium">Aucune publication sélectionnée</p>
-              <p className="text-muted-foreground mt-1 text-sm">
-                Choisis une publication dans la liste pour préparer le
-                correctif.
-              </p>
-            </div>
+            <EmptyState
+              icon={Megaphone}
+              title="Aucune publication sélectionnée"
+              description="Choisissez une publication dans la liste pour préparer le correctif."
+              className="p-6"
+            />
           )}
           <Label className="grid gap-2">
             Titre du correctif

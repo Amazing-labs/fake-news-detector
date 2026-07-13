@@ -20,7 +20,7 @@ function RootLayout() {
       <AppShell session={session} isPending={isPending}>
         <Outlet />
       </AppShell>
-      <Toaster richColors position="top-right" />
+      <Toaster richColors closeButton position="top-right" />
       <TanStackRouterDevtools />
     </>
   )
