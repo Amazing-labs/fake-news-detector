@@ -9,6 +9,7 @@ export const verificationThemes = [
   { value: 'Société', label: 'Société' },
   { value: 'Sport', label: 'Sport' },
   { value: 'International', label: 'International' },
+  { value: 'Autre', label: 'Autre' },
 ] as const
 
 export type VerificationTheme = (typeof verificationThemes)[number]['value']

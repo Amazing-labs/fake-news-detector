@@ -47,6 +47,7 @@ export const verificationThemeSchema = z.enum([
   'Société',
   'Sport',
   'International',
+  'Autre',
 ])
 
 export const journalistStatusReasonSchema = z.enum([
