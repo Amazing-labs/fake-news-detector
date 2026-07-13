@@ -476,7 +476,9 @@ export function InboxSubjectDetailWorkspacePage({
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <h1 className="text-lg font-semibold">{subject.theme}</h1>
+              <h1 className="text-xl font-semibold tracking-tight text-balance">
+                {subject.theme}
+              </h1>
               <p className="text-muted-foreground mt-1 text-sm">
                 Détail du sujet avant prise en charge journalistique.
               </p>

@@ -45,11 +45,9 @@ export function MediaTypeIcon({ type }: { type: string }) {
 
 export function MetaCell({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border p-3">
-      <p className="text-muted-foreground text-xs font-medium uppercase">
-        {label}
-      </p>
-      <p className="mt-1 font-medium">{value}</p>
+    <div className="bg-muted/40 rounded-xl p-3.5">
+      <p className="text-muted-foreground text-xs font-medium">{label}</p>
+      <p className="mt-1 font-medium tracking-tight">{value}</p>
     </div>
   )
 }
@@ -59,7 +57,7 @@ export function MetaCell({ label, value }: { label: string; value: string }) {
 // watcher) so every role reads the source context the same way.
 export function SubjectContextQuote({ subject }: { subject: string }) {
   return (
-    <blockquote className="border-primary/50 bg-muted/40 rounded-r-lg border-l-2 px-4 py-3">
+    <blockquote className="bg-muted/40 rounded-lg px-4 py-3">
       <p className="text-muted-foreground text-xs font-medium tracking-wide uppercase">
         Contexte du sujet
       </p>
