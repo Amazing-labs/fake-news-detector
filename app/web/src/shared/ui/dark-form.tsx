@@ -7,9 +7,9 @@ export function DarkFormCard(props: {
   children: ReactNode
 }) {
   return (
-    <section className="bg-card text-card-foreground border-border rounded-2xl border p-6 shadow-sm">
+    <section className="bg-card text-card-foreground border-border rounded-2xl border p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_10px_28px_-18px_rgba(0,0,0,0.16)]">
       <div>
-        <h1 className="text-lg font-semibold">{props.title}</h1>
+        <h1 className="text-xl font-semibold tracking-tight">{props.title}</h1>
         {props.description ? (
           <p className="text-muted-foreground mt-1 text-sm">
             {props.description}
@@ -108,7 +108,7 @@ export function DarkButton(
     <button
       type={type}
       disabled={disabled || loading}
-      className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-60 ${tone} ${className ?? ''}`}
+      className={`inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-60 ${tone} ${className ?? ''}`}
       {...rest}
     >
       {loading ? <Spinner /> : null}
