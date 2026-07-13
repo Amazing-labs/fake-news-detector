@@ -17,8 +17,7 @@ import {
 } from '../lib/supabase'
 import { cleanupMedia } from '../api/media'
 import { cn } from '../lib/utils'
-import { Button, Input, Select, SectionCard } from './primitives'
-import { mediaTypes, type MediaDraft } from './media-fields.model'
+import { type MediaDraft } from './media-fields.model'
 
 const MAX_MEDIA = 6
 
@@ -57,7 +56,6 @@ export function MediaFields(props: {
   description?: string
   items: MediaDraft[]
   onChange: (items: MediaDraft[]) => void
-  variant?: 'default' | 'dark'
   /** Current actor id; uploads are stored under `uploads/<ownerId>/`. */
   ownerId: string
   /** Locks all controls (e.g. during submit). */
@@ -68,7 +66,6 @@ export function MediaFields(props: {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const sessionUploadsRef = useRef<string[]>([])
-  const isDark = props.variant === 'dark'
   const canUpload = isSupabaseUploadConfigured()
   const maxItems = props.maxItems ?? MAX_MEDIA
   const isSingle = maxItems === 1
@@ -130,234 +127,110 @@ export function MediaFields(props: {
     props.onChange(props.items.filter((_, i) => i !== index))
   }
 
-  function updateItem(index: number, patch: Partial<MediaDraft>) {
-    if (props.disabled) return
-    const next = [...props.items]
-    next[index] = { ...next[index], ...patch }
-    props.onChange(next)
-  }
-
-  if (isDark) {
-    return (
-      <section className="grid gap-3">
-        <div>
-          <h2 className="text-foreground text-sm font-semibold">
-            {props.title ?? 'Médias'}
-          </h2>
-          <div className="mt-0.5 flex items-center justify-between gap-2">
-            <p className="text-muted-foreground text-sm">
-              {props.description ?? 'Ajoute un ou plusieurs médias via upload.'}
-            </p>
-            <span className="text-muted-foreground shrink-0 text-xs">
-              {props.items.length} / {maxItems}
-            </span>
-          </div>
-        </div>
-
-        {props.items.length > 0 && (
-          <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
-            {props.items.map((item, index) => {
-              const Icon = mediaTypeIcon[item.type] ?? File
-              return (
-                <div
-                  key={`${index}-${item.type}`}
-                  className="group relative min-w-0"
-                >
-                  {item.type === 'IMAGE' && item.url ? (
-                    <div className="border-border aspect-square overflow-hidden rounded-lg border">
-                      <img
-                        src={item.url}
-                        alt={`Média ${index + 1}`}
-                        className="size-full object-cover"
-                      />
-                    </div>
-                  ) : (
-                    <div className="border-border bg-muted flex aspect-square flex-col items-center justify-center gap-1.5 rounded-lg border px-2 text-center">
-                      <Icon className="text-muted-foreground size-6 shrink-0" />
-                      <span className="text-muted-foreground line-clamp-2 text-[10px] font-medium">
-                        {item.type}
-                      </span>
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => removeItem(index)}
-                    disabled={props.disabled}
-                    className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border border-white/20 bg-black/80 opacity-0 shadow-sm transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:ring-white/60 focus-visible:outline-none disabled:cursor-not-allowed"
-                    aria-label={`Retirer le média ${index + 1}`}
-                  >
-                    <X className="size-3 text-white" />
-                  </button>
-                  {item.name ? (
-                    <p
-                      className="text-muted-foreground mt-1 truncate text-[10px]"
-                      title={item.name}
-                    >
-                      {item.name}
-                    </p>
-                  ) : null}
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        {!isFull && (
-          <label
-            onDragEnter={(e) => e.preventDefault()}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-            className={cn(
-              dropzoneBase,
-              inputsDisabled
-                ? 'pointer-events-none cursor-not-allowed opacity-50'
-                : 'cursor-pointer',
-            )}
-          >
-            {isUploading ? (
-              <Loader2 className="text-muted-foreground size-5 animate-spin" />
-            ) : null}
-            <span className="text-foreground text-sm font-semibold">
-              {isUploading
-                ? 'Upload en cours…'
-                : isSingle
-                  ? 'Glissez un média ici'
-                  : 'Glissez les médias ici'}
-            </span>
-            <span className="text-muted-foreground mt-2 text-sm">
-              {!canUpload
-                ? "configure Supabase pour activer l'upload"
-                : isSingle
-                  ? 'ou cliquez pour le sélectionner'
-                  : `ou cliquez pour les sélectionner · max ${maxItems}`}
-            </span>
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple={!isSingle}
-              accept={acceptedMediaFileTypes}
-              className="hidden"
-              disabled={inputsDisabled}
-              onChange={(e) => void handleFiles(e.target.files)}
-            />
-          </label>
-        )}
-      </section>
-    )
-  }
-
   return (
-    <SectionCard
-      title={props.title ?? 'Médias'}
-      description={
-        props.description ?? 'Ajoute un ou plusieurs médias via upload.'
-      }
-    >
-      <div className="grid gap-3">
-        {/* Image thumbnails grid */}
-        {props.items.some((i) => i.type === 'IMAGE') && (
-          <div className="grid grid-cols-4 gap-2 sm:grid-cols-6">
-            {props.items
-              .map((item, idx) => ({ item, idx }))
-              .filter(({ item }) => item.type === 'IMAGE' && item.url)
-              .map(({ item, idx }) => (
-                <div
-                  key={idx}
-                  className="aspect-square overflow-hidden rounded-lg border"
-                >
-                  <img
-                    src={item.url}
-                    alt={`Média ${idx + 1}`}
-                    className="size-full object-cover"
-                  />
-                </div>
-              ))}
-          </div>
-        )}
-
-        {props.items.length ? (
-          props.items.map((item, index) => (
-            <div
-              key={`${index}-${item.type}`}
-              className="grid gap-3 rounded-[1.15rem] border border-[#eee9e2] bg-[#fbfaf8] p-4"
-            >
-              <Input
-                label={`URL média ${index + 1}`}
-                value={item.url}
-                onChange={(e) => updateItem(index, { url: e.target.value })}
-              />
-              <Select
-                label="Type"
-                value={item.type}
-                onChange={(e) =>
-                  updateItem(index, {
-                    type: e.target.value as MediaDraft['type'],
-                  })
-                }
-              >
-                {mediaTypes.map((type) => (
-                  <option key={type} value={type}>
-                    {type}
-                  </option>
-                ))}
-              </Select>
-              <Button
-                variant="secondary"
-                disabled={props.disabled}
-                onClick={() => removeItem(index)}
-              >
-                Retirer ce média
-              </Button>
-            </div>
-          ))
-        ) : (
-          <p className="text-sm text-[#706a63]">
-            Aucun média ajouté pour l'instant.
+    <section className="grid gap-3">
+      <div>
+        <h2 className="text-foreground text-sm font-semibold">
+          {props.title ?? 'Médias'}
+        </h2>
+        <div className="mt-0.5 flex items-center justify-between gap-2">
+          <p className="text-muted-foreground text-sm">
+            {props.description ?? 'Ajoute un ou plusieurs médias via upload.'}
           </p>
-        )}
-
-        {!isFull && (
-          <label
-            onDragEnter={(e) => e.preventDefault()}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDrop}
-            className={cn(
-              dropzoneBase,
-              'min-h-40',
-              inputsDisabled
-                ? 'pointer-events-none cursor-not-allowed opacity-50'
-                : 'cursor-pointer',
-            )}
-          >
-            {isUploading ? (
-              <Loader2 className="text-muted-foreground size-5 animate-spin" />
-            ) : null}
-            <span className="text-foreground text-sm font-black">
-              {isUploading
-                ? 'Upload en cours…'
-                : isSingle
-                  ? 'Glissez un fichier ici'
-                  : 'Glissez les fichiers ici'}
-            </span>
-            <span className="text-muted-foreground mt-2 text-sm">
-              {!canUpload
-                ? "configure Supabase pour activer l'upload de fichiers"
-                : isSingle
-                  ? 'ou cliquez pour le sélectionner'
-                  : `ou cliquez pour uploader · max ${maxItems}`}
-            </span>
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple={!isSingle}
-              accept={acceptedMediaFileTypes}
-              className="hidden"
-              disabled={inputsDisabled}
-              onChange={(e) => void handleFiles(e.target.files)}
-            />
-          </label>
-        )}
+          <span className="text-muted-foreground shrink-0 text-xs">
+            {props.items.length} / {maxItems}
+          </span>
+        </div>
       </div>
-    </SectionCard>
+
+      {props.items.length > 0 && (
+        <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-6">
+          {props.items.map((item, index) => {
+            const Icon = mediaTypeIcon[item.type] ?? File
+            return (
+              <div
+                key={`${index}-${item.type}`}
+                className="group relative min-w-0"
+              >
+                {item.type === 'IMAGE' && item.url ? (
+                  <div className="border-border aspect-square overflow-hidden rounded-lg border">
+                    <img
+                      src={item.url}
+                      alt={`Média ${index + 1}`}
+                      className="size-full object-cover"
+                    />
+                  </div>
+                ) : (
+                  <div className="border-border bg-muted flex aspect-square flex-col items-center justify-center gap-1.5 rounded-lg border px-2 text-center">
+                    <Icon className="text-muted-foreground size-6 shrink-0" />
+                    <span className="text-muted-foreground line-clamp-2 text-[10px] font-medium">
+                      {item.type}
+                    </span>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => removeItem(index)}
+                  disabled={props.disabled}
+                  className="border-border bg-background text-foreground focus-visible:ring-ring absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full border opacity-0 shadow-sm transition-opacity group-focus-within:opacity-100 group-hover:opacity-100 focus-visible:opacity-100 focus-visible:ring-2 focus-visible:outline-none disabled:cursor-not-allowed"
+                  aria-label={`Retirer le média ${index + 1}`}
+                >
+                  <X className="size-3" />
+                </button>
+                {item.name ? (
+                  <p
+                    className="text-muted-foreground mt-1 truncate text-[10px]"
+                    title={item.name}
+                  >
+                    {item.name}
+                  </p>
+                ) : null}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {!isFull && (
+        <label
+          onDragEnter={(e) => e.preventDefault()}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handleDrop}
+          className={cn(
+            dropzoneBase,
+            inputsDisabled
+              ? 'pointer-events-none cursor-not-allowed opacity-50'
+              : 'cursor-pointer',
+          )}
+        >
+          {isUploading ? (
+            <Loader2 className="text-muted-foreground size-5 animate-spin" />
+          ) : null}
+          <span className="text-foreground text-sm font-semibold">
+            {isUploading
+              ? 'Upload en cours…'
+              : isSingle
+                ? 'Glissez un média ici'
+                : 'Glissez les médias ici'}
+          </span>
+          <span className="text-muted-foreground mt-2 text-sm">
+            {!canUpload
+              ? "configure Supabase pour activer l'upload"
+              : isSingle
+                ? 'ou cliquez pour le sélectionner'
+                : `ou cliquez pour les sélectionner · max ${maxItems}`}
+          </span>
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple={!isSingle}
+            accept={acceptedMediaFileTypes}
+            className="hidden"
+            disabled={inputsDisabled}
+            onChange={(e) => void handleFiles(e.target.files)}
+          />
+        </label>
+      )}
+    </section>
   )
 }
