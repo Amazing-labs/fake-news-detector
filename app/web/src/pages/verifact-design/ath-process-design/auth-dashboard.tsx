@@ -1,43 +1,38 @@
 import { Link, useNavigate } from '@tanstack/react-router'
 import {
   ArrowLeft,
-  BadgeCheck,
   CheckCircle2,
   Clock3,
   Eye,
   EyeOff,
-  Flag,
   Moon,
   ShieldCheck,
   Sun,
 } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { toast } from 'sonner'
+import { AuthHero } from './auth-design'
 import {
   localAuthActors,
   signInLocalActor,
   useAppSession,
 } from '@entities/session/model'
 import { isBetterAuthDisabled } from '@lib/auth-config'
-import { authClient, type AppSession } from '@lib/auth-client'
 import { Alert, AlertDescription, AlertTitle } from '@shared/ui/shadcn/alert'
 import { Button } from '@shared/ui/shadcn/button'
 import { Input } from '@shared/ui/shadcn/input'
 import { Label } from '@shared/ui/shadcn/label'
 import { Tabs, TabsList, TabsTrigger } from '@shared/ui/shadcn/tabs'
-import { actorLabels } from './data'
-import { actorFromSession, dashboardPathForSession } from './session-routing'
-import { useTheme } from './theme'
+import { actorLabels } from '../data'
+import { actorFromSession, dashboardPathForSession } from '../session-routing'
+import { type AuthModeType } from '@entities/session/model'
+import { useTheme } from '../theme'
+import { showLocalActorLoginViewSection } from './auth-local-actor'
 
-export function VeriFactAuthPage(props: {
-  initialMode?: 'sign-in' | 'sign-up'
-}) {
+export function VeriFactAuthPage(props: { initialMode?: AuthModeType }) {
   const { isDark, setIsDark } = useTheme()
   const navigate = useNavigate()
   const { session, isPending } = useAppSession()
-  const [mode, setMode] = useState<'sign-in' | 'sign-up'>(
-    props.initialMode ?? 'sign-in',
-  )
+  const [mode, setMode] = useState<AuthModeType>(props.initialMode ?? 'sign-in')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -53,43 +48,6 @@ export function VeriFactAuthPage(props: {
       void navigate({ to: dashboardPathForSession(session) })
     }
   }, [isPending, navigate, session])
-
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setPending(true)
-
-    try {
-      const result =
-        mode === 'sign-up'
-          ? await authClient.signUp.email({ name, email, password })
-          : await authClient.signIn.email({ email, password })
-
-      if (result.error) {
-        // Generic on purpose: never reveal whether the email exists or which
-        // field is wrong.
-        toast.error(
-          mode === 'sign-up'
-            ? 'Inscription impossible. Vérifiez vos informations.'
-            : 'Email ou mot de passe invalide.',
-        )
-        return
-      }
-
-      toast.success('Session ouverte.')
-      setPassword('')
-      // If the session refresh fails, still navigate using the sign-in result.
-      const refreshedSession = await authClient.getSession().catch(() => null)
-      await navigate({
-        to: dashboardPathForSession(
-          (refreshedSession?.data ?? result.data) as unknown as AppSession,
-        ),
-      })
-    } catch {
-      toast.error('Une erreur inattendue est survenue. Veuillez réessayer.')
-    } finally {
-      setPending(false)
-    }
-  }
 
   async function handleLocalSignIn(
     actor: (typeof localAuthActors)[number]['actor'],
@@ -184,30 +142,19 @@ export function VeriFactAuthPage(props: {
               </Button>
             ) : isBetterAuthDisabled ? (
               <div className="grid gap-3">
-                {localAuthActors.map((localActor) => (
-                  <Button
-                    key={localActor.actor}
-                    type="button"
-                    variant="outline"
-                    className="h-auto justify-start rounded-xl p-4 text-left transition-transform active:scale-[0.99]"
-                    onClick={() => void handleLocalSignIn(localActor.actor)}
-                  >
-                    <span className="grid gap-1">
-                      <span className="font-semibold">{localActor.label}</span>
-                      <span className="text-muted-foreground text-sm font-normal">
-                        {localActor.description}
-                      </span>
-                    </span>
-                  </Button>
-                ))}
+                {localAuthActors.map((localActor) =>
+                  showLocalActorLoginViewSection(
+                    isBetterAuthDisabled,
+                    localActor,
+                    handleLocalSignIn,
+                  ),
+                )}
               </div>
             ) : (
               <form className="space-y-4" onSubmit={handleSubmit}>
                 <Tabs
                   value={mode}
-                  onValueChange={(value) =>
-                    setMode(value as 'sign-in' | 'sign-up')
-                  }
+                  onValueChange={(value) => setMode(value as AuthModeType)}
                 >
                   <TabsList className="grid w-full grid-cols-2">
                     <TabsTrigger value="sign-in">Connexion</TabsTrigger>
@@ -238,7 +185,16 @@ export function VeriFactAuthPage(props: {
                   />
                 </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="password">Mot de passe</Label>
+                  <div className="mb-2 flex items-center justify-between">
+                    <Label htmlFor="password">Mot de passe</Label>
+                    <Link
+                      className="text-muted-foreground hover:text-foreground text-xs transition-colors"
+                      to="/auth"
+                      search={{ mode: 'forgot-password' as AuthModeType }}
+                    >
+                      Mot de passe oublier ?
+                    </Link>
+                  </div>
                   <div className="relative">
                     <Input
                       id="password"
@@ -283,72 +239,3 @@ export function VeriFactAuthPage(props: {
     </div>
   )
 }
-
-/** Editorial brand panel shown beside the auth form on large screens. */
-function AuthHero() {
-  return (
-    <aside className="bg-card text-card-foreground relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-between lg:p-12">
-      <div
-        className="pointer-events-none absolute -top-24 -left-24 size-96 rounded-full opacity-[0.16] blur-3xl"
-        style={{ background: 'oklch(0.72 0.15 162)' }}
-      />
-
-      <Link to="/" className="relative flex items-center gap-2">
-        <ShieldCheck className="size-5" />
-        <span className="font-semibold tracking-tight">Fake News Detector</span>
-      </Link>
-
-      <div className="relative max-w-md">
-        <h2 className="text-[clamp(2rem,3.4vw,3rem)] leading-[1.05] text-balance">
-          <span className="font-ui font-bold tracking-tight">
-            Le citoyen tient
-          </span>{' '}
-          <span className="font-editorial text-[1.1em]">le premier rôle.</span>
-        </h2>
-        <p className="text-muted-foreground mt-5 text-lg leading-relaxed text-pretty">
-          Un compte suffit pour signaler, enquêter et suivre chaque verdict
-          jusqu'à ses sources.
-        </p>
-
-        <ul className="mt-8 space-y-4">
-          {HERO_POINTS.map((point) => (
-            <li key={point.label} className="flex items-start gap-3">
-              <span
-                className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full text-white"
-                style={{ background: 'oklch(0.72 0.15 162)' }}
-              >
-                <point.icon className="size-4" />
-              </span>
-              <span className="leading-relaxed">
-                <span className="font-medium">{point.label}</span>{' '}
-                <span className="text-muted-foreground">{point.body}</span>
-              </span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      <p className="text-muted-foreground relative text-sm">
-        Vérifier l'information, ensemble.
-      </p>
-    </aside>
-  )
-}
-
-const HERO_POINTS = [
-  {
-    icon: Flag,
-    label: 'Signalez.',
-    body: 'Déposez un contenu suspect et suivez son enquête.',
-  },
-  {
-    icon: Eye,
-    label: 'Devenez vigie.',
-    body: 'Apportez des preuves aux enquêtes en cours.',
-  },
-  {
-    icon: BadgeCheck,
-    label: 'Suivez les verdicts.',
-    body: 'Chaque conclusion, justifiée par ses sources.',
-  },
-] as const

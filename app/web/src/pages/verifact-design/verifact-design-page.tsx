@@ -1,4 +1,4 @@
-import { VeriFactAuthPage } from './auth-dashboard'
+import { VeriFactAuthPage } from './ath-process-design/auth-dashboard'
 import {
   CitizenDashboardPage,
   CitizenReportCreateWorkspacePage,
