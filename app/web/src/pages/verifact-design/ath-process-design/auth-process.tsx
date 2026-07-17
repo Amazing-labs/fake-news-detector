@@ -5,12 +5,16 @@ import type { AuthModeType } from '@entities/session/model'
 type AuthInputParams = {
     name?: string
     email: string
-    password?: string
+    password: string
 }
+
+type ResetPasswordType = Omit<AuthInputParams, 'name' | 'email'> & { confirm_password: string }
+type ForgotPasswordType = Omi
 
 export async function handleSubmit(
   event: React.FormEvent<HTMLFormElement>,
-  mode: AuthInputParams,
+  params: AuthInputParams | ResetPasswordType,
+  mode: AuthModeType
 ) {
   event.preventDefault()
 
@@ -19,10 +23,7 @@ export async function handleSubmit(
 
     switch (mode) {
       case 'sign-in':
-        if (!params.name || !params.password) {
-          toast.error("L'email et le mot de passe sont requis")
-          throw new Error("Invalid data onLogin")
-        }
+        
         result = await authClient.signIn.email({ email: params.email, password: params.password });
         handleSubmitError<typeof result>('sign-in', result)
         break;
@@ -89,4 +90,24 @@ function handleSubmitError<T>(mode: AuthModeType, result: T | null | any): void 
     }
 }
 
-function validateAuthInput(mode: AuthModeType, params)
+type SignInPayload = { mode: 'sign-in', params: AuthInputParams }
+type SignUpPayload = { mode: 'sign-up', params: AuthInputParams }
+type ResetPasswordPayload = { mod: 'forgot-password', }
+
+function validateAuthInput(mode: AuthModeType, params: AuthInputParams | ResetPasswordType): void {
+  if (!mode) throw new Error("Mode is require")
+  switch(mode) {
+    case 'sign-in':
+      if (!params.name || !params.password) {
+          toast.error("L'email et le mot de passe sont requis")
+      }
+      break;
+    case 'sign-up':
+      if (!params.name || !params.password || !params.email) {
+        toast.error("Tous les champs sont réquis")
+      }
+      break;
+    case 'forgot-password':
+      if (!params.password || !params.con)
+  }
+}
