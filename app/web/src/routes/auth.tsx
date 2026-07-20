@@ -5,6 +5,7 @@ import type { AuthModeType } from '@entities/session/model'
 export const Route = createFileRoute('/auth')({
   validateSearch: (search: Record<string, unknown>) => ({
     mode: validateMode(search.mode),
+    ...(typeof search.token === 'string' ? { token: search.token } : {}),
   }),
   component: AuthRoute,
 })
@@ -14,7 +15,7 @@ function validateMode(mode: string | unknown): AuthModeType | undefined {
   switch (mode) {
     case 'sign-in':
       return 'sign-in'
-    case 'sign-out':
+    case 'sign-up':
       return 'sign-up'
     case 'forgot-password':
       return 'forgot-password'
@@ -26,8 +27,7 @@ function validateMode(mode: string | unknown): AuthModeType | undefined {
 }
 
 function AuthRoute() {
-  const { mode } = Route.useSearch()
-  const initialMode = mode === 'sign-up' ? 'sign-up' : 'sign-in'
+  const { mode, token } = Route.useSearch()
 
-  return <AuthPage initialMode={initialMode} />
+  return <AuthPage mode={mode ?? 'sign-in'} resetToken={token} />
 }

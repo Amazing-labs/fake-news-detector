@@ -3,45 +3,40 @@ import {
   ArrowLeft,
   CheckCircle2,
   Clock3,
-  Eye,
-  EyeOff,
   Moon,
   ShieldCheck,
   Sun,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
-import { AuthHero } from './auth-design'
+import { useEffect } from 'react'
 import {
   localAuthActors,
   signInLocalActor,
+  type AuthModeType,
   useAppSession,
 } from '@entities/session/model'
 import { isBetterAuthDisabled } from '@lib/auth-config'
 import { Alert, AlertDescription, AlertTitle } from '@shared/ui/shadcn/alert'
 import { Button } from '@shared/ui/shadcn/button'
-import { Input } from '@shared/ui/shadcn/input'
-import { Label } from '@shared/ui/shadcn/label'
-import { Tabs, TabsList, TabsTrigger } from '@shared/ui/shadcn/tabs'
 import { actorLabels } from '../data'
 import { actorFromSession, dashboardPathForSession } from '../session-routing'
-import { type AuthModeType } from '@entities/session/model'
 import { useTheme } from '../theme'
+import {
+  ForgotPasswordForm,
+  ResetPasswordForm,
+  SignInForm,
+  SignUpForm,
+} from './auth-forms'
+import { AuthHero } from './auth-design'
 import { showLocalActorLoginViewSection } from './auth-local-actor'
 
-export function VeriFactAuthPage(props: { initialMode?: AuthModeType }) {
+export function VeriFactAuthPage(props: {
+  mode: AuthModeType
+  resetToken?: string
+}) {
   const { isDark, setIsDark } = useTheme()
   const navigate = useNavigate()
   const { session, isPending } = useAppSession()
-  const [mode, setMode] = useState<AuthModeType>(props.initialMode ?? 'sign-in')
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
-  const [pending, setPending] = useState(false)
-
-  useEffect(() => {
-    setMode(props.initialMode ?? 'sign-in')
-  }, [props.initialMode])
+  const { mode } = props
 
   useEffect(() => {
     if (!isPending && session) {
@@ -55,20 +50,22 @@ export function VeriFactAuthPage(props: { initialMode?: AuthModeType }) {
     await signInLocalActor(actor)
   }
 
+  function navigateToMode(nextMode: AuthModeType) {
+    void navigate({ to: '/auth', search: { mode: nextMode } })
+  }
+
   const isSignUp = mode === 'sign-up'
 
   return (
     <div className="bg-background text-foreground min-h-screen lg:grid lg:grid-cols-2">
       <AuthHero />
-
       <div className="flex min-h-screen flex-col px-5 py-8 sm:px-8">
         <div className="flex items-center justify-between">
           <Link
             to="/"
             className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1.5 text-sm transition-colors"
           >
-            <ArrowLeft className="size-4" />
-            Accueil
+            <ArrowLeft className="size-4" /> Accueil
           </Link>
           <button
             type="button"
@@ -91,7 +88,13 @@ export function VeriFactAuthPage(props: { initialMode?: AuthModeType }) {
               Fake News Detector
             </span>
             <h1 className="mt-3 text-[clamp(1.75rem,4vw,2.25rem)] leading-tight font-bold tracking-tight text-balance lg:mt-0">
-              {isSignUp ? 'Créer un compte citoyen' : 'Bon retour'}
+              {isSignUp
+                ? 'Créer un compte citoyen'
+                : mode === 'forgot-password'
+                  ? 'Réinitialiser votre accès'
+                  : mode === 'reset-password'
+                    ? 'Choisir un nouveau mot de passe'
+                    : 'Bon retour'}
             </h1>
             <p className="text-muted-foreground mt-2 leading-relaxed text-pretty">
               {isSignUp
@@ -150,88 +153,17 @@ export function VeriFactAuthPage(props: { initialMode?: AuthModeType }) {
                   ),
                 )}
               </div>
+            ) : mode === 'sign-in' ? (
+              <SignInForm onModeChange={navigateToMode} />
+            ) : mode === 'sign-up' ? (
+              <SignUpForm onModeChange={navigateToMode} />
+            ) : mode === 'forgot-password' ? (
+              <ForgotPasswordForm onModeChange={navigateToMode} />
             ) : (
-              <form className="space-y-4" onSubmit={handleSubmit}>
-                <Tabs
-                  value={mode}
-                  onValueChange={(value) => setMode(value as AuthModeType)}
-                >
-                  <TabsList className="grid w-full grid-cols-2">
-                    <TabsTrigger value="sign-in">Connexion</TabsTrigger>
-                    <TabsTrigger value="sign-up">Inscription</TabsTrigger>
-                  </TabsList>
-                </Tabs>
-                {mode === 'sign-up' ? (
-                  <div className="grid gap-2">
-                    <Label htmlFor="name">Nom</Label>
-                    <Input
-                      id="name"
-                      value={name}
-                      onChange={(event) => setName(event.target.value)}
-                      placeholder="Awa Diarra"
-                      required
-                    />
-                  </div>
-                ) : null}
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    placeholder="vous@exemple.fr"
-                    type="email"
-                    required
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <div className="mb-2 flex items-center justify-between">
-                    <Label htmlFor="password">Mot de passe</Label>
-                    <Link
-                      className="text-muted-foreground hover:text-foreground text-xs transition-colors"
-                      to="/auth"
-                      search={{ mode: 'forgot-password' as AuthModeType }}
-                    >
-                      Mot de passe oublier ?
-                    </Link>
-                  </div>
-                  <div className="relative">
-                    <Input
-                      id="password"
-                      value={password}
-                      onChange={(event) => setPassword(event.target.value)}
-                      placeholder="••••••••"
-                      type={showPassword ? 'text' : 'password'}
-                      className="pr-10"
-                      required
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((visible) => !visible)}
-                      className="text-muted-foreground hover:text-foreground focus-visible:ring-ring/50 absolute inset-y-0 right-0 flex items-center rounded-md px-3 focus-visible:ring-[3px] focus-visible:outline-none"
-                      aria-label={
-                        showPassword
-                          ? 'Masquer le mot de passe'
-                          : 'Afficher le mot de passe'
-                      }
-                      aria-pressed={showPassword}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="size-4" />
-                      ) : (
-                        <Eye className="size-4" />
-                      )}
-                    </button>
-                  </div>
-                </div>
-                <Button
-                  className="h-11 w-full transition-transform active:scale-[0.98]"
-                  loading={pending}
-                  type="submit"
-                >
-                  {isSignUp ? 'Créer mon compte' : 'Se connecter'}
-                </Button>
-              </form>
+              <ResetPasswordForm
+                token={props.resetToken}
+                onModeChange={navigateToMode}
+              />
             )}
           </div>
         </div>
