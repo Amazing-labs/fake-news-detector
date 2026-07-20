@@ -293,6 +293,13 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
+    sendResetPassword: isProduction()
+      ? undefined
+      : async ({ url }) => {
+          console.log(
+            `[BetterAuthDebug] Password reset URL (development only): ${url}`,
+          )
+        },
     password: {
       hash: hashWorkerPassword,
       verify: verifyWorkerPassword,

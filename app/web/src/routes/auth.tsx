@@ -1,16 +1,32 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { AuthPage } from '../pages/auth/auth-page'
+import type { AuthModeType } from '@entities/session/model'
 
 export const Route = createFileRoute('/auth')({
   validateSearch: (search: Record<string, unknown>) => ({
-    mode: search.mode === 'sign-up' ? 'sign-up' : 'sign-in',
+    mode: validateMode(search.mode),
+    ...(typeof search.token === 'string' ? { token: search.token } : {}),
   }),
   component: AuthRoute,
 })
 
-function AuthRoute() {
-  const { mode } = Route.useSearch()
-  const initialMode = mode === 'sign-up' ? 'sign-up' : 'sign-in'
+function validateMode(mode: string | unknown): AuthModeType | undefined {
+  switch (mode) {
+    case 'sign-in':
+      return 'sign-in'
+    case 'sign-up':
+      return 'sign-up'
+    case 'forgot-password':
+      return 'forgot-password'
+    case 'reset-password':
+      return 'reset-password'
+    default:
+      return undefined
+  }
+}
 
-  return <AuthPage initialMode={initialMode} />
+function AuthRoute() {
+  const { mode, token } = Route.useSearch()
+
+  return <AuthPage mode={mode ?? 'sign-in'} resetToken={token} />
 }

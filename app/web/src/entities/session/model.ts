@@ -6,6 +6,11 @@ import { authClient } from '@lib/auth-client'
 export type UserRole = 'CITIZEN' | 'JOURNALIST' | 'EDITORIAL_DIRECTOR'
 export type CitizenType = 'REGULAR' | 'WATCHER'
 export type LocalAuthActor = 'director' | 'journalist' | 'citizen'
+export type AuthModeType =
+  | 'sign-in'
+  | 'sign-up'
+  | 'forgot-password'
+  | 'reset-password'
 
 const localSessionStorageKey = 'fnd-local-auth-session'
 const localSessionChangedEvent = 'fnd-local-auth-session-changed'
