@@ -11,7 +11,6 @@ export const Route = createFileRoute('/auth')({
 })
 
 function validateMode(mode: string | unknown): AuthModeType | undefined {
-  if (!mode) return
   switch (mode) {
     case 'sign-in':
       return 'sign-in'
@@ -22,7 +21,7 @@ function validateMode(mode: string | unknown): AuthModeType | undefined {
     case 'reset-password':
       return 'reset-password'
     default:
-      throw new Error('Invalide mode')
+      return undefined
   }
 }
 

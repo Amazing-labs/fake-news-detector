@@ -21,6 +21,7 @@ function PasswordField(props: {
   label: string
   value: string
   onChange: (value: string) => void
+  autoComplete: 'current-password' | 'new-password'
 }) {
   const [visible, setVisible] = useState(false)
 
@@ -35,6 +36,7 @@ function PasswordField(props: {
           placeholder="••••••••"
           type={visible ? 'text' : 'password'}
           className="pr-10"
+          autoComplete={props.autoComplete}
           required
         />
         <button
@@ -82,6 +84,7 @@ export function SignInForm({ onModeChange }: AuthFormProps) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           type="email"
+          autoComplete="email"
           required
         />
       </div>
@@ -90,6 +93,7 @@ export function SignInForm({ onModeChange }: AuthFormProps) {
         label="Mot de passe"
         value={password}
         onChange={setPassword}
+        autoComplete="current-password"
       />
       <div className="flex justify-end">
         <Link
@@ -143,6 +147,7 @@ export function SignUpForm({ onModeChange }: AuthFormProps) {
           id="sign-up-name"
           value={name}
           onChange={(event) => setName(event.target.value)}
+          autoComplete="name"
           required
         />
       </div>
@@ -153,6 +158,7 @@ export function SignUpForm({ onModeChange }: AuthFormProps) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           type="email"
+          autoComplete="email"
           required
         />
       </div>
@@ -161,6 +167,7 @@ export function SignUpForm({ onModeChange }: AuthFormProps) {
         label="Mot de passe"
         value={password}
         onChange={setPassword}
+        autoComplete="new-password"
       />
       <Button className="h-11 w-full" loading={pending} type="submit">
         Créer mon compte
@@ -189,7 +196,9 @@ export function ForgotPasswordForm({ onModeChange }: AuthFormProps) {
         `${window.location.origin}/auth?mode=reset-password`,
       )
       toast.success(
-        'Le lien de réinitialisation a été écrit dans le terminal du serveur.',
+        import.meta.env.DEV
+          ? 'Le lien de réinitialisation a été écrit dans le terminal du serveur.'
+          : 'La réinitialisation par e-mail n’est pas encore disponible.',
       )
     } catch (error) {
       toast.error(
@@ -203,8 +212,9 @@ export function ForgotPasswordForm({ onModeChange }: AuthFormProps) {
   return (
     <form className="space-y-4" onSubmit={onSubmit}>
       <p className="text-muted-foreground text-sm">
-        Saisissez votre email. En développement, le lien de réinitialisation est
-        affiché dans le terminal du serveur.
+        {import.meta.env.DEV
+          ? 'Saisissez votre email. En développement, le lien de réinitialisation est affiché dans le terminal du serveur.'
+          : 'La réinitialisation par e-mail n’est pas encore disponible.'}
       </p>
       <div className="grid gap-2">
         <Label htmlFor="forgot-password-email">Email</Label>
@@ -213,6 +223,7 @@ export function ForgotPasswordForm({ onModeChange }: AuthFormProps) {
           value={email}
           onChange={(event) => setEmail(event.target.value)}
           type="email"
+          autoComplete="email"
           required
         />
       </div>
@@ -274,12 +285,14 @@ export function ResetPasswordForm({
         label="Nouveau mot de passe"
         value={password}
         onChange={setPassword}
+        autoComplete="new-password"
       />
       <PasswordField
         id="reset-password-confirmation"
         label="Confirmer le mot de passe"
         value={confirmation}
         onChange={setConfirmation}
+        autoComplete="new-password"
       />
       <Button className="h-11 w-full" loading={pending} type="submit">
         Réinitialiser le mot de passe
