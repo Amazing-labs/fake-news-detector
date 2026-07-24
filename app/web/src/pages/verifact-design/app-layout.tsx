@@ -4,6 +4,7 @@ import {
   Bell,
   CheckCircle2,
   Info,
+  LogOut,
   Moon,
   Search,
   ShieldCheck,
@@ -298,6 +299,7 @@ export function AppLayout(props: {
             </Badge>
             <NotificationPopover />
             <Button
+
               variant="ghost"
               size="icon"
               onClick={() => setIsDark((value) => !value)}
@@ -310,12 +312,15 @@ export function AppLayout(props: {
               )}
             </Button>
             {session ? (
-              <Button
-                variant="outline"
+               <Button className="group/fab relative flex h-10 w-10 items-center overflow-hidden rounded-full px-3 transition-[width] duration-300 ease-in-out hover:w-36 "
+                variant="ghost"
                 onClick={() => void handleSignOut()}
                 loading={isSigningOut}
               >
-                Déconnexion
+                <LogOut aria-hidden="true" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-transform duration-300 group-hover/fab:left-3 group-hover/fab:translate-x-0"/>
+                <span className="ml-8  whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover/fab:opacity-100">
+                        Deconnection
+                      </span>
               </Button>
             ) : (
               <Button variant="outline" asChild>
