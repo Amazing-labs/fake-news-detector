@@ -219,7 +219,7 @@ export function AppLayout(props: {
 
   return (
     <div className="bg-background text-foreground min-h-screen">
-      <aside className="bg-sidebar text-sidebar-foreground border-sidebar-border fixed inset-y-0 left-0 z-30 hidden w-72 border-r lg:flex lg:flex-col">
+      <aside className="bg-background text-sidebar-foreground fixed inset-y-0 left-0 z-30 hidden w-72 lg:flex lg:flex-col">
         <div className="flex h-16 items-center gap-3 px-5">
           <div className="bg-sidebar-primary text-sidebar-primary-foreground flex size-9 items-center justify-center rounded-lg">
             <ShieldCheck className="size-5" />
@@ -276,107 +276,108 @@ export function AppLayout(props: {
         </div>
       </aside>
 
-      <div className="overflow-x-hidden lg:pl-72">
-        <header className="bg-background/90 supports-backdrop-filter:bg-background/60 sticky top-0 z-20 border-b backdrop-blur">
-          <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
-            <div className="flex items-center gap-2 lg:hidden">
-              <div className="bg-sidebar-primary text-sidebar-primary-foreground flex size-9 items-center justify-center rounded-lg">
-                <ShieldCheck className="size-5" />
+      <div className=" flex min-h-screen flex-col lg:pl-72 lg:pt-2 lg:pr-0 lg:pb-0">
+        <div className="  bg-card text-card-foreground flex flex-1 flex-col border-border lg:rounded-tl-3xl lg:border-t lg:border-l lg:shadow-sm overflow-hidden">
+          <header className="bg-card/90 supports-backdrop-filter:bg-card/60 sticky top-0 z-20 border-b backdrop-blur">
+            <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
+              <div className="flex items-center gap-2 lg:hidden">
+                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex size-9 items-center justify-center rounded-lg">
+                  <ShieldCheck className="size-5" />
+                </div>
+                <span className="hidden text-sm font-semibold sm:inline">
+                  Fake News Detector
+                </span>
               </div>
-              <span className="hidden text-sm font-semibold sm:inline">
-                Fake News Detector
-              </span>
-            </div>
-            <div className="relative hidden flex-1 sm:block">
-              <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
-              <Input
-                className="max-w-xl pl-9"
-                placeholder="Chercher un sujet, une source ou une correction"
-              />
-            </div>
-            <Badge variant="outline" className="ml-auto hidden sm:inline-flex">
-              {roleLabel}
-            </Badge>
-            <NotificationPopover />
-            <Button
-
-              variant="ghost"
-              size="icon"
-              onClick={() => setIsDark((value) => !value)}
-              aria-label="Changer de theme"
-            >
-              {isDark ? (
-                <Sun className="size-4" />
-              ) : (
-                <Moon className="size-4" />
-              )}
-            </Button>
-            {session ? (
-               <Button className="group/fab relative flex h-10 w-10 items-center overflow-hidden rounded-full px-3 transition-[width] duration-300 ease-in-out hover:w-36 "
+              <div className="relative hidden flex-1 sm:block">
+                <Search className="text-muted-foreground pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2" />
+                <Input
+                  className="max-w-xl pl-9"
+                  placeholder="Chercher un sujet, une source ou une correction"
+                />
+              </div>
+              <Badge variant="outline" className="ml-auto hidden sm:inline-flex">
+                {roleLabel}
+              </Badge>
+              <NotificationPopover />
+              <Button
                 variant="ghost"
-                onClick={() => void handleSignOut()}
-                loading={isSigningOut}
+                size="icon"
+                onClick={() => setIsDark((value) => !value)}
+                aria-label="Changer de theme"
               >
-                <LogOut aria-hidden="true" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-transform duration-300 group-hover/fab:left-3 group-hover/fab:translate-x-0"/>
-                <span className="ml-8  whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover/fab:opacity-100">
-                        Deconnection
-                      </span>
+                {isDark ? (
+                  <Sun className="size-4" />
+                ) : (
+                  <Moon className="size-4" />
+                )}
               </Button>
-            ) : (
-              <Button variant="outline" asChild>
-                <Link to="/auth" search={{ mode: 'sign-in' }}>
-                  Connexion
-                </Link>
-              </Button>
-            )}
-          </div>
-          <nav className="border-t lg:hidden">
-            <div
-              ref={tabletNavRef}
-              className="scrollbar-thin flex gap-2 overflow-x-auto px-4 py-2 sm:px-6"
-              onScroll={(event) => {
-                tabletNavScrollLeft = event.currentTarget.scrollLeft
-              }}
-            >
-              {visibleNavItems.map((item) => {
-                const Icon = item.icon
-                const active = isActivePath(item.to)
-
-                return (
-                  <Link
-                    key={item.label}
-                    to={item.to}
-                    onClick={() => {
-                      tabletNavScrollLeft =
-                        tabletNavRef.current?.scrollLeft ?? tabletNavScrollLeft
-                    }}
-                    className={cn(
-                      'flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-sm transition-colors',
-                      active
-                        ? 'bg-primary text-primary-foreground font-medium'
-                        : 'text-muted-foreground hover:bg-muted hover:text-foreground',
-                    )}
-                  >
-                    <Icon className="size-4" />
-                    <span>{item.label}</span>
-                    {item.badge ? (
-                      <Badge
-                        variant={active ? 'secondary' : 'outline'}
-                        className="h-5 px-1.5"
-                      >
-                        {item.badge}
-                      </Badge>
-                    ) : null}
+              {session ? (
+                 <Button className="group/fab relative flex h-10 w-10 items-center overflow-hidden rounded-full px-3 transition-[width] duration-300 ease-in-out hover:w-36 "
+                  variant="ghost"
+                  onClick={() => void handleSignOut()}
+                  loading={isSigningOut}
+                >
+                  <LogOut aria-hidden="true" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-transform duration-300 group-hover/fab:left-3 group-hover/fab:translate-x-0"/>
+                  <span className="ml-8  whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover/fab:opacity-100">
+                          Deconnection
+                        </span>
+                </Button>
+              ) : (
+                <Button variant="outline" asChild>
+                  <Link to="/auth" search={{ mode: 'sign-in' }}>
+                    Connexion
                   </Link>
-                )
-              })}
+                </Button>
+              )}
             </div>
-          </nav>
-        </header>
+            <nav className="border-t lg:hidden">
+              <div
+                ref={tabletNavRef}
+                className="scrollbar-thin flex gap-2 overflow-x-auto px-4 py-2 sm:px-6"
+                onScroll={(event) => {
+                  tabletNavScrollLeft = event.currentTarget.scrollLeft
+                }}
+              >
+                {visibleNavItems.map((item) => {
+                  const Icon = item.icon
+                  const active = isActivePath(item.to)
 
-        <main className="mx-auto flex w-full max-w-7xl flex-col gap-6 overflow-x-hidden p-4 sm:p-6">
-          {props.children}
-        </main>
+                  return (
+                    <Link
+                      key={item.label}
+                      to={item.to}
+                      onClick={() => {
+                        tabletNavScrollLeft =
+                          tabletNavRef.current?.scrollLeft ?? tabletNavScrollLeft
+                      }}
+                      className={cn(
+                        'flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-sm transition-colors',
+                        active
+                          ? 'bg-primary text-primary-foreground font-medium'
+                          : 'text-muted-foreground hover:bg-muted hover:text-foreground',
+                      )}
+                    >
+                      <Icon className="size-4" />
+                      <span>{item.label}</span>
+                      {item.badge ? (
+                        <Badge
+                          variant={active ? 'secondary' : 'outline'}
+                          className="h-5 px-1.5"
+                        >
+                          {item.badge}
+                        </Badge>
+                      ) : null}
+                    </Link>
+                  )
+                })}
+              </div>
+            </nav>
+          </header>
+
+          <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 p-4 sm:p-6">
+            {props.children}
+          </main>
+        </div>
       </div>
     </div>
   )
