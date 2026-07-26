@@ -40,6 +40,7 @@ import { domainLabel } from '../workspace-labels'
 import {
   EmptyState,
   ErrorState,
+  DoubleBorderCard,
   MetaCell,
   StatCard,
   StatusBadge,
@@ -163,7 +164,7 @@ export function JournalistWorkspacePage() {
             <div className="grid gap-4 rounded-lg border p-4">
               <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
-                  <div className="flex flex-wrap items-center gap-2">
+                  <div className="flex flex-row flex-wrap items-center gap-2">
                     <p className="font-medium">
                       {currentInvestigation.title ?? 'Sujet sans titre'}
                     </p>
@@ -447,52 +448,49 @@ export function CitizenDashboardPage() {
       </div>
 
       <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Retours publics</CardTitle>
-            <CardDescription>
-              Les publications et correctifs lies aux signalements verifies.
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="grid gap-3">
-            {recentPublications.length === 0 ? (
-              <EmptyState
-                icon={Megaphone}
-                title="Aucun retour public"
-                description="Les publications et correctifs liés à vos signalements vérifiés apparaîtront ici."
-              />
-            ) : null}
-            {recentPublications.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-start justify-between gap-3 rounded-lg border p-4"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-medium">
-                    {item.title ?? 'Publication sans titre'}
-                  </p>
-                  <div className="mt-2">
-                    <StatusBadge status={item.finalVerdict} />
-                  </div>
+        <DoubleBorderCard>
+          <div className="p-6">
+            <div className="space-y-1.5">
+              <h2 className="text-lg leading-none font-semibold tracking-tight">
+                Retours publics
+              </h2>
+              <p className="text-muted-foreground text-sm">
+                Les publications et correctifs lies aux signalements verifies.
+              </p>
+            </div>
+
+            <div className="mt-6">
+              {recentPublications.length === 0 ? (
+                <EmptyState
+                  icon={Megaphone}
+                  title="Aucun retour public"
+                  description="Les publications et correctifs liés à vos signalements vérifiés apparaîtront ici."
+                />
+              ) : (
+                <div className="divide-border/70 divide-y">
+                  {recentPublications.map((item) => (
+                    <Link
+                      key={item.id}
+                      to="/publications/$publicationId"
+                      params={{ publicationId: item.id }}
+                      className="hover:bg-muted/30 -mx-2 flex items-center justify-between gap-4 rounded-lg px-2 py-4 transition-colors first:pt-0 last:pb-0"
+                    >
+                      <div className="min-w-0">
+                        <p className="truncate font-medium">
+                          {item.title ?? 'Publication sans titre'}
+                        </p>
+                        <div className="mt-2">
+                          <StatusBadge status={item.finalVerdict} />
+                        </div>
+                      </div>
+                      <ExternalLink className="text-muted-foreground size-4 shrink-0" />
+                    </Link>
+                  ))}
                 </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="text-muted-foreground hover:text-foreground size-8 shrink-0 rounded-full"
-                  asChild
-                  aria-label={`Voir ${item.title ?? item.id}`}
-                >
-                  <Link
-                    to="/publications/$publicationId"
-                    params={{ publicationId: item.id }}
-                  >
-                    <ExternalLink className="size-4" />
-                  </Link>
-                </Button>
-              </div>
-            ))}
-          </CardContent>
-        </Card>
+              )}
+            </div>
+          </div>
+        </DoubleBorderCard>
       </div>
     </AppLayout>
   )

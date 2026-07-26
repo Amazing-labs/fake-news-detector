@@ -1,14 +1,8 @@
 import type { ComponentType, ReactNode } from 'react'
-import { AlertTriangle } from 'lucide-react'
+import { AlertTriangle, Ellipsis, TrendingDown, TrendingUp } from 'lucide-react'
 import { toApiErrorMessage } from '@shared/api/http'
 import { cn } from '@shared/lib/utils'
 import { Badge } from '@shared/ui/shadcn/badge'
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@shared/ui/shadcn/card'
 import { domainLabel } from './workspace-labels'
 
 const STATUS_PILL = 'h-6 rounded-full border-transparent px-2.5 font-medium'
@@ -149,32 +143,96 @@ export function ErrorState({
   )
 }
 
+export function DoubleBorderCard({
+  className,
+  children,
+}: {
+  className?: string
+  children: ReactNode
+}) {
+  return (
+    <div
+      className={cn(
+        'bg-background rounded-xl border border-border p-[2px]',
+        className,
+      )}
+    >
+      <div className="bg-card text-card-foreground rounded-[calc(var(--radius-xl)-3px)] border border-border/70">
+        {children}
+      </div>
+    </div>
+  )
+}
+
 export function StatCard(props: {
   title: string
   value: string
-  hint: string
-  icon: ComponentType<{ className?: string }>
+  hint?: string
+  comparisonValue?: string
+  trend?: {
+    value: string
+    direction: 'up' | 'down'
+  }
+  icon?: ComponentType<{ className?: string }>
 }) {
-  const Icon = props.icon
+  const ActionIcon = props.icon ?? Ellipsis
+  const showFooter = Boolean(props.hint ?? props.comparisonValue)
 
   return (
-    <Card className="gap-0 py-5 transition-shadow duration-200 hover:shadow-[0_2px_4px_rgba(0,0,0,0.05),0_18px_44px_-24px_rgba(0,0,0,0.22)]">
-      <CardHeader className="gap-4">
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-muted-foreground text-sm font-medium">
+    <DoubleBorderCard>
+      <div className="flex flex-col p-6">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-muted-foreground text-sm font-medium">
             {props.title}
-          </CardTitle>
-          <span className="bg-muted/60 text-muted-foreground/70 grid size-8 place-items-center rounded-lg">
-            <Icon className="size-4" />
+          </p>
+          <span className="text-muted-foreground/70 hover:text-muted-foreground shrink-0 transition-colors">
+            <ActionIcon className="size-4" />
           </span>
         </div>
-        <CardDescription className="flex items-baseline gap-2">
-          <span className="text-foreground text-3xl font-semibold tracking-tight tabular-nums">
+
+        <div className="mt-5 flex flex-wrap items-center gap-2.5">
+          <span className="text-card-foreground text-3xl font-semibold tracking-tight tabular-nums">
             {props.value}
           </span>
-          <span className="text-sm">{props.hint}</span>
-        </CardDescription>
-      </CardHeader>
-    </Card>
+          {props.trend ? (
+            <span
+              className={cn(
+                'inline-flex items-center gap-1 rounded-md border px-1.5 py-0.5 text-xs font-medium tabular-nums',
+                props.trend.direction === 'up'
+                  ? 'border-chart-1/20 bg-chart-1/10 text-chart-1'
+                  : 'border-destructive/20 bg-destructive/10 text-destructive',
+              )}
+            >
+              {props.trend.direction === 'up' ? (
+                <TrendingUp className="size-3" />
+              ) : (
+                <TrendingDown className="size-3" />
+              )}
+              {props.trend.value}
+            </span>
+          ) : null}
+        </div>
+
+        {showFooter ? (
+          <div className="border-border/70 mt-5 border-t pt-3.5">
+            <p className="text-muted-foreground text-xs">
+              {props.hint ? (
+                <>
+                  {props.hint}
+                  {props.comparisonValue ? ' ' : null}
+                </>
+              ) : (
+                'Vs last month: '
+              )}
+              {props.comparisonValue ? (
+                <span className="text-card-foreground text-sm font-medium tabular-nums">
+                  {props.comparisonValue}
+                </span>
+              ) : null}
+            </p>
+          </div>
+        ) : null}
+      </div>
+    </DoubleBorderCard>
   )
 }
