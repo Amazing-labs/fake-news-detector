@@ -38,6 +38,22 @@ export function InvestigationsWorkspacePage({
 
   if (isActorPending) return null
 
+  // Watchers — and citizens, who share the CITIZEN role — only ever receive
+  // dossiers the direction sent back for revision, so a status filter would be
+  // a row of tabs all resolving to the same list. Show that list directly.
+  if (actor === 'watcher' || actor === 'citizen') {
+    return (
+      <AppLayout actor={actor} page="investigations">
+        <InvestigationList
+          scope="contributable"
+          title="Enquêtes à enrichir"
+          description="Les dossiers renvoyés en correction par la direction, ouverts à vos preuves."
+          emptyDescription="Aucun dossier n'attend de contribution pour le moment."
+        />
+      </AppLayout>
+    )
+  }
+
   // A journalist reads their own dossiers whatever the status, so the full list
   // is their natural landing tab; arbitration roles land on the review queue.
   const activeTab = defaultTab ?? (actor === 'journalist' ? 'all' : 'pending')
