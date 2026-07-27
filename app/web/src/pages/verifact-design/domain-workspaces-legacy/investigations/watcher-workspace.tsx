@@ -37,11 +37,14 @@ export function WatcherInvestigationWorkspace({
   sourceGroups,
   journalistProofMedia,
   watcherEvidence,
+  canContribute = true,
 }: {
   dossier: Dossier
   sourceGroups: SourceGroup[]
   journalistProofMedia: JournalistProofMedia[]
   watcherEvidence: WatcherEvidenceItem[]
+  /** Only an approved watcher may add evidence; other readers get the dossier read-only. */
+  canContribute?: boolean
 }) {
   const sourceCount = sourceGroups.flatMap((g) => g.media).length
   const contribution = watcherContributionAccess(dossier.status)
@@ -54,19 +57,21 @@ export function WatcherInvestigationWorkspace({
             <DossierHeader
               dossier={dossier}
               action={
-                <ActionGuard action={contribution}>
-                  <WatcherContributeDialog investigationId={dossier.id}>
-                    <Button size="sm" disabled={!contribution.enabled}>
-                      <FilePlus2 className="size-4" />
-                      Contribuer
-                    </Button>
-                  </WatcherContributeDialog>
-                </ActionGuard>
+                canContribute ? (
+                  <ActionGuard action={contribution}>
+                    <WatcherContributeDialog investigationId={dossier.id}>
+                      <Button size="sm" disabled={!contribution.enabled}>
+                        <FilePlus2 className="size-4" />
+                        Contribuer
+                      </Button>
+                    </WatcherContributeDialog>
+                  </ActionGuard>
+                ) : null
               }
             />
           </CardHeader>
           <CardContent className="grid gap-3">
-            <BlockedNotice action={contribution} />
+            {canContribute ? <BlockedNotice action={contribution} /> : null}
             <div className="grid gap-3 sm:grid-cols-3">
               <MetaCell
                 label="Catégorie"

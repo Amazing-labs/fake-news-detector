@@ -672,6 +672,20 @@ describe('createApp', () => {
 
     expect(withoutNotes.status).toBe(400)
     expect(investigationController.approve).toHaveBeenCalledOnce()
+
+    // A whitespace-only note is rejected at the boundary too: the domain trims
+    // before validating, so it must never reach the controller either.
+    const blankNotes = await app.request('/api/investigations/inv-1/approve', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer director-1:EDITORIAL_DIRECTOR',
+      },
+      body: JSON.stringify({ publicationNotes: '   ' }),
+    })
+
+    expect(blankNotes.status).toBe(400)
+    expect(investigationController.approve).toHaveBeenCalledOnce()
   })
 
   test('rejects invalid numeric mediaId before reaching the investigation service', async () => {

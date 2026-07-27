@@ -60,7 +60,9 @@ export const proofMediaSchema = z.object({
 })
 
 export const approveInvestigationSchema = z.object({
-  publicationNotes: z.string().min(1),
+  // Trimmed before the length check: the domain rejects a whitespace-only note,
+  // so it must never get past the boundary in the first place.
+  publicationNotes: z.string().trim().min(1),
   verifiedLinks: z
     .array(
       z.object({

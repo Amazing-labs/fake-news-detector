@@ -192,9 +192,9 @@ export function InvestigationDetailWorkspacePage({
     )
   }
 
-  if (actor === 'watcher') {
+  if (actor === 'director') {
     return (
-      <WatcherInvestigationWorkspace
+      <DirectorInvestigationWorkspace
         dossier={dossier}
         sourceGroups={sourceGroups}
         journalistProofMedia={journalistProofMedia}
@@ -203,12 +203,16 @@ export function InvestigationDetailWorkspacePage({
     )
   }
 
+  // Fail safe: the arbitration console is opt-in for the director alone. Every
+  // other reader — watcher, citizen, or a role added later — gets the read-only
+  // dossier, and only a watcher is offered the contribution action.
   return (
-    <DirectorInvestigationWorkspace
+    <WatcherInvestigationWorkspace
       dossier={dossier}
       sourceGroups={sourceGroups}
       journalistProofMedia={journalistProofMedia}
       watcherEvidence={watcherEvidence}
+      canContribute={actor === 'watcher'}
     />
   )
 }

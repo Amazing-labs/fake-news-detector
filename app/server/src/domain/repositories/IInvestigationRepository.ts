@@ -8,6 +8,12 @@ import { Evidence } from '../entities/Evidence'
  * finder per combination.
  */
 export interface InvestigationQuery {
+  /**
+   * Omit to skip the status filter entirely. An **empty array matches nothing**
+   * — the read side relies on that to deny a reader a lifecycle slice outside
+   * their visibility envelope, so an implementation must not treat `[]` as
+   * "no filter" or it would silently widen visibility.
+   */
   statuses?: readonly InvestigationStatus[]
   journalistId?: string
 }
