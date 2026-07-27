@@ -402,6 +402,55 @@ describe('FactCheckingService new workflows', () => {
     expect(publication.hasVerifiedEvidence()).toBe(true)
   })
 
+  test('submitWatcherEvidence only accepts a dossier sent back for revision', async () => {
+    const watcher = new Citizen(
+      'w1',
+      'Watcher',
+      'w@test',
+      'CITIZEN',
+      'ACTIVE',
+      'WATCHER',
+    )
+    const published = new Investigation(
+      'i1',
+      's1',
+      'j1',
+      'FABRICATED',
+      'TRUE',
+      'notes',
+      0,
+      'PUBLISHED',
+    )
+
+    const ctx = buildService()
+    ctx.citizenRepository.findById.mockResolvedValue(watcher)
+    ctx.investigationRepository.findById.mockResolvedValue(published)
+
+    await expect(
+      ctx.service.submitWatcherEvidence({
+        citizenId: watcher.id,
+        investigationId: published.id,
+        title: 'Titre',
+        content: 'Contenu',
+        media: [{ url: 'https://example.com/a.jpg', type: 'IMAGE' }],
+      }),
+    ).rejects.toThrow(BusinessRuleError)
+
+    expect(ctx.evidenceRepository.saveWithMedia).not.toHaveBeenCalled()
+
+    published.status = 'NEEDS_REVISION'
+    const evidenceId = await ctx.service.submitWatcherEvidence({
+      citizenId: watcher.id,
+      investigationId: published.id,
+      title: 'Titre',
+      content: 'Contenu',
+      media: [{ url: 'https://example.com/a.jpg', type: 'IMAGE' }],
+    })
+
+    expect(evidenceId).toBeTruthy()
+    expect(ctx.evidenceRepository.saveWithMedia).toHaveBeenCalledOnce()
+  })
+
   test('publishCorrection marks the publication, stores the correction, and notifies journalist plus citizens', async () => {
     const director = new Director('d1', 'Director', 'd@test')
     const journalist = new Journalist(

@@ -142,6 +142,12 @@ export class CitizenWorkflowService {
     const investigation = await this.getInvestigationOrThrow(
       input.investigationId,
     )
+    if (!investigation.canReceiveWatcherEvidence()) {
+      throw new BusinessRuleError(
+        'Evidence can only be added to an investigation sent back for revision',
+      )
+    }
+
     const evidence = EvidenceFactory.createWithMedia(
       {
         investigationId: investigation.id,

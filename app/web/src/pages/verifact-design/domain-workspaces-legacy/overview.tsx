@@ -549,10 +549,11 @@ export function WatcherWorkspacePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Enquetes a enrichir</CardTitle>
+          <CardTitle>Enquêtes à enrichir</CardTitle>
           <CardDescription>
-            Une vigie ajoute des preuves mais ne pilote pas l'enquête. Ouvre une
-            enquête pour soumettre une contribution.
+            La rédaction ouvre un dossier aux vigies quand la direction le
+            renvoie en correction. Vous y ajoutez des preuves, sans piloter
+            l'enquête.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -560,7 +561,7 @@ export function WatcherWorkspacePage() {
             <EmptyState
               icon={FileSearch}
               title="Aucune enquête à enrichir"
-              description="Les enquêtes ouvertes à contribution apparaîtront ici."
+              description="Les dossiers renvoyés en correction par la direction apparaîtront ici."
             />
           ) : null}
           {enrichable.map((item) => (

@@ -6,6 +6,8 @@ import type { ActorRole } from '../../shared/types'
 
 const JOURNALIST = { actorId: 'j1', actorRole: 'JOURNALIST' as ActorRole }
 const DIRECTOR = { actorId: 'd1', actorRole: 'EDITORIAL_DIRECTOR' as ActorRole }
+// Watchers carry the CITIZEN role; citizenType is not part of the read context.
+const WATCHER = { actorId: 'w1', actorRole: 'CITIZEN' as ActorRole }
 
 // Only the investigation repository takes part in the ownership rule; the other
 // collaborators are consulted afterwards to resolve display names.
@@ -136,5 +138,67 @@ describe('investigation ownership scoping', () => {
     )
 
     expect(investigation.journalistId).toBe('j2')
+  })
+})
+
+describe('watcher visibility scoping', () => {
+  test('limits a watcher to dossiers sent back for revision when no scope is given', async () => {
+    const findMany = vi.fn(async () => [])
+    const service = buildQueryService({ findMany })
+
+    await service.listInvestigationsForReader(WATCHER)
+
+    expect(findMany).toHaveBeenCalledWith({
+      statuses: ['NEEDS_REVISION'],
+      journalistId: undefined,
+    })
+  })
+
+  test('intersects the requested scope with what a watcher may see', async () => {
+    const findMany = vi.fn(async () => [])
+    const service = buildQueryService({ findMany })
+
+    await service.listInvestigationsForReader(WATCHER, {
+      scope: 'contributable',
+    })
+
+    expect(findMany).toHaveBeenCalledWith({
+      statuses: ['NEEDS_REVISION'],
+      journalistId: undefined,
+    })
+  })
+
+  test('returns nothing rather than something else when a watcher asks for a slice they may not see', async () => {
+    const findMany = vi.fn(async () => [])
+    const service = buildQueryService({ findMany })
+
+    await service.listInvestigationsForReader(WATCHER, { scope: 'published' })
+
+    expect(findMany).toHaveBeenCalledWith({
+      statuses: [],
+      journalistId: undefined,
+    })
+  })
+
+  test('lets a watcher read a dossier sent back for revision', async () => {
+    const service = buildQueryService({
+      findById: vi.fn(async () =>
+        makeInvestigation('i1', 'j1', 'NEEDS_REVISION'),
+      ),
+    })
+
+    const investigation = await service.getInvestigationForReader('i1', WATCHER)
+
+    expect(investigation.id).toBe('i1')
+  })
+
+  test('hides a published dossier from a watcher behind a not-found', async () => {
+    const service = buildQueryService({
+      findById: vi.fn(async () => makeInvestigation('i1', 'j1', 'PUBLISHED')),
+    })
+
+    await expect(
+      service.getInvestigationForReader('i1', WATCHER),
+    ).rejects.toThrow(NotFoundError)
   })
 })

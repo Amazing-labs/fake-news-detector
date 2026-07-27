@@ -53,6 +53,21 @@ export function journalistDossierAccess(
   return ALLOWED
 }
 
+/**
+ * Whether a watcher may still add evidence. Mirrors
+ * `Investigation.canReceiveWatcherEvidence()`: a dossier only opens to outside
+ * contribution once the director has sent it back for revision.
+ */
+export function watcherContributionAccess(
+  status: InvestigationStatus,
+): ActionState {
+  return status === 'NEEDS_REVISION'
+    ? ALLOWED
+    : denied(
+        'Ce dossier n’est pas ouvert à contribution : la direction ne l’a pas renvoyé en correction.',
+      )
+}
+
 export interface ArbitrationActions {
   publish: ActionState
   archive: ActionState

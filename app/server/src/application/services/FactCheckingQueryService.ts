@@ -32,10 +32,12 @@ import type {
   InboxSubject,
   InboxSubjectStatus,
 } from '../../domain/entities/InboxSubject'
-import type {
-  Investigation,
-  InvestigationStatus,
+import {
+  WATCHER_CONTRIBUTABLE_STATUSES,
+  type Investigation,
+  type InvestigationStatus,
 } from '../../domain/entities/Investigation'
+import type { InvestigationQuery } from '../../domain/repositories/IInvestigationRepository'
 import type { Journalist } from '../../domain/entities/Journalist'
 import type { Publication } from '../../domain/entities/Publication'
 import type { Report } from '../../domain/entities/Report'
@@ -87,14 +89,46 @@ const SCOPE_STATUSES: Record<
   'pending-review': ['PENDING_REVIEW'],
   published: ['PUBLISHED'],
   canceled: ['CANCELED'],
-  // Contributable == Investigation.canBeEdited(): a watcher may enrich a
-  // dossier while it is open, actively worked, or sent back for revision.
-  contributable: ['OPEN', 'IN_PROGRESS', 'NEEDS_REVISION'],
+  contributable: WATCHER_CONTRIBUTABLE_STATUSES,
 }
 
 export interface InvestigationListFilter {
   scope?: InvestigationScope
   journalistId?: string
+}
+
+/**
+ * The slice of the investigation collection a reader is allowed to see at all,
+ * whatever they ask for. Staff read on one axis (a journalist sees only the
+ * dossiers they own), watchers on the other (only dossiers the newsroom has
+ * reopened for contribution). Watchers carry the CITIZEN role, and no surface
+ * lets a regular citizen read an investigation, so scoping the whole role keeps
+ * the rule in one place instead of plumbing citizenType through the session.
+ */
+function visibilityFor(reader: ReaderContext): InvestigationQuery {
+  if (reader.actorRole === 'JOURNALIST') {
+    return { journalistId: reader.actorId }
+  }
+  if (reader.actorRole === 'CITIZEN') {
+    return { statuses: WATCHER_CONTRIBUTABLE_STATUSES }
+  }
+  return {}
+}
+
+function isVisibleTo(
+  investigation: Investigation,
+  reader: ReaderContext,
+): boolean {
+  const visibility = visibilityFor(reader)
+  if (
+    visibility.journalistId &&
+    investigation.journalistId !== visibility.journalistId
+  ) {
+    return false
+  }
+  return (
+    !visibility.statuses || visibility.statuses.includes(investigation.status)
+  )
 }
 
 export interface DirectorDashboardData {
@@ -245,20 +279,24 @@ export class FactCheckingQueryService {
       : this.inboxSubjectRepository.findAll()
   }
 
-  // A journalist owns their dossiers and only ever sees those, whatever the
-  // lifecycle slice asked for — the requested `journalistId` is ignored rather
-  // than honoured, exactly like the citizen scoping on reports. Any other role
-  // reads the collection as filtered.
+  // The reader's visibility envelope narrows the requested slice: a journalist's
+  // own dossiers whatever the scope (the requested `journalistId` is ignored,
+  // exactly like the citizen scoping on reports), and for a watcher the
+  // intersection with what is open to contribution — so asking for a slice they
+  // may not see returns nothing rather than something else.
   async listInvestigationsForReader(
     reader: ReaderContext,
     filter: InvestigationListFilter = {},
   ): Promise<Investigation[]> {
+    const visibility = visibilityFor(reader)
+    const requested = filter.scope ? SCOPE_STATUSES[filter.scope] : undefined
+
     return this.investigationRepository.findMany({
-      statuses: filter.scope ? SCOPE_STATUSES[filter.scope] : undefined,
-      journalistId:
-        reader.actorRole === 'JOURNALIST'
-          ? reader.actorId
-          : filter.journalistId,
+      statuses:
+        visibility.statuses && requested
+          ? requested.filter((status) => visibility.statuses?.includes(status))
+          : (visibility.statuses ?? requested),
+      journalistId: visibility.journalistId ?? filter.journalistId,
     })
   }
 
@@ -878,18 +916,15 @@ export class FactCheckingQueryService {
     return investigation
   }
 
-  // A journalist may only read a dossier they own; every other role reads any.
-  // Ownership failures are reported as "not found" so another journalist's
-  // dossier cannot be probed for existence.
+  // Same envelope as the collection read, applied to a single dossier. A reader
+  // outside it is told "not found" rather than "forbidden", so a dossier they
+  // may not see cannot be probed for existence either.
   async getInvestigationForReader(
     investigationId: string,
     reader: ReaderContext,
   ): Promise<Investigation> {
     const investigation = await this.getInvestigation(investigationId)
-    if (
-      reader.actorRole === 'JOURNALIST' &&
-      investigation.journalistId !== reader.actorId
-    ) {
+    if (!isVisibleTo(investigation, reader)) {
       throw new NotFoundError('Investigation', investigationId)
     }
     return investigation
