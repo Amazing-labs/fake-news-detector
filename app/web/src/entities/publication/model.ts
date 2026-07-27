@@ -8,8 +8,12 @@ export type PublicationItem = {
   investigationId: string
   approvedById: string
   finalVerdict: string
-  /** Editorial statement the director signed the publication off with. */
-  publicationNotes: string
+  /**
+   * Editorial statement the director signed the publication off with. `null`
+   * for publications released before the statement became mandatory — those
+   * were never signed, so nothing is attributed to anyone.
+   */
+  publicationNotes: string | null
   publishedAt: string
   isCorrection: boolean
   /** Linked investigation's inbox subject theme, resolved server-side. */

@@ -20,6 +20,8 @@ export interface CreatePublicationParams {
 }
 
 export class PublicationFactory {
+  // Every publication minted here carries a signed statement. Legacy rows may
+  // hydrate with `null`, but nothing can be *created* without one.
   static create(params: CreatePublicationParams): Publication {
     const publicationNotes = params.publicationNotes.trim()
     if (!publicationNotes) {

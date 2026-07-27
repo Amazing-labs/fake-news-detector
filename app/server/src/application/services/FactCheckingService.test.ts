@@ -451,6 +451,32 @@ describe('FactCheckingService new workflows', () => {
     expect(ctx.evidenceRepository.saveWithMedia).toHaveBeenCalledOnce()
   })
 
+  test('approveInvestigation refuses to mint a publication without a signed note', async () => {
+    const director = new Director('d1', 'Director', 'd@test')
+    const investigation = new Investigation(
+      'i1',
+      's1',
+      'j1',
+      'FABRICATED',
+      'TRUE',
+      'notes',
+      0,
+      'PENDING_REVIEW',
+    )
+
+    const ctx = buildService()
+    ctx.directorRepository.findById.mockResolvedValue(director)
+    ctx.investigationRepository.findById.mockResolvedValue(investigation)
+
+    await expect(
+      ctx.service.approveInvestigation(director.id, investigation.id, {
+        publicationNotes: '   ',
+      }),
+    ).rejects.toThrow(ValidationError)
+
+    expect(ctx.publicationRepository.save).not.toHaveBeenCalled()
+  })
+
   test('publishCorrection marks the publication, stores the correction, and notifies journalist plus citizens', async () => {
     const director = new Director('d1', 'Director', 'd@test')
     const journalist = new Journalist(
@@ -470,12 +496,13 @@ describe('FactCheckingService new workflows', () => {
       0,
       'PUBLISHED',
     )
+    // Hydrated like a legacy row: released before the signed note was required.
     const publication = new Publication(
       'p1',
       investigation.id,
       director.id,
       'TRUE',
-      'Note editoriale',
+      null,
     )
     const citizenA = new Citizen(
       'c1',

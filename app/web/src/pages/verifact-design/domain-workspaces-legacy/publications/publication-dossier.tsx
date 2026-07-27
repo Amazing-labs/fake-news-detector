@@ -150,26 +150,37 @@ export function PublicationDetailWorkspacePage({
         </CardHeader>
       </Card>
 
-      {/* The director's signed statement — required by the domain, so always
-          present on a publication. */}
+      {/* The director's signed statement. Absent only on dossiers arbitrated
+          before it became mandatory — those are shown as unsigned rather than
+          attributed to a director who never wrote them. */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Note de publication</CardTitle>
           <CardDescription>
-            Ce que la rédaction retient du dossier, et pourquoi elle l’assume.
+            {dossier.publicationNotes
+              ? 'Ce que la rédaction retient du dossier, et pourquoi elle l’assume.'
+              : 'Ce dossier a été arbitré avant que la note signée ne devienne obligatoire.'}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <blockquote className="border-primary/40 border-l-2 pl-4">
-            <p className="text-sm leading-relaxed text-pretty whitespace-pre-line">
-              {dossier.publicationNotes}
-            </p>
-            {dossier.credits.directorName && (
-              <footer className="text-muted-foreground mt-3 text-xs">
-                — {dossier.credits.directorName}, directeur de publication
-              </footer>
-            )}
-          </blockquote>
+          {dossier.publicationNotes ? (
+            <blockquote className="border-primary/40 border-l-2 pl-4">
+              <p className="text-sm leading-relaxed text-pretty whitespace-pre-line">
+                {dossier.publicationNotes}
+              </p>
+              {dossier.credits.directorName && (
+                <footer className="text-muted-foreground mt-3 text-xs">
+                  — {dossier.credits.directorName}, directeur de publication
+                </footer>
+              )}
+            </blockquote>
+          ) : (
+            <EmptyState
+              icon={FileText}
+              title="Aucune note signée"
+              description="Cette publication est antérieure à l'obligation de note éditoriale. Aucune déclaration n'a été enregistrée à l'époque."
+            />
+          )}
         </CardContent>
       </Card>
 
