@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   ExternalLink,
   FileSearch,
+  Inbox,
   Megaphone,
   Paperclip,
   PenLine,
@@ -66,6 +67,7 @@ import {
 import { toApiErrorMessage } from '@shared/api/http'
 import { MediaPreviewItem } from './media-preview'
 import { toPreviewMedia } from './media-preview-utils'
+import { InvestigationList } from './investigations/investigation-list'
 
 function useActorMetrics() {
   return useQuery({
@@ -227,9 +229,24 @@ export function JournalistWorkspacePage() {
                 </div>
               </div>
             </div>
-          ) : null}
+          ) : (
+            <EmptyState
+              icon={Inbox}
+              title="Aucun dossier actif"
+              description="Prenez un sujet dans l'inbox pour ouvrir votre prochaine enquête."
+            />
+          )}
         </CardContent>
       </Card>
+
+      {/* Ownership view: every dossier this journalist owns, whatever its
+          status. The server scopes the collection to the reader, so no filter
+          is needed here. */}
+      <InvestigationList
+        title="Mes enquêtes"
+        description="Tous les dossiers dont vous êtes propriétaire, de l'ouverture à la publication."
+        emptyDescription="Vos dossiers resteront accessibles ici même une fois publiés ou clôturés."
+      />
     </AppLayout>
   )
 }

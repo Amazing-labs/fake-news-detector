@@ -32,10 +32,7 @@ function buildService(deps: any = {}) {
     findById: vi.fn(),
     findByReportId: vi.fn(),
     findByInboxSubjectId: vi.fn(),
-    findByJournalistId: vi.fn(),
-    findInProgress: vi.fn(),
-    findPendingReviews: vi.fn(),
-    findPublished: vi.fn(),
+    findMany: vi.fn(async () => []),
     update: vi.fn(),
     addEvidence: vi.fn(),
     ...deps.investigationRepository,
@@ -301,6 +298,7 @@ describe('FactCheckingService new workflows', () => {
     const publicationId = await ctx.service.approveInvestigation(
       director.id,
       investigation.id,
+      { publicationNotes: '  La rumeur ne resiste pas aux sources.  ' },
     )
 
     expect(publicationId).toBeTruthy()
@@ -308,6 +306,9 @@ describe('FactCheckingService new workflows', () => {
     expect(ctx.authoritySourceRepository.saveMany).toHaveBeenCalledWith([])
     expect(ctx.publicationRepository.save).toHaveBeenCalledOnce()
     const publication = ctx.publicationRepository.save.mock.calls[0][0]
+    expect(publication.publicationNotes).toBe(
+      'La rumeur ne resiste pas aux sources.',
+    )
     expect(publication.verifiedLinks).toEqual([])
     expect(publication.verifiedMedia).toEqual([])
     expect(ctx.notificationRepository.save).toHaveBeenCalledOnce()
@@ -358,6 +359,7 @@ describe('FactCheckingService new workflows', () => {
     ctx.citizenRepository.findAllIds.mockResolvedValue([citizen.id])
 
     await ctx.service.approveInvestigation(director.id, investigation.id, {
+      publicationNotes: 'Note editoriale',
       verifiedLinks: [
         {
           url: 'https://example.com/source',
@@ -424,6 +426,7 @@ describe('FactCheckingService new workflows', () => {
       investigation.id,
       director.id,
       'TRUE',
+      'Note editoriale',
     )
     const citizenA = new Citizen(
       'c1',

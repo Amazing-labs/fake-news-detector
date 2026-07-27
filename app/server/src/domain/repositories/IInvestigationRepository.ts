@@ -1,5 +1,16 @@
-import { Investigation } from '../entities/Investigation'
+import { Investigation, InvestigationStatus } from '../entities/Investigation'
 import { Evidence } from '../entities/Evidence'
+
+/**
+ * Filter for the single investigation collection read. Every criterion is
+ * optional and criteria combine with AND, so ownership scoping (`journalistId`)
+ * composes with any lifecycle slice (`statuses`) instead of needing a dedicated
+ * finder per combination.
+ */
+export interface InvestigationQuery {
+  statuses?: readonly InvestigationStatus[]
+  journalistId?: string
+}
 
 export interface IInvestigationRepository {
   save(investigation: Investigation): Promise<void>
@@ -8,13 +19,8 @@ export interface IInvestigationRepository {
   findByReportId(reportId: string): Promise<Investigation | null>
   findByInboxSubjectId(inboxSubjectId: string): Promise<Investigation | null>
   findByInboxSubjectIds(inboxSubjectIds: string[]): Promise<Investigation[]>
-  findByJournalistId(journalistId: string): Promise<Investigation[]>
-  findAll(): Promise<Investigation[]>
-  findInProgress(): Promise<Investigation[]>
-  findPendingReviews(): Promise<Investigation[]>
-  findPublished(): Promise<Investigation[]>
-  findCanceled(): Promise<Investigation[]>
-  findContributable(): Promise<Investigation[]>
+  /** Newest first. An empty/absent query returns every investigation. */
+  findMany(query?: InvestigationQuery): Promise<Investigation[]>
   update(investigation: Investigation): Promise<void>
   addEvidence(investigationId: string, evidence: Evidence): Promise<void>
 }

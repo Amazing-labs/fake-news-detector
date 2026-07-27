@@ -16,7 +16,6 @@ import type { InboxSubjectMediaInsert } from '../../../domain/repositories/IInbo
 import type { IMediaStorage } from '../../../domain/interfaces'
 import { PublicationFactory } from '../../../domain/factories/PublicationFactory'
 import { NotificationFactory } from '../../../domain/factories/NotificationFactory'
-import { AuthoritySourceFactory } from '../../../domain/factories/AuthoritySourceFactory'
 import {
   InboxSubjectDeletedEvent,
   type IDomainEventPublisher,
@@ -90,7 +89,7 @@ export class DirectorWorkflowService {
   async approveInvestigation(
     directorId: string,
     investigationId: string,
-    input: ApproveInvestigationInput = {},
+    input: ApproveInvestigationInput,
   ): Promise<string> {
     const director = await this.getDirectorOrThrow(directorId)
     const investigation = await this.getInvestigationOrThrow(investigationId)
@@ -102,24 +101,23 @@ export class DirectorWorkflowService {
       input,
       publicationId,
     )
-    const publication = PublicationFactory.createPublication(
-      publicationId,
-      investigation.id,
-      director.id,
-      investigation.draftVerdict,
-      {
-        verifiedLinks: evidenceBundle.verifiedLinks,
-        verifiedMedia: evidenceBundle.verifiedMedia,
-      },
-    )
+    const publication = PublicationFactory.create({
+      id: publicationId,
+      investigationId: investigation.id,
+      approvedById: director.id,
+      finalVerdict: investigation.draftVerdict,
+      publicationNotes: input.publicationNotes,
+      verifiedLinks: evidenceBundle.verifiedLinks,
+      verifiedMedia: evidenceBundle.verifiedMedia,
+    })
 
-    await this.persistApprovedPublicationArtifacts(
-      investigation,
-      director,
-      publication,
-      audit,
+    await this.investigationRepository.update(investigation)
+    await this.directorRepository.update(director)
+    await this.authoritySourceRepository.saveMany(
       evidenceBundle.authoritySources,
     )
+    await this.publicationRepository.save(publication)
+    await this.workflowAuditRepository.save(audit)
 
     await this.investigationLifecycleService.closeReportAndLinkedInboxAfterInvestigation(
       investigation,
@@ -366,27 +364,6 @@ export class DirectorWorkflowService {
       'INFO',
     )
     await this.notificationRepository.save(notification)
-  }
-
-  private async persistApprovedPublicationArtifacts(
-    investigation: Awaited<ReturnType<IInvestigationRepository['findById']>>,
-    director: Awaited<ReturnType<IDirectorRepository['findById']>>,
-    publication: ReturnType<typeof PublicationFactory.createPublication>,
-    audit: ReturnType<typeof directorApproveInvestigationWithAudit>,
-    authoritySources: ReturnType<typeof AuthoritySourceFactory.create>[],
-  ): Promise<void> {
-    if (!investigation) {
-      throw new ValidationError(
-        'Investigation is required before publication persistence',
-      )
-    }
-    await this.investigationRepository.update(investigation)
-    if (director) {
-      await this.directorRepository.update(director)
-    }
-    await this.authoritySourceRepository.saveMany(authoritySources)
-    await this.publicationRepository.save(publication)
-    await this.workflowAuditRepository.save(audit)
   }
 
   private async getDirectorOrThrow(directorId: string) {

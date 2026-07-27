@@ -1,8 +1,15 @@
+import type {
+  EvidenceView,
+  InvestigationMediaView,
+} from '../investigation/model'
+
 export type PublicationItem = {
   id: string
   investigationId: string
   approvedById: string
   finalVerdict: string
+  /** Editorial statement the director signed the publication off with. */
+  publicationNotes: string
   publishedAt: string
   isCorrection: boolean
   /** Linked investigation's inbox subject theme, resolved server-side. */
@@ -30,6 +37,25 @@ export type PublicationItem = {
 export type PublicationList = {
   items: PublicationItem[]
   total: number
+}
+
+/**
+ * The full editorial trail behind a publication. Carries no actor identifier:
+ * contributions are attributed through `credits` and the watcher display name,
+ * so the citizen who filed the originating report stays anonymous.
+ */
+export type PublicationDossier = PublicationItem & {
+  /** Description of the inbox subject the investigation was opened on. */
+  subject: string | null
+  /** The journalist's investigation notes. */
+  investigationNotes: string
+  media: InvestigationMediaView[]
+  evidence: EvidenceView[]
+  credits: {
+    journalistName: string | null
+    directorName: string | null
+    watcherNames: string[]
+  }
 }
 
 export type CorrectionItem = {

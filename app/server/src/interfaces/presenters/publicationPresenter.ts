@@ -1,6 +1,11 @@
 import type { Publication } from '../../domain/entities/Publication'
 import type { Correction } from '../../domain/entities/Correction'
-import type { EnrichedPublication } from '../../application/services/FactCheckingQueryService'
+import type {
+  EnrichedEvidence,
+  EnrichedInvestigationMedia,
+  EnrichedPublication,
+  PublicationDossier,
+} from '../../application/services/FactCheckingQueryService'
 
 export function presentCorrection(correction: Correction) {
   return {
@@ -28,6 +33,7 @@ export function presentPublication(publication: Publication) {
     investigationId: publication.investigationId,
     approvedById: publication.approvedById,
     finalVerdict: publication.finalVerdict,
+    publicationNotes: publication.publicationNotes,
     publishedAt: publication.publishedAt.toISOString(),
     isCorrection: publication.isCorrection,
     verifiedLinks: publication.verifiedLinks.map((link) => ({
@@ -103,5 +109,65 @@ export function presentEnrichedPublicationList(items: EnrichedPublication[]) {
   return {
     items: items.map(presentEnrichedPublication),
     total: items.length,
+  }
+}
+
+// ── Public dossier ───────────────────────────────────────────────────────────
+// The publication page is readable by citizens, so the dossier drops every id
+// that could identify a contributor: the `uploadedById` on source media (the
+// citizen who filed the report) and the `watcherId` on evidence never leave the
+// server. Contributions are attributed by display name through `credits`
+// instead. The director's `approvedById` does ride along on the publication
+// itself — they sign the publication publicly, so that is not a disclosure.
+
+function presentDossierMedia({
+  media,
+  authoritySourceName,
+  authoritySourceType,
+}: EnrichedInvestigationMedia) {
+  return {
+    id: media.id,
+    url: media.url,
+    type: media.type,
+    order: media.order,
+    origin: media.origin,
+    category: media.category ?? null,
+    reliability: media.reliability ?? null,
+    justification: media.justification ?? null,
+    authoritySourceName,
+    authoritySourceType,
+  }
+}
+
+function presentDossierEvidence({
+  evidence,
+  media,
+  watcherName,
+}: EnrichedEvidence) {
+  return {
+    id: evidence.id,
+    title: evidence.title,
+    content: evidence.content,
+    watcherName,
+    media: media.map((item) => ({
+      id: item.id,
+      url: item.url,
+      type: item.type,
+      order: item.order,
+      category: item.category ?? null,
+      reliability: item.reliability ?? null,
+      justification: item.justification ?? null,
+    })),
+  }
+}
+
+export function presentPublicationDossier(dossier: PublicationDossier) {
+  return {
+    ...presentEnrichedPublication(dossier.publication),
+    subject: dossier.subject,
+    investigationNotes: dossier.investigationNotes,
+    media: dossier.media.map(presentDossierMedia),
+    evidence: dossier.evidence.map(presentDossierEvidence),
+    credits: dossier.credits,
   }
 }

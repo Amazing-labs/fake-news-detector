@@ -13,6 +13,10 @@ model Publication {
 
   finalVerdict Verdict
 
+  /// Editorial statement the director signs off when approving the dossier.
+  /// Required by the domain: a publication is never released unsigned.
+  publicationNotes String @db.Text
+
   publishedAt  DateTime @default(now())
   isCorrection Boolean  @default(false)
 

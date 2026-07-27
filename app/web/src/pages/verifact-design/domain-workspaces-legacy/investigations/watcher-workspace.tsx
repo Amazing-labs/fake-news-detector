@@ -130,12 +130,7 @@ export function WatcherInvestigationWorkspace({
             {watcherEvidence.length > 0 ? (
               <div className="grid gap-3">
                 {watcherEvidence.map((e) => (
-                  <WatcherEvidenceCard
-                    key={e.id}
-                    evidence={e}
-                    withClassification={false}
-                    investigationId={dossier.id}
-                  />
+                  <WatcherEvidenceCard key={e.id} evidence={e} />
                 ))}
               </div>
             ) : (

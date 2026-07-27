@@ -178,7 +178,7 @@ export class FactCheckingService {
   async approveInvestigation(
     directorId: string,
     investigationId: string,
-    input: ApproveInvestigationInput = {},
+    input: ApproveInvestigationInput,
   ): Promise<string> {
     return this.runInTransaction(() =>
       this.directorWorkflowService.approveInvestigation(

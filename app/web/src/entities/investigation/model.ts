@@ -58,6 +58,25 @@ export type InvestigationMediaList = {
   total: number
 }
 
+/**
+ * The media fields the dossier views actually read. The publication dossier
+ * serves the same rows stripped of every actor id (the citizen author stays
+ * anonymous), so the shared adapters are typed against this subset rather than
+ * the full investigation payload.
+ */
+export type InvestigationMediaView = Pick<
+  InvestigationMediaItem,
+  | 'id'
+  | 'url'
+  | 'type'
+  | 'origin'
+  | 'category'
+  | 'reliability'
+  | 'justification'
+  | 'authoritySourceName'
+  | 'authoritySourceType'
+>
+
 export type EvidenceMediaItem = {
   id: number
   url: string
@@ -88,4 +107,17 @@ export type EvidenceItem = {
 export type EvidenceList = {
   items: EvidenceItem[]
   total: number
+}
+
+/** Evidence counterpart of {@link InvestigationMediaView}. */
+export type EvidenceView = Pick<
+  EvidenceItem,
+  'id' | 'title' | 'content' | 'watcherName'
+> & {
+  media: Array<
+    Pick<
+      EvidenceMediaItem,
+      'id' | 'url' | 'type' | 'category' | 'reliability' | 'justification'
+    >
+  >
 }

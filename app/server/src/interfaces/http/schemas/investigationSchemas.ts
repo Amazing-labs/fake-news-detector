@@ -12,6 +12,22 @@ export const investigationIdParamSchema = z.object({
   investigationId: idSchema,
 })
 
+// Lifecycle slices exposed on the collection read. Omitting `scope` means "no
+// status filter" — combined with the reader scoping applied in the application
+// layer, that is how a journalist lists all of their own dossiers.
+export const investigationListQuerySchema = z.object({
+  scope: z
+    .enum([
+      'in-progress',
+      'pending-review',
+      'published',
+      'canceled',
+      'contributable',
+    ])
+    .optional(),
+  journalistId: idSchema.optional(),
+})
+
 export const investigationSourceMediaParamSchema = z.object({
   investigationId: idSchema,
   mediaId: idSchema,
@@ -44,6 +60,7 @@ export const proofMediaSchema = z.object({
 })
 
 export const approveInvestigationSchema = z.object({
+  publicationNotes: z.string().min(1),
   verifiedLinks: z
     .array(
       z.object({

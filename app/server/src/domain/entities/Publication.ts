@@ -7,6 +7,8 @@ export class Publication {
     public investigationId: string,
     public approvedById: string,
     public finalVerdict: Verdict,
+    /** Editorial statement the director signs off with. Never empty. */
+    public publicationNotes: string,
     public publishedAt: Date = new Date(),
     public isCorrection: boolean = false,
     public readonly verifiedLinks: ReadonlyArray<VerifiedLink> = Object.freeze(

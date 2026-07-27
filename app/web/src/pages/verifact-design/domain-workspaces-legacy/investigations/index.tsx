@@ -30,19 +30,40 @@ import {
 import { WatcherInvestigationWorkspace } from './watcher-workspace'
 
 export function InvestigationsWorkspacePage({
-  defaultTab = 'pending',
+  defaultTab,
 }: {
-  defaultTab?: 'pending' | 'published' | 'canceled'
+  defaultTab?: 'all' | 'pending' | 'published' | 'canceled'
 }) {
   const { actor, isActorPending } = useResolvedActor('guest')
 
   if (isActorPending) return null
 
+  // A journalist reads their own dossiers whatever the status, so the full list
+  // is their natural landing tab; arbitration roles land on the review queue.
+  const activeTab = defaultTab ?? (actor === 'journalist' ? 'all' : 'pending')
+  const isOwnerView = actor === 'journalist'
+  const allTabCopy = isOwnerView
+    ? {
+        title: 'Mes enquêtes',
+        description:
+          'Tous les dossiers dont vous êtes propriétaire, quel que soit leur statut.',
+        emptyDescription:
+          "Prenez un sujet dans l'inbox pour ouvrir votre premier dossier.",
+      }
+    : {
+        title: 'Toutes les enquêtes',
+        description: 'Tous les dossiers du desk, quel que soit leur statut.',
+        emptyDescription: 'Les enquêtes apparaîtront ici dès leur ouverture.',
+      }
+
   return (
     <AppLayout actor={actor} page="investigations">
-      <Tabs defaultValue={defaultTab}>
+      <Tabs defaultValue={activeTab}>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <TabsList>
+            <TabsTrigger value="all">
+              {isOwnerView ? 'Mes enquêtes' : 'Toutes'}
+            </TabsTrigger>
             <TabsTrigger value="pending">En attente</TabsTrigger>
             <TabsTrigger value="published">Publiées</TabsTrigger>
             <TabsTrigger value="canceled">Annulées</TabsTrigger>
@@ -59,14 +80,17 @@ export function InvestigationsWorkspacePage({
             </Button>
           )}
         </div>
+        <TabsContent value="all" className="mt-4">
+          <InvestigationList {...allTabCopy} />
+        </TabsContent>
         <TabsContent value="pending" className="mt-4">
-          <InvestigationList status="PENDING_REVIEW" />
+          <InvestigationList scope="pending-review" />
         </TabsContent>
         <TabsContent value="published" className="mt-4">
-          <InvestigationList status="PUBLISHED" />
+          <InvestigationList scope="published" />
         </TabsContent>
         <TabsContent value="canceled" className="mt-4">
-          <InvestigationList status="CANCELED" />
+          <InvestigationList scope="canceled" />
         </TabsContent>
       </Tabs>
     </AppLayout>
@@ -137,9 +161,9 @@ export function InvestigationDetailWorkspacePage({
   }
 
   const dossier = toDossier(investigationQuery.data)
-  const sourceGroups = toSourceGroups(sourceMediaQuery.data)
-  const journalistProofMedia = toJournalistProof(sourceMediaQuery.data)
-  const watcherEvidence = toWatcherEvidence(evidenceQuery.data)
+  const sourceGroups = toSourceGroups(sourceMediaQuery.data.items)
+  const journalistProofMedia = toJournalistProof(sourceMediaQuery.data.items)
+  const watcherEvidence = toWatcherEvidence(evidenceQuery.data.items)
 
   if (actor === 'journalist') {
     return (
