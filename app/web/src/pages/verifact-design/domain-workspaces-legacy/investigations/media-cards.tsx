@@ -143,7 +143,9 @@ function safeHref(url: string): string | undefined {
   }
 }
 
-function MediaArtifact({
+// Renders any media by type — inline for image/video, an action button
+// otherwise — with the download affordance the product uses everywhere.
+export function MediaArtifact({
   url,
   type,
   title,
@@ -167,7 +169,12 @@ function MediaArtifact({
           className="block overflow-hidden rounded-lg border"
           title="Ouvrir en plein écran"
         >
-          <img src={href} alt={title} className="size-16 object-cover" />
+          <img
+            src={href}
+            alt={title}
+            loading="lazy"
+            className="size-16 object-cover"
+          />
         </a>
       )
     }
@@ -183,6 +190,7 @@ function MediaArtifact({
           <img
             src={href}
             alt={title}
+            loading="lazy"
             className="max-h-56 w-full object-cover"
           />
         </a>
@@ -476,15 +484,15 @@ function EvidenceMediaClassificationRow({
 
 // ── Watcher evidence card ──────────────────────────────────────────────────────
 
-export function WatcherEvidenceCard({
-  evidence,
-  withClassification,
-  investigationId,
-}: {
-  evidence: WatcherEvidenceItem
-  withClassification: boolean
-  investigationId: string
-}) {
+// `investigationId` is only ever used to address the classification mutation,
+// so the read-only variant does not ask for one.
+type WatcherEvidenceCardProps = { evidence: WatcherEvidenceItem } & (
+  | { withClassification: true; investigationId: string }
+  | { withClassification?: false }
+)
+
+export function WatcherEvidenceCard(props: WatcherEvidenceCardProps) {
+  const { evidence, withClassification } = props
   const [isOpen, setIsOpen] = useState(false)
   const classifiedCount = evidence.media.filter(
     (m) => m.category && m.reliability && m.justification,
@@ -549,13 +557,13 @@ export function WatcherEvidenceCard({
             Médias ({evidence.media.length})
           </p>
 
-          {withClassification ? (
+          {props.withClassification ? (
             evidence.media.map((m, i) => (
               <EvidenceMediaClassificationRow
                 key={m.id}
                 media={m}
                 index={i}
-                investigationId={investigationId}
+                investigationId={props.investigationId}
                 evidenceId={evidence.id}
               />
             ))

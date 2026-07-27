@@ -107,6 +107,7 @@ export const verifiedMediaInputSchema = z.object({
 })
 
 export const approveInvestigationInputSchema = z.object({
+  publicationNotes: z.string().trim().min(1),
   verifiedLinks: z.array(verifiedLinkInputSchema).optional(),
   verifiedMedia: z.array(verifiedMediaInputSchema).optional(),
 })

@@ -137,6 +137,7 @@ export function PublishInvestigationDialog({
   const [open, setOpen] = useState(false)
   const [withEvidence, setWithEvidence] = useState(false)
 
+  const [publicationNotes, setPublicationNotes] = useState('')
   const [linkUrl, setLinkUrl] = useState('')
   const [linkAuthorityName, setLinkAuthorityName] = useState('')
   const [linkAuthorityType, setLinkAuthorityType] =
@@ -145,13 +146,17 @@ export function PublishInvestigationDialog({
   const { session } = useAppSession()
   const ownerId = session?.user.actorId ?? ''
 
+  // The publication note is the director's signed statement — the domain
+  // refuses a publication without one, so neither publish path can skip it.
+  const hasNotes = publicationNotes.trim() !== ''
   // Publishing is hard to walk back: a director who asked to attach evidence
   // must not publish an empty payload by clicking through.
   const hasEvidence =
     linkUrl.trim() !== '' || normalizeMediaDrafts(media).length > 0
 
-  function resetEvidence() {
+  function resetForm() {
     setWithEvidence(false)
+    setPublicationNotes('')
     setLinkUrl('')
     setLinkAuthorityName('')
     setLinkAuthorityType('OFFICIAL_DECREE')
@@ -173,13 +178,14 @@ export function PublishInvestigationDialog({
           ]
         : []
       return approveInvestigation(investigationId, {
+        publicationNotes: publicationNotes.trim(),
         verifiedLinks,
         verifiedMedia: normalizeMediaDrafts(media),
       })
     },
     onSuccess: () => {
       setOpen(false)
-      resetEvidence()
+      resetForm()
       void queryClient.invalidateQueries({ queryKey: ['investigations'] })
       void queryClient.invalidateQueries({ queryKey: ['publications'] })
       void queryClient.invalidateQueries({ queryKey: ['decisions'] })
@@ -191,6 +197,10 @@ export function PublishInvestigationDialog({
   })
 
   function handlePublish() {
+    if (!hasNotes) {
+      toast.error('La note de publication est obligatoire.')
+      return
+    }
     const trimmedLink = linkUrl.trim()
     if (trimmedLink) {
       try {
@@ -209,7 +219,7 @@ export function PublishInvestigationDialog({
       onOpenChange={(next) => {
         if (mutation.isPending) return
         setOpen(next)
-        if (!next) resetEvidence()
+        if (!next) resetForm()
       }}
     >
       <DialogTrigger asChild>{children}</DialogTrigger>
@@ -217,13 +227,28 @@ export function PublishInvestigationDialog({
         <DialogHeader>
           <DialogTitle>Publier le dossier</DialogTitle>
           <DialogDescription>
-            Voulez-vous ajouter des preuves supplémentaires pour renforcer la
-            publication ?
+            Votre note engage la rédaction : elle accompagne le verdict sur la
+            page publique de la publication.
           </DialogDescription>
         </DialogHeader>
 
+        <Label className="grid gap-2">
+          Note de publication
+          <Textarea
+            required
+            rows={4}
+            className="resize-none"
+            value={publicationNotes}
+            onChange={(event) => setPublicationNotes(event.target.value)}
+            placeholder="Ce que la rédaction retient du dossier et pourquoi elle l'assume…"
+          />
+          <span className="text-muted-foreground text-xs">
+            Obligatoire — publiée telle quelle, signée de votre nom.
+          </span>
+        </Label>
+
         {withEvidence ? (
-          <div className="grid gap-6">
+          <div className="grid gap-6 border-t pt-5">
             <section className="grid gap-3">
               <div>
                 <p className="text-sm font-medium">Lien vérifié</p>
@@ -292,7 +317,7 @@ export function PublishInvestigationDialog({
           {withEvidence ? (
             <Button
               onClick={handlePublish}
-              disabled={!hasEvidence}
+              disabled={!hasNotes || !hasEvidence}
               loading={mutation.isPending}
             >
               {!mutation.isPending && <BadgeCheck />}
@@ -305,11 +330,15 @@ export function PublishInvestigationDialog({
                 onClick={() => setWithEvidence(true)}
                 disabled={mutation.isPending}
               >
-                Oui, ajouter des preuves
+                Ajouter des preuves
               </Button>
-              <Button onClick={handlePublish} loading={mutation.isPending}>
+              <Button
+                onClick={handlePublish}
+                disabled={!hasNotes}
+                loading={mutation.isPending}
+              >
                 {!mutation.isPending && <BadgeCheck />}
-                Non, publier
+                Publier
               </Button>
             </>
           )}

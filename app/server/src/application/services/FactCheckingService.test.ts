@@ -32,10 +32,7 @@ function buildService(deps: any = {}) {
     findById: vi.fn(),
     findByReportId: vi.fn(),
     findByInboxSubjectId: vi.fn(),
-    findByJournalistId: vi.fn(),
-    findInProgress: vi.fn(),
-    findPendingReviews: vi.fn(),
-    findPublished: vi.fn(),
+    findMany: vi.fn(async () => []),
     update: vi.fn(),
     addEvidence: vi.fn(),
     ...deps.investigationRepository,
@@ -301,6 +298,7 @@ describe('FactCheckingService new workflows', () => {
     const publicationId = await ctx.service.approveInvestigation(
       director.id,
       investigation.id,
+      { publicationNotes: '  La rumeur ne resiste pas aux sources.  ' },
     )
 
     expect(publicationId).toBeTruthy()
@@ -308,6 +306,9 @@ describe('FactCheckingService new workflows', () => {
     expect(ctx.authoritySourceRepository.saveMany).toHaveBeenCalledWith([])
     expect(ctx.publicationRepository.save).toHaveBeenCalledOnce()
     const publication = ctx.publicationRepository.save.mock.calls[0][0]
+    expect(publication.publicationNotes).toBe(
+      'La rumeur ne resiste pas aux sources.',
+    )
     expect(publication.verifiedLinks).toEqual([])
     expect(publication.verifiedMedia).toEqual([])
     expect(ctx.notificationRepository.save).toHaveBeenCalledOnce()
@@ -358,6 +359,7 @@ describe('FactCheckingService new workflows', () => {
     ctx.citizenRepository.findAllIds.mockResolvedValue([citizen.id])
 
     await ctx.service.approveInvestigation(director.id, investigation.id, {
+      publicationNotes: 'Note editoriale',
       verifiedLinks: [
         {
           url: 'https://example.com/source',
@@ -400,6 +402,81 @@ describe('FactCheckingService new workflows', () => {
     expect(publication.hasVerifiedEvidence()).toBe(true)
   })
 
+  test('submitWatcherEvidence only accepts a dossier sent back for revision', async () => {
+    const watcher = new Citizen(
+      'w1',
+      'Watcher',
+      'w@test',
+      'CITIZEN',
+      'ACTIVE',
+      'WATCHER',
+    )
+    const published = new Investigation(
+      'i1',
+      's1',
+      'j1',
+      'FABRICATED',
+      'TRUE',
+      'notes',
+      0,
+      'PUBLISHED',
+    )
+
+    const ctx = buildService()
+    ctx.citizenRepository.findById.mockResolvedValue(watcher)
+    ctx.investigationRepository.findById.mockResolvedValue(published)
+
+    await expect(
+      ctx.service.submitWatcherEvidence({
+        citizenId: watcher.id,
+        investigationId: published.id,
+        title: 'Titre',
+        content: 'Contenu',
+        media: [{ url: 'https://example.com/a.jpg', type: 'IMAGE' }],
+      }),
+    ).rejects.toThrow(BusinessRuleError)
+
+    expect(ctx.evidenceRepository.saveWithMedia).not.toHaveBeenCalled()
+
+    published.status = 'NEEDS_REVISION'
+    const evidenceId = await ctx.service.submitWatcherEvidence({
+      citizenId: watcher.id,
+      investigationId: published.id,
+      title: 'Titre',
+      content: 'Contenu',
+      media: [{ url: 'https://example.com/a.jpg', type: 'IMAGE' }],
+    })
+
+    expect(evidenceId).toBeTruthy()
+    expect(ctx.evidenceRepository.saveWithMedia).toHaveBeenCalledOnce()
+  })
+
+  test('approveInvestigation refuses to mint a publication without a signed note', async () => {
+    const director = new Director('d1', 'Director', 'd@test')
+    const investigation = new Investigation(
+      'i1',
+      's1',
+      'j1',
+      'FABRICATED',
+      'TRUE',
+      'notes',
+      0,
+      'PENDING_REVIEW',
+    )
+
+    const ctx = buildService()
+    ctx.directorRepository.findById.mockResolvedValue(director)
+    ctx.investigationRepository.findById.mockResolvedValue(investigation)
+
+    await expect(
+      ctx.service.approveInvestigation(director.id, investigation.id, {
+        publicationNotes: '   ',
+      }),
+    ).rejects.toThrow(ValidationError)
+
+    expect(ctx.publicationRepository.save).not.toHaveBeenCalled()
+  })
+
   test('publishCorrection marks the publication, stores the correction, and notifies journalist plus citizens', async () => {
     const director = new Director('d1', 'Director', 'd@test')
     const journalist = new Journalist(
@@ -419,11 +496,13 @@ describe('FactCheckingService new workflows', () => {
       0,
       'PUBLISHED',
     )
+    // Hydrated like a legacy row: released before the signed note was required.
     const publication = new Publication(
       'p1',
       investigation.id,
       director.id,
       'TRUE',
+      null,
     )
     const citizenA = new Citizen(
       'c1',

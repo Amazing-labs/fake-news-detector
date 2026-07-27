@@ -6,9 +6,9 @@
  * force-cast; unknown values fall back to a benign default (or null).
  */
 import type {
-  EvidenceList,
+  EvidenceView,
   InvestigationItem,
-  InvestigationMediaList,
+  InvestigationMediaView,
 } from '@entities/investigation/model'
 import {
   investigationStatusSchema,
@@ -49,10 +49,12 @@ export function toDossier(investigation: InvestigationItem): Dossier {
   }
 }
 
-export function toSourceGroups(media: InvestigationMediaList): SourceGroup[] {
+export function toSourceGroups(
+  media: readonly InvestigationMediaView[],
+): SourceGroup[] {
   return SOURCE_ORIGINS.map((origin) => ({
     origin,
-    media: media.items
+    media: media
       .filter((item) => item.origin === origin)
       .map(
         (item): SourceMedia => ({
@@ -69,9 +71,9 @@ export function toSourceGroups(media: InvestigationMediaList): SourceGroup[] {
 }
 
 export function toJournalistProof(
-  media: InvestigationMediaList,
+  media: readonly InvestigationMediaView[],
 ): JournalistProofMedia[] {
-  return media.items
+  return media
     .filter((item) => item.origin === 'JOURNALIST_PROOF')
     .map((item) => ({
       id: item.id,
@@ -84,9 +86,9 @@ export function toJournalistProof(
 }
 
 export function toWatcherEvidence(
-  evidence: EvidenceList,
+  evidence: readonly EvidenceView[],
 ): WatcherEvidenceItem[] {
-  return evidence.items.map((item) => ({
+  return evidence.map((item) => ({
     id: item.id,
     title: item.title,
     watcher: item.watcherName,

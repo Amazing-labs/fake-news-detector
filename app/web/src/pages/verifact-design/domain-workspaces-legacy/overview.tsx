@@ -8,6 +8,7 @@ import {
   ClipboardCheck,
   ExternalLink,
   FileSearch,
+  Inbox,
   Megaphone,
   Paperclip,
   PenLine,
@@ -66,6 +67,7 @@ import {
 import { toApiErrorMessage } from '@shared/api/http'
 import { MediaPreviewItem } from './media-preview'
 import { toPreviewMedia } from './media-preview-utils'
+import { InvestigationList } from './investigations/investigation-list'
 
 function useActorMetrics() {
   return useQuery({
@@ -227,9 +229,24 @@ export function JournalistWorkspacePage() {
                 </div>
               </div>
             </div>
-          ) : null}
+          ) : (
+            <EmptyState
+              icon={Inbox}
+              title="Aucun dossier actif"
+              description="Prenez un sujet dans l'inbox pour ouvrir votre prochaine enquête."
+            />
+          )}
         </CardContent>
       </Card>
+
+      {/* Ownership view: every dossier this journalist owns, whatever its
+          status. The server scopes the collection to the reader, so no filter
+          is needed here. */}
+      <InvestigationList
+        title="Mes enquêtes"
+        description="Tous les dossiers dont vous êtes propriétaire, de l'ouverture à la publication."
+        emptyDescription="Vos dossiers resteront accessibles ici même une fois publiés ou clôturés."
+      />
     </AppLayout>
   )
 }
@@ -532,10 +549,11 @@ export function WatcherWorkspacePage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Enquetes a enrichir</CardTitle>
+          <CardTitle>Enquêtes à enrichir</CardTitle>
           <CardDescription>
-            Une vigie ajoute des preuves mais ne pilote pas l'enquête. Ouvre une
-            enquête pour soumettre une contribution.
+            La rédaction ouvre un dossier aux vigies quand la direction le
+            renvoie en correction. Vous y ajoutez des preuves, sans piloter
+            l'enquête.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
@@ -543,7 +561,7 @@ export function WatcherWorkspacePage() {
             <EmptyState
               icon={FileSearch}
               title="Aucune enquête à enrichir"
-              description="Les enquêtes ouvertes à contribution apparaîtront ici."
+              description="Les dossiers renvoyés en correction par la direction apparaîtront ici."
             />
           ) : null}
           {enrichable.map((item) => (

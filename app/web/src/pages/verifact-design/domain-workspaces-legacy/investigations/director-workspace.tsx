@@ -28,11 +28,14 @@ import {
   WatcherEvidenceCard,
 } from './media-cards'
 import {
+  ActionGuard,
+  BlockedNotice,
   MetaCell,
   NotesBlock,
   OriginBadge,
   SubjectContextQuote,
 } from './primitives'
+import { directorArbitrationActions } from '@entities/investigation/policy'
 import type {
   Dossier,
   JournalistProofMedia,
@@ -51,8 +54,7 @@ export function DirectorInvestigationWorkspace({
   journalistProofMedia: JournalistProofMedia[]
   watcherEvidence: WatcherEvidenceItem[]
 }) {
-  const canPublish = ['TRUE', 'FALSE', 'MISLEADING'].includes(dossier.verdict)
-  const canArchive = dossier.verdict === 'UNVERIFIABLE'
+  const actions = directorArbitrationActions(dossier.status, dossier.verdict)
   const sourceCount = sourceGroups.flatMap((g) => g.media).length
 
   return (
@@ -113,53 +115,66 @@ export function DirectorInvestigationWorkspace({
               </TabsList>
             </div>
             <div className="flex flex-wrap gap-2">
-              {canPublish && (
+              <ActionGuard action={actions.publish}>
                 <PublishInvestigationDialog investigationId={dossier.id}>
-                  <Button size="sm">
+                  <Button size="sm" disabled={!actions.publish.enabled}>
                     <BadgeCheck className="size-4" />
                     Publier
                   </Button>
                 </PublishInvestigationDialog>
-              )}
-              {canArchive && (
+              </ActionGuard>
+              <ActionGuard action={actions.archive}>
                 <ArbitrationReasonDialog
                   investigationId={dossier.id}
                   kind="archive"
                   action="Archiver le dossier"
                 >
-                  <Button size="sm">
+                  <Button size="sm" disabled={!actions.archive.enabled}>
                     <Archive className="size-4" />
                     Archiver
                   </Button>
                 </ArbitrationReasonDialog>
-              )}
-              <ArbitrationReasonDialog
-                investigationId={dossier.id}
-                kind="reject"
-                action="Demander une correction"
-              >
-                <Button variant="outline" size="sm">
-                  <PenLine className="size-4" />
-                  Correction
-                </Button>
-              </ArbitrationReasonDialog>
-              <ArbitrationReasonDialog
-                investigationId={dossier.id}
-                kind="cancel"
-                action="Annuler le dossier"
-                tone="destructive"
-              >
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="text-destructive"
+              </ActionGuard>
+              <ActionGuard action={actions.requestRevision}>
+                <ArbitrationReasonDialog
+                  investigationId={dossier.id}
+                  kind="reject"
+                  action="Demander une correction"
                 >
-                  <Ban className="size-4" />
-                  Annuler
-                </Button>
-              </ArbitrationReasonDialog>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={!actions.requestRevision.enabled}
+                  >
+                    <PenLine className="size-4" />
+                    Correction
+                  </Button>
+                </ArbitrationReasonDialog>
+              </ActionGuard>
+              <ActionGuard action={actions.cancel}>
+                <ArbitrationReasonDialog
+                  investigationId={dossier.id}
+                  kind="cancel"
+                  action="Annuler le dossier"
+                  tone="destructive"
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-destructive"
+                    disabled={!actions.cancel.enabled}
+                  >
+                    <Ban className="size-4" />
+                    Annuler
+                  </Button>
+                </ArbitrationReasonDialog>
+              </ActionGuard>
             </div>
           </div>
+
+          {/* `requestRevision` is the dossier-level gate: it is blocked exactly
+              when the dossier is closed or not yet under review. */}
+          <BlockedNotice action={actions.requestRevision} />
 
           {/* SOURCE — classified, read-only, grouped by origin */}
           <TabsContent value="source" className="mt-4">
@@ -207,12 +222,7 @@ export function DirectorInvestigationWorkspace({
             {watcherEvidence.length > 0 ? (
               <div className="grid gap-3">
                 {watcherEvidence.map((e) => (
-                  <WatcherEvidenceCard
-                    key={e.id}
-                    evidence={e}
-                    withClassification={false}
-                    investigationId={dossier.id}
-                  />
+                  <WatcherEvidenceCard key={e.id} evidence={e} />
                 ))}
               </div>
             ) : (

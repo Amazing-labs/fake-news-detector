@@ -1,5 +1,6 @@
-import { FileText } from 'lucide-react'
+import { FileText, Lock } from 'lucide-react'
 import type { ReactNode } from 'react'
+import type { ActionState } from '@entities/investigation/policy'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Card, CardContent } from '@shared/ui/shadcn/card'
 import { domainLabel } from '../../workspace-labels'
@@ -73,16 +74,19 @@ export function CategorySelect({
   value,
   onChange,
   placeholder = 'Catégorie',
+  disabled,
 }: {
   value: string
   onChange: (value: string) => void
   placeholder?: string
+  disabled?: boolean
 }) {
   return (
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
       className={SELECT_CLASS}
+      disabled={disabled}
     >
       <option value="" disabled>
         {placeholder}
@@ -123,6 +127,38 @@ export function ReliabilitySelect({
         </option>
       ))}
     </select>
+  )
+}
+
+// A disabled control swallows pointer events and leaves the tab order, so the
+// explanation cannot live on the control itself: `title` serves pointer users
+// and the visually-hidden copy keeps it reachable for assistive tech.
+export function ActionGuard({
+  action,
+  children,
+}: {
+  action: ActionState
+  children: ReactNode
+}) {
+  if (action.enabled) return children
+  return (
+    <span className="inline-flex" title={action.reason}>
+      {children}
+      <span className="sr-only">{action.reason}</span>
+    </span>
+  )
+}
+
+// The one visible line that says why a dossier can no longer be acted on.
+// Shared by both workspaces so "verrouillé" always reads the same way.
+export function BlockedNotice({ action }: { action: ActionState }) {
+  if (action.enabled) return null
+
+  return (
+    <p className="text-muted-foreground flex items-center gap-2 text-xs text-pretty">
+      <Lock className="size-3.5 shrink-0" />
+      {action.reason}
+    </p>
   )
 }
 

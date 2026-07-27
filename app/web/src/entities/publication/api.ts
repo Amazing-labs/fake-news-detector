@@ -1,5 +1,10 @@
 import { apiRequest } from '@shared/api/http'
-import type { CorrectionList, PublicationItem, PublicationList } from './model'
+import type {
+  CorrectionList,
+  PublicationDossier,
+  PublicationItem,
+  PublicationList,
+} from './model'
 import type { CreateCorrectionInput, PublicationScope } from './schemas'
 
 export type { CreateCorrectionInput, PublicationScope }
@@ -12,6 +17,8 @@ export const publicationQueryKeys = {
     ['publications', 'detail', publicationId] as const,
   corrections: (publicationId: string) =>
     ['publications', 'corrections', publicationId] as const,
+  dossier: (publicationId: string) =>
+    ['publications', 'dossier', publicationId] as const,
 }
 
 export function listPublications(params?: { scope?: PublicationScope }) {
@@ -30,6 +37,12 @@ export function listPublications(params?: { scope?: PublicationScope }) {
 
 export function getPublication(publicationId: string) {
   return apiRequest<PublicationItem>(`/api/publications/${publicationId}`)
+}
+
+export function getPublicationDossier(publicationId: string) {
+  return apiRequest<PublicationDossier>(
+    `/api/publications/${publicationId}/dossier`,
+  )
 }
 
 export function getPublicationCorrections(publicationId: string) {

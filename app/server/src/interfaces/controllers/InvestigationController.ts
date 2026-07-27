@@ -7,11 +7,13 @@ import {
   requiredNumericParam,
   requiredParam,
   validatedJson,
+  validatedQuery,
 } from '../http/request'
 import type {
   approveInvestigationSchema,
   archiveSchema,
   directorReasonSchema,
+  investigationListQuerySchema,
   proofMediaSchema,
   submitWatcherEvidenceSchema,
   updateInvestigationDraftSchema,
@@ -32,30 +34,42 @@ export class InvestigationController {
   ) {}
 
   list = async (c: Context<{ Variables: AppVariables }>) => {
-    const items = await this.queryService.listInvestigationsEnriched({
-      scope: c.req.query('scope'),
-      journalistId: c.req.query('journalistId'),
-    })
+    const filter =
+      validatedQuery<z.infer<typeof investigationListQuerySchema>>(c)
+    const items = await this.queryService.listInvestigationsForReaderEnriched(
+      c.get('actor'),
+      filter,
+    )
     return ok(c, presentEnrichedInvestigationList(items))
   }
 
   getById = async (c: Context<{ Variables: AppVariables }>) => {
     const id = requiredParam(c, 'investigationId')
-    const investigation = await this.queryService.getInvestigationEnriched(id)
+    const investigation =
+      await this.queryService.getInvestigationForReaderEnriched(
+        id,
+        c.get('actor'),
+      )
     return ok(c, presentEnrichedInvestigation(investigation))
   }
 
   listSourceMedia = async (c: Context<{ Variables: AppVariables }>) => {
     const id = requiredParam(c, 'investigationId')
     const media =
-      await this.queryService.getInvestigationSourceMediaEnriched(id)
+      await this.queryService.getInvestigationSourceMediaForReaderEnriched(
+        id,
+        c.get('actor'),
+      )
     return ok(c, presentEnrichedInvestigationMediaList(media))
   }
 
   listEvidence = async (c: Context<{ Variables: AppVariables }>) => {
     const id = requiredParam(c, 'investigationId')
     const evidences =
-      await this.queryService.getInvestigationEvidenceEnriched(id)
+      await this.queryService.getInvestigationEvidenceForReaderEnriched(
+        id,
+        c.get('actor'),
+      )
     return ok(c, presentEnrichedEvidenceList(evidences))
   }
 
@@ -143,6 +157,7 @@ export class InvestigationController {
       actor.actorId,
       requiredParam(c, 'investigationId'),
       {
+        publicationNotes: body.publicationNotes,
         verifiedLinks: body.verifiedLinks,
         verifiedMedia: body.verifiedMedia,
       },

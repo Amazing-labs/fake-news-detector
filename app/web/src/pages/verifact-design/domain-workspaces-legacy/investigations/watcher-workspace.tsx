@@ -16,7 +16,15 @@ import {
   SourceMediaReadRow,
   WatcherEvidenceCard,
 } from './media-cards'
-import { DossierHeader, MetaCell, NotesBlock, OriginBadge } from './primitives'
+import {
+  ActionGuard,
+  BlockedNotice,
+  DossierHeader,
+  MetaCell,
+  NotesBlock,
+  OriginBadge,
+} from './primitives'
+import { watcherContributionAccess } from '@entities/investigation/policy'
 import type {
   Dossier,
   JournalistProofMedia,
@@ -29,13 +37,17 @@ export function WatcherInvestigationWorkspace({
   sourceGroups,
   journalistProofMedia,
   watcherEvidence,
+  canContribute = true,
 }: {
   dossier: Dossier
   sourceGroups: SourceGroup[]
   journalistProofMedia: JournalistProofMedia[]
   watcherEvidence: WatcherEvidenceItem[]
+  /** Only an approved watcher may add evidence; other readers get the dossier read-only. */
+  canContribute?: boolean
 }) {
   const sourceCount = sourceGroups.flatMap((g) => g.media).length
+  const contribution = watcherContributionAccess(dossier.status)
 
   return (
     <AppLayout actor="watcher" page="investigations">
@@ -45,16 +57,21 @@ export function WatcherInvestigationWorkspace({
             <DossierHeader
               dossier={dossier}
               action={
-                <WatcherContributeDialog investigationId={dossier.id}>
-                  <Button size="sm">
-                    <FilePlus2 className="size-4" />
-                    Contribuer
-                  </Button>
-                </WatcherContributeDialog>
+                canContribute ? (
+                  <ActionGuard action={contribution}>
+                    <WatcherContributeDialog investigationId={dossier.id}>
+                      <Button size="sm" disabled={!contribution.enabled}>
+                        <FilePlus2 className="size-4" />
+                        Contribuer
+                      </Button>
+                    </WatcherContributeDialog>
+                  </ActionGuard>
+                ) : null
               }
             />
           </CardHeader>
-          <CardContent>
+          <CardContent className="grid gap-3">
+            {canContribute ? <BlockedNotice action={contribution} /> : null}
             <div className="grid gap-3 sm:grid-cols-3">
               <MetaCell
                 label="Catégorie"
@@ -130,12 +147,7 @@ export function WatcherInvestigationWorkspace({
             {watcherEvidence.length > 0 ? (
               <div className="grid gap-3">
                 {watcherEvidence.map((e) => (
-                  <WatcherEvidenceCard
-                    key={e.id}
-                    evidence={e}
-                    withClassification={false}
-                    investigationId={dossier.id}
-                  />
+                  <WatcherEvidenceCard key={e.id} evidence={e} />
                 ))}
               </div>
             ) : (

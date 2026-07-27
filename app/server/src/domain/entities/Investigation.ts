@@ -29,6 +29,16 @@ export type InvestigationStatus =
   | 'ARCHIVED'
   | 'CANCELED'
 
+/**
+ * A dossier only opens to outside (watcher) contribution once the director has
+ * sent it back for revision: that is the moment the newsroom is asking for more
+ * material. This is the whole of what a watcher may see or enrich, so the read
+ * side scopes watchers with the same constant.
+ */
+export const WATCHER_CONTRIBUTABLE_STATUSES: readonly InvestigationStatus[] = [
+  'NEEDS_REVISION',
+] as const
+
 export class Investigation {
   constructor(
     public readonly id: string,
@@ -61,6 +71,10 @@ export class Investigation {
       this.status === 'IN_PROGRESS' ||
       this.status === 'NEEDS_REVISION'
     )
+  }
+
+  canReceiveWatcherEvidence(): boolean {
+    return WATCHER_CONTRIBUTABLE_STATUSES.includes(this.status)
   }
 
   canMarkAsArchived(): boolean {

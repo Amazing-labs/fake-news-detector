@@ -650,10 +650,41 @@ describe('createApp', () => {
         'Content-Type': 'application/json',
         Authorization: 'Bearer director-1:EDITORIAL_DIRECTOR',
       },
-      body: JSON.stringify({}),
+      body: JSON.stringify({ publicationNotes: 'Note editoriale' }),
     })
 
     expect(response.status).toBe(201)
+    expect(investigationController.approve).toHaveBeenCalledOnce()
+
+    // The publication note is a domain requirement, so an approval without one
+    // is rejected at the boundary and never reaches the controller.
+    const withoutNotes = await app.request(
+      '/api/investigations/inv-1/approve',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: 'Bearer director-1:EDITORIAL_DIRECTOR',
+        },
+        body: JSON.stringify({}),
+      },
+    )
+
+    expect(withoutNotes.status).toBe(400)
+    expect(investigationController.approve).toHaveBeenCalledOnce()
+
+    // A whitespace-only note is rejected at the boundary too: the domain trims
+    // before validating, so it must never reach the controller either.
+    const blankNotes = await app.request('/api/investigations/inv-1/approve', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer director-1:EDITORIAL_DIRECTOR',
+      },
+      body: JSON.stringify({ publicationNotes: '   ' }),
+    })
+
+    expect(blankNotes.status).toBe(400)
     expect(investigationController.approve).toHaveBeenCalledOnce()
   })
 

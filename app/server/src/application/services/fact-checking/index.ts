@@ -7,6 +7,11 @@ export {
   archivedUnverifiableMessageForStakeholder,
   canceledMessageForStakeholder,
 } from './stakeholderMessages'
+export {
+  computeActorMetrics,
+  type ActorMetrics,
+  type ActorMetricsDeps,
+} from './actorMetrics'
 export { InvestigationLifecycleService } from './investigationLifecycleService'
 export { JournalistWorkflowService } from './journalistWorkflowService'
 export { DirectorWorkflowService } from './directorWorkflowService'

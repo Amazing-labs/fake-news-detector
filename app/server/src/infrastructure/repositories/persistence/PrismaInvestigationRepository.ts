@@ -1,6 +1,9 @@
 import { Evidence } from '../../../domain/entities/Evidence'
 import { Investigation } from '../../../domain/entities/Investigation'
-import type { IInvestigationRepository } from '../../../domain/repositories/IInvestigationRepository'
+import type {
+  IInvestigationRepository,
+  InvestigationQuery,
+} from '../../../domain/repositories/IInvestigationRepository'
 import { prisma } from '../../config/database'
 
 type PrismaInvestigationRow = NonNullable<
@@ -68,59 +71,12 @@ export class PrismaInvestigationRepository implements IInvestigationRepository {
     return rows.map((row) => this.toDomain(row))
   }
 
-  async findByJournalistId(journalistId: string): Promise<Investigation[]> {
+  async findMany(query: InvestigationQuery = {}): Promise<Investigation[]> {
     const rows = await prisma.investigation.findMany({
-      where: { journalistId },
-      orderBy: { createdAt: 'desc' },
-    })
-    return rows.map((row) => this.toDomain(row))
-  }
-
-  async findAll(): Promise<Investigation[]> {
-    const rows = await prisma.investigation.findMany({
-      orderBy: { createdAt: 'desc' },
-    })
-    return rows.map((row) => this.toDomain(row))
-  }
-
-  async findInProgress(): Promise<Investigation[]> {
-    const rows = await prisma.investigation.findMany({
-      where: { status: 'IN_PROGRESS' },
-      orderBy: { createdAt: 'desc' },
-    })
-    return rows.map((row) => this.toDomain(row))
-  }
-
-  async findPendingReviews(): Promise<Investigation[]> {
-    const rows = await prisma.investigation.findMany({
-      where: { status: 'PENDING_REVIEW' },
-      orderBy: { createdAt: 'desc' },
-    })
-    return rows.map((row) => this.toDomain(row))
-  }
-
-  async findPublished(): Promise<Investigation[]> {
-    const rows = await prisma.investigation.findMany({
-      where: { status: 'PUBLISHED' },
-      orderBy: { createdAt: 'desc' },
-    })
-    return rows.map((row) => this.toDomain(row))
-  }
-
-  async findCanceled(): Promise<Investigation[]> {
-    const rows = await prisma.investigation.findMany({
-      where: { status: 'CANCELED' },
-      orderBy: { createdAt: 'desc' },
-    })
-    return rows.map((row) => this.toDomain(row))
-  }
-
-  async findContributable(): Promise<Investigation[]> {
-    // Contributable == editable per Investigation.canBeEdited(): a watcher can
-    // enrich an investigation while it is OPEN, actively worked (IN_PROGRESS),
-    // or sent back for revision (NEEDS_REVISION).
-    const rows = await prisma.investigation.findMany({
-      where: { status: { in: ['OPEN', 'IN_PROGRESS', 'NEEDS_REVISION'] } },
+      where: {
+        ...(query.statuses ? { status: { in: [...query.statuses] } } : {}),
+        ...(query.journalistId ? { journalistId: query.journalistId } : {}),
+      },
       orderBy: { createdAt: 'desc' },
     })
     return rows.map((row) => this.toDomain(row))

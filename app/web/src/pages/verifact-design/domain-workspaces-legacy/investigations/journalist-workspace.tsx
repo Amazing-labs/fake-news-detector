@@ -41,14 +41,18 @@ import {
 import {
   JournalistProofList,
   SourceMediaCard,
+  SourceMediaReadRow,
   WatcherEvidenceCard,
 } from './media-cards'
 import {
+  ActionGuard,
+  BlockedNotice,
   CategorySelect,
   DossierHeader,
   MetaCell,
   OriginBadge,
 } from './primitives'
+import { journalistDossierAccess } from '@entities/investigation/policy'
 import { EmptyState } from '../../workspace-ui'
 import type {
   MediaCategory,
@@ -77,6 +81,10 @@ export function JournalistInvestigationWorkspace({
   const queryClient = useQueryClient()
   const { session } = useAppSession()
   const ownerId = session?.user.actorId ?? ''
+  // A dossier in review or already closed is read-only for its journalist —
+  // the domain refuses every write, so the workspace stops offering them.
+  const access = journalistDossierAccess(dossier.status)
+  const isEditable = access.enabled
 
   const [proofAuthorityName, setProofAuthorityName] = useState('')
   const [proofSourceType, setProofSourceType] = useState<SourceType>(
@@ -207,22 +215,25 @@ export function JournalistInvestigationWorkspace({
             <DossierHeader
               dossier={dossier}
               action={
-                <Button
-                  size="sm"
-                  onClick={handleSubmitForReview}
-                  loading={submitMutation.isPending}
-                >
-                  {!submitMutation.isPending && (
-                    <ClipboardCheck className="size-4" />
-                  )}
-                  {submitMutation.isPending
-                    ? 'Soumission…'
-                    : 'Soumettre en revue'}
-                </Button>
+                <ActionGuard action={access}>
+                  <Button
+                    size="sm"
+                    onClick={handleSubmitForReview}
+                    disabled={!isEditable}
+                    loading={submitMutation.isPending}
+                  >
+                    {!submitMutation.isPending && (
+                      <ClipboardCheck className="size-4" />
+                    )}
+                    {submitMutation.isPending
+                      ? 'Soumission…'
+                      : 'Soumettre en revue'}
+                  </Button>
+                </ActionGuard>
               }
             />
           </CardHeader>
-          <CardContent>
+          <CardContent className="grid gap-3">
             <div className="grid gap-3 sm:grid-cols-2">
               <MetaCell
                 label="Révision"
@@ -230,6 +241,7 @@ export function JournalistInvestigationWorkspace({
               />
               <MetaCell label="Mis à jour" value={dossier.updatedAt} />
             </div>
+            <BlockedNotice action={access} />
           </CardContent>
         </Card>
 
@@ -264,13 +276,17 @@ export function JournalistInvestigationWorkspace({
                           {group.media.length > 1 ? 's' : ''}
                         </span>
                       </div>
-                      {group.media.map((m) => (
-                        <SourceMediaCard
-                          key={m.id}
-                          media={m}
-                          investigationId={dossier.id}
-                        />
-                      ))}
+                      {group.media.map((m) =>
+                        isEditable ? (
+                          <SourceMediaCard
+                            key={m.id}
+                            media={m}
+                            investigationId={dossier.id}
+                          />
+                        ) : (
+                          <SourceMediaReadRow key={m.id} media={m} />
+                        ),
+                      )}
                     </div>
                   ))}
               </div>
@@ -287,83 +303,87 @@ export function JournalistInvestigationWorkspace({
           <TabsContent value="proof" className="mt-4">
             <div className="grid gap-6">
               <JournalistProofList proofMedia={journalistProofMedia} />
-              <Card>
-                <CardHeader>
-                  <CardTitle className="text-base">
-                    Ajouter une preuve journalistique
-                  </CardTitle>
-                  <CardDescription>
-                    Source d'autorité requise — aucune classification de
-                    catégorie sur les preuves journaliste.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-4">
-                  <div className="grid gap-3 md:grid-cols-2">
-                    <Label className="grid gap-1.5 text-sm">
-                      Source d'autorité
-                      <Input
-                        placeholder="Nom de la source"
-                        value={proofAuthorityName}
-                        onChange={(e) => setProofAuthorityName(e.target.value)}
-                      />
-                    </Label>
-                    <Label className="grid gap-1.5 text-sm">
-                      Type de source
-                      <select
-                        value={proofSourceType}
-                        onChange={(e) =>
-                          setProofSourceType(e.target.value as SourceType)
-                        }
-                        className={SELECT_CLASS}
-                      >
-                        {SOURCE_TYPE_OPTIONS.map(([v, l]) => (
-                          <option key={v} value={v}>
-                            {l}
-                          </option>
-                        ))}
-                      </select>
-                    </Label>
-                  </div>
-                  <MediaFields
-                    title="Média de la preuve"
-                    description="Un fichier par preuve — son type est détecté automatiquement."
-                    items={proofMedia}
-                    onChange={setProofMedia}
-                    ownerId={ownerId}
-                    maxItems={1}
-                    disabled={
-                      addProofMutation.isPending || trimmedProofUrl !== ''
-                    }
-                  />
-                  <Label className="grid gap-1.5 text-sm">
-                    Lien
-                    <Input
-                      placeholder="https://…"
-                      type="url"
-                      value={proofUrl}
-                      onChange={(e) => setProofUrl(e.target.value)}
+              {isEditable ? (
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-base">
+                      Ajouter une preuve journalistique
+                    </CardTitle>
+                    <CardDescription>
+                      Source d'autorité requise — aucune classification de
+                      catégorie sur les preuves journaliste.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="grid gap-4">
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <Label className="grid gap-1.5 text-sm">
+                        Source d'autorité
+                        <Input
+                          placeholder="Nom de la source"
+                          value={proofAuthorityName}
+                          onChange={(e) =>
+                            setProofAuthorityName(e.target.value)
+                          }
+                        />
+                      </Label>
+                      <Label className="grid gap-1.5 text-sm">
+                        Type de source
+                        <select
+                          value={proofSourceType}
+                          onChange={(e) =>
+                            setProofSourceType(e.target.value as SourceType)
+                          }
+                          className={SELECT_CLASS}
+                        >
+                          {SOURCE_TYPE_OPTIONS.map(([v, l]) => (
+                            <option key={v} value={v}>
+                              {l}
+                            </option>
+                          ))}
+                        </select>
+                      </Label>
+                    </div>
+                    <MediaFields
+                      title="Média de la preuve"
+                      description="Un fichier par preuve — son type est détecté automatiquement."
+                      items={proofMedia}
+                      onChange={setProofMedia}
+                      ownerId={ownerId}
+                      maxItems={1}
                       disabled={
-                        addProofMutation.isPending ||
-                        uploadedProof !== undefined
+                        addProofMutation.isPending || trimmedProofUrl !== ''
                       }
                     />
-                    <span className="text-muted-foreground text-xs">
-                      Une preuve est soit un fichier, soit un lien.
-                    </span>
-                  </Label>
-                  <Button
-                    className="w-fit"
-                    onClick={handleAddProof}
-                    disabled={!canAddProof}
-                    loading={addProofMutation.isPending}
-                  >
-                    {!addProofMutation.isPending && (
-                      <FilePlus2 className="size-4" />
-                    )}
-                    Ajouter la preuve
-                  </Button>
-                </CardContent>
-              </Card>
+                    <Label className="grid gap-1.5 text-sm">
+                      Lien
+                      <Input
+                        placeholder="https://…"
+                        type="url"
+                        value={proofUrl}
+                        onChange={(e) => setProofUrl(e.target.value)}
+                        disabled={
+                          addProofMutation.isPending ||
+                          uploadedProof !== undefined
+                        }
+                      />
+                      <span className="text-muted-foreground text-xs">
+                        Une preuve est soit un fichier, soit un lien.
+                      </span>
+                    </Label>
+                    <Button
+                      className="w-fit"
+                      onClick={handleAddProof}
+                      disabled={!canAddProof}
+                      loading={addProofMutation.isPending}
+                    >
+                      {!addProofMutation.isPending && (
+                        <FilePlus2 className="size-4" />
+                      )}
+                      Ajouter la preuve
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : null}
             </div>
           </TabsContent>
 
@@ -371,14 +391,18 @@ export function JournalistInvestigationWorkspace({
           <TabsContent value="watchers" className="mt-4">
             {watcherEvidence.length > 0 ? (
               <div className="grid gap-3">
-                {watcherEvidence.map((e) => (
-                  <WatcherEvidenceCard
-                    key={e.id}
-                    evidence={e}
-                    withClassification
-                    investigationId={dossier.id}
-                  />
-                ))}
+                {watcherEvidence.map((e) =>
+                  isEditable ? (
+                    <WatcherEvidenceCard
+                      key={e.id}
+                      evidence={e}
+                      withClassification
+                      investigationId={dossier.id}
+                    />
+                  ) : (
+                    <WatcherEvidenceCard key={e.id} evidence={e} />
+                  ),
+                )}
               </div>
             ) : (
               <EmptyState
@@ -411,6 +435,7 @@ export function JournalistInvestigationWorkspace({
                         setMediaCategory(value as MediaCategory)
                       }
                       placeholder="Choisir une catégorie"
+                      disabled={!isEditable}
                     />
                   </Label>
                   <Label className="grid gap-1.5 text-sm">
@@ -421,6 +446,7 @@ export function JournalistInvestigationWorkspace({
                         setDraftVerdict(e.target.value as Verdict)
                       }
                       className={SELECT_CLASS}
+                      disabled={!isEditable}
                     >
                       {RELIABILITY_OPTIONS.map(([v, l]) => (
                         <option key={v} value={v}>
@@ -437,19 +463,23 @@ export function JournalistInvestigationWorkspace({
                     onChange={(e) => setNotes(e.target.value)}
                     rows={5}
                     className="resize-none"
+                    disabled={!isEditable}
                     placeholder="Vos observations de travail — visibles par la direction lors de la revue."
                   />
                 </Label>
-                <Button
-                  size="sm"
-                  className="w-fit"
-                  onClick={() => saveDraftMutation.mutate()}
-                  loading={saveDraftMutation.isPending}
-                >
-                  {saveDraftMutation.isPending
-                    ? 'Enregistrement…'
-                    : 'Enregistrer le brouillon'}
-                </Button>
+                <ActionGuard action={access}>
+                  <Button
+                    size="sm"
+                    className="w-fit"
+                    onClick={() => saveDraftMutation.mutate()}
+                    disabled={!isEditable}
+                    loading={saveDraftMutation.isPending}
+                  >
+                    {saveDraftMutation.isPending
+                      ? 'Enregistrement…'
+                      : 'Enregistrer le brouillon'}
+                  </Button>
+                </ActionGuard>
               </CardContent>
             </Card>
           </TabsContent>

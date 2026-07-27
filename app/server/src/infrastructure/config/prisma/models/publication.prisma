@@ -13,6 +13,12 @@ model Publication {
 
   finalVerdict Verdict
 
+  /// Editorial statement the director signs off when approving the dossier.
+  /// Required by the domain for every publication created since the rule came
+  /// in; NULL marks a dossier arbitrated before that, where no statement was
+  /// ever recorded. Absence is represented, never faked with an empty string.
+  publicationNotes String? @db.Text
+
   publishedAt  DateTime @default(now())
   isCorrection Boolean  @default(false)
 
