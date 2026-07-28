@@ -3,42 +3,62 @@
 
 @custom-variant dark (&:is(.dark *));
 
-:root {
-  --radius: 0.625rem;
 
-  /* ─── Warm Ivory Light Theme ─── */
-  --background: oklch(0.979 0.008 60); /* #faf8f4 — ivory chaud */
-  --foreground: oklch(0.22 0.03 50); /* #3d2c1e — brun sombre */
-  --card: oklch(1 0 0); /* blanc pur pour les cartes */
-  --card-foreground: oklch(0.22 0.03 50);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.22 0.03 50);
-  --primary: oklch(0.48 0.07 55); /* #8b6e52 — brun accent */
-  --primary-foreground: oklch(0.979 0.008 60); /* ivory sur bouton */
-  --secondary: oklch(0.935 0.012 60); /* #ede8df — ivory moyen */
-  --secondary-foreground: oklch(0.22 0.03 50);
-  --muted: oklch(0.935 0.012 60);
-  --muted-foreground: oklch(0.5 0.04 55); /* brun moyen pour texte secondaire */
-  --accent: oklch(0.91 0.018 58); /* #e8ddd0 — ivory doré */
-  --accent-foreground: oklch(0.22 0.03 50);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.875 0.022 58); /* #ddd3c4 — brun clair */
-  --input: oklch(0.875 0.022 58);
-  --ring: oklch(0.6 0.06 55); /* brun moyen pour focus */
-  --chart-1: oklch(0.55 0.09 50);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.96 0.012 60); /* légèrement plus sombre que bg */
-  --sidebar-foreground: oklch(0.22 0.03 50);
-  --sidebar-primary: oklch(0.48 0.07 55);
-  --sidebar-primary-foreground: oklch(0.979 0.008 60);
-  --sidebar-accent: oklch(0.91 0.018 58);
-  --sidebar-accent-foreground: oklch(0.22 0.03 50);
-  --sidebar-border: oklch(0.875 0.022 58);
-  --sidebar-ring: oklch(0.6 0.06 55);
+:root {
+  --background: hsl(0 0% 98.8235%);
+  --foreground: hsl(0 0% 9.0196%);
+  --card: hsl(0 0% 98.8235%);
+  --card-foreground: hsl(0 0% 9.0196%);
+  --popover: hsl(0 0% 98.8235%);
+  --popover-foreground: hsl(0 0% 32.1569%);
+  --primary: hsl(151.3274 66.8639% 66.8627%);
+  --primary-foreground: hsl(153.3333 13.0435% 13.5294%);
+  --secondary: hsl(0 0% 99.2157%);
+  --secondary-foreground: hsl(0 0% 9.0196%);
+  --muted: hsl(0 0% 92.9412%);
+  --muted-foreground: hsl(0 0% 12.5490%);
+  --accent: hsl(0 0% 92.9412%);
+  --accent-foreground: hsl(0 0% 12.5490%);
+  --destructive: hsl(9.8901 81.9820% 43.5294%);
+  --destructive-foreground: hsl(0 100% 99.4118%);
+  --border: hsl(0 0% 87.4510%);
+  --input: hsl(0 0% 96.4706%);
+  --ring: hsl(151.3274 66.8639% 66.8627%);
+  --chart-1: hsl(151.3274 66.8639% 66.8627%);
+  --chart-2: hsl(217.2193 91.2195% 59.8039%);
+  --chart-3: hsl(258.3117 89.5349% 66.2745%);
+  --chart-4: hsl(37.6923 92.1260% 50.1961%);
+  --chart-5: hsl(160.1183 84.0796% 39.4118%);
+  --sidebar: hsl(0 0% 96.0784%);
+  --sidebar-foreground: hsl(0 0% 43.9216%);
+  --sidebar-primary: hsl(151.3274 66.8639% 66.8627%);
+  --sidebar-primary-foreground: hsl(153.3333 13.0435% 13.5294%);
+  --sidebar-accent: hsl(0 0% 92.9412%);
+  --sidebar-accent-foreground: hsl(0 0% 12.5490%);
+  --sidebar-border: hsl(0 0% 87.4510%);
+  --sidebar-ring: hsl(151.3274 66.8639% 66.8627%);
+  --font-sans: Outfit, sans-serif;
+  --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  --font-mono: monospace;
+  --radius: 0.5rem;
+  --shadow-x: 0px;
+  --shadow-y: 1px;
+  --shadow-blur: 3px;
+  --shadow-spread: 0px;
+  --shadow-opacity: 0.17;
+  --shadow-color: #000000;
+  --shadow-2xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.09);
+  --shadow-xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.09);
+  --shadow-sm: 0px 1px 3px 0px hsl(0 0% 0% / 0.17), 0px 1px 2px -1px hsl(0 0% 0% / 0.17);
+  --shadow: 0px 1px 3px 0px hsl(0 0% 0% / 0.17), 0px 1px 2px -1px hsl(0 0% 0% / 0.17);
+  --shadow-md: 0px 1px 3px 0px hsl(0 0% 0% / 0.17), 0px 2px 4px -1px hsl(0 0% 0% / 0.17);
+  --shadow-lg: 0px 1px 3px 0px hsl(0 0% 0% / 0.17), 0px 4px 6px -1px hsl(0 0% 0% / 0.17);
+  --shadow-xl: 0px 1px 3px 0px hsl(0 0% 0% / 0.17), 0px 8px 10px -1px hsl(0 0% 0% / 0.17);
+  --shadow-2xl: 0px 1px 3px 0px hsl(0 0% 0% / 0.43);
+  --tracking-normal: 0.025em;
+  --spacing: 0.25rem;
 }
+
 .dark {
   --background: hsl(0 0% 7.0588%);
   --foreground: hsl(214.2857 31.8182% 91.3725%);
@@ -92,12 +112,7 @@
   --shadow-2xl: 0px 1px 3px 0px hsl(0 0% 0% / 0.43);
 }
 
-
 @theme inline {
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -113,6 +128,7 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
@@ -129,7 +145,34 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+  --font-serif: var(--font-serif);
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+
+  --shadow-2xs: var(--shadow-2xs);
+  --shadow-xs: var(--shadow-xs);
+  --shadow-sm: var(--shadow-sm);
+  --shadow: var(--shadow);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-2xl: var(--shadow-2xl);
+
+  --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
+  --tracking-tight: calc(var(--tracking-normal) - 0.025em);
+  --tracking-normal: var(--tracking-normal);
+  --tracking-wide: calc(var(--tracking-normal) + 0.025em);
+  --tracking-wider: calc(var(--tracking-normal) + 0.05em);
+  --tracking-widest: calc(var(--tracking-normal) + 0.1em);
 }
+
+
 
 @layer base {
   * {
@@ -137,6 +180,8 @@
     border-color: var(--border);
     outline-color: color-mix(in oklab, var(--ring) 50%, transparent);
   }
+
+
 
   html {
     font-family:
@@ -152,6 +197,9 @@
   }
 
   body {
+      @apply bg-background text-foreground;
+      letter-spacing: var(--tracking-normal);
+
     margin: 0;
     min-height: 100vh;
     background: var(--background);

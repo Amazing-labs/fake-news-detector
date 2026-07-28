@@ -180,8 +180,8 @@ export function StatCard(props: {
 
   return (
     <DoubleBorderCard>
-      <div className="flex flex-col p-6">
-        <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-col  ">
+        <div className="flex items-center justify-between gap-3 bg-sidebar/40 w-full px-6 h-8 rounded-t-2xl ">
           <p className="text-muted-foreground text-sm font-medium">
             {props.title}
           </p>
@@ -190,7 +190,7 @@ export function StatCard(props: {
           </span>
         </div>
 
-        <div className="mt-5 flex flex-wrap items-center gap-2.5">
+        <div className="mt-5 flex flex-wrap items-center gap-2.5 px-6">
           <span className="text-card-foreground text-3xl font-semibold tracking-tight tabular-nums">
             {props.value}
           </span>
@@ -214,7 +214,7 @@ export function StatCard(props: {
         </div>
 
         {showFooter ? (
-          <div className="border-border/70 mt-5 border-t pt-3.5">
+          <div className="border-border/70 mt-5 border-t pt-3.5 pb-3.5 px-6">
             <p className="text-muted-foreground text-xs">
               {props.hint ? (
                 <>
