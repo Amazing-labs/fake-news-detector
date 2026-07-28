@@ -1,7 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import {
   ExternalLink,
-  FileSearch,
   FileText,
   Inbox,
   Link2,
@@ -234,15 +233,10 @@ export function PublicationDetailWorkspacePage({
         </TabsContent>
 
         <TabsContent value="proof" className="mt-4">
-          {journalistProof.length > 0 ? (
-            <JournalistProofList proofMedia={journalistProof} />
-          ) : (
-            <EmptyState
-              icon={FileSearch}
-              title="Aucune preuve journalistique"
-              description="Le verdict s'appuie sur les médias du signalement et les contributions vigies."
-            />
-          )}
+          <JournalistProofList
+            proofMedia={journalistProof}
+            emptyDescription="Le verdict s'appuie sur les médias du signalement et les contributions vigies."
+          />
         </TabsContent>
 
         <TabsContent value="watchers" className="mt-4">

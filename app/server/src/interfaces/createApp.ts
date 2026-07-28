@@ -15,6 +15,7 @@ import { createWatcherApplicationRoutes } from './routes/watcherApplicationRoute
 import { toErrorResponse } from './http/responses'
 import { runWithPrismaConnectionString } from '../infrastructure/config/database'
 import { auth } from './auth/betterAuth'
+import { isTrustedOrigin } from './auth/trustedOrigins'
 import { readProcessEnv } from '../shared'
 
 export function createApp(dependencies: AppDependencies) {
@@ -28,10 +29,16 @@ export function createApp(dependencies: AppDependencies) {
     )
   })
 
+  // Credentialed CORS must never reflect an arbitrary Origin: doing so lets any
+  // site issue authenticated requests from a signed-in user's browser. Only the
+  // origins on the shared allowlist are echoed back; anything else gets no CORS
+  // header and is blocked by the browser. The normal path (dev proxy in
+  // development, Vercel rewrite in production) is server-to-server and never
+  // triggers CORS at all, so this only ever affects direct browser calls.
   app.use(
     '/api/auth/*',
     cors({
-      origin: (origin) => origin ?? 'http://localhost:5173',
+      origin: (origin) => (isTrustedOrigin(origin) ? origin : null),
       allowHeaders: ['Content-Type', 'Authorization'],
       allowMethods: ['GET', 'POST', 'OPTIONS'],
       credentials: true,
