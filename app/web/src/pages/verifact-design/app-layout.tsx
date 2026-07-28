@@ -38,6 +38,7 @@ import {
 } from './session-routing'
 import { useTheme } from './theme'
 import type { Actor, PageKind } from './types'
+import ShieldLogo from '../../logo/ShieldLogo'
 
 let tabletNavScrollLeft = 0
 
@@ -221,9 +222,9 @@ export function AppLayout(props: {
     <div className="bg-background text-foreground min-h-screen">
       <aside className="bg-background text-sidebar-foreground fixed inset-y-0 left-0 z-30 hidden w-72 lg:flex lg:flex-col">
         <div className="flex h-16 items-center gap-3 px-5">
-          <div className="bg-sidebar-primary text-sidebar-primary-foreground flex size-9 items-center justify-center rounded-lg">
-            <ShieldCheck className="size-5" />
-          </div>
+
+            <ShieldLogo width={28} height={72} />
+
           <div>
             <p className="text-sm font-semibold">Fake News Detector</p>
             <p className="text-muted-foreground text-xs">
@@ -231,7 +232,7 @@ export function AppLayout(props: {
             </p>
           </div>
         </div>
-        <Separator />
+
         <nav className="flex-1 space-y-1 overflow-y-auto p-3">
           {visibleNavItems.map((item) => {
             const Icon = item.icon
@@ -282,7 +283,7 @@ export function AppLayout(props: {
             <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
               <div className="flex items-center gap-2 lg:hidden">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex size-9 items-center justify-center rounded-lg">
-                  <ShieldCheck className="size-5" />
+                  <ShieldLogo width={64} height={72} />
                 </div>
                 <span className="hidden text-sm font-semibold sm:inline">
                   Fake News Detector
