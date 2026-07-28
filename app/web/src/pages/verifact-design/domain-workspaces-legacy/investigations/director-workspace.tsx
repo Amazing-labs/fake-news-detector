@@ -1,12 +1,4 @@
-import {
-  Archive,
-  BadgeCheck,
-  Ban,
-  FileSearch,
-  Inbox,
-  PenLine,
-  Users,
-} from 'lucide-react'
+import { Archive, BadgeCheck, Ban, Inbox, PenLine, Users } from 'lucide-react'
 import { Button } from '@shared/ui/shadcn/button'
 import { Card, CardContent, CardHeader } from '@shared/ui/shadcn/card'
 import {
@@ -207,15 +199,7 @@ export function DirectorInvestigationWorkspace({
           </TabsContent>
 
           <TabsContent value="proof" className="mt-4">
-            {journalistProofMedia.length > 0 ? (
-              <JournalistProofList proofMedia={journalistProofMedia} />
-            ) : (
-              <EmptyState
-                icon={FileSearch}
-                title="Aucune preuve journalistique"
-                description="Le journaliste n'a pas encore versé de preuve à ce dossier."
-              />
-            )}
+            <JournalistProofList proofMedia={journalistProofMedia} />
           </TabsContent>
 
           <TabsContent value="watchers" className="mt-4">

@@ -1,4 +1,10 @@
-import { ChevronDown, Download, ExternalLink, Play } from 'lucide-react'
+import {
+  ChevronDown,
+  Download,
+  ExternalLink,
+  FileSearch,
+  Play,
+} from 'lucide-react'
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -19,7 +25,7 @@ import { Card, CardContent, CardHeader } from '@shared/ui/shadcn/card'
 import { Label } from '@shared/ui/shadcn/label'
 import { Textarea } from '@shared/ui/shadcn/textarea'
 import { domainLabel } from '../../workspace-labels'
-import { StatusBadge } from '../../workspace-ui'
+import { EmptyState, StatusBadge } from '../../workspace-ui'
 import {
   CategorySelect,
   MediaTypeIcon,
@@ -361,10 +367,23 @@ export function SourceMediaReadRow({ media }: { media: SourceMedia }) {
 
 export function JournalistProofList({
   proofMedia,
+  emptyDescription = 'Le journaliste n’a pas encore versé de preuve à ce dossier.',
 }: {
   proofMedia: JournalistProofMedia[]
+  emptyDescription?: string
 }) {
-  if (!proofMedia.length) return null
+  // The empty case belongs to the list, not to each caller: rendering nothing
+  // reads as a broken panel, and four call sites cannot be trusted to guard it.
+  if (!proofMedia.length) {
+    return (
+      <EmptyState
+        icon={FileSearch}
+        title="Aucune preuve journalistique"
+        description={emptyDescription}
+      />
+    )
+  }
+
   const showInlineTypes = ['IMAGE', 'VIDEO']
 
   return (

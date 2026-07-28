@@ -302,7 +302,14 @@ export function JournalistInvestigationWorkspace({
           {/* PROOF — authority source required, no category/reliability */}
           <TabsContent value="proof" className="mt-4">
             <div className="grid gap-6">
-              <JournalistProofList proofMedia={journalistProofMedia} />
+              <JournalistProofList
+                proofMedia={journalistProofMedia}
+                emptyDescription={
+                  isEditable
+                    ? 'Ajoutez votre première preuve avec le formulaire ci-dessous.'
+                    : 'Aucune preuve n’a été versée à ce dossier.'
+                }
+              />
               {isEditable ? (
                 <Card>
                   <CardHeader>

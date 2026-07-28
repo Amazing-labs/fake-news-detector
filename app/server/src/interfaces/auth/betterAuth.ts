@@ -269,7 +269,7 @@ function resolveBetterAuthSecret(): string {
   return secret
 }
 
-function readTrustedOrigins(): string[] {
+export function readTrustedOrigins(): string[] {
   const configured = readProcessEnv('BETTER_AUTH_TRUSTED_ORIGINS')
   if (!configured) {
     return [...DEFAULT_TRUSTED_ORIGINS]
@@ -281,6 +281,16 @@ function readTrustedOrigins(): string[] {
       ...configured.split(',').map(normalizeOrigin).filter(Boolean),
     ]),
   ]
+}
+
+/**
+ * Whether a browser Origin may be echoed back on a credentialed response.
+ * Shared with the CORS layer so the auth allowlist and the CORS allowlist can
+ * never drift apart.
+ */
+export function isTrustedOrigin(origin: string | undefined): boolean {
+  if (!origin) return false
+  return readTrustedOrigins().includes(normalizeOrigin(origin))
 }
 
 export const auth = betterAuth({

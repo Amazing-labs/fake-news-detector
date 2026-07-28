@@ -1,4 +1,4 @@
-import { FilePlus2, FileSearch, Inbox, Users } from 'lucide-react'
+import { FilePlus2, Inbox, Users } from 'lucide-react'
 import { Button } from '@shared/ui/shadcn/button'
 import { Card, CardContent, CardHeader } from '@shared/ui/shadcn/card'
 import {
@@ -132,15 +132,7 @@ export function WatcherInvestigationWorkspace({
 
           {/* JOURNALIST PROOF — read-only with download */}
           <TabsContent value="proof" className="mt-4">
-            {journalistProofMedia.length > 0 ? (
-              <JournalistProofList proofMedia={journalistProofMedia} />
-            ) : (
-              <EmptyState
-                icon={FileSearch}
-                title="Aucune preuve journalistique"
-                description="Le journaliste n'a pas encore versé de preuve à ce dossier."
-              />
-            )}
+            <JournalistProofList proofMedia={journalistProofMedia} />
           </TabsContent>
 
           <TabsContent value="contributions" className="mt-4">
