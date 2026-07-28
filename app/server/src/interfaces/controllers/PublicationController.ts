@@ -9,6 +9,7 @@ import {
   presentCorrectionList,
   presentEnrichedPublication,
   presentEnrichedPublicationList,
+  presentPublicationDossier,
 } from '../presenters/publicationPresenter'
 import type { z } from 'zod'
 
@@ -29,6 +30,12 @@ export class PublicationController {
     const id = requiredParam(c, 'publicationId')
     const publication = await this.queryService.getPublicationEnriched(id)
     return ok(c, presentEnrichedPublication(publication))
+  }
+
+  getDossier = async (c: Context<{ Variables: AppVariables }>) => {
+    const id = requiredParam(c, 'publicationId')
+    const dossier = await this.queryService.getPublicationDossier(id)
+    return ok(c, presentPublicationDossier(dossier))
   }
 
   listCorrections = async (c: Context<{ Variables: AppVariables }>) => {

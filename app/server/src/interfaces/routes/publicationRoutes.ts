@@ -47,6 +47,16 @@ export function createPublicationRoutes(
   routes.openapi(
     createRoute({
       method: 'get',
+      path: '/{publicationId}/dossier',
+      request: { params: publicationIdParamSchema },
+      responses: okResponse('Publication editorial dossier'),
+    }),
+    publicationController.getDossier,
+  )
+
+  routes.openapi(
+    createRoute({
+      method: 'get',
       path: '/{publicationId}/corrections',
       request: { params: publicationIdParamSchema },
       responses: okResponse('Corrections for a publication'),

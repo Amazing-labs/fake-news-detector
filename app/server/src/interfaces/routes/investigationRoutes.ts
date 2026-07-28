@@ -18,6 +18,7 @@ import {
   directorReasonSchema,
   investigationEvidenceMediaParamSchema,
   investigationIdParamSchema,
+  investigationListQuerySchema,
   investigationSourceMediaParamSchema,
   proofMediaSchema,
   submitWatcherEvidenceSchema,
@@ -38,6 +39,7 @@ export function createInvestigationRoutes(
     createRoute({
       method: 'get',
       path: '/',
+      request: { query: investigationListQuerySchema },
       responses: okResponse('List of investigations'),
     }),
     investigationController.list,

@@ -15,40 +15,52 @@ import {
   listInvestigations,
   type InvestigationScope,
 } from '@entities/investigation/api'
+import { domainLabel } from '../../workspace-labels'
 import { EmptyState, ErrorState, StatusBadge } from '../../workspace-ui'
 
-const STATUS_TO_SCOPE: Record<string, InvestigationScope> = {
-  PENDING_REVIEW: 'pending-review',
-  PUBLISHED: 'published',
-  CANCELED: 'canceled',
-  IN_PROGRESS: 'in-progress',
-}
-
-export function InvestigationList({ status }: { status: string }) {
-  const scope = STATUS_TO_SCOPE[status]
+/**
+ * The investigation collection for one lifecycle slice. Omitting `scope` lists
+ * every status — which, combined with the server-side ownership scoping, is how
+ * a journalist gets the full history of the dossiers they own.
+ */
+export function InvestigationList({
+  scope,
+  title = 'Liste des enquêtes',
+  description = 'Le détail contient les actions de publication, rejet et archive.',
+  emptyDescription = 'Les enquêtes apparaîtront ici quand leur statut changera.',
+}: {
+  scope?: InvestigationScope
+  title?: string
+  description?: string
+  emptyDescription?: string
+}) {
   const investigationsQuery = useQuery({
     queryKey: investigationQueryKeys.list({ scope }),
     queryFn: () => listInvestigations({ scope }),
-    enabled: !!scope,
   })
   const rows = investigationsQuery.data?.items ?? []
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Liste des enquêtes</CardTitle>
-        <CardDescription>
-          Le détail contient les actions de publication, rejet et archive.
-        </CardDescription>
+        <CardTitle className="flex items-center gap-2">
+          {title}
+          {rows.length > 0 && (
+            <span className="text-muted-foreground text-sm font-normal tabular-nums">
+              {rows.length}
+            </span>
+          )}
+        </CardTitle>
+        <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3">
         {rows.length ? (
           rows.map((item) => (
             <div
               key={item.id}
-              className="border-border/60 hover:border-border hover:bg-muted/30 grid gap-4 rounded-lg border p-4 transition-colors lg:grid-cols-[1fr_auto]"
+              className="border-border/60 hover:border-border hover:bg-muted/30 grid gap-4 rounded-lg border p-4 transition-colors lg:grid-cols-[1fr_auto] lg:items-center"
             >
-              <div>
+              <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="font-medium">
                     {item.title ?? 'Sujet sans titre'}
@@ -56,9 +68,13 @@ export function InvestigationList({ status }: { status: string }) {
                   <StatusBadge status={item.status} />
                 </div>
                 <p className="text-muted-foreground mt-1 text-sm">
-                  {item.journalistName ?? 'Non assigné'}
-                  {item.mediaCategory ? ` · ${item.mediaCategory}` : ''}
-                  {item.draftVerdict ? ` · ${item.draftVerdict}` : ''}
+                  {[
+                    item.journalistName ?? 'Non assigné',
+                    item.draftVerdict ? domainLabel(item.draftVerdict) : null,
+                    item.mediaCategory ? domainLabel(item.mediaCategory) : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')}
                 </p>
               </div>
               <Button size="sm" variant="outline" asChild>
@@ -79,7 +95,7 @@ export function InvestigationList({ status }: { status: string }) {
           <EmptyState
             icon={FileSearch}
             title="Aucun dossier pour ce filtre"
-            description="Les enquêtes apparaîtront ici quand leur statut changera."
+            description={emptyDescription}
           />
         )}
       </CardContent>

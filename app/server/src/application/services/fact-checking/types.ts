@@ -41,6 +41,8 @@ export interface PublicationVerifiedMediaInput {
 }
 
 export interface ApproveInvestigationInput {
+  /** Editorial statement carried onto the publication. Required. */
+  publicationNotes: string
   verifiedLinks?: PublicationVerifiedLinkInput[]
   verifiedMedia?: PublicationVerifiedMediaInput[]
 }

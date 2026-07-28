@@ -7,6 +7,12 @@ export class Publication {
     public investigationId: string,
     public approvedById: string,
     public finalVerdict: Verdict,
+    /**
+     * Editorial statement the director signs off with — never empty when set.
+     * `null` only for dossiers arbitrated before the statement became
+     * mandatory: those were never signed, and are not pretended to be.
+     */
+    public publicationNotes: string | null,
     public publishedAt: Date = new Date(),
     public isCorrection: boolean = false,
     public readonly verifiedLinks: ReadonlyArray<VerifiedLink> = Object.freeze(

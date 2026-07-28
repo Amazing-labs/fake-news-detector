@@ -32,7 +32,12 @@ import type {
   InboxSubject,
   InboxSubjectStatus,
 } from '../../domain/entities/InboxSubject'
-import type { Investigation } from '../../domain/entities/Investigation'
+import {
+  WATCHER_CONTRIBUTABLE_STATUSES,
+  type Investigation,
+  type InvestigationStatus,
+} from '../../domain/entities/Investigation'
+import type { InvestigationQuery } from '../../domain/repositories/IInvestigationRepository'
 import type { Journalist } from '../../domain/entities/Journalist'
 import type { Publication } from '../../domain/entities/Publication'
 import type { Report } from '../../domain/entities/Report'
@@ -51,6 +56,9 @@ import type {
 import type { EvidenceWithMedia } from '../../domain/processes/investigationReviewReadiness'
 import type { ActorRole } from '../../shared/types'
 import { NotFoundError } from '../../shared/errors'
+import { computeActorMetrics, type ActorMetrics } from './fact-checking'
+
+export type { ActorMetrics }
 
 // Collapse a list of (possibly repeated, possibly null/undefined) foreign keys
 // into the distinct ids actually worth resolving, so the batched `findByIds`
@@ -64,9 +72,63 @@ export interface ReaderContext {
   actorRole: ActorRole
 }
 
+export type InvestigationScope =
+  | 'in-progress'
+  | 'pending-review'
+  | 'published'
+  | 'canceled'
+  | 'contributable'
+
+// Each scope is a lifecycle slice of the investigation collection. No scope
+// means no status filter at all.
+const SCOPE_STATUSES: Record<
+  InvestigationScope,
+  readonly InvestigationStatus[]
+> = {
+  'in-progress': ['IN_PROGRESS'],
+  'pending-review': ['PENDING_REVIEW'],
+  published: ['PUBLISHED'],
+  canceled: ['CANCELED'],
+  contributable: WATCHER_CONTRIBUTABLE_STATUSES,
+}
+
 export interface InvestigationListFilter {
-  scope?: string
+  scope?: InvestigationScope
   journalistId?: string
+}
+
+/**
+ * The slice of the investigation collection a reader is allowed to see at all,
+ * whatever they ask for. Staff read on one axis (a journalist sees only the
+ * dossiers they own), watchers on the other (only dossiers the newsroom has
+ * reopened for contribution). Watchers carry the CITIZEN role, and no surface
+ * lets a regular citizen read an investigation, so scoping the whole role keeps
+ * the rule in one place instead of plumbing citizenType through the session.
+ */
+function visibilityFor(reader: ReaderContext): InvestigationQuery {
+  if (reader.actorRole === 'JOURNALIST') {
+    return { journalistId: reader.actorId }
+  }
+  if (reader.actorRole === 'CITIZEN') {
+    return { statuses: WATCHER_CONTRIBUTABLE_STATUSES }
+  }
+  return {}
+}
+
+function isVisibleTo(
+  investigation: Investigation,
+  reader: ReaderContext,
+): boolean {
+  const visibility = visibilityFor(reader)
+  if (
+    visibility.journalistId &&
+    investigation.journalistId !== visibility.journalistId
+  ) {
+    return false
+  }
+  return (
+    !visibility.statuses || visibility.statuses.includes(investigation.status)
+  )
 }
 
 export interface DirectorDashboardData {
@@ -74,48 +136,6 @@ export interface DirectorDashboardData {
   publishedCount: number
   totalNotifications: number
 }
-
-// Dashboard KPIs scoped to the connected actor. The shape is discriminated by
-// `profile` because each role tracks different counters. Definitions are kept
-// strictly computable from existing aggregates (no invented semantics):
-// - director: global pipeline counts
-// - journalist: own investigations by lifecycle stage
-// - citizen: own reports + how far each travelled (publication / corrections)
-// - watcher: own evidence (followed investigations, this-month, published-on)
-// Every variant carries `contributionScore` — the actor's cumulative
-// engagement/arbitration score kept on the domain entity — so the profile page
-// can surface it uniformly regardless of role.
-export type ActorMetrics =
-  | {
-      profile: 'director'
-      openSubjects: number
-      inProgressInvestigations: number
-      pendingReviews: number
-      publishedCount: number
-      contributionScore: number
-    }
-  | {
-      profile: 'journalist'
-      currentDossiers: number
-      pendingReviews: number
-      directorReturns: number
-      contributionScore: number
-    }
-  | {
-      profile: 'citizen'
-      activeReports: number
-      awaitingReply: number
-      repliesReceived: number
-      corrections: number
-      contributionScore: number
-    }
-  | {
-      profile: 'watcher'
-      followedInvestigations: number
-      evidenceThisMonth: number
-      acceptedContributions: number
-      contributionScore: number
-    }
 
 // Read-model wrappers: the domain entity plus the display names/titles joined
 // from related aggregates, resolved on the read side so the UI gets one shape.
@@ -144,6 +164,23 @@ export interface EnrichedPublication {
   publication: Publication
   title: string | null
   authoritySourceNames: ReadonlyMap<string, string>
+}
+
+// Everything the public publication page renders, assembled on the read side:
+// the publication itself, the dossier it was built from, and the people who are
+// credited for it. `credits` names only the staff and watcher contributors —
+// the citizen who filed the originating report stays anonymous.
+export interface PublicationDossier {
+  publication: EnrichedPublication
+  subject: string | null
+  investigationNotes: string
+  media: EnrichedInvestigationMedia[]
+  evidence: EnrichedEvidence[]
+  credits: {
+    journalistName: string | null
+    directorName: string | null
+    watcherNames: string[]
+  }
 }
 
 export interface EnrichedInvestigationMedia {
@@ -242,29 +279,25 @@ export class FactCheckingQueryService {
       : this.inboxSubjectRepository.findAll()
   }
 
-  async listInvestigations(
+  // The reader's visibility envelope narrows the requested slice: a journalist's
+  // own dossiers whatever the scope (the requested `journalistId` is ignored,
+  // exactly like the citizen scoping on reports), and for a watcher the
+  // intersection with what is open to contribution — so asking for a slice they
+  // may not see returns nothing rather than something else.
+  async listInvestigationsForReader(
+    reader: ReaderContext,
     filter: InvestigationListFilter = {},
   ): Promise<Investigation[]> {
-    switch (filter.scope) {
-      case 'in-progress':
-        return this.investigationRepository.findInProgress()
-      case 'pending-review':
-        return this.investigationRepository.findPendingReviews()
-      case 'published':
-        return this.investigationRepository.findPublished()
-      case 'canceled':
-        return this.investigationRepository.findCanceled()
-      case 'contributable':
-        return this.investigationRepository.findContributable()
-    }
+    const visibility = visibilityFor(reader)
+    const requested = filter.scope ? SCOPE_STATUSES[filter.scope] : undefined
 
-    if (filter.journalistId) {
-      return this.investigationRepository.findByJournalistId(
-        filter.journalistId,
-      )
-    }
-
-    return this.investigationRepository.findPendingReviews()
+    return this.investigationRepository.findMany({
+      statuses:
+        visibility.statuses && requested
+          ? requested.filter((status) => visibility.statuses?.includes(status))
+          : (visibility.statuses ?? requested),
+      journalistId: visibility.journalistId ?? filter.journalistId,
+    })
   }
 
   async listPublications(scope?: string): Promise<Publication[]> {
@@ -280,7 +313,9 @@ export class FactCheckingQueryService {
   async getDirectorDashboard(): Promise<DirectorDashboardData> {
     const [pendingReviews, publishedCount, totalNotifications] =
       await Promise.all([
-        this.investigationRepository.findPendingReviews(),
+        this.investigationRepository.findMany({
+          statuses: ['PENDING_REVIEW'],
+        }),
         this.publicationRepository.count(),
         this.notificationRepository.count(),
       ])
@@ -343,155 +378,24 @@ export class FactCheckingQueryService {
       })
   }
 
-  // Dashboard KPIs for the connected actor. Citizens and watchers share the
-  // CITIZEN role, so the citizenType decides which profile to compute.
+  // Dashboard KPIs for the connected actor. The computation is its own read
+  // concern (see `fact-checking/actorMetrics`); this only hands it the
+  // repositories it needs.
   async getActorMetrics(reader: ReaderContext): Promise<ActorMetrics> {
-    if (reader.actorRole === 'EDITORIAL_DIRECTOR') {
-      return this.directorMetrics(reader.actorId)
-    }
-    if (reader.actorRole === 'JOURNALIST') {
-      return this.journalistMetrics(reader.actorId)
-    }
-    const citizen = await this.citizenRepository.findById(reader.actorId)
-    const contributionScore = citizen?.engagementScore ?? 0
-    return citizen?.isWatcher()
-      ? this.watcherMetrics(reader.actorId, contributionScore)
-      : this.citizenMetrics(reader.actorId, contributionScore)
-  }
-
-  private async directorMetrics(directorId: string): Promise<ActorMetrics> {
-    const [openSubjects, inProgress, pendingReviews, publishedCount, director] =
-      await Promise.all([
-        this.inboxSubjectRepository.findByStatus('OPEN'),
-        this.investigationRepository.findInProgress(),
-        this.investigationRepository.findPendingReviews(),
-        this.publicationRepository.count(),
-        this.directorRepository.findById(directorId),
-      ])
-    return {
-      profile: 'director',
-      openSubjects: openSubjects.length,
-      inProgressInvestigations: inProgress.length,
-      pendingReviews: pendingReviews.length,
-      publishedCount,
-      contributionScore: director?.scoreInvestigation ?? 0,
-    }
-  }
-
-  private async journalistMetrics(journalistId: string): Promise<ActorMetrics> {
-    const [own, journalist] = await Promise.all([
-      this.investigationRepository.findByJournalistId(journalistId),
-      this.journalistRepository.findById(journalistId),
-    ])
-    return {
-      profile: 'journalist',
-      currentDossiers: own.filter((i) => i.canBeEdited()).length,
-      pendingReviews: own.filter((i) => i.isPendingReview()).length,
-      directorReturns: own.filter((i) => i.status === 'NEEDS_REVISION').length,
-      contributionScore: journalist?.engagementScore ?? 0,
-    }
-  }
-
-  private async citizenMetrics(
-    citizenId: string,
-    contributionScore: number,
-  ): Promise<ActorMetrics> {
-    const reports = await this.reportRepository.findByCitizenId(citizenId)
-    const activeReports = reports.filter((r) => r.status === 'OPEN').length
-
-    // Walk the report trail (report -> subject -> investigation -> publication
-    // -> corrections) one batched query per hop instead of four reads per
-    // report, then assemble each report's outcome from the lookup maps. This
-    // keeps the dashboard flat as a citizen's report history grows.
-    const subjects = await this.inboxSubjectRepository.findByReportIds(
-      reports.map((report) => report.id),
+    return computeActorMetrics(
+      {
+        reportRepository: this.reportRepository,
+        inboxSubjectRepository: this.inboxSubjectRepository,
+        investigationRepository: this.investigationRepository,
+        evidenceRepository: this.evidenceRepository,
+        publicationRepository: this.publicationRepository,
+        correctionRepository: this.correctionRepository,
+        citizenRepository: this.citizenRepository,
+        journalistRepository: this.journalistRepository,
+        directorRepository: this.directorRepository,
+      },
+      reader,
     )
-    const subjectByReportId = new Map<string, InboxSubject>()
-    for (const subject of subjects) {
-      if (subject.reportId) subjectByReportId.set(subject.reportId, subject)
-    }
-
-    const investigations =
-      await this.investigationRepository.findByInboxSubjectIds(
-        subjects.map((subject) => subject.id),
-      )
-    const investigationByInboxId = new Map(
-      investigations.map((investigation) => [
-        investigation.inboxSubjectId,
-        investigation,
-      ]),
-    )
-
-    const publicationRefs =
-      await this.publicationRepository.findRefsByInvestigationIds(
-        investigations.map((investigation) => investigation.id),
-      )
-    const publicationByInvestigationId = new Map(
-      publicationRefs.map((ref) => [ref.investigationId, ref]),
-    )
-
-    const corrections = await this.correctionRepository.findByPublicationIds(
-      publicationRefs.map((ref) => ref.id),
-    )
-    const correctionCountByPublicationId = new Map<string, number>()
-    for (const correction of corrections) {
-      correctionCountByPublicationId.set(
-        correction.publicationId,
-        (correctionCountByPublicationId.get(correction.publicationId) ?? 0) + 1,
-      )
-    }
-
-    const trails = reports.map((report) => {
-      const subject = subjectByReportId.get(report.id)
-      const investigation = subject
-        ? investigationByInboxId.get(subject.id)
-        : undefined
-      const publication = investigation
-        ? publicationByInvestigationId.get(investigation.id)
-        : undefined
-      if (!publication) {
-        return { replied: false, corrections: 0, status: report.status }
-      }
-      return {
-        replied: true,
-        corrections: correctionCountByPublicationId.get(publication.id) ?? 0,
-        status: report.status,
-      }
-    })
-
-    return {
-      profile: 'citizen',
-      activeReports,
-      awaitingReply: trails.filter((t) => !t.replied && t.status === 'OPEN')
-        .length,
-      repliesReceived: trails.filter((t) => t.replied).length,
-      corrections: trails.reduce((sum, t) => sum + t.corrections, 0),
-      contributionScore,
-    }
-  }
-
-  private async watcherMetrics(
-    watcherId: string,
-    contributionScore: number,
-  ): Promise<ActorMetrics> {
-    const [evidence, publishedInvestigations] = await Promise.all([
-      this.evidenceRepository.findByWatcherId(watcherId),
-      this.investigationRepository.findPublished(),
-    ])
-    const publishedIds = new Set(publishedInvestigations.map((i) => i.id))
-    const now = new Date()
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-    return {
-      profile: 'watcher',
-      followedInvestigations: new Set(evidence.map((e) => e.investigationId))
-        .size,
-      evidenceThisMonth: evidence.filter((e) => e.createdAt >= startOfMonth)
-        .length,
-      acceptedContributions: evidence.filter((e) =>
-        publishedIds.has(e.investigationId),
-      ).length,
-      contributionScore,
-    }
   }
 
   // ---------------------------------------------------------------------------
@@ -550,10 +454,14 @@ export class FactCheckingQueryService {
     })
   }
 
-  async listInvestigationsEnriched(
+  async listInvestigationsForReaderEnriched(
+    reader: ReaderContext,
     filter: InvestigationListFilter = {},
   ): Promise<EnrichedInvestigation[]> {
-    const investigations = await this.listInvestigations(filter)
+    const investigations = await this.listInvestigationsForReader(
+      reader,
+      filter,
+    )
     const [inboxSubjects, journalistNames] = await Promise.all([
       this.inboxSubjectByIdMap(
         investigations.map((investigation) => investigation.inboxSubjectId),
@@ -637,10 +545,14 @@ export class FactCheckingQueryService {
     return { subject, ownerName: journalist?.name ?? null }
   }
 
-  async getInvestigationEnriched(
+  async getInvestigationForReaderEnriched(
     investigationId: string,
+    reader: ReaderContext,
   ): Promise<EnrichedInvestigation> {
-    const investigation = await this.getInvestigation(investigationId)
+    const investigation = await this.getInvestigationForReader(
+      investigationId,
+      reader,
+    )
     const [inboxSubject, journalist] = await Promise.all([
       this.inboxSubjectRepository.findById(investigation.inboxSubjectId),
       this.journalistRepository.findById(investigation.journalistId),
@@ -675,10 +587,89 @@ export class FactCheckingQueryService {
     }
   }
 
-  async getInvestigationSourceMediaEnriched(
+  async getInvestigationSourceMediaForReaderEnriched(
+    investigationId: string,
+    reader: ReaderContext,
+  ): Promise<EnrichedInvestigationMedia[]> {
+    await this.getInvestigationForReader(investigationId, reader)
+    return this.enrichInvestigationMedia(investigationId)
+  }
+
+  async getInvestigationEvidenceForReaderEnriched(
+    investigationId: string,
+    reader: ReaderContext,
+  ): Promise<EnrichedEvidence[]> {
+    await this.getInvestigationForReader(investigationId, reader)
+    return this.enrichInvestigationEvidence(investigationId)
+  }
+
+  // The full editorial trail behind a publication, assembled once for the
+  // public publication page: the classified source media, the journalist's
+  // supporting proof, the watcher contributions, and the named credits. The
+  // citizen who filed the originating report is deliberately absent — only the
+  // journalist, the watchers and the approving director are credited.
+  async getPublicationDossier(
+    publicationId: string,
+  ): Promise<PublicationDossier> {
+    const publication = await this.getPublication(publicationId)
+    const investigation = await this.investigationRepository.findById(
+      publication.investigationId,
+    )
+    if (!investigation) {
+      throw new NotFoundError('Investigation', publication.investigationId)
+    }
+
+    const [
+      inboxSubject,
+      authoritySourceNames,
+      media,
+      evidence,
+      journalist,
+      director,
+    ] = await Promise.all([
+      this.inboxSubjectRepository.findById(investigation.inboxSubjectId),
+      this.authoritySourceNameMap(
+        this.publicationAuthoritySourceIds(publication),
+      ),
+      this.enrichInvestigationMedia(investigation.id),
+      this.enrichInvestigationEvidence(investigation.id),
+      this.journalistRepository.findById(investigation.journalistId),
+      this.directorRepository.findById(publication.approvedById),
+    ])
+
+    return {
+      publication: {
+        publication,
+        title: inboxSubject?.theme ?? null,
+        authoritySourceNames,
+      },
+      subject: inboxSubject?.description ?? null,
+      investigationNotes: investigation.investigationNotes,
+      media,
+      evidence,
+      credits: {
+        journalistName: journalist?.name ?? null,
+        directorName: director?.name ?? null,
+        watcherNames: [
+          ...new Set(
+            evidence
+              .map((item) => item.watcherName)
+              .filter((name): name is string => Boolean(name)),
+          ),
+        ],
+      },
+    }
+  }
+
+  // Callers have already resolved (and access-checked) the investigation, so
+  // these skip the existence read the public getters perform.
+  private async enrichInvestigationMedia(
     investigationId: string,
   ): Promise<EnrichedInvestigationMedia[]> {
-    const media = await this.getInvestigationSourceMedia(investigationId)
+    const media =
+      await this.investigationMediaRepository.findByInvestigationId(
+        investigationId,
+      )
     const authoritySources = await this.authoritySourceMap(
       media.map((item) => item.authoritySourceId),
     )
@@ -694,10 +685,13 @@ export class FactCheckingQueryService {
     })
   }
 
-  async getInvestigationEvidenceEnriched(
+  private async enrichInvestigationEvidence(
     investigationId: string,
   ): Promise<EnrichedEvidence[]> {
-    const bundles = await this.getInvestigationEvidence(investigationId)
+    const bundles =
+      await this.evidenceRepository.findWithMediaByInvestigationId(
+        investigationId,
+      )
     const citizenNames = await this.citizenNameMap(
       bundles.map(({ evidence }) => evidence.watcherId),
     )
@@ -922,22 +916,18 @@ export class FactCheckingQueryService {
     return investigation
   }
 
-  async getInvestigationSourceMedia(
+  // Same envelope as the collection read, applied to a single dossier. A reader
+  // outside it is told "not found" rather than "forbidden", so a dossier they
+  // may not see cannot be probed for existence either.
+  async getInvestigationForReader(
     investigationId: string,
-  ): Promise<InvestigationMedia[]> {
-    await this.getInvestigation(investigationId)
-    return this.investigationMediaRepository.findByInvestigationId(
-      investigationId,
-    )
-  }
-
-  async getInvestigationEvidence(
-    investigationId: string,
-  ): Promise<EvidenceWithMedia[]> {
-    await this.getInvestigation(investigationId)
-    return this.evidenceRepository.findWithMediaByInvestigationId(
-      investigationId,
-    )
+    reader: ReaderContext,
+  ): Promise<Investigation> {
+    const investigation = await this.getInvestigation(investigationId)
+    if (!isVisibleTo(investigation, reader)) {
+      throw new NotFoundError('Investigation', investigationId)
+    }
+    return investigation
   }
 
   async getPublication(publicationId: string): Promise<Publication> {
