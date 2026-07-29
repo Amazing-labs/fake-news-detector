@@ -174,6 +174,20 @@ export function AppLayout(props: {
   const location = useLocation()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+
+  const pageLabels: Record<PageKind, string> = {
+    dashboard: 'Dashboard',
+    subjects: 'Sujets',
+    reports: 'Signalements',
+    investigations: 'Enquêtes',
+    publications: 'Publications',
+    people: 'Utilisateurs',
+    notifications: 'Notifications',
+    profile: 'Profil',
+    auth: 'Authentification',
+    'create-subject': 'Nouveau sujet',
+    correction: 'Correctif',
+  }
   const tabletNavRef = useRef<HTMLDivElement>(null)
   const { isDark, setIsDark } = useTheme()
   const { session } = useAppSession()
@@ -453,6 +467,19 @@ export function AppLayout(props: {
           </header>
 
           <main className="max-w-10xl mx-auto flex w-full flex-1 flex-col gap-6 p-4 sm:p-6">
+            <div className="text-muted-foreground/50 flex items-center gap-1.5 text-xs">
+              <Link to="/dashboard" className="hover:text-foreground transition-colors">
+                Dashboard
+              </Link>
+              {props.page !== 'dashboard' && props.page !== 'auth' ? (
+                <>
+                  <ChevronRight className="size-3" />
+                  <span className="text-foreground/60 font-medium">
+                    {pageLabels[props.page] ?? props.page}
+                  </span>
+                </>
+              ) : null}
+            </div>
             {props.children}
           </main>
         </div>
