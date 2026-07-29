@@ -32,7 +32,7 @@ export function DarkInput(
     <label className="grid gap-2 text-sm font-medium">
       {label}
       <input
-        className={`border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border px-3 py-2.5 transition outline-none focus-visible:ring-[3px] ${className ?? ''}`}
+        className={`border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-primary/70 focus-visible:ring-primary/20 rounded-lg border px-3 py-2.5 transition outline-none focus-visible:ring-[3px] ${className ?? ''}`}
         {...rest}
       />
     </label>
@@ -51,7 +51,7 @@ export function DarkSelect(
     <label className="grid gap-2 text-sm font-medium">
       {label}
       <select
-        className={`border-input bg-background text-foreground focus-visible:border-ring focus-visible:ring-ring/50 rounded-lg border px-3 py-2.5 transition outline-none focus-visible:ring-[3px] ${className ?? ''}`}
+        className={`border-input bg-background text-foreground focus-visible:border-primary/70 focus-visible:ring-primary/20 rounded-lg border p-2 px-3 py-2.5 transition outline-none focus-visible:ring-[3px] ${className ?? ''}`}
         {...rest}
       >
         {options.map((option) => (
@@ -60,6 +60,66 @@ export function DarkSelect(
           </option>
         ))}
       </select>
+    </label>
+  )
+}
+
+export function DarkIconSelect<T extends string>(props: {
+  label: string
+  value: T
+  options: ReadonlyArray<{
+    value: T
+    label: string
+    icon: React.ReactNode
+  }>
+  onChange: (value: T) => void
+  className?: string
+}) {
+  const { label, options, className, value, onChange } = props
+  const selected =
+    options.find((option) => option.value === value) ?? options[0]
+
+  function handleSelect(
+    optionValue: T,
+    event: React.MouseEvent<HTMLButtonElement>,
+  ) {
+    onChange(optionValue)
+    const details = event.currentTarget.closest('details')
+    details?.removeAttribute('open')
+  }
+
+  return (
+    <label className="grid gap-2 text-sm font-medium">
+      {label}
+      <details className={`relative ${className ?? ''}`}>
+        <summary className="border-input bg-background text-foreground hover:border-primary/70 focus-visible:border-primary/70 focus-visible:ring-primary/20 flex cursor-pointer items-center justify-between gap-2 rounded-lg border px-3 py-2.5 text-left transition outline-none focus-visible:ring-[3px]">
+          <span className="flex items-center gap-2">
+            {selected?.icon}
+            <span>{selected?.label}</span>
+          </span>
+          <span className="text-muted-foreground">▾</span>
+        </summary>
+        <div className="border-input bg-background text-foreground absolute right-0 left-0 z-10 mt-1 overflow-hidden rounded-lg border shadow-lg">
+          <ul className="max-h-60 overflow-auto">
+            {options.map((option) => (
+              <li key={option.value}>
+                <button
+                  type="button"
+                  className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition ${
+                    option.value === value
+                      ? 'bg-accent text-accent-foreground'
+                      : 'hover:bg-accent/10'
+                  }`}
+                  onClick={(event) => handleSelect(option.value, event)}
+                >
+                  {option.icon}
+                  <span>{option.label}</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </details>
     </label>
   )
 }
@@ -75,7 +135,7 @@ export function DarkTextArea(
     <label className="grid gap-2 text-sm font-medium">
       {label}
       <textarea
-        className={`border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 min-h-24 rounded-lg border px-3 py-2.5 transition outline-none focus-visible:ring-[3px] ${className ?? ''}`}
+        className={`border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-primary/70 focus-visible:ring-primary/20 min-h-24 rounded-lg border px-3 py-2.5 transition outline-none focus-visible:ring-[3px] ${className ?? ''}`}
         {...rest}
       />
     </label>

@@ -1,16 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import { toast } from 'sonner'
 import { createReport, reportQueryKeys } from '@entities/report/api'
 import { toApiErrorMessage } from '@shared/api/http'
 import { useAppSession } from '@entities/session/model'
-import {
-  DarkButton,
-  DarkFormCard,
-  DarkSelect,
-  DarkTextArea,
-} from '@shared/ui/dark-form'
+import { DarkButton, DarkFormCard, DarkIconSelect } from '@shared/ui/dark-form'
 import {
   defaultVerificationTheme,
   verificationThemes,
@@ -21,6 +16,111 @@ import {
   normalizeMediaDrafts,
   type MediaDraft,
 } from '@shared/ui/media-fields.model'
+import {
+  BookOpenIcon,
+  CpuIcon,
+  Globe2Icon,
+  GavelIcon,
+  HeartPulseIcon,
+  ActivityIcon,
+  InfoIcon,
+  LeafIcon,
+  MoreHorizontalIcon,
+  ShieldIcon,
+  TrendingUpIcon,
+  UsersIcon,
+} from 'lucide-react'
+
+function DarkTextAreaWithFooter(props: {
+  label: string
+  value: string
+  onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void
+  placeholder: string
+  maxLength: number
+}) {
+  const { label, value, onChange, placeholder, maxLength } = props
+
+  return (
+    <label className="grid gap-2 text-sm font-medium">
+      {label}
+      <textarea
+        className="border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-primary/70 focus-visible:ring-primary/20 min-h-16 rounded-lg border px-3 py-2.5 transition outline-none focus-visible:ring-[3px]"
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        maxLength={maxLength}
+      />
+      <div className="border-input bg-background text-muted-foreground flex items-center gap-2 rounded-b-lg border border-t-0 px-3 py-2 text-xs">
+        <span>
+          {value.length}/{maxLength} caractères
+        </span>
+        <InfoIcon className="ml-auto h-4 w-4" />
+      </div>
+    </label>
+  )
+}
+
+const verificationThemeOptions: Array<{
+  value: VerificationTheme
+  label: string
+  icon: ReactNode
+}> = [
+  {
+    value: 'Santé',
+    label: 'Santé',
+    icon: <HeartPulseIcon className="text-muted-foreground h-4 w-4" />,
+  },
+  {
+    value: 'Sécurité',
+    label: 'Sécurité',
+    icon: <ShieldIcon className="text-muted-foreground h-4 w-4" />,
+  },
+  {
+    value: 'Économie',
+    label: 'Économie',
+    icon: <TrendingUpIcon className="text-muted-foreground h-4 w-4" />,
+  },
+  {
+    value: 'Éducation',
+    label: 'Éducation',
+    icon: <BookOpenIcon className="text-muted-foreground h-4 w-4" />,
+  },
+  {
+    value: 'Politique',
+    label: 'Politique',
+    icon: <GavelIcon className="text-muted-foreground h-4 w-4" />,
+  },
+  {
+    value: 'Environnement',
+    label: 'Environnement',
+    icon: <LeafIcon className="text-muted-foreground h-4 w-4" />,
+  },
+  {
+    value: 'Technologie',
+    label: 'Technologie',
+    icon: <CpuIcon className="text-muted-foreground h-4 w-4" />,
+  },
+  {
+    value: 'Société',
+    label: 'Société',
+    icon: <UsersIcon className="text-muted-foreground h-4 w-4" />,
+  },
+  {
+    value: 'Sport',
+    label: 'Sport',
+    icon: <ActivityIcon className="text-muted-foreground h-4 w-4" />,
+  },
+  {
+    value: 'International',
+    label: 'International',
+    icon: <Globe2Icon className="text-muted-foreground h-4 w-4" />,
+  },
+  {
+    value: 'Autre',
+    label: 'Autre',
+    icon: <MoreHorizontalIcon className="text-muted-foreground h-4 w-4" />,
+  },
+]
 
 export function CreateReportForm() {
   const queryClient = useQueryClient()
@@ -79,27 +179,25 @@ export function CreateReportForm() {
           handleSubmit()
         }}
       >
-        <DarkSelect
+        <DarkIconSelect
           label="Thème"
           value={theme}
-          onChange={(event) =>
-            setTheme(event.target.value as VerificationTheme)
-          }
-          options={verificationThemes}
+          onChange={(value) => setTheme(value)}
+          options={verificationThemeOptions}
         />
-        <DarkTextArea
+        <DarkTextAreaWithFooter
           label="Rumeur à vérifier"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
-          className="min-h-16"
-          placeholder="Décris la rumeur et le contexte connu"
+          placeholder="Décris ta rumeur et le contexte connu"
+          maxLength={140}
         />
-        <DarkTextArea
+        <DarkTextAreaWithFooter
           label="Message reçu"
           value={content}
           onChange={(event) => setContent(event.target.value)}
-          className="min-h-20"
           placeholder="Colle ici le message, la publication ou le texte reçu"
+          maxLength={140}
         />
         <MediaFields
           title="Médias"
