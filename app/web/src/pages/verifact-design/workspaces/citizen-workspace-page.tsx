@@ -120,24 +120,13 @@ export function CitizenWorkspacePage() {
                       <p className="text-muted-foreground mt-1 text-sm line-clamp-2">
                         {item.content}
                       </p>
-                      <p className="text-muted-foreground/60 mt-1.5 text-xs">
-                        {relativeTime(item.createdAt)}
+                      <p className="text-muted-foreground/60 mt-1.5 flex flex-wrap items-center gap-3 text-xs">
+                        <span>{relativeTime(item.createdAt)}</span>
+                        <span className="hover:text-foreground inline-flex items-center gap-1 transition-colors">
+                          Voir le suivi →
+                        </span>
                       </p>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="self-start"
-                      onClick={(e) => {
-                        e.preventDefault()
-                        e.stopPropagation()
-                      }}
-                      asChild
-                    >
-                      <Link to="/reports/$reportId" params={{ reportId: item.id }}>
-                        Voir le suivi
-                      </Link>
-                    </Button>
                   </Link>
                 ))
               )}

@@ -26,6 +26,7 @@ import {
   TabsList,
   TabsTrigger,
 } from '@shared/ui/shadcn/tabs'
+import { cn } from '@shared/lib/utils'
 import { AppLayout } from '../../app-layout'
 import { useResolvedActor } from '../../session-routing'
 import { domainLabel } from '../../workspace-labels'
@@ -52,6 +53,20 @@ function relativeTime(dateStr: string): string {
   if (days < 30) return `il y a ${days}j`
   const months = Math.floor(days / 30)
   return `il y a ${months}mois`
+}
+
+const verdictColor: Record<string, string> = {
+  TRUE: 'border-emerald-500/40 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  FALSE: 'border-red-500/40 bg-red-500/10 text-red-600 dark:text-red-400',
+  MISLEADING: 'border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400',
+  UNVERIFIABLE: 'border-slate-400/40 bg-slate-400/10 text-slate-500 dark:text-slate-400',
+}
+
+const verdictBorder: Record<string, string> = {
+  TRUE: 'border-l-emerald-500',
+  FALSE: 'border-l-red-500',
+  MISLEADING: 'border-l-amber-500',
+  UNVERIFIABLE: 'border-l-slate-400',
 }
 
 export function PublicationsWorkspacePage() {
@@ -209,7 +224,11 @@ function PublicationList({
                   key={item.id}
                   to="/publications/$publicationId"
                   params={{ publicationId }}
-                  className="border-border/60 hover:border-border hover:bg-muted/30 grid gap-3 rounded-lg border p-4 transition-colors sm:grid-cols-[1fr_auto] sm:items-start"
+                    className={cn(
+                    'hover:border-border hover:bg-muted/30 grid gap-3 rounded-lg border p-4 transition-all sm:grid-cols-[1fr_auto] sm:items-start',
+                    'border-l-4 hover:shadow-sm active:scale-[0.99]',
+                    verdictBorder[item.finalVerdict] ?? 'border-l-border',
+                  )}
                 >
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
@@ -222,21 +241,30 @@ function PublicationList({
                         {item.isCorrection ? 'Correctif' : 'Publication'}
                       </Badge>
                     </div>
-                    <p className="text-muted-foreground mt-1 text-sm">
-                      Verdict : {domainLabel(item.finalVerdict)}
-                    </p>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                      <span
+                        className={cn(
+                          'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium border',
+                          verdictColor[item.finalVerdict] ?? 'text-muted-foreground border-border',
+                        )}
+                      >
+                        {domainLabel(item.finalVerdict)}
+                      </span>
+                      <span className="text-muted-foreground/50 text-xs">
+                        {relativeTime(item.publishedAt)}
+                      </span>
+                    </div>
                     <div className="text-muted-foreground/60 mt-1.5 flex flex-wrap items-center gap-3 text-xs">
-                      <span>{relativeTime(item.publishedAt)}</span>
                       {linkCount > 0 && (
                         <span className="inline-flex items-center gap-1">
                           <LinkIcon className="size-3" />
-                          {linkCount}
+                          {linkCount} lien{linkCount > 1 ? 's' : ''}
                         </span>
                       )}
                       {mediaCount > 0 && (
                         <span className="inline-flex items-center gap-1">
                           <Image className="size-3" />
-                          {mediaCount}
+                          {mediaCount} média{mediaCount > 1 ? 's' : ''}
                         </span>
                       )}
                     </div>

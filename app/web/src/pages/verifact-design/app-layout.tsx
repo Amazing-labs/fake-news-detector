@@ -467,20 +467,23 @@ export function AppLayout(props: {
           </header>
 
           <main className="max-w-10xl mx-auto flex w-full flex-1 flex-col gap-6 p-4 sm:p-6">
-            <div className="text-muted-foreground/50 flex items-center gap-1.5 text-xs">
-              <Link to="/dashboard" className="hover:text-foreground transition-colors">
+            <div className="text-muted-foreground/60 flex items-center gap-1.5 text-xs">
+              <Link to="/dashboard" className="hover:text-foreground/80 transition-colors">
                 Dashboard
               </Link>
               {props.page !== 'dashboard' && props.page !== 'auth' ? (
                 <>
                   <ChevronRight className="size-3" />
-                  <span className="text-foreground/60 font-medium">
+                  <span className="text-foreground/70 font-medium">
                     {pageLabels[props.page] ?? props.page}
                   </span>
                 </>
               ) : null}
             </div>
-            {props.children}
+            <div className="relative flex-1">
+              <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,var(--color-sidebar-accent)/0.3,transparent_50%)]" />
+              {props.children}
+            </div>
           </main>
         </div>
       </div>
