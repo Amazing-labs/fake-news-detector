@@ -15,7 +15,7 @@ import {
 } from '@shared/ui/shadcn/card'
 import { AppLayout } from '../app-layout'
 import { useResolvedActor } from '../session-routing'
-import { EmptyState, ErrorState, StatusBadge } from '../workspace-ui'
+import { DoubleBorderCard, EmptyState, ErrorState, StatusBadge } from '../workspace-ui'
 
 export function CitizenWorkspacePage() {
   const { session } = useResolvedActor('citizen')
@@ -30,8 +30,9 @@ export function CitizenWorkspacePage() {
   return (
     <AppLayout actor="citizen" page="reports">
       <div className="grid gap-6">
-        <Card>
-          <CardHeader>
+        <DoubleBorderCard>
+          <Card className='pt-0'>
+          <CardHeader className='bg-sidebar/20 p-2.5' >
             <CardTitle>Mes signalements</CardTitle>
             <CardDescription>
               Suivre les rumeurs transmises au desk et leur état éditorial.
@@ -85,8 +86,9 @@ export function CitizenWorkspacePage() {
                 </Button>
               </div>
             ))}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </DoubleBorderCard>
       </div>
     </AppLayout>
   )

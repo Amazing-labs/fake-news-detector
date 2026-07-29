@@ -320,7 +320,7 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
   return (
     <AppLayout actor={actor} page="reports">
       {/* Header card */}
-      <Card>
+      <DoubleBorderCard>
         <CardHeader>
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
@@ -342,7 +342,7 @@ export function ReportDetailWorkspacePage({ reportId }: { reportId: string }) {
             />
           </div>
         </CardHeader>
-      </Card>
+      </DoubleBorderCard>
 
       {/* Tabs */}
       <Tabs defaultValue="content">
