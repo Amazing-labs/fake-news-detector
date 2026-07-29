@@ -1,6 +1,7 @@
 import {
   Bell,
   BookOpenCheck,
+  Circle,
   FilePlus2,
   FileSearch,
   Inbox,
@@ -26,7 +27,28 @@ export const navItems: NavItem[] = [
   { label: 'Signalements', to: '/reports', icon: FileSearch },
   { label: 'Enquêtes', to: '/investigations', icon: ShieldCheck },
   { label: 'Vigies', to: '/watcher-applications', icon: BookOpenCheck },
-  { label: 'Publications', to: '/publications/list', icon: Newspaper },
+  {
+    label: 'Publications',
+    to: '/publications/list',
+    icon: Newspaper,
+    children: [
+      { label: 'Toutes', to: '/publications/list', icon: Circle },
+      { label: 'Vrai', to: '/publications/list', icon: Circle, search: { verdict: 'TRUE' } },
+      { label: 'Faux', to: '/publications/list', icon: Circle, search: { verdict: 'FALSE' } },
+      {
+        label: 'Trompeur',
+        to: '/publications/list',
+        icon: Circle,
+        search: { verdict: 'MISLEADING' },
+      },
+      {
+        label: 'Non vérifiable',
+        to: '/publications/list',
+        icon: Circle,
+        search: { verdict: 'UNVERIFIABLE' },
+      },
+    ],
+  },
   { label: 'Utilisateurs', to: '/journalists/list', icon: Users },
   { label: 'Notifications', to: '/notifications', icon: Bell },
 ]

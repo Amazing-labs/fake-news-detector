@@ -26,6 +26,8 @@ export type NavItem = {
   to: string
   icon: LucideIcon
   badge?: string
+  search?: Record<string, unknown>
+  children?: NavItem[]
 }
 
 export type RoleCard = {

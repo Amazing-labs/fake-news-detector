@@ -1,5 +1,8 @@
-import { Link } from '@tanstack/react-router'
+import { Link, useLocation } from '@tanstack/react-router'
 import { ExternalLink, Megaphone, RotateCcw } from 'lucide-react'
+import { useMemo, useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { cn } from '@shared/lib/utils'
 import { LoadingRow } from '@shared/ui/loader'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
@@ -16,7 +19,6 @@ import {
   TabsList,
   TabsTrigger,
 } from '@shared/ui/shadcn/tabs'
-import { useQuery } from '@tanstack/react-query'
 import { AppLayout } from '../../app-layout'
 import { useResolvedActor } from '../../session-routing'
 import { domainLabel } from '../../workspace-labels'
@@ -26,10 +28,20 @@ import {
   publicationQueryKeys,
 } from '@entities/publication/api'
 import type { PublicationItem } from '@entities/publication/model'
+import {
+  filterPublicationsByVerdict,
+  getPublicationVerdictCounts,
+  publicationVerdictFilters,
+  type PublicationVerdictFilter,
+} from './publication-filters'
 
 export function PublicationsWorkspacePage() {
   const { actor } = useResolvedActor('director')
   const canManage = actor === 'director' || actor === 'admin'
+  const location = useLocation()
+  const [activeSection, setActiveSection] = useState<
+    'all' | 'publications' | 'corrections'
+  >('all')
 
   const publicationsQuery = useQuery({
     queryKey: publicationQueryKeys.list(),
@@ -38,10 +50,38 @@ export function PublicationsWorkspacePage() {
   const items = publicationsQuery.data?.items ?? []
   const mainItems = items.filter((item) => !item.isCorrection)
   const correctionItems = items.filter((item) => item.isCorrection)
+  const selectedVerdict = useMemo<PublicationVerdictFilter>(() => {
+    const search = location.search as
+      | Record<string, string | undefined>
+      | undefined
+    const verdictValue = search?.verdict
+
+    return verdictValue && verdictValue !== 'all'
+      ? (verdictValue as PublicationVerdictFilter)
+      : 'all'
+  }, [location.search])
+
+  const sectionItems =
+    activeSection === 'publications'
+      ? mainItems
+      : activeSection === 'corrections'
+        ? correctionItems
+        : items
+
+  const visibleItems = filterPublicationsByVerdict(
+    sectionItems,
+    selectedVerdict,
+  )
+  const verdictCounts = getPublicationVerdictCounts(sectionItems)
 
   return (
     <AppLayout actor={actor} page="publications">
-      <Tabs defaultValue="all">
+      <Tabs
+        value={activeSection}
+        onValueChange={(value) =>
+          setActiveSection(value as 'all' | 'publications' | 'corrections')
+        }
+      >
         <TabsList className="tabular-nums">
           <TabsTrigger value="all">Toutes ({items.length})</TabsTrigger>
           <TabsTrigger value="publications">
@@ -51,23 +91,50 @@ export function PublicationsWorkspacePage() {
             Correctifs ({correctionItems.length})
           </TabsTrigger>
         </TabsList>
+        <div className="mt-4 flex flex-wrap gap-2">
+          {publicationVerdictFilters.map((filter) => {
+            const count = verdictCounts[filter.value]
+            const isActive = filter.value === selectedVerdict
+
+            return (
+              <Button
+                key={filter.value}
+                asChild
+                variant={isActive ? 'default' : 'outline'}
+                size="sm"
+                className={cn('h-8 rounded-full', isActive && 'shadow-sm')}
+              >
+                <Link
+                  to="/publications/list"
+                  search={
+                    filter.value === 'all'
+                      ? undefined
+                      : { verdict: filter.value }
+                  }
+                >
+                  {filter.label} ({count})
+                </Link>
+              </Button>
+            )
+          })}
+        </div>
         <TabsContent value="all" className="mt-4">
           <PublicationList
-            items={items}
+            items={visibleItems}
             canManage={canManage}
             query={publicationsQuery}
           />
         </TabsContent>
         <TabsContent value="publications" className="mt-4">
           <PublicationList
-            items={mainItems}
+            items={visibleItems}
             canManage={canManage}
             query={publicationsQuery}
           />
         </TabsContent>
         <TabsContent value="corrections" className="mt-4">
           <PublicationList
-            items={correctionItems}
+            items={visibleItems}
             canManage={canManage}
             query={publicationsQuery}
           />

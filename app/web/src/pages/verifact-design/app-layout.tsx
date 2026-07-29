@@ -236,26 +236,56 @@ export function AppLayout(props: {
           {visibleNavItems.map((item) => {
             const Icon = item.icon
             const active = isActivePath(item.to)
+            const showChildren =
+              Boolean(item.children?.length) &&
+              (active || item.label === 'Publications')
 
             return (
-              <Link
-                key={item.label}
-                to={item.to}
-                className={cn(
-                  'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-200',
-                  active
-                    ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
-                    : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
-                )}
-              >
-                <Icon className="size-4" />
-                <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                {item.badge ? (
-                  <Badge variant="secondary" className="h-5 px-1.5">
-                    {item.badge}
-                  </Badge>
+              <div key={item.label}>
+                <Link
+                  to={item.to}
+                  search={item.search}
+                  className={cn(
+                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-200',
+                    active
+                      ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
+                      : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
+                  )}
+                >
+                  <Icon className="size-4" />
+                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
+                  {item.badge ? (
+                    <Badge variant="secondary" className="h-5 px-1.5">
+                      {item.badge}
+                    </Badge>
+                  ) : null}
+                </Link>
+                {showChildren ? (
+                  <div className="mt-1 ml-5 space-y-1">
+                    {item.children?.map((child) => {
+                      const ChildIcon = child.icon
+                      const childActive = isActivePath(child.to)
+
+                      return (
+                        <Link
+                          key={child.label}
+                          to={child.to}
+                          search={child.search}
+                          className={cn(
+                            'flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs transition-colors',
+                            childActive
+                              ? 'bg-sidebar-accent/70 text-sidebar-accent-foreground font-medium'
+                              : 'text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
+                          )}
+                        >
+                          <ChildIcon className="size-3.5" />
+                          <span className="truncate">{child.label}</span>
+                        </Link>
+                      )
+                    })}
+                  </div>
                 ) : null}
-              </Link>
+              </div>
             )
           })}
         </nav>
