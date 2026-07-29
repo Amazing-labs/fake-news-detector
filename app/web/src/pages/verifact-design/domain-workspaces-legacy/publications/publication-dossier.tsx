@@ -100,6 +100,7 @@ export function PublicationDetailWorkspacePage({
 
   return (
     <AppLayout actor={actor} page="publications">
+      <div className="grid gap-6">
       {/* Verdict card — what the reader came for, above everything else. */}
       <Card>
         <CardHeader className="gap-4">
@@ -294,6 +295,7 @@ export function PublicationDetailWorkspacePage({
       </Tabs>
 
       <PublicationCredits credits={dossier.credits} />
+      </div>
     </AppLayout>
   )
 }

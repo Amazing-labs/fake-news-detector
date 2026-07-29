@@ -55,7 +55,7 @@ export function ProfileDashboard() {
   if (isActorPending) {
     return (
       <AppLayout actor="guest" page="profile">
-        <div className="mx-auto flex w-full max-w-4xl items-center justify-center py-20">
+        <div className="mx-auto flex w-full max-w-10xl items-center justify-center py-20">
           <div className="flex flex-col items-center gap-3">
             <div className="border-primary/30 size-10 animate-spin rounded-full border-2 border-t-primary" />
             <p className="text-muted-foreground text-sm">Vérification de session…</p>
@@ -74,7 +74,7 @@ export function ProfileDashboard() {
 
   return (
     <AppLayout actor={actor} page="profile">
-      <div className="mx-auto grid w-full max-w-4xl gap-6">
+      <div className="mx-auto grid w-full max-w-10xl gap-6">
         {/* ── Hero ──────────────────────────────────────────────────────────── */}
         <DoubleBorderCard>
           <div className="p-6">

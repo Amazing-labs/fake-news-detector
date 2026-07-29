@@ -65,6 +65,7 @@ export function DirectorHomePage() {
 
   return (
     <AppLayout actor="director" page="dashboard">
+      <div className="grid gap-6">
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="À arbitrer"
@@ -192,6 +193,7 @@ export function DirectorHomePage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </AppLayout>
   )
 }
