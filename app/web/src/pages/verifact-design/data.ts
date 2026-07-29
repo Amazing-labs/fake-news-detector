@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   Newspaper,
   ShieldCheck,
-  UserCog,
   Users,
 } from 'lucide-react'
 import type { Actor, NavItem, RoleCard } from './types'
@@ -30,7 +29,6 @@ export const navItems: NavItem[] = [
   { label: 'Publications', to: '/publications/list', icon: Newspaper },
   { label: 'Utilisateurs', to: '/journalists/list', icon: Users },
   { label: 'Notifications', to: '/notifications', icon: Bell },
-  { label: 'Profil', to: '/profile', icon: UserCog },
 ]
 
 export const navByActor: Record<Actor, string[]> = {
@@ -41,7 +39,6 @@ export const navByActor: Record<Actor, string[]> = {
     'Vigies',
     'Publications',
     'Notifications',
-    'Profil',
   ],
   watcher: [
     'Tableau de bord',
@@ -49,7 +46,6 @@ export const navByActor: Record<Actor, string[]> = {
     'Signalements',
     'Publications',
     'Notifications',
-    'Profil',
   ],
   journalist: [
     'Tableau de bord',
@@ -57,7 +53,6 @@ export const navByActor: Record<Actor, string[]> = {
     'Enquêtes',
     'Publications',
     'Notifications',
-    'Profil',
   ],
   director: [
     'Tableau de bord',
@@ -67,9 +62,8 @@ export const navByActor: Record<Actor, string[]> = {
     'Publications',
     'Utilisateurs',
     'Notifications',
-    'Profil',
   ],
-  admin: ['Tableau de bord', 'Utilisateurs', 'Notifications', 'Profil'],
+  admin: ['Tableau de bord', 'Utilisateurs', 'Notifications'],
 }
 
 export const roleCards: RoleCard[] = [

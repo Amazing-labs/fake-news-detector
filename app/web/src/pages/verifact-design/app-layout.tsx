@@ -222,8 +222,7 @@ export function AppLayout(props: {
     <div className="bg-background text-foreground min-h-screen">
       <aside className="bg-background text-sidebar-foreground fixed inset-y-0 left-0 z-30 hidden w-72 lg:flex lg:flex-col">
         <div className="flex h-16 items-center gap-3 px-5">
-
-            <ShieldLogo width={28} height={72} />
+          <ShieldLogo width={28} height={72} />
 
           <div>
             <p className="text-sm font-semibold">Fake News Detector</p>
@@ -262,7 +261,10 @@ export function AppLayout(props: {
         </nav>
         <Separator />
         <div className="p-3">
-          <div className="bg-sidebar-accent/50 flex items-center gap-3 rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+          <Link
+            to="/profile"
+            className="bg-sidebar-accent/50 hover:bg-sidebar-accent/70 flex items-center gap-3 rounded-xl p-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)] transition-colors"
+          >
             <Avatar>
               <AvatarImage src={session?.user.image ?? ''} alt={displayName} />
               <AvatarFallback>{initials(displayName)}</AvatarFallback>
@@ -273,12 +275,12 @@ export function AppLayout(props: {
                 {session ? roleLabel : 'Session invitée'}
               </p>
             </div>
-          </div>
+          </Link>
         </div>
       </aside>
 
-      <div className=" flex min-h-screen flex-col lg:pl-72 lg:pt-2 lg:pr-0 lg:pb-0">
-        <div className="  bg-card text-card-foreground flex flex-1 flex-col border-border lg:rounded-tl-3xl lg:border-t lg:border-l lg:shadow-sm overflow-hidden">
+      <div className="flex min-h-screen flex-col lg:pt-2 lg:pr-0 lg:pb-0 lg:pl-72">
+        <div className="bg-card text-card-foreground border-border flex flex-1 flex-col overflow-hidden lg:rounded-tl-3xl lg:border-t lg:border-l lg:shadow-sm">
           <header className="bg-card/90 supports-backdrop-filter:bg-card/60 sticky top-0 z-20 border-b backdrop-blur">
             <div className="flex h-16 items-center gap-3 px-4 sm:px-6">
               <div className="flex items-center gap-2 lg:hidden">
@@ -296,7 +298,10 @@ export function AppLayout(props: {
                   placeholder="Chercher un sujet, une source ou une correction"
                 />
               </div>
-              <Badge variant="outline" className="ml-auto hidden sm:inline-flex">
+              <Badge
+                variant="outline"
+                className="ml-auto hidden sm:inline-flex"
+              >
                 {roleLabel}
               </Badge>
               <NotificationPopover />
@@ -313,15 +318,19 @@ export function AppLayout(props: {
                 )}
               </Button>
               {session ? (
-                 <Button className="group/fab relative flex h-10 w-10 items-center overflow-hidden rounded-full px-3 transition-[width] duration-300 ease-in-out hover:w-36 "
+                <Button
+                  className="group/fab relative flex h-10 w-10 items-center overflow-hidden rounded-full px-3 transition-[width] duration-300 ease-in-out hover:w-36"
                   variant="ghost"
                   onClick={() => void handleSignOut()}
                   loading={isSigningOut}
                 >
-                  <LogOut aria-hidden="true" className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-transform duration-300 group-hover/fab:left-3 group-hover/fab:translate-x-0"/>
-                  <span className="ml-8  whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover/fab:opacity-100">
-                          Deconnection
-                        </span>
+                  <LogOut
+                    aria-hidden="true"
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 transition-transform duration-300 group-hover/fab:left-3 group-hover/fab:translate-x-0"
+                  />
+                  <span className="ml-8 whitespace-nowrap opacity-0 transition-opacity duration-300 group-hover/fab:opacity-100">
+                    Deconnection
+                  </span>
                 </Button>
               ) : (
                 <Button variant="outline" asChild>
@@ -349,7 +358,8 @@ export function AppLayout(props: {
                       to={item.to}
                       onClick={() => {
                         tabletNavScrollLeft =
-                          tabletNavRef.current?.scrollLeft ?? tabletNavScrollLeft
+                          tabletNavRef.current?.scrollLeft ??
+                          tabletNavScrollLeft
                       }}
                       className={cn(
                         'flex shrink-0 items-center gap-2 rounded-full px-3 py-2 text-sm transition-colors',
@@ -375,7 +385,7 @@ export function AppLayout(props: {
             </nav>
           </header>
 
-          <main className="mx-auto flex w-full max-w-10xl flex-1 flex-col gap-6 p-4 sm:p-6">
+          <main className="max-w-10xl mx-auto flex w-full flex-1 flex-col gap-6 p-4 sm:p-6">
             {props.children}
           </main>
         </div>
