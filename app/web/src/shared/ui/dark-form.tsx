@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Spinner } from './loader'
+import { DoubleBorderCard } from '@pages/verifact-design/workspace-ui'
 
 export function DarkFormCard(props: {
   title: string
@@ -7,7 +8,10 @@ export function DarkFormCard(props: {
   children: ReactNode
 }) {
   return (
-    <section className="bg-card text-card-foreground border-border rounded-2xl border p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_10px_28px_-18px_rgba(0,0,0,0.16)]">
+    <DoubleBorderCard>
+
+
+    <section className="bg-card text-card-foreground  p-6 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_10px_28px_-18px_rgba(0,0,0,0.16)]">
       <div>
         <h1 className="text-xl font-semibold tracking-tight">{props.title}</h1>
         {props.description ? (
@@ -17,7 +21,8 @@ export function DarkFormCard(props: {
         ) : null}
       </div>
       {props.children}
-    </section>
+      </section>
+    </DoubleBorderCard>
   )
 }
 

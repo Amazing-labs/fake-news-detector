@@ -6,6 +6,7 @@ import { createReport, reportQueryKeys } from '@entities/report/api'
 import { toApiErrorMessage } from '@shared/api/http'
 import { useAppSession } from '@entities/session/model'
 import { DarkButton, DarkFormCard, DarkIconSelect } from '@shared/ui/dark-form'
+import { Textarea } from '@shared/ui/shadcn/textarea'
 import {
   defaultVerificationTheme,
   verificationThemes,
@@ -31,7 +32,7 @@ import {
   UsersIcon,
 } from 'lucide-react'
 
-function DarkTextAreaWithFooter(props: {
+function ReportTextareaGroup(props: {
   label: string
   value: string
   onChange: (event: React.ChangeEvent<HTMLTextAreaElement>) => void
@@ -43,18 +44,20 @@ function DarkTextAreaWithFooter(props: {
   return (
     <label className="grid gap-2 text-sm font-medium">
       {label}
-      <textarea
-        className="border-input bg-background text-foreground placeholder:text-muted-foreground focus-visible:border-primary/70 focus-visible:ring-primary/20 min-h-16 rounded-lg border px-3 py-2.5 transition outline-none focus-visible:ring-[3px]"
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        maxLength={maxLength}
-      />
-      <div className="border-input bg-background text-muted-foreground flex items-center gap-2 rounded-b-lg border border-t-0 px-3 py-2 text-xs">
-        <span>
-          {value.length}/{maxLength} caractères
-        </span>
-        <InfoIcon className="ml-auto h-4 w-4" />
+      <div className="bg-background rounded-lg shadow-sm">
+        <Textarea
+          className="focus-visible:border-primary/70 focus-visible:ring-primary/20 min-h-24 w-full resize-none rounded-t-lg border-none! px-3 py-2.5"
+          value={value}
+          onChange={onChange}
+          placeholder={placeholder}
+          maxLength={maxLength}
+        />
+        <div className="text-muted-foreground flex items-center justify-between gap-2 rounded-b-lg px-3 py-2 text-xs">
+          <span>
+            {value.length}/{maxLength} caractères
+          </span>
+          <InfoIcon className="h-4 w-4" />
+        </div>
       </div>
     </label>
   )
@@ -185,14 +188,14 @@ export function CreateReportForm() {
           onChange={(value) => setTheme(value)}
           options={verificationThemeOptions}
         />
-        <DarkTextAreaWithFooter
+        <ReportTextareaGroup
           label="Rumeur à vérifier"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
           placeholder="Décris ta rumeur et le contexte connu"
           maxLength={140}
         />
-        <DarkTextAreaWithFooter
+        <ReportTextareaGroup
           label="Message reçu"
           value={content}
           onChange={(event) => setContent(event.target.value)}
