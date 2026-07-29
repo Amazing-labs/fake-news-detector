@@ -270,7 +270,7 @@ export function AppLayout(props: {
               <div key={item.label}>
                 <div
                   className={cn(
-                    'flex items-center rounded-lg transition-colors duration-200',
+                    'flex items-center rounded-lg transition-all duration-300',
                     active
                       ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
                       : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
@@ -281,7 +281,7 @@ export function AppLayout(props: {
                     search={item.search}
                     className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2 text-sm"
                   >
-                    <Icon className="size-4" />
+                    <Icon className="size-4 transition-transform duration-200" />
                     <span className="min-w-0 flex-1 truncate">
                       {item.label}
                     </span>
@@ -304,16 +304,16 @@ export function AppLayout(props: {
                       }
                       aria-label={`Afficher les sous-options ${item.label}`}
                     >
-                      {isExpanded ? (
+                      <div className="transition-transform duration-300 ease-out" style={{ transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
                         <ChevronDown className="size-4" />
-                      ) : (
-                        <ChevronRight className="size-4" />
-                      )}
+                      </div>
                     </Button>
                   ) : null}
                 </div>
                 {showChildren ? (
-                  <div className="mt-1 ml-5 pl-3 border-l border-sidebar-border/40 space-y-0.5">
+                  <div
+                    className="mt-1 ml-5 pl-3 border-l border-sidebar-border/40 space-y-0.5 animate-slide-down motion-reduce:animate-none origin-top"
+                  >
                     {item.children?.map((child) => {
                       const childActive = isActivePath(child.to, child.search)
 
@@ -323,9 +323,9 @@ export function AppLayout(props: {
                           to={child.to}
                           search={child.search}
                           className={cn(
-                            'relative flex items-center rounded-md px-2.5 py-1.5 text-xs transition-colors',
+                            'relative flex items-center rounded-md px-2.5 py-1.5 text-xs transition-all duration-150',
                             childActive
-                              ? 'bg-sidebar-accent/70 text-sidebar-accent-foreground font-medium'
+                              ? 'bg-sidebar-accent/70 text-sidebar-accent-foreground font-medium scale-[1.01]'
                               : 'text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
                           )}
                         >
@@ -482,7 +482,12 @@ export function AppLayout(props: {
             </div>
             <div className="relative flex-1">
               <div className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_top_right,var(--color-sidebar-accent)/0.3,transparent_50%)]" />
-              {props.children}
+              <div
+                key={location.pathname + location.search}
+                className="animate-fade-in motion-reduce:animate-none"
+              >
+                {props.children}
+              </div>
             </div>
           </main>
         </div>

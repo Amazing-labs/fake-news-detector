@@ -214,7 +214,7 @@ function PublicationList({
               <div className="bg-muted h-20 animate-pulse rounded-lg" />
             </div>
           ) : items.length ? (
-            items.map((item) => {
+            items.map((item, i) => {
               const publicationId = item.id
               const linkCount = item.verifiedLinks.length
               const mediaCount = item.verifiedMedia.length
@@ -222,10 +222,11 @@ function PublicationList({
               return (
                 <Link
                   key={item.id}
+                  style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}
                   to="/publications/$publicationId"
                   params={{ publicationId }}
-                    className={cn(
-                    'hover:border-border hover:bg-muted/30 grid gap-3 rounded-lg border p-4 transition-all sm:grid-cols-[1fr_auto] sm:items-start',
+                  className={cn(
+                    'animate-slide-up motion-reduce:animate-none hover:border-border hover:bg-muted/30 grid gap-3 rounded-lg border p-4 transition-all sm:grid-cols-[1fr_auto] sm:items-start',
                     'border-l-4 hover:shadow-sm active:scale-[0.99]',
                     verdictBorder[item.finalVerdict] ?? 'border-l-border',
                   )}

@@ -105,12 +105,13 @@ export function CitizenWorkspacePage() {
                   description="Signalez un contenu douteux : il rejoint le desk et vous suivez son traitement ici."
                 />
               ) : (
-                reportRows.map((item) => (
+                reportRows.map((item, i) => (
                   <Link
                     key={item.id}
+                    style={{ animationDelay: `${i * 60}ms`, animationFillMode: 'both' }}
                     to="/reports/$reportId"
                     params={{ reportId: item.id }}
-                    className="border-border/60 hover:border-border hover:bg-muted/30 grid gap-3 rounded-lg border p-4 transition-colors md:grid-cols-[1fr_auto]"
+                    className="animate-slide-up motion-reduce:animate-none border-border/60 hover:border-border hover:bg-muted/30 grid gap-3 rounded-lg border p-4 transition-all hover:shadow-sm active:scale-[0.99] md:grid-cols-[1fr_auto]"
                   >
                     <div>
                       <div className="flex flex-wrap items-center gap-2">
