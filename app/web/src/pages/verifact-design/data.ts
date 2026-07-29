@@ -32,6 +32,7 @@ export const navItems: NavItem[] = [
     to: '/publications/list',
     icon: Newspaper,
     children: [
+      { label: 'Toutes', to: '/publications/list', icon: Circle },
       { label: 'Vrai', to: '/publications/list', icon: Circle, search: { verdict: 'TRUE' } },
       { label: 'Faux', to: '/publications/list', icon: Circle, search: { verdict: 'FALSE' } },
       {

@@ -21,7 +21,7 @@ import {
 import { AppLayout } from '../../app-layout'
 import { useResolvedActor } from '../../session-routing'
 import { domainLabel } from '../../workspace-labels'
-import { EmptyState, ErrorState } from '../../workspace-ui'
+import { DoubleBorderCard, EmptyState, ErrorState } from '../../workspace-ui'
 import {
   listPublications,
   publicationQueryKeys,
@@ -123,14 +123,15 @@ function PublicationList({
   query: { isPending: boolean; isError: boolean; error: unknown }
 }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Publications et correctifs</CardTitle>
-        <CardDescription>
-          Chaque publication conserve son verdict final et ses preuves.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="grid gap-3">
+    <DoubleBorderCard>
+      <Card className='pt-0'>
+        <CardHeader className='bg-sidebar/20 p-2.5'>
+          <CardTitle>Publications et correctifs</CardTitle>
+          <CardDescription>
+            Chaque publication conserve son verdict final et ses preuves.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-3">
         {query.isError ? (
           <ErrorState error={query.error} />
         ) : query.isPending ? (
@@ -196,6 +197,7 @@ function PublicationList({
           />
         )}
       </CardContent>
-    </Card>
+      </Card>
+    </DoubleBorderCard>
   )
 }
