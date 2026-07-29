@@ -1,5 +1,5 @@
-import { Link, useLocation } from '@tanstack/react-router'
-import { ExternalLink, Megaphone, RotateCcw } from 'lucide-react'
+import { Link, useLocation, useNavigate } from '@tanstack/react-router'
+import { Megaphone, RotateCcw } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { LoadingRow } from '@shared/ui/loader'
@@ -122,6 +122,8 @@ function PublicationList({
   canManage: boolean
   query: { isPending: boolean; isError: boolean; error: unknown }
 }) {
+  const navigate = useNavigate()
+
   return (
     <DoubleBorderCard>
       <Card className='pt-0'>
@@ -140,8 +142,10 @@ function PublicationList({
           items.map((item) => {
             const publicationId = item.id
             return (
-              <div
+              <Link
                 key={item.id}
+                to="/publications/$publicationId"
+                params={{ publicationId }}
                 className="border-border/60 hover:border-border hover:bg-muted/30 grid gap-3 rounded-lg border p-4 transition-colors sm:grid-cols-[1fr_auto] sm:items-start"
               >
                 <div className="min-w-0">
@@ -161,32 +165,24 @@ function PublicationList({
                 </div>
                 <div className="flex items-center gap-2 sm:justify-end">
                   {canManage && (
-                    <Button size="sm" variant="outline" asChild>
-                      <Link
-                        to="/publications/corrections"
-                        search={{ publicationId }}
-                      >
-                        <RotateCcw />
-                        Correctif
-                      </Link>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.preventDefault()
+                        e.stopPropagation()
+                        navigate({
+                          to: '/publications/corrections',
+                          search: { publicationId },
+                        })
+                      }}
+                    >
+                      <RotateCcw />
+                      Correctif
                     </Button>
                   )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-foreground hover:bg-muted rounded-full transition-colors"
-                    asChild
-                  >
-                    <Link
-                      to="/publications/$publicationId"
-                      params={{ publicationId }}
-                      aria-label={`Voir le détail de ${item.title ?? publicationId}`}
-                    >
-                      <ExternalLink />
-                    </Link>
-                  </Button>
                 </div>
-              </div>
+              </Link>
             )
           })
         ) : (
@@ -196,7 +192,7 @@ function PublicationList({
             description="Les publications apparaîtront ici une fois validées."
           />
         )}
-      </CardContent>
+        </CardContent>
       </Card>
     </DoubleBorderCard>
   )
