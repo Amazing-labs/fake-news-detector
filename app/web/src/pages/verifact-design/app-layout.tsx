@@ -3,11 +3,12 @@ import {
   AlertTriangle,
   Bell,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   Info,
   LogOut,
   Moon,
   Search,
-  ShieldCheck,
   Sun,
 } from 'lucide-react'
 import type { ComponentType, ReactNode } from 'react'
@@ -184,6 +185,11 @@ export function AppLayout(props: {
     navByActor[actor].includes(item.label),
   )
   const [isSigningOut, setIsSigningOut] = useState(false)
+  const [expandedNavItem, setExpandedNavItem] = useState<string | null>(null)
+
+  useLayoutEffect(() => {
+    setExpandedNavItem(null)
+  }, [location.pathname])
   async function handleSignOut() {
     setIsSigningOut(true)
     try {
@@ -200,13 +206,18 @@ export function AppLayout(props: {
     }
   }
 
-  function isActivePath(to: string) {
+  function isActivePath(to: string, search?: Record<string, unknown>) {
     const sectionPath = to.split('/')[1]
-
-    return (
+    const pathMatch =
       location.pathname === to ||
       (to !== '/' &&
         location.pathname.startsWith(sectionPath ? `/${sectionPath}` : to))
+
+    if (!pathMatch) return false
+    if (!search) return true
+
+    return Object.entries(search).every(
+      ([key, value]) => (location.search as Record<string, unknown>)?.[key] === value,
     )
   }
 
@@ -236,35 +247,61 @@ export function AppLayout(props: {
           {visibleNavItems.map((item) => {
             const Icon = item.icon
             const active = isActivePath(item.to)
-            const showChildren =
-              Boolean(item.children?.length) &&
-              (active || item.label === 'Publications')
+            const isDropdown = Boolean(item.children?.length)
+            const isExpanded =
+              isDropdown && (expandedNavItem === item.label || active)
+            const showChildren = isDropdown && isExpanded
 
             return (
               <div key={item.label}>
-                <Link
-                  to={item.to}
-                  search={item.search}
+                <div
                   className={cn(
-                    'flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors duration-200',
+                    'flex items-center rounded-lg transition-colors duration-200',
                     active
                       ? 'bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-[0_1px_2px_rgba(0,0,0,0.06)]'
                       : 'text-muted-foreground hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground',
                   )}
                 >
-                  <Icon className="size-4" />
-                  <span className="min-w-0 flex-1 truncate">{item.label}</span>
-                  {item.badge ? (
-                    <Badge variant="secondary" className="h-5 px-1.5">
-                      {item.badge}
-                    </Badge>
+                  <Link
+                    to={item.to}
+                    search={item.search}
+                    className="flex min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2 text-sm"
+                  >
+                    <Icon className="size-4" />
+                    <span className="min-w-0 flex-1 truncate">
+                      {item.label}
+                    </span>
+                    {item.badge ? (
+                      <Badge variant="secondary" className="h-5 px-1.5">
+                        {item.badge}
+                      </Badge>
+                    ) : null}
+                  </Link>
+                  {isDropdown ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="mr-1 size-7 text-current hover:bg-transparent"
+                      onClick={() =>
+                        setExpandedNavItem((current) =>
+                          current === item.label ? null : item.label,
+                        )
+                      }
+                      aria-label={`Afficher les sous-options ${item.label}`}
+                    >
+                      {isExpanded ? (
+                        <ChevronDown className="size-4" />
+                      ) : (
+                        <ChevronRight className="size-4" />
+                      )}
+                    </Button>
                   ) : null}
-                </Link>
+                </div>
                 {showChildren ? (
-                  <div className="mt-1 ml-5 space-y-1">
+                  <div className="mt-1 ml-5 pl-3 border-l border-sidebar-border/40 space-y-0.5">
                     {item.children?.map((child) => {
-                      const ChildIcon = child.icon
-                      const childActive = isActivePath(child.to)
+                      const childActive = isActivePath(child.to, child.search)
 
                       return (
                         <Link
@@ -272,13 +309,13 @@ export function AppLayout(props: {
                           to={child.to}
                           search={child.search}
                           className={cn(
-                            'flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs transition-colors',
+                            'relative flex items-center rounded-md px-2.5 py-1.5 text-xs transition-colors',
                             childActive
                               ? 'bg-sidebar-accent/70 text-sidebar-accent-foreground font-medium'
                               : 'text-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground',
                           )}
                         >
-                          <ChildIcon className="size-3.5" />
+                          <span className="absolute -left-3 top-1/2 h-px w-3 -translate-y-1/2 bg-sidebar-border/40" />
                           <span className="truncate">{child.label}</span>
                         </Link>
                       )

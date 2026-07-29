@@ -2,7 +2,6 @@ import { Link, useLocation } from '@tanstack/react-router'
 import { ExternalLink, Megaphone, RotateCcw } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { cn } from '@shared/lib/utils'
 import { LoadingRow } from '@shared/ui/loader'
 import { Badge } from '@shared/ui/shadcn/badge'
 import { Button } from '@shared/ui/shadcn/button'
@@ -30,8 +29,6 @@ import {
 import type { PublicationItem } from '@entities/publication/model'
 import {
   filterPublicationsByVerdict,
-  getPublicationVerdictCounts,
-  publicationVerdictFilters,
   type PublicationVerdictFilter,
 } from './publication-filters'
 
@@ -72,7 +69,6 @@ export function PublicationsWorkspacePage() {
     sectionItems,
     selectedVerdict,
   )
-  const verdictCounts = getPublicationVerdictCounts(sectionItems)
 
   return (
     <AppLayout actor={actor} page="publications">
@@ -91,33 +87,6 @@ export function PublicationsWorkspacePage() {
             Correctifs ({correctionItems.length})
           </TabsTrigger>
         </TabsList>
-        <div className="mt-4 flex flex-wrap gap-2">
-          {publicationVerdictFilters.map((filter) => {
-            const count = verdictCounts[filter.value]
-            const isActive = filter.value === selectedVerdict
-
-            return (
-              <Button
-                key={filter.value}
-                asChild
-                variant={isActive ? 'default' : 'outline'}
-                size="sm"
-                className={cn('h-8 rounded-full', isActive && 'shadow-sm')}
-              >
-                <Link
-                  to="/publications/list"
-                  search={
-                    filter.value === 'all'
-                      ? undefined
-                      : { verdict: filter.value }
-                  }
-                >
-                  {filter.label} ({count})
-                </Link>
-              </Button>
-            )
-          })}
-        </div>
         <TabsContent value="all" className="mt-4">
           <PublicationList
             items={visibleItems}
