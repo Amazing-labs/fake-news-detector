@@ -436,7 +436,7 @@ export function CitizenDashboardPage() {
   const recentPublications = publicationsQuery.data?.items.slice(0, 3) ?? []
 
   return (
-    <AppLayout actor="citizen" page="dashboard">
+    <AppLayout actor="citizen" page="dashboard" >
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <StatCard
           title="Signalements actifs"
@@ -464,7 +464,7 @@ export function CitizenDashboardPage() {
         />
       </div>
 
-      <div className="grid gap-6">
+      <div className="grid gap-6 mt-4">
         <DoubleBorderCard>
           <div className="p-6">
             <div className="space-y-1.5">

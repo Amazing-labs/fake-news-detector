@@ -180,8 +180,8 @@ export function StatCard(props: {
 
   return (
     <DoubleBorderCard>
-      <div className="flex flex-col  ">
-        <div className="flex items-center justify-between gap-3 bg-sidebar/40 w-full px-6 h-8 rounded-t-2xl ">
+      <div className="flex flex-col overflow-hidden  ">
+        <div className="flex items-center justify-between gap-3 bg-sidebar/40 w-full px-6 h-8 ">
           <p className="text-muted-foreground text-sm font-medium">
             {props.title}
           </p>
