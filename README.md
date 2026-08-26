@@ -98,7 +98,7 @@ Everything deeper than this front door lives in [`doc/`](doc/):
 - **[Domain summary](doc/ddd-summary.md)** — aggregates, entities, invariants, lifecycles, enums, and the role-based permission matrix.
 - **[API reference](doc/api.md)** — every HTTP endpoint with its required permission.
 - **[Art direction](doc/art-direction.md)** — visual identity and screens to design.
-- **UML diagrams** — [class](doc/class/), [use case](doc/usecase/), [sequence](doc/sequence/), and [ERD](doc/erd/) (PlantUML).
+- **UML & Merise diagrams** — [use case](doc/usecase/), [class](doc/class/), [MPD](doc/mpd/), [sequence](doc/sequence/), and [activity](doc/activity/) (PlantUML).
 
 ## Deployment
 

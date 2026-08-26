@@ -1,0 +1,154 @@
+@startuml mpd-essentiel
+' =============================================================================
+' Fake News Detector — Modèle Physique de Données (Merise), vue resserrée
+' Variante imprimable : les 10 tables du circuit éditorial, soit le pendant
+' exact des 14 classes de la vue fonctionnelle et des 14 cas d'utilisation.
+' Aucune note dans le dessin : la légende Merise et le périmètre vivent dans le
+' texte qui accompagne la figure (voir README.md).
+' Source de vérité : migrations PostgreSQL réellement appliquées
+' (app/server/src/infrastructure/config/prisma/migrations/**).
+' =============================================================================
+
+hide circle
+skinparam shadowless true
+skinparam defaultFontName "Arial"
+skinparam classAttributeIconSize 0
+skinparam entityBackgroundColor #FFFFFF
+skinparam entityBorderColor #4A5568
+skinparam nodesep 35
+skinparam ranksep 35
+
+title Fake News Detector — Modèle Physique de Données\nCircuit éditorial, 10 tables PostgreSQL
+
+entity "actors" as actors {
+  <u>id</u> : UUID
+  --
+  name : VARCHAR
+  email : VARCHAR (U)
+  role : Role
+  status : AccountStatus
+  citizenType : CitizenType
+  engagementScore : INTEGER
+  openReportsCount : INTEGER
+  activeInvestigationsCount : INTEGER
+}
+
+entity "watcher_applications" as wapp {
+  <u>id</u> : UUID
+  --
+  # actorId : UUID
+  motivation : TEXT
+  status : WatcherApplicationStatus
+}
+
+entity "reports" as reports {
+  <u>id</u> : UUID
+  --
+  # citizenId : UUID
+  theme : VARCHAR
+  title : VARCHAR (O)
+  content : TEXT (O)
+  status : ReportStatus
+}
+
+entity "inbox_subjects" as inbox {
+  <u>id</u> : UUID
+  --
+  # createdById : UUID
+  # reportId : UUID (O) (U)
+  theme : VARCHAR
+  description : TEXT
+  origin : InboxSubjectOrigin
+  status : InboxSubjectStatus
+}
+
+entity "investigations" as inv {
+  <u>id</u> : UUID
+  --
+  # inboxSubjectId : UUID (U)
+  # journalistId : UUID
+  mediaCategory : MediaCategory (O)
+  draftVerdict : Verdict
+  investigationNotes : TEXT
+  attemptCount : INTEGER
+  status : InvestigationStatus
+}
+
+entity "evidence" as evid {
+  <u>id</u> : UUID
+  --
+  # investigationId : UUID
+  # watcherId : UUID
+  title : VARCHAR
+  content : TEXT
+}
+
+entity "workflow_audits" as audit {
+  <u>id</u> : UUID
+  --
+  # investigationId : UUID
+  # actorId : UUID
+  previousStatus : InvestigationStatus (O)
+  newStatus : InvestigationStatus
+  comment : TEXT (O)
+}
+
+entity "publications" as pub {
+  <u>id</u> : UUID
+  --
+  # investigationId : UUID (U)
+  # approvedById : UUID
+  finalVerdict : Verdict
+  publicationNotes : TEXT (O)
+  publishedAt : TIMESTAMP
+  isCorrection : BOOLEAN
+}
+
+entity "Correction" as corr {
+  <u>id</u> : UUID
+  --
+  # publicationId : UUID
+  # correctedById : UUID
+  # notificationId : UUID (U)
+  title : VARCHAR
+  content : TEXT
+}
+
+entity "notifications" as notif {
+  <u>id</u> : UUID
+  --
+  # actorId : UUID
+  # publicationId : UUID (O)
+  # investigationId : UUID (O)
+  type : NotificationType
+  level : NotificationLevel
+  theme : VARCHAR
+  message : TEXT
+  isRead : BOOLEAN
+}
+
+' =============================================================================
+' RELATIONS (pied-de-corbeau)
+' =============================================================================
+
+actors ||--o{ wapp
+actors ||--o{ reports
+actors ||--o{ inbox
+actors ||--o{ inv
+actors ||--o{ evid
+actors ||--o{ audit
+actors ||--o{ pub
+actors ||--o{ corr
+actors ||--o{ notif
+
+reports ||--o| inbox
+inbox   ||--o| inv
+inv     ||--o{ evid
+inv     ||--o{ audit
+inv     ||--o| pub
+inv     ||--o{ notif
+pub     ||--o{ corr
+pub     ||--o{ notif
+notif   ||--o| corr
+
+@enduml

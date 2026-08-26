@@ -1,0 +1,107 @@
+@startuml usecase-essentiel
+' =============================================================================
+' Fake News Detector — Cas d'utilisation (vue resserrée, format imprimable)
+' 13 cas plus S'authentifier, qu'ils incluent tous. Aucune note dans le dessin :
+' la couverture détaillée et les règles d'accès vivent dans le texte qui
+' accompagne la figure.
+' Source de vérité : doc/api.md croisé avec la matrice de permissions.
+' =============================================================================
+
+left to right direction
+skinparam shadowless true
+skinparam defaultFontName "Arial"
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #4A5568
+}
+
+title Fake News Detector — Cas d'utilisation\nCe que la plateforme permet de faire, par rôle
+
+' ==========================================
+' ACTEURS
+' ==========================================
+
+actor "Citoyen Vigie" as V
+actor "Citoyen" as C
+actor "Journaliste" as J
+actor "Directeur\nPublication" as D
+actor "Utilisateur" as U
+actor "Visiteur" as VIS
+
+V --|> C
+C --|> U
+J --|> U
+D --|> U
+
+rectangle "Application de Fact-Checking" {
+
+  usecase "Contribuer à une enquête" as UC6
+  usecase "Signaler un contenu suspect" as UC4
+  usecase "Suivre l'avancement\nde ses signalements" as UC12
+  usecase "Postuler au rôle\nde vigie" as UC5
+  usecase "Consulter son profil\net son activité" as UC3
+  usecase "Consulter les publications" as UC1
+  usecase "Suivre ses notifications" as UC2
+  usecase "Soumettre l'enquête\nà validation" as UC8
+  usecase "Ouvrir une enquête\nsur un sujet" as UC7
+  usecase "Gérer les utilisateurs" as UC11
+  usecase "Publier un démenti" as UC13
+  usecase "Arbitrer une enquête" as UC10
+  usecase "Gérer la boîte à sujets" as UC9
+
+  usecase "S'authentifier" as AUTH
+}
+
+' ==========================================
+' ASSOCIATIONS
+' ==========================================
+
+U --> UC1
+U --> UC2
+U --> UC3
+
+C --> UC4
+C --> UC12
+C --> UC5
+
+V --> UC6
+
+J --> UC7
+J --> UC8
+
+D --> UC9
+D --> UC10
+D --> UC11
+D --> UC13
+
+' Le visiteur n'est pas encore authentifié : c'est le seul acteur pour qui
+' S'authentifier est un but en soi, et non une inclusion.
+VIS --> AUTH
+
+' ==========================================
+' AUTHENTIFICATION : CONDITION DE TOUS LES CAS
+' ==========================================
+
+UC1 ..> AUTH : <<inclus>>
+UC2 ..> AUTH : <<inclus>>
+UC3 ..> AUTH : <<inclus>>
+UC4 ..> AUTH : <<inclus>>
+UC5 ..> AUTH : <<inclus>>
+UC6 ..> AUTH : <<inclus>>
+UC7 ..> AUTH : <<inclus>>
+UC8 ..> AUTH : <<inclus>>
+UC9 ..> AUTH : <<inclus>>
+UC10 ..> AUTH : <<inclus>>
+UC11 ..> AUTH : <<inclus>>
+UC12 ..> AUTH : <<inclus>>
+UC13 ..> AUTH : <<inclus>>
+
+' ==========================================
+' EXTENSION
+' ==========================================
+
+UC13 ..> UC10 : <<étend>>
+
+@enduml

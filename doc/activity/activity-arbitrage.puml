@@ -1,0 +1,96 @@
+@startuml activity-arbitrage
+' =============================================================================
+' Fake News Detector — Diagramme d'activité : arbitrage d'une enquête
+' Source de vérité : DirectorWorkflowService, InvestigationLifecycleService et
+' investigationStatusWorkflow (app/server/src/**).
+' =============================================================================
+
+skinparam shadowless true
+skinparam defaultFontName "Arial"
+skinparam ActivityBackgroundColor #FFFFFF
+skinparam ActivityBorderColor #4A5568
+skinparam ActivityDiamondBackgroundColor #FFFFFF
+skinparam ActivityDiamondBorderColor #4A5568
+skinparam ArrowColor #4A5568
+skinparam NoteBackgroundColor #FFFBEA
+skinparam NoteBorderColor #D69E2E
+
+title Fake News Detector — Arbitrage d'une enquête\npar le directeur de publication
+
+start
+
+:Consulter la liste des enquêtes
+en attente de validation;
+note right
+  Seules les enquêtes au statut
+  PENDING_REVIEW sont arbitrables.
+end note
+
+:Ouvrir le dossier et l'examiner
+(notes d'enquête, médias classés,
+preuves apportées par les vigies);
+
+if (Le directeur valide-t-il le dossier ?) then (non — renvoi)
+
+  :Saisir le motif du renvoi
+  (obligatoire);
+  :Journaliser la décision
+  (auteur, statut précédent, motif);
+
+  if (Compteur de tentatives sous le
+  garde-fou anti-abus ?) then (oui)
+    :Passer l'enquête en NEEDS_REVISION
+    et incrémenter le compteur;
+    :Notifier le journaliste
+    (notification de ton WARNING);
+    :Le dossier s'ouvre aux
+    contributions des vigies;
+    :Le journaliste corrige
+    et resoumet;
+    stop
+  else (non — garde-fou atteint)
+    :Passer l'enquête en CANCELED;
+    :Archiver le sujet éditorial et,
+    le cas échéant, le signalement;
+    :Libérer le créneau du journaliste
+    (sans point d'engagement);
+    :Notifier les parties prenantes;
+    :Enquête définitivement annulée;
+    stop
+  endif
+
+else (oui)
+
+  if (Verdict proposé = INVÉRIFIABLE ?) then (oui)
+    :Passer l'enquête en ARCHIVED;
+    :Journaliser la décision;
+    :Archiver le sujet éditorial et,
+    le cas échéant, le signalement;
+    :Libérer le créneau du journaliste
+    (+2 points d'engagement);
+    :Notifier les parties prenantes :
+    journaliste, vigies contributrices,
+    citoyen à l'origine du signalement;
+    :Enquête archivée, sans publication;
+    stop
+  else (non — VRAI / FAUX / TROMPEUR)
+    :Saisir la note éditoriale
+    (obligatoire) et attacher
+    les pièces vérifiées;
+    :Créer la publication officielle
+    et passer l'enquête en PUBLISHED;
+    :Journaliser la décision;
+    :Archiver le sujet éditorial et,
+    le cas échéant, le signalement;
+    :Libérer le créneau du journaliste
+    (+2 points d'engagement);
+    :Notifier le journaliste;
+    :Diffuser une notification
+    à chaque citoyen (par lots de 500);
+    :Publication officielle diffusée;
+    stop
+  endif
+
+endif
+
+@enduml

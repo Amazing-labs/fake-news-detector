@@ -1,0 +1,114 @@
+@startuml sequence-arbitrage
+autonumber
+
+actor "Directeur" as Directeur
+
+participant "Application" as App
+
+database "Base de données" as DB
+
+ref over Directeur, DB
+  **Préconditions**
+  S'authentifier — session valide, rôle DIRECTEUR DE PUBLICATION
+  Compte au statut ACTIF
+  Au moins une enquête au statut EN ATTENTE DE VALIDATION
+end ref
+
+== Le Directeur examine l'enquête ==
+
+Directeur -> App : Consulte les enquêtes en attente
+activate App
+App -> DB : Récupère les enquêtes à valider
+activate DB
+DB --> App : Liste des enquêtes
+deactivate DB
+App --> Directeur : Affiche les enquêtes
+deactivate App
+
+Directeur -> App : Ouvre une enquête
+activate App
+App -> DB : Récupère le dossier complet
+activate DB
+DB --> App : Notes d'enquête, médias classés, preuves des vigies
+deactivate DB
+App --> Directeur : Affiche le dossier complet
+deactivate App
+
+== Décision du Directeur ==
+
+alt Le Directeur valide le dossier
+
+  alt Verdict « Invérifiable »
+
+    Directeur -> App : Accepte l'archivage
+    activate App
+    App -> DB : Passe l'enquête au statut ARCHIVÉE
+    activate DB
+    DB --> App : Enquête archivée
+    deactivate DB
+    App -> DB : Journalise la décision\n(auteur, statut précédent, motif)
+    App -> DB : Archive le sujet éditorial\net le signalement d'origine
+    App -> DB : Libère le créneau du journaliste (+2 points)
+    App -> DB : Enregistre les notifications des parties prenantes
+    activate DB
+    DB --> App : Notifications enregistrées
+    deactivate DB
+    App --> Directeur : « Enquête archivée, sans publication »
+    deactivate App
+
+  else Verdict publiable (Vrai / Faux / Trompeur)
+
+    Directeur -> App : Saisit la note éditoriale\net attache les pièces vérifiées
+    activate App
+    App -> DB : Crée la publication officielle\net passe l'enquête au statut PUBLIÉE
+    activate DB
+    DB --> App : Publication créée
+    deactivate DB
+    App -> DB : Journalise la décision
+    App -> DB : Archive le sujet éditorial\net le signalement d'origine
+    App -> DB : Libère le créneau du journaliste (+2 points)
+    App -> DB : Enregistre la notification du journaliste
+    App -> DB : Diffuse une notification à chaque citoyen
+    activate DB
+    DB --> App : Notifications enregistrées
+    deactivate DB
+    App --> Directeur : « Publication validée et diffusée »
+    deactivate App
+
+  end
+
+else Le Directeur renvoie le dossier
+
+  Directeur -> App : Saisit le motif de renvoi (obligatoire)
+  activate App
+  App -> DB : Journalise la décision et incrémente\nle compteur de tentatives
+  activate DB
+  DB --> App : Décision enregistrée
+  deactivate DB
+
+  alt Nombre de tentatives < 3
+
+    App -> DB : Passe l'enquête au statut À CORRIGER
+    activate DB
+    DB --> App : Enquête renvoyée
+    deactivate DB
+    App -> DB : Enregistre la notification du journaliste
+    App --> Directeur : « Enquête renvoyée pour correction »
+
+  else Nombre maximum de tentatives atteint
+
+    App -> DB : Passe l'enquête au statut ANNULÉE
+    activate DB
+    DB --> App : Enquête annulée
+    deactivate DB
+    App -> DB : Archive le sujet éditorial\net le signalement d'origine
+    App -> DB : Libère le créneau du journaliste, sans point
+    App -> DB : Enregistre les notifications des parties prenantes
+    App --> Directeur : « Enquête définitivement annulée »
+
+  end
+  deactivate App
+
+end
+
+@enduml

@@ -8,11 +8,46 @@ Reference material for Fake News Detector. Start with the root
 | [`ddd-summary.md`](ddd-summary.md)     | The domain reference: aggregates, entities, invariants, lifecycles, enums, domain processes, and the role-based permission matrix. |
 | [`api.md`](api.md)                     | Every HTTP endpoint with its required permission.                                                                                  |
 | [`art-direction.md`](art-direction.md) | Visual identity, palette, and the list of screens to design.                                                                       |
-| [`class/`](class/)                     | Class diagrams (PlantUML) — domain model and relationships.                                                                        |
-| [`usecase/`](usecase/)                 | Use-case diagrams (PlantUML) — functionality by actor.                                                                             |
-| [`sequence/`](sequence/)               | Sequence diagrams (PlantUML) — interaction flows.                                                                                  |
-| [`erd/`](erd/)                         | Entity-relationship diagrams (PlantUML) — database schema.                                                                         |
+| [`usecase/`](usecase/)                 | Use-case diagram — what the platform lets each role do.                                                                            |
+| [`class/`](class/)                     | Class diagram — one responsibility per class.                                                                                      |
+| [`mpd/`](mpd/)                         | Merise physical data model — the real PostgreSQL tables, and why Merise is used for it.                                            |
+| [`sequence/`](sequence/)               | Sequence diagrams — the three chronological flows.                                                                                 |
+| [`activity/`](activity/)               | Activity diagram — the director's arbitration workflow, step by step.                                                              |
 
-Each UML directory ships a `*-simple` and a `*-full` variant. Render the
-`.puml` files with any PlantUML tool (e.g. the PlantUML VS Code extension or
-`plantuml file.puml`).
+## The diagram set
+
+One figure per family, each sized to stay legible on a printed A4 page. The
+alternate variants that used to sit beside them were removed: they duplicated
+this content at a size no printer could resolve.
+
+| Diagram                                                              | Purpose                                           | Render      | Print legibility |
+| -------------------------------------------------------------------- | ------------------------------------------------- | ----------- | ---------------- |
+| [`usecase-essentiel`](usecase/usecase-essentiel.puml)                | 13 use cases plus `S'authentifier`, by role.      | 994 × 1593  | ~5,3 pt          |
+| [`class-fonctionnel`](class/class-fonctionnel.puml)                  | 14 classes, one responsibility each.              | 1113 × 1613 | ~5,2 pt          |
+| [`mpd-essentiel`](mpd/mpd-essentiel.puml)                            | 10 PostgreSQL tables of the editorial circuit.    | 977 × 1416  | ~5,9 pt          |
+| [`sequence-signalement`](sequence/sequence-signalement.puml)         | A citizen files a report.                         | 668 × 673   | ~8,7 pt          |
+| [`sequence-prise-en-charge`](sequence/sequence-prise-en-charge.puml) | A journalist opens an investigation on a subject. | 610 × 749   | ~9,5 pt          |
+| [`sequence-arbitrage`](sequence/sequence-arbitrage.puml)             | The director arbitrates and publishes.            | 775 × 1838  | ~4,6 pt          |
+| [`activity-arbitrage`](activity/activity-arbitrage.puml)             | The same arbitration, as a workflow.              | 1012 × 984  | ~5,7 pt          |
+
+Legibility is the height of a 12 px glyph once the figure is scaled to a full A4
+portrait page (17 × 24,7 cm of usable area).
+
+## The three views describe one perimeter
+
+The use-case, class and MPD figures are deliberately cut to the same scope, so
+they can be read side by side:
+
+**14 use cases → 14 classes → 10 tables.** The gap between classes and tables is
+the flattened inheritance of `Acteur`: Citoyen, Vigie, Journaliste and Directeur
+share the single `actors` table, discriminated by its `role` column.
+
+Each family's `README.md` carries the coverage table proving that mapping in
+both directions, plus the text meant to be pasted next to the figure in the
+defense document.
+
+## Rendering
+
+Render the `.puml` files with any PlantUML tool (the VS Code extension, or
+`plantuml file.puml`). Generated `.png` / `.svg` files next to a `.puml` are
+build artifacts — regenerate them rather than editing them.
