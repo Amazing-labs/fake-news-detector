@@ -1,10 +1,10 @@
 # Diagrammes de séquence
 
-| Fichier | Contenu | Rendu | Lisibilité imprimée |
-| --- | --- | --- | --- |
-| [`sequence-signalement.puml`](sequence-signalement.puml) | Un citoyen signale un contenu suspect. | 668 × 673 | ~8,7 pt |
-| [`sequence-prise-en-charge.puml`](sequence-prise-en-charge.puml) | Un journaliste ouvre une enquête sur un sujet. | 610 × 749 | ~9,5 pt |
-| [`sequence-arbitrage.puml`](sequence-arbitrage.puml) | Le directeur arbitre, publie, renvoie ou annule. | 775 × 1838 | ~4,6 pt |
+| Fichier                                                          | Contenu                                          | Rendu      | Lisibilité imprimée |
+| ---------------------------------------------------------------- | ------------------------------------------------ | ---------- | ------------------- |
+| [`sequence-signalement.puml`](sequence-signalement.puml)         | Un citoyen signale un contenu suspect.           | 668 × 673  | ~8,7 pt             |
+| [`sequence-prise-en-charge.puml`](sequence-prise-en-charge.puml) | Un journaliste ouvre une enquête sur un sujet.   | 610 × 749  | ~9,5 pt             |
+| [`sequence-arbitrage.puml`](sequence-arbitrage.puml)             | Le directeur arbitre, publie, renvoie ou annule. | 775 × 1838 | ~4,6 pt             |
 
 ## Conventions
 

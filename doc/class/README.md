@@ -1,8 +1,8 @@
 # Diagrammes de classes
 
-| Fichier | Usage | Rendu | Lisibilité imprimée |
-| --- | --- | --- | --- |
-| [`class-fonctionnel.puml`](class-fonctionnel.puml) | La figure du document. 14 classes, une responsabilité par classe : le miroir exact des 14 cas d'utilisation. | 1113 × 1613 | ~5,2 pt sur A4 |
+| Fichier                                            | Usage                                                                                                        | Rendu       | Lisibilité imprimée |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ----------- | ------------------- |
+| [`class-fonctionnel.puml`](class-fonctionnel.puml) | La figure du document. 14 classes, une responsabilité par classe : le miroir exact des 14 cas d'utilisation. | 1113 × 1613 | ~5,2 pt sur A4      |
 
 Les variantes qui l'accompagnaient — `class-essentiel`, `class-simple`,
 `class-domain`, `class-services` — ont été retirées : elles redisaient ce
@@ -16,16 +16,16 @@ La lisibilité est calculée pour une figure occupant une page A4 portrait
 
 ## Conventions de lecture
 
-| Tracé | Sens |
-| --- | --- |
-| Triangle creux | Généralisation : la sous-classe est une spécialisation de la classe mère. |
-| Trait plein | Association : un lien durable entre deux entités, avec ses multiplicités. |
-| Trait plein à losange plein | Composition : la partie n'existe pas sans le tout et disparaît avec lui. |
-| Trait pointillé `«crée»` | L'acteur a le droit de faire naître l'entité, mais c'est l'entité qui porte la logique de sa propre création. |
-| Trait pointillé `«déclenche»` | L'acteur provoque un changement d'état sur une entité qui existe déjà. |
+| Tracé                         | Sens                                                                                                          |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Triangle creux                | Généralisation : la sous-classe est une spécialisation de la classe mère.                                     |
+| Trait plein                   | Association : un lien durable entre deux entités, avec ses multiplicités.                                     |
+| Trait plein à losange plein   | Composition : la partie n'existe pas sans le tout et disparaît avec lui.                                      |
+| Trait pointillé `«crée»`      | L'acteur a le droit de faire naître l'entité, mais c'est l'entité qui porte la logique de sa propre création. |
+| Trait pointillé `«déclenche»` | L'acteur provoque un changement d'état sur une entité qui existe déjà.                                        |
 
 Les deux stéréotypes en pointillé traduisent la règle « une classe, une
-responsabilité » : un citoyen *peut* signaler, mais il ne sait pas *comment* on
+responsabilité » : un citoyen _peut_ signaler, mais il ne sait pas _comment_ on
 crée un signalement — cette logique appartient à `Signalement`. L'acteur ne
 porte donc que ses droits (`peutSignaler()`, `peutArbitrer()`), et le pointillé
 désigne l'entité qui sait faire.
@@ -36,22 +36,22 @@ désigne l'entité qui sait faire.
 
 Les 14 cas du diagramme de cas d'utilisation, et les classes qui les portent.
 
-| Cas d'utilisation | Classes concernées |
-| --- | --- |
-| S'authentifier | `Acteur` : `statut`, `estActif()` |
-| Consulter les publications | `Acteur.consulterPublication()` → `Publication` |
-| Suivre ses notifications | `Acteur.suivreSesNotification()` → `Notification.marquerCommeLue()` |
-| Consulter son profil et son activité | `Acteur.consulterProfil()`, `scoreEngagement`, `scoreArbitrage` |
-| Signaler un contenu suspect | `Citoyen.peutSignaler()` `«crée»` `Signalement.deposer()` |
-| Suivre l'avancement de ses signalements | `Signalement.statut`, association *alimente* → `SujetBoiteReception.statut` |
-| Postuler au rôle de vigie | `Citoyen.peutPostulerVigie()` `«crée»` `CandidatureVigie.deposer()` |
-| Contribuer à une enquête | `Vigie.peutContribuer()` `«crée»` `Preuve.apporter()` |
-| Ouvrir une enquête sur un sujet | `Journaliste.peutMenerEnquete()`, `SujetBoiteReception.estDisponible()` / `marquerPrisEnCharge()`, `Enquete.ouvrirSurSujet()` / `enregistrerBrouillon()` |
-| Soumettre l'enquête à validation | `Journaliste` `«déclenche»` `Enquete.soumettrePourRevue()` |
-| Arbitrer une enquête | `Directeur.peutArbitrer()` `«déclenche»` `Enquete.approuver()` / `demanderRevision()` / `archiver()` / `annuler()`, `JournalAudit.enregistrer()`, `Publication.publier()` |
-| Publier un démenti | `Directeur` `«crée»` `Rectification.rectifier()`, `Publication.estCorrection`, `Notification` *porte* la rectification |
-| Gérer la boîte à sujets | `Directeur` `«crée, déclenche»` `SujetBoiteReception.ouvrirParDirecteur()` / `supprimerSujet()` / `archiver()` |
-| Gérer les utilisateurs | `Acteur.gererUtilisateurs()`, `Directeur` `«déclenche»` `Acteur`, `CandidatureVigie.approuver()` / `rejeter()` |
+| Cas d'utilisation                       | Classes concernées                                                                                                                                                        |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| S'authentifier                          | `Acteur` : `statut`, `estActif()`                                                                                                                                         |
+| Consulter les publications              | `Acteur.consulterPublication()` → `Publication`                                                                                                                           |
+| Suivre ses notifications                | `Acteur.suivreSesNotification()` → `Notification.marquerCommeLue()`                                                                                                       |
+| Consulter son profil et son activité    | `Acteur.consulterProfil()`, `scoreEngagement`, `scoreArbitrage`                                                                                                           |
+| Signaler un contenu suspect             | `Citoyen.peutSignaler()` `«crée»` `Signalement.deposer()`                                                                                                                 |
+| Suivre l'avancement de ses signalements | `Signalement.statut`, association _alimente_ → `SujetBoiteReception.statut`                                                                                               |
+| Postuler au rôle de vigie               | `Citoyen.peutPostulerVigie()` `«crée»` `CandidatureVigie.deposer()`                                                                                                       |
+| Contribuer à une enquête                | `Vigie.peutContribuer()` `«crée»` `Preuve.apporter()`                                                                                                                     |
+| Ouvrir une enquête sur un sujet         | `Journaliste.peutMenerEnquete()`, `SujetBoiteReception.estDisponible()` / `marquerPrisEnCharge()`, `Enquete.ouvrirSurSujet()` / `enregistrerBrouillon()`                  |
+| Soumettre l'enquête à validation        | `Journaliste` `«déclenche»` `Enquete.soumettrePourRevue()`                                                                                                                |
+| Arbitrer une enquête                    | `Directeur.peutArbitrer()` `«déclenche»` `Enquete.approuver()` / `demanderRevision()` / `archiver()` / `annuler()`, `JournalAudit.enregistrer()`, `Publication.publier()` |
+| Publier un démenti                      | `Directeur` `«crée»` `Rectification.rectifier()`, `Publication.estCorrection`, `Notification` _porte_ la rectification                                                    |
+| Gérer la boîte à sujets                 | `Directeur` `«crée, déclenche»` `SujetBoiteReception.ouvrirParDirecteur()` / `supprimerSujet()` / `archiver()`                                                            |
+| Gérer les utilisateurs                  | `Acteur.gererUtilisateurs()`, `Directeur` `«déclenche»` `Acteur`, `CandidatureVigie.approuver()` / `rejeter()`                                                            |
 
 ---
 

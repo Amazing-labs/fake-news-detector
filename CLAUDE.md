@@ -57,7 +57,7 @@ bun run sweep             # dry-run orphaned-media reconciliation; --apply to ex
 `.github/workflows/ci.yml` runs, per app: ESLint, `tsc --noEmit`, Prettier check,
 build, plus Prisma generate/validate and the domain tests on the server side. A
 separate `safets doctor --fail-on-new` job compares runtime-safety findings
-against `.safets-baseline.json` — it fails on *new* findings only, so the two
+against `.safets-baseline.json` — it fails on _new_ findings only, so the two
 pre-existing entries in that baseline are expected. `ddd-review.yml` runs a
 multi-agent DDD review when a PR is opened.
 
@@ -74,7 +74,7 @@ shared/          constants, env, errors, types
 ```
 
 Dependencies point inward. `domain/` imports neither Hono nor Prisma nor
-anything from `infrastructure/`; it declares repository *interfaces* that
+anything from `infrastructure/`; it declares repository _interfaces_ that
 `infrastructure/repositories/persistence/Prisma*Repository.ts` implement.
 
 **`interfaces/createAppDependencies.ts` is the single wiring point.** All

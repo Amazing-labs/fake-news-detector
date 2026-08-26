@@ -1,8 +1,8 @@
 # Modèle Physique de Données (Merise)
 
-| Fichier | Contenu | Rendu | Lisibilité imprimée |
-| --- | --- | --- | --- |
-| [`mpd-essentiel.puml`](mpd-essentiel.puml) | La figure du document. Les 10 tables du circuit éditorial. Aucune note dans le dessin. | 977 × 1416 | ~5,9 pt sur A4 |
+| Fichier                                    | Contenu                                                                                | Rendu      | Lisibilité imprimée |
+| ------------------------------------------ | -------------------------------------------------------------------------------------- | ---------- | ------------------- |
+| [`mpd-essentiel.puml`](mpd-essentiel.puml) | La figure du document. Les 10 tables du circuit éditorial. Aucune note dans le dessin. | 977 × 1416 | ~5,9 pt sur A4      |
 
 La variante `mpd-simple`, qui dessinait les 22 tables du schéma, a été retirée :
 à environ 2 pt elle n'était lisible sur aucune impression. Son historique reste
@@ -26,12 +26,12 @@ souhaité. Notation : clé primaire soulignée, clé étrangère préfixée par 
 La figure ne porte plus de note, pour rester lisible une fois imprimée. Ce qui
 suit tient sa place.
 
-| Notation | Sens |
-| --- | --- |
-| <u>souligné</u> | Clé primaire. |
-| `#` | Clé étrangère. |
-| `(O)` | Colonne facultative, NULL autorisé. |
-| `(U)` | Contrainte d'unicité. |
+| Notation                  | Sens                                               |
+| ------------------------- | -------------------------------------------------- |
+| <u>souligné</u>           | Clé primaire.                                      |
+| `#`                       | Clé étrangère.                                     |
+| `(O)`                     | Colonne facultative, NULL autorisé.                |
+| `(U)`                     | Contrainte d'unicité.                              |
 | Capitales sans guillemets | Type ENUM natif PostgreSQL (`Role`, `Verdict`, …). |
 
 Chaque table porte en plus `createdAt` et, sauf le journal d'audit qui est
@@ -55,22 +55,22 @@ d'utilisation propre. Le schéma complet fait foi :
 
 Les 14 cas du diagramme de cas d'utilisation, et les tables qui les portent.
 
-| Cas d'utilisation | Tables concernées |
-| --- | --- |
-| S'authentifier | `actors` (`status`) — via les tables d'authentification, hors périmètre |
-| Consulter les publications | `publications`, `Correction` |
-| Suivre ses notifications | `notifications` (`isRead`) |
-| Consulter son profil et son activité | `actors` (`engagementScore`), `workflow_audits` |
-| Signaler un contenu suspect | `reports` |
-| Suivre l'avancement de ses signalements | `reports` (`status`), `inbox_subjects` (`status`) |
-| Postuler au rôle de vigie | `watcher_applications` |
-| Contribuer à une enquête | `evidence` |
-| Ouvrir une enquête sur un sujet | `inbox_subjects`, `investigations` |
-| Soumettre l'enquête à validation | `investigations` (`status`) |
-| Arbitrer une enquête | `investigations` (`status`, `attemptCount`), `workflow_audits`, `publications` |
-| Publier un démenti | `Correction`, `publications` (`isCorrection`), `notifications` |
-| Gérer la boîte à sujets | `inbox_subjects` (`origin`, `status`) |
-| Gérer les utilisateurs | `actors` (`status`), `watcher_applications` (`status`) |
+| Cas d'utilisation                       | Tables concernées                                                              |
+| --------------------------------------- | ------------------------------------------------------------------------------ |
+| S'authentifier                          | `actors` (`status`) — via les tables d'authentification, hors périmètre        |
+| Consulter les publications              | `publications`, `Correction`                                                   |
+| Suivre ses notifications                | `notifications` (`isRead`)                                                     |
+| Consulter son profil et son activité    | `actors` (`engagementScore`), `workflow_audits`                                |
+| Signaler un contenu suspect             | `reports`                                                                      |
+| Suivre l'avancement de ses signalements | `reports` (`status`), `inbox_subjects` (`status`)                              |
+| Postuler au rôle de vigie               | `watcher_applications`                                                         |
+| Contribuer à une enquête                | `evidence`                                                                     |
+| Ouvrir une enquête sur un sujet         | `inbox_subjects`, `investigations`                                             |
+| Soumettre l'enquête à validation        | `investigations` (`status`)                                                    |
+| Arbitrer une enquête                    | `investigations` (`status`, `attemptCount`), `workflow_audits`, `publications` |
+| Publier un démenti                      | `Correction`, `publications` (`isCorrection`), `notifications`                 |
+| Gérer la boîte à sujets                 | `inbox_subjects` (`origin`, `status`)                                          |
+| Gérer les utilisateurs                  | `actors` (`status`), `watcher_applications` (`status`)                         |
 
 Le cadrage est strict, dans les deux sens : toute table présente porte au moins
 un cas d'utilisation, et tout cas d'utilisation trouve au moins une table.
@@ -90,8 +90,8 @@ modèle **relationnel** : des tables, des colonnes typées, des clés et des
 contraintes. Les deux ne parlent pas de la même chose, et le passage de l'un à
 l'autre n'est pas une traduction mécanique.
 
-UML n'interdit pas ce passage : des profils existent — le *UML Data Modeling
-Profile*, l'*Information Management Metamodel* de l'OMG — et tout ORM en réalise
+UML n'interdit pas ce passage : des profils existent — le _UML Data Modeling
+Profile_, l'_Information Management Metamodel_ de l'OMG — et tout ORM en réalise
 une version au quotidien. Mais aucune de ces voies n'est **normative**. Le
 standard UML ne désigne aucune transformation unique vers le relationnel, et il
 laisse surtout ouvertes les décisions qui déterminent le schéma final. Trois

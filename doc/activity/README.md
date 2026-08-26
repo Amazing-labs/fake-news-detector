@@ -1,6 +1,6 @@
 # Diagrammes d'activité
 
-| Fichier                                              | Contenu                                                | Rendu      | Lisibilité imprimée |
+| Fichier                                              | Contenu                                                  | Rendu      | Lisibilité imprimée |
 | ---------------------------------------------------- | -------------------------------------------------------- | ---------- | ------------------- |
 | [`activity-arbitrage.puml`](activity-arbitrage.puml) | Arbitrage d'une enquête par le directeur de publication. | 1012 × 984 | ~6 pt sur 17 cm     |
 
