@@ -1,133 +1,192 @@
-@startuml
-top to bottom direction
+@startuml usecase-simple
+' =============================================================================
+' Fake News Detector — Cas d'utilisation (vue simplifiée)
+'
+' Même couverture fonctionnelle que usecase-full, mais regroupée : 16 cas au
+' lieu de 38. Rien n'est retiré, tout est agrégé — la note « Ce que recouvre
+' chaque cas » donne la décomposition complète.
+' Source de vérité : doc/api.md croisé avec la matrice de permissions.
+' =============================================================================
+
+left to right direction
+skinparam shadowless true
+skinparam defaultFontName "Arial"
 skinparam actorStyle awesome
-skinparam rectangle {
-  BorderColor #DarkGray
-  BackgroundColor #LightGray
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #4A5568
+}
+
+title Fake News Detector — Cas d'utilisation\nCe que la plateforme permet de faire, par rôle
+
+' ==========================================
+' ACTEURS
+' ==========================================
+
+actor "Citoyen Vigie" as V
+actor "Citoyen" as C
+actor "Journaliste" as J
+actor "Directeur\nPublication" as D
+actor "Utilisateur" as U
+
+V --|> C
+C --|> U
+J --|> U
+D --|> U
+
+rectangle "Application de Fact-Checking" {
+
+  ' ---------- SOCLE COMMUN ----------
+  usecase "Consulter le fil éditorial" as UC1
+  usecase "Suivre ses notifications" as UC2
+  usecase "Consulter son profil\net son activité" as UC3
+
+  ' ---------- CITOYEN ----------
+  usecase "Signaler un contenu suspect" as UC4
+  usecase "Devenir vigie" as UC5
+
+  ' ---------- VIGIE ----------
+  usecase "Contribuer une preuve\nà une enquête" as UC6
+
+  ' ---------- JOURNALISTE ----------
+  usecase "Prendre en charge un sujet" as UC7
+  usecase "Instruire l'enquête" as UC8
+  usecase "Soumettre l'enquête\nà validation" as UC9
+
+  ' ---------- DIRECTEUR ----------
+  usecase "Alimenter le fil éditorial" as UC10
+  usecase "Arbitrer une enquête" as UC11
+  usecase "Publier une rectification" as UC12
+  usecase "Traiter les candidatures\nvigie" as UC13
+  usecase "Suivre l'activité\nde la rédaction" as UC14
+  usecase "Administrer la plateforme" as UC15
+
+  ' ---------- AUTHENTIFICATION ----------
+  usecase "S'authentifier" as AUTH
 }
 
 ' ==========================================
-' ACTORS
-' ==========================================
-actor "Citizen" as Citizen
-actor "Journalist" as Journalist  
-actor "Director" as Director
-
-' ==========================================
-' SYSTEM
-' ==========================================
-rectangle "Fact-Checking Platform" {
-  
-  ' ---------- AUTHENTICATION ----------
-  (Authenticate) as Auth
-  
-  ' ---------- CITIZEN ----------
-  package "Citizen Features" {
-    (Submit Report) as SubmitReport
-    (View Profile) as ViewProfile
-    (Apply for Watcher) as ApplyWatcher
-    (View Notifications) as ViewNotifications
-    (View Inbox) as ViewInbox
-  }
-
-  ' ---------- WATCHER (citizen subtype) ----------
-  package "Watcher Features" {
-    (Submit Evidence) as SubmitEvidence
-    (View Investigations) as ViewInvestigations
-  }
-
-  ' ---------- JOURNALIST ----------
-  package "Journalist Features" {
-    (Pick Inbox Subject) as PickSubject
-    (Write Investigation) as WriteInvestigation
-    (Submit for Review) as SubmitForReview
-    (Correct Investigation) as CorrectInvestigation
-  }
-
-  ' ---------- DIRECTOR ----------
-  package "Director Features" {
-    (Validate Investigation) as ValidateInvestigation
-    (Reject Investigation) as RejectInvestigation
-    (Archive Unverifiable) as ArchiveUnverifiable
-    (Cancel Investigation) as CancelInvestigation
-    (Publish Analysis) as PublishAnalysis
-    (Publish Correction) as PublishCorrection
-    (Manage Users) as ManageUsers
-    (Manage Watchers) as ManageWatchers
-    (Manage Inbox Subjects) as ManageInbox
-    (View Dashboard) as ViewDashboard
-  }
-}
-
-' ==========================================
-' RELATIONS
+' ASSOCIATIONS
 ' ==========================================
 
-' Required authentication
-SubmitReport ..> Auth : <<include>>
-ViewProfile ..> Auth : <<include>>
-ApplyWatcher ..> Auth : <<include>>
-ViewNotifications ..> Auth : <<include>>
-ViewInbox ..> Auth : <<include>>
-SubmitEvidence ..> Auth : <<include>>
-ViewInvestigations ..> Auth : <<include>>
+U --> AUTH
+U --> UC1
+U --> UC2
+U --> UC3
 
-PickSubject ..> Auth : <<include>>
-WriteInvestigation ..> Auth : <<include>>
-SubmitForReview ..> Auth : <<include>>
-CorrectInvestigation ..> Auth : <<include>>
+C --> UC4
+C --> UC5
 
-ValidateInvestigation ..> Auth : <<include>>
-RejectInvestigation ..> Auth : <<include>>
-ArchiveUnverifiable ..> Auth : <<include>>
-CancelInvestigation ..> Auth : <<include>>
-PublishAnalysis ..> Auth : <<include>>
-PublishCorrection ..> Auth : <<include>>
-ManageUsers ..> Auth : <<include>>
-ManageWatchers ..> Auth : <<include>>
-ManageInbox ..> Auth : <<include>>
-ViewDashboard ..> Auth : <<include>>
+V --> UC6
 
-' Citizen associations
-Citizen --> SubmitReport
-Citizen --> ViewProfile
-Citizen --> ApplyWatcher
-Citizen --> ViewNotifications
-Citizen --> ViewInbox
+J --> UC7
+J --> UC8
+J --> UC9
 
-' Watcher associations (citizen subtype)
-Citizen --> SubmitEvidence
-Citizen --> ViewInvestigations
+D --> UC10
+D --> UC11
+D --> UC12
+D --> UC13
+D --> UC14
+D --> UC15
 
-' Journalist associations
-Journalist --> PickSubject
-Journalist --> WriteInvestigation
-Journalist --> SubmitForReview
-Journalist --> CorrectInvestigation
+' ==========================================
+' INCLUSION DE L'AUTHENTIFICATION
+' ==========================================
 
-' Director associations
-Director --> ValidateInvestigation
-Director --> RejectInvestigation
-Director --> ArchiveUnverifiable
-Director --> CancelInvestigation
-Director --> PublishAnalysis
-Director --> PublishCorrection
-Director --> ManageUsers
-Director --> ManageWatchers
-Director --> ManageInbox
-Director --> ViewDashboard
+UC1 ..> AUTH : <<inclus>>
+UC2 ..> AUTH : <<inclus>>
+UC3 ..> AUTH : <<inclus>>
+UC4 ..> AUTH : <<inclus>>
+UC5 ..> AUTH : <<inclus>>
+UC6 ..> AUTH : <<inclus>>
+UC7 ..> AUTH : <<inclus>>
+UC8 ..> AUTH : <<inclus>>
+UC9 ..> AUTH : <<inclus>>
+UC10 ..> AUTH : <<inclus>>
+UC11 ..> AUTH : <<inclus>>
+UC12 ..> AUTH : <<inclus>>
+UC13 ..> AUTH : <<inclus>>
+UC14 ..> AUTH : <<inclus>>
+UC15 ..> AUTH : <<inclus>>
 
-' Functional dependencies
-WriteInvestigation ..> PickSubject : <<include>>
-SubmitForReview ..> WriteInvestigation : <<include>>
-CorrectInvestigation ..> SubmitForReview : <<extend>>
+' ==========================================
+' DEPENDANCES METIER
+' ==========================================
 
-ValidateInvestigation ..> SubmitForReview : <<include>>
-RejectInvestigation ..> SubmitForReview : <<extend>>
-PublishAnalysis ..> ValidateInvestigation : <<include>>
-ArchiveUnverifiable ..> SubmitForReview : <<extend>>
-CancelInvestigation ..> WriteInvestigation : <<extend>>
+UC8 ..> UC7 : <<inclus>>
+UC9 ..> UC8 : <<inclus>>
+UC11 ..> UC9 : <<inclus>>
+UC12 ..> UC11 : <<étend>>
+UC6 ..> UC11 : <<étend>>
 
-SubmitEvidence ..> ViewInvestigations : <<include>>
+' ==========================================
+' COUVERTURE : RIEN N'EST MASQUE
+' ==========================================
+
+note as NC
+  **Ce que recouvre chaque cas d'utilisation**
+  Les 16 cas ci-contre agrègent les 38 opérations exposées par l'API.
+  ==
+  **Consulter le fil éditorial** — signalements, sujets éditoriaux, enquêtes,
+  publications, rectifications d'une publication.
+  **Suivre ses notifications** — consulter, marquer une notification comme lue,
+  tout marquer comme lu.
+  **Consulter son profil et son activité** — profil, contributions, indicateurs
+  personnels selon le rôle.
+  --
+  **Signaler un contenu suspect** — dépôt du signalement et de ses médias
+  (3 signalements ouverts au maximum).
+  **Devenir vigie** — dépôt d'une candidature motivée.
+  **Contribuer une preuve à une enquête** — preuve écrite et médias associés.
+  --
+  **Prendre en charge un sujet** — consulter la boîte de réception éditoriale
+  et les signalements ouverts, puis ouvrir l'enquête sur un sujet.
+  **Instruire l'enquête** — rédiger le brouillon (catégorie, verdict, notes),
+  classer les médias sources, classer les médias de preuve vigie, ajouter des
+  preuves journalistiques, corriger après une demande de révision.
+  **Soumettre l'enquête à validation** — envoi en revue directeur.
+  --
+  **Alimenter le fil éditorial** — créer un sujet d'origine directeur,
+  supprimer un sujet (médias du bucket compris).
+  **Arbitrer une enquête** — approuver et publier, renvoyer en révision,
+  archiver un dossier invérifiable, annuler.
+  **Publier une rectification** — correctif signé sur une publication existante.
+  **Traiter les candidatures vigie** — consulter, approuver, rejeter.
+  **Suivre l'activité de la rédaction** — tableau de bord directeur,
+  historique de ses propres décisions.
+  **Administrer la plateforme** — créer un compte journaliste ; bannir,
+  désactiver ou réactiver un journaliste ou un citoyen ; purger les médias
+  orphelins du stockage.
+end note
+
+' ==========================================
+' REGLES D'ACCES
+' ==========================================
+
+note bottom of U
+  Hormis la sonde technique `GET /health`, tout cas d'utilisation
+  exige une session better-auth valide. Les rôles sont donc des
+  spécialisations d'un utilisateur déjà authentifié.
+end note
+
+note bottom of V
+  La vigie est un citoyen promu (typeCitoyen = WATCHER) après
+  candidature approuvée par un directeur. Elle conserve tous
+  les cas d'utilisation du citoyen.
+end note
+
+note bottom of UC6
+  Contribution possible uniquement sur une enquête
+  renvoyée en révision.
+end note
+
+note bottom of UC11
+  Publication réservée aux verdicts TRUE, FALSE ou MISLEADING.
+  Un verdict UNVERIFIABLE ne se publie pas : il est archivé.
+  L'arbitrage exige au préalable que tous les médias sources
+  aient été classés par le journaliste.
+end note
 
 @enduml

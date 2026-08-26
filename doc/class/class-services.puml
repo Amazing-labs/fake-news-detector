@@ -1,0 +1,297 @@
+@startuml class-services
+' =============================================================================
+' Fake News Detector — Vue applicative (cas d'usage exposés)
+' Ce que le système sait FAIRE, et par qui.
+' Source de vérité : app/server/src/application/services/**
+' =============================================================================
+
+title Fake News Detector — Vue applicative\nLes cas d'usage offerts par la plateforme
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundCorner 8
+skinparam linetype ortho
+skinparam nodesep 40
+skinparam ranksep 50
+hide circle
+
+skinparam class {
+  BorderColor #4A5568
+  BackgroundColor #FFFFFF
+  ArrowColor #4A5568
+  StereotypeFontColor #6B46C1
+}
+skinparam package {
+  BorderColor #A0AEC0
+  FontStyle bold
+  FontSize 14
+}
+skinparam note {
+  BackgroundColor #FFFBEA
+  BorderColor #D69E2E
+  FontSize 11
+}
+
+' =============================================================================
+' Entrée : le web parle au serveur en HTTP, jamais au domaine directement
+' =============================================================================
+package "Interface HTTP (Hono + OpenAPI)" #EDF2F7 {
+  class "Controllers" as Controllers <<frontière>> {
+    ReportController
+    InboxSubjectController
+    InvestigationController
+    PublicationController
+    NotificationController
+    WatcherApplicationController
+    DirectorController
+    JournalistManagementController
+    MediaController · MeController · DashboardController
+    --
+    Valident les entrées (Zod) puis délèguent.
+    Aucune règle métier ici.
+  }
+
+  class SecurityService <<transverse>> {
+    + authenticate(headers) : AuthenticationResult
+    + hasPermission(role, permission) : boolean
+    + assertAccess(role, permission) : void
+  }
+}
+
+' =============================================================================
+' Écriture : la façade et ses quatre services de workflow
+' =============================================================================
+package "Application — écriture (commandes)" #FFF5F5 {
+
+  class FactCheckingService <<façade>> {
+    -- Citoyen --
+    + submitReport(input) : string
+    + submitWatcherApplication(citizenId, motivation) : string
+    + submitWatcherEvidence(input) : string
+    -- Journaliste --
+    + pickInboxSubject(journalistId, inboxSubjectId)
+    + updateInvestigationDraft(...)
+    + updateInvestigationSourceMediaItem(...)
+    + updateWatcherEvidenceMediaItem(...)
+    + addJournalistProofMedia(...)
+    + submitInvestigationForReview(...)
+    -- Directeur --
+    + createDirectorInboxSubject(...)
+    + approveInvestigation(...)
+    + rejectInvestigation(...)
+    + archiveUnverifiableInvestigation(...)
+    + cancelInvestigation(...)
+    + deleteInboxSubjectByDirector(...)
+    + publishCorrection(...)
+    + approveWatcherApplication(...)
+    + rejectWatcherApplication(...)
+  }
+
+  class CitizenWorkflowService <<cas d'usage>> {
+    + submitReport(input) : string
+    + submitWatcherApplication(citizenId, motivation) : string
+    + submitWatcherEvidence(input) : string
+  }
+
+  class JournalistWorkflowService <<cas d'usage>> {
+    + pickInboxSubject(...)
+    + updateInvestigationDraft(...)
+    + updateInvestigationSourceMediaItem(...)
+    + updateWatcherEvidenceMediaItem(...)
+    + addJournalistProofMedia(...)
+    + submitInvestigationForReview(...)
+  }
+
+  class DirectorWorkflowService <<cas d'usage>> {
+    + createDirectorInboxSubject(...)
+    + approveInvestigation(...)
+    + rejectInvestigation(...)
+    + archiveUnverifiableInvestigation(...)
+    + cancelInvestigation(...)
+    + deleteInboxSubjectByDirector(...)
+    + approveWatcherApplication(...)
+    + rejectWatcherApplication(...)
+    + purgeBucketMedia(mediaUrls)
+  }
+
+  class CorrectionWorkflowService <<cas d'usage>> {
+    + publishCorrection(...)
+  }
+
+  class InvestigationLifecycleService <<effets de bord>> {
+    + closeReportAndLinkedInboxAfterInvestigation(...)
+    + finalizeJournalistInvestigationSlot(...)
+    + notifyJournalistAboutPublication(...)
+    + broadcastPublicationToCitizens(publicationId)
+    + notifyArchiveAccepted(...)
+    + handleCancellationSideEffects(...)
+  }
+
+  class ActorManagementService <<cas d'usage>> {
+    + listJournalists() / listCitizens()
+    + createJournalist(...)
+    + banJournalist / disableJournalist / activateJournalist
+    + banCitizen / disableCitizen / activateCitizen
+  }
+
+  class StorageMaintenanceService <<maintenance>> {
+    + sweepOrphans(...)
+    --
+    Supprime du bucket les fichiers
+    qui ne sont plus référencés.
+  }
+}
+
+' =============================================================================
+' Lecture : services de consultation, séparés de l'écriture
+' =============================================================================
+package "Application — lecture (requêtes)" #F0FFF4 {
+
+  class FactCheckingQueryService <<lecture>> {
+    -- Listes filtrées par rôle du lecteur --
+    + listReportsForReader(...) / listOpenReportsInbox()
+    + listInboxSubjects(...) / listInvestigationsForReader(...)
+    + listPublications(scope) / listWatcherApplications()
+    + listDirectorDecisionsEnriched(...)
+    + listContributionsForWatcherEnriched(...)
+    -- Détails enrichis (jointures d'affichage) --
+    + getReportForReaderEnriched(...) / getInboxSubjectEnriched(...)
+    + getInvestigationForReaderEnriched(...) / getPublicationEnriched(...)
+    + getInvestigationSourceMediaForReaderEnriched(...)
+    + getInvestigationEvidenceForReaderEnriched(...)
+    + getPublicationDossier(...) / getPublicationCorrections(...)
+    + getInboxSubjectMedia(...) / getReportMediaForReader(...)
+    -- Tableaux de bord --
+    + getDirectorDashboard() : DirectorDashboardData
+    + getActorMetrics(reader) : ActorMetrics
+  }
+
+  class NotificationService <<lecture>> {
+    + listForActor(actorId, ...)
+    + markAsRead(actorId, notificationId)
+    + markAllAsRead(actorId)
+  }
+}
+
+' =============================================================================
+' Domaine et persistance
+' =============================================================================
+package "Domaine (règles métier pures)" #EBF4FF {
+  class "Entités & agrégats" as DomainEntities <<domaine>> {
+    Citizen · Journalist · Director
+    Report · InboxSubject · Investigation
+    Evidence · Publication · Correction
+    Notification · WatcherApplication
+    WorkflowAudit · AuthoritySource
+  }
+
+  class "Processus de domaine" as DomainProcesses <<processus>> {
+    -- investigationStatusWorkflow --
+    submitInvestigationForReviewWithAudit()
+    directorApproveInvestigationWithAudit()
+    directorRejectInvestigationWithAudit()
+    directorAcceptUnverifiableArchiveWithAudit()
+    directorCancelInvestigationWithAudit()
+    -- investigationReviewReadiness --
+    assertInvestigationReadyForDirectorReview()
+    assertWatcherEvidenceMediaCompleteForReview()
+    -- investigationMediaCopy --
+    copySourceMediaToInvestigationMedia()
+  }
+}
+
+package "Infrastructure" #F7FAFC {
+  class "Repositories (interfaces I*Repository)" as Repositories <<contrat>> {
+    ICitizenRepository · IJournalistRepository · IDirectorRepository
+    IReportRepository · IInboxSubjectRepository
+    IInvestigationRepository · IEvidenceRepository
+    IPublicationRepository · ICorrectionRepository
+    INotificationRepository · IWatcherApplicationRepository
+    IWorkflowAuditRepository · IAuthoritySourceRepository
+    I*MediaRepository · IReferencedMediaRepository
+    --
+    Implémentés par Prisma (PostgreSQL).
+  }
+
+  class "Adaptateurs" as Adapters <<contrat>> {
+    IMediaStorage → Supabase Storage
+    IEmailService → EmailAdapter
+    IDomainEventPublisher → événements de domaine
+  }
+}
+
+' =============================================================================
+' Dépendances (toujours vers l'intérieur : jamais le domaine vers l'extérieur)
+' =============================================================================
+Controllers ..> SecurityService : contrôle d'accès\npar permission
+Controllers ..> FactCheckingService : commandes
+Controllers ..> ActorManagementService : commandes
+Controllers ..> FactCheckingQueryService : requêtes
+Controllers ..> NotificationService : requêtes
+
+FactCheckingService *-- CitizenWorkflowService
+FactCheckingService *-- JournalistWorkflowService
+FactCheckingService *-- DirectorWorkflowService
+FactCheckingService *-- CorrectionWorkflowService
+
+DirectorWorkflowService ..> InvestigationLifecycleService : effets de bord\n(clôture, notifications)
+CorrectionWorkflowService ..> InvestigationLifecycleService
+
+CitizenWorkflowService ..> DomainEntities
+JournalistWorkflowService ..> DomainProcesses
+DirectorWorkflowService ..> DomainProcesses
+DomainProcesses ..> DomainEntities : orchestre\n+ journalise (WorkflowAudit)
+
+CitizenWorkflowService ..> Repositories
+JournalistWorkflowService ..> Repositories
+DirectorWorkflowService ..> Repositories
+CorrectionWorkflowService ..> Repositories
+InvestigationLifecycleService ..> Repositories
+ActorManagementService ..> Repositories
+FactCheckingQueryService ..> Repositories
+NotificationService ..> Repositories
+StorageMaintenanceService ..> Repositories
+
+DirectorWorkflowService ..> Adapters : suppression\ndes médias
+StorageMaintenanceService ..> Adapters
+Repositories ..> DomainEntities : reconstitue
+
+note right of FactCheckingService
+  **Pourquoi une façade ?**
+  Un point d'entrée unique pour toutes les écritures,
+  mais la logique reste répartie par rôle dans quatre
+  services dédiés — on évite ainsi le « service à tout
+  faire ». Chaque commande s'exécute dans une
+  **transaction** (`createTransactionalFactCheckingService`) :
+  soit tout réussit, soit rien n'est écrit.
+end note
+
+note bottom of DomainProcesses
+  **Le point de passage obligé**
+  Tout changement de statut d'une enquête passe par ces
+  fonctions : elles appliquent la règle métier **et** écrivent
+  la ligne d'audit correspondante. Appeler la méthode de
+  l'entité directement contournerait la traçabilité.
+end note
+
+note bottom of FactCheckingQueryService
+  **Lecture contextuelle**
+  Chaque requête reçoit le rôle du lecteur (`ReaderContext`)
+  et ne renvoie que ce qu'il a le droit de voir : un citoyen
+  ne voit pas les brouillons d'enquête, une vigie ne voit que
+  les dossiers ouverts à contribution (statut NEEDS_REVISION).
+end note
+
+legend bottom
+  |= Symbole |= Lecture métier |
+  | <<façade>> | Guichet unique des actions qui modifient les données |
+  | <<cas d'usage>> | Un métier = un service : citoyen, journaliste, directeur |
+  | <<processus>> | Règle de transition partagée, avec journal d'audit |
+  | <<contrat>> | Interface : le métier ignore la technologie derrière |
+  | Trait à losange plein | **Composition** : la façade est composée de ces services |
+  | Trait pointillé | **Dépendance** : utilise, sans posséder |
+endlegend
+
+@enduml

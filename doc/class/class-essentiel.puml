@@ -1,0 +1,154 @@
+@startuml class-essentiel
+' =============================================================================
+' Fake News Detector — Circuit principal (vue resserrée, format imprimable)
+' Variante condensée de la vue métier : seules les classes et les opérations
+' du parcours « alerte citoyenne -> verdict publié » sont conservées.
+' Version à jour du code : app/server/src/domain/** + schéma Prisma.
+' =============================================================================
+
+skinparam shadowless true
+skinparam defaultFontName "Arial"
+skinparam RoundCorner 10
+skinparam classAttributeIconSize 0
+hide circle
+
+title Fake News Detector — Circuit principal\nDe l'alerte citoyenne au verdict publié
+
+' ==========================================
+' ACTEURS
+' ==========================================
+
+abstract class Acteur {
+  # id : string
+  # nom : string
+  # role : Role
+  # statut : StatutCompte
+  --
+  + estActif() : boolean
+}
+
+class Citoyen {
+  - typeCitoyen : TypeCitoyen
+  - nombreSignalementsOuverts : int
+  --
+  + peutSignaler() : boolean
+  + peutSoumettrePreuve() : boolean
+  + soumettreSignalement(theme, titre, contenu) : Signalement
+  + soumettrePreuve(enqueteId, titre, contenu) : Preuve
+}
+
+class Journaliste {
+  - nombreEnquetesActives : int
+  --
+  + peutMenerEnquete() : boolean
+  + prendreSujet(sujet) : Enquete
+  + enregistrerBrouillon(enquete, categorie, verdict, notes) : void
+  + soumettrePourRevue(enquete) : void
+}
+
+class Directeur {
+  --
+  + creerSujet(theme, description) : SujetBoiteReception
+  + publierEnquete(enquete) : void
+  + rejeterEnquete(enquete) : StatutEnquete
+  + archiverEnquete(enquete) : void
+  + annulerEnquete(enquete) : void
+}
+
+' ==========================================
+' CHAINE EDITORIALE
+' ==========================================
+
+class Signalement {
+  - id : string
+  - theme : string
+  - contenu : string
+  - statut : StatutSignalement
+  --
+  + estOuvert() : boolean
+  + archiver() : void
+}
+
+class SujetBoiteReception {
+  - id : string
+  - theme : string
+  - origine : OrigineSujet
+  - statut : StatutSujet
+  --
+  + estDisponible() : boolean
+  + marquerPrisEnCharge() : void
+}
+
+class Enquete {
+  - id : string
+  - verdictProvisoire : Verdict
+  - notesEnquete : string
+  - statut : StatutEnquete
+  --
+  + estModifiable() : boolean
+  + soumettrePourRevue() : void
+  + approuver() : void
+  + demanderRevision() : StatutEnquete
+  + archiver() : void
+}
+
+class Preuve {
+  - id : string
+  - titre : string
+  - contenu : string
+}
+
+class Publication {
+  - id : string
+  - verdictFinal : Verdict
+  - notesPublication : string
+  - datePublication : DateTime
+}
+
+class Notification {
+  - id : string
+  - type : TypeNotification
+  - message : string
+  - estLue : boolean
+  --
+  + marquerCommeLue() : void
+}
+
+' ==========================================
+' RELATIONS
+' ==========================================
+
+Acteur <|-- Citoyen
+Acteur <|-- Journaliste
+Acteur <|-- Directeur
+
+Citoyen "1" -- "0..*" Signalement : dépose (3 ouverts max) >
+Signalement "0..1" -- "0..1" SujetBoiteReception : alimente >
+Directeur "0..1" -- "0..*" SujetBoiteReception : crée >
+
+SujetBoiteReception "1" -- "0..1" Enquete : instruit par >
+Journaliste "1" -- "0..*" Enquete : mène (1 active) >
+Citoyen "1" -- "0..*" Preuve : apporte (vigie) >
+Enquete "1" *-- "0..*" Preuve : rassemble >
+Directeur ..> Enquete : arbitre
+
+Enquete "1" -- "0..1" Publication : aboutit à >
+Directeur "1" -- "0..*" Publication : approuve et signe >
+Publication "0..1" -- "0..*" Notification : annonce >
+Acteur "1" -- "0..*" Notification : destinataire >
+
+' ==========================================
+' PERIMETRE
+' ==========================================
+
+note as N1
+  **Vue resserrée sur le circuit principal.**
+  Ne figurent pas ici : les médias et leurs sources d'autorité, le journal
+  d'audit des changements de statut, les rectifications de publication et
+  les candidatures vigie.
+  --
+  Un verdict UNVERIFIABLE n'est jamais publié : il est archivé.
+  Une vigie ne peut contribuer qu'à une enquête renvoyée en révision.
+end note
+
+@enduml

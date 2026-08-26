@@ -1,0 +1,45 @@
+@startuml sequence-signalement
+autonumber
+
+actor "Citoyen" as Citoyen
+
+participant "Application" as App
+
+database "Base de données" as DB
+
+ref over Citoyen, DB
+  **Préconditions**
+  S'authentifier — session valide
+  Compte au statut ACTIF
+  Moins de 3 signalements ouverts
+end ref
+
+== Le citoyen signale un contenu suspect ==
+
+Citoyen -> App : Dépose un signalement\n(thème, titre, contenu, au moins un média)
+activate App
+
+App -> DB : Enregistre le signalement (statut OUVERT)
+activate DB
+DB --> App : Signalement enregistré
+deactivate DB
+
+App -> DB : Ouvre le sujet éditorial correspondant\n(origine SIGNALEMENT, statut OUVERT)
+activate DB
+DB --> App : Sujet ouvert
+deactivate DB
+
+App -> DB : Enregistre les médias du signalement
+activate DB
+DB --> App : Médias enregistrés
+deactivate DB
+
+App -> DB : Incrémente le compteur de signalements\nouverts et le score d'engagement
+activate DB
+DB --> App : Citoyen mis à jour
+deactivate DB
+
+App --> Citoyen : « Votre signalement a bien été envoyé »
+deactivate App
+
+@enduml

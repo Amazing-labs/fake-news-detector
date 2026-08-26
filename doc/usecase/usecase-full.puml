@@ -1,234 +1,233 @@
-@startuml
+@startuml usecase-full
+' =============================================================================
+' Fake News Detector — Diagramme de cas d'utilisation (vue complète)
+' Source de vérité : doc/api.md (toutes les routes HTTP) croisé avec la matrice
+' de permissions de SecurityService.
+'
+' Structure : acteurs à gauche, tous spécialisant « Utilisateur » ; un seul
+' rectangle système ; « S'authentifier » inclus par tous les cas.
+' Les cas sont regroupés par rôle à l'intérieur du rectangle : en colonne unique,
+' 38 cas d'utilisation produisent une image de 2389x4410 illisible.
+' =============================================================================
+
 left to right direction
-skinparam theme plain
+skinparam shadowless true
+skinparam defaultFontName "Arial"
 skinparam actorStyle awesome
+skinparam packageStyle rectangle
+skinparam usecase {
+  BackgroundColor #FFFFFF
+  BorderColor #4A5568
+}
+
+title Fake News Detector — Cas d'utilisation (vue complète)\nToutes les fonctionnalités exposées par l'API
 
 ' ==========================================
-' ACTORS (based on Prisma roles)
+' ACTEURS
 ' ==========================================
-actor "Actor (CITIZEN)" as Citizen
-actor "Actor (JOURNALIST)" as Journalist
-actor "Actor (EDITORIAL_DIRECTOR)" as Director
 
-' ==========================================
-' SYSTEM
-' ==========================================
-rectangle "Fact-Checking System" {
-  
-  ' ---------- AUTHENTICATION ----------
-  (Authenticate) as Auth
-  (Logout) as Logout
-  
-  ' ---------- PROFILE MANAGEMENT ----------
-  (View Profile) as ViewProfile
-  (View History) as ViewHistory
-  (View Notifications) as ViewNotifications
-  (Mark Notifications as Read) as MarkNotifsRead
-  
-  ' ---------- CITIZEN (REGULAR) ----------
-  (Submit Report) as SubmitReport
-  (View Inbox Subjects) as ViewInboxSubjects
-  (Apply for Watcher) as ApplyWatcher
-  (View Own Reports) as ViewOwnReports
-  
-  ' ---------- WATCHER ----------
-  (Submit Evidence) as SubmitEvidence
-  (View Ongoing Investigations) as ViewInvestigationsForEvidence
-  
-  ' ---------- JOURNALIST ----------
-  (View Available Reports) as ViewAvailableReports
-  (Pick Report) as PickReport
-  (Update Investigation Draft) as UpdateInvestigationDraft
-  (Submit Investigation for Review) as SubmitForReview
-  (Correct Investigation) as CorrectInvestigation
-  (View Own Investigations) as ViewOwnInvestigations
-  (View Available Inbox) as ViewJournalistInbox
-  
-  ' ---------- DIRECTOR ----------
-  (View Pending Investigations) as ViewPendingInvestigations
-  (Validate Investigation) as ValidateInvestigation
-  (Reject Investigation) as RejectInvestigation
-  (Publish Analysis) as PublishAnalysis
-  (Publish Correction) as PublishCorrection
-  (Manage Users) as ManageUsers
-  (Manage Watchers) as ManageWatchers
-  (View Dashboard) as ViewDashboardInvestigation
-  
-  ' ---------- USER MANAGEMENT ----------
-  (View Users) as ViewUsers
-  (Ban Citizen) as BanCitizen
-  (Disable Citizen) as DisableCitizen
-  (Activate Citizen) as ActivateCitizen
-  (Ban Journalist) as BanJournalist
-  (Disable Journalist) as DisableJournalist
-  (Activate Journalist) as ActivateJournalist
-  
-  ' ---------- WATCHER MANAGEMENT ----------
-  (View Watcher Applications) as ViewWatcherApplications
-  (Approve Watcher Application) as ApproveWatcherApplication
-  (Reject Watcher Application) as RejectWatcherApplication
-  
-  ' ---------- INBOX MANAGEMENT ----------
-  (Create Inbox Subject) as CreateInboxSubject
-  (Archive Inbox Subject) as ArchiveInboxSubject
-  (View Dashboard) as ViewDashboard
-  
-  ' ---------- PUBLICATIONS ----------
-  (View Publications) as ViewPublications
-  (Create Correction) as CreateCorrection
-  (View Authority Sources) as ViewAuthoritySources
+actor "Citoyen Vigie" as V
+actor "Citoyen" as C
+actor "Journaliste" as J
+actor "Directeur\nPublication" as D
+actor "Utilisateur" as U
+
+V --|> C
+C --|> U
+J --|> U
+D --|> U
+
+rectangle "Application de Fact-Checking" {
+
+  package "Socle commun" {
+    usecase "Consulter son profil" as UC01
+    usecase "Consulter ses contributions" as UC02
+    usecase "Consulter ses indicateurs" as UC03
+    usecase "Consulter et marquer\nses notifications" as UC04
+    usecase "Consulter les signalements" as UC05
+    usecase "Consulter les enquêtes" as UC06
+    usecase "Consulter les publications" as UC07
+    usecase "Consulter les rectifications" as UC08
+    usecase "Nettoyer les fichiers\nd'un envoi abandonné" as UC09
+  }
+
+  package "Citoyen" {
+    usecase "Déposer un signalement" as UC10
+    usecase "Postuler comme vigie" as UC11
+  }
+
+  package "Citoyen Vigie" {
+    usecase "Apporter une preuve\nà une enquête" as UC12
+  }
+
+  package "Journaliste" {
+    usecase "Consulter la boîte\nde réception éditoriale" as UC20
+    usecase "Consulter les signalements\nouverts" as UC21
+    usecase "Prendre en charge un sujet" as UC22
+    usecase "Rédiger le brouillon\nd'enquête" as UC23
+    usecase "Corriger l'enquête\naprès révision" as UC24
+    usecase "Classer un média source" as UC25
+    usecase "Classer un média\nde preuve vigie" as UC26
+    usecase "Ajouter une preuve\njournalistique" as UC27
+    usecase "Soumettre l'enquête\nà validation" as UC28
+  }
+
+  package "Directeur Publication" {
+    usecase "Créer un sujet éditorial" as UC30
+    usecase "Supprimer un sujet éditorial" as UC31
+    usecase "Approuver et publier\nune enquête" as UC32
+    usecase "Renvoyer une enquête\nen révision" as UC33
+    usecase "Archiver une enquête\ninvérifiable" as UC34
+    usecase "Annuler une enquête" as UC35
+    usecase "Publier une rectification" as UC36
+    usecase "Consulter les candidatures\nvigie" as UC37
+    usecase "Approuver une candidature\nvigie" as UC38
+    usecase "Rejeter une candidature\nvigie" as UC39
+    usecase "Créer un compte journaliste" as UC40
+    usecase "Bannir, désactiver ou\nréactiver un journaliste" as UC41
+    usecase "Bannir, désactiver ou\nréactiver un citoyen" as UC42
+    usecase "Consulter le tableau\nde bord directeur" as UC43
+    usecase "Consulter l'historique\nde ses décisions" as UC44
+    usecase "Purger les médias orphelins" as UC45
+  }
+
+  package "Authentification" {
+    usecase "S'authentifier" as AUTH
+  }
 }
 
 ' ==========================================
-' INHERITANCE RELATIONS (based on roles)
+' ASSOCIATIONS ACTEUR - CAS
 ' ==========================================
-Citizen : "role = CITIZEN\n(Regular or Watcher)"
-Journalist : "role = JOURNALIST"
-Director : "role = EDITORIAL_DIRECTOR"
 
-' ==========================================
-' REQUIRED AUTHENTICATION
-' ==========================================
-SubmitReport ..> Auth : <<include>>
-ViewProfile ..> Auth : <<include>>
-ViewHistory ..> Auth : <<include>>
-ViewNotifications ..> Auth : <<include>>
-MarkNotifsRead ..> Auth : <<include>>
-ViewInboxSubjects ..> Auth : <<include>>
-ApplyWatcher ..> Auth : <<include>>
-ViewOwnReports ..> Auth : <<include>>
+U --> UC01
+U --> UC02
+U --> UC03
+U --> UC04
+U --> UC05
+U --> UC06
+U --> UC07
+U --> UC08
+U --> UC09
+U --> AUTH
 
-SubmitEvidence ..> Auth : <<include>>
-ViewInvestigationsForEvidence ..> Auth : <<include>>
+C --> UC10
+C --> UC11
 
-ViewAvailableReports ..> Auth : <<include>>
-PickReport ..> Auth : <<include>>
-UpdateInvestigationDraft ..> Auth : <<include>>
-SubmitForReview ..> Auth : <<include>>
-CorrectInvestigation ..> Auth : <<include>>
-ViewOwnInvestigations ..> Auth : <<include>>
-ViewJournalistInbox ..> Auth : <<include>>
+V --> UC12
 
-ViewPendingInvestigations ..> Auth : <<include>>
-ValidateInvestigation ..> Auth : <<include>>
-RejectInvestigation ..> Auth : <<include>>
-ApproveInvestigation ..> Auth : <<include>>
-MarkUnverifiable ..> Auth : <<include>>
-PublishInvestigation ..> Auth : <<include>>
+J --> UC20
+J --> UC21
+J --> UC22
+J --> UC23
+J --> UC24
+J --> UC25
+J --> UC26
+J --> UC27
+J --> UC28
 
-ViewUsers ..> Auth : <<include>>
-BanCitizen ..> Auth : <<include>>
-DisableCitizen ..> Auth : <<include>>
-ActivateCitizen ..> Auth : <<include>>
-BanJournalist ..> Auth : <<include>>
-DisableJournalist ..> Auth : <<include>>
-ActivateJournalist ..> Auth : <<include>>
-
-ViewWatcherApplications ..> Auth : <<include>>
-ApproveWatcherApplication ..> Auth : <<include>>
-RejectWatcherApplication ..> Auth : <<include>>
-
-CreateInboxSubject ..> Auth : <<include>>
-ArchiveInboxSubject ..> Auth : <<include>>
-ViewDashboard ..> Auth : <<include>>
-
-ViewPublications ..> Auth : <<include>>
-CreateCorrection ..> Auth : <<include>>
-ViewAuthoritySources ..> Auth : <<include>>
+D --> UC20
+D --> UC30
+D --> UC31
+D --> UC32
+D --> UC33
+D --> UC34
+D --> UC35
+D --> UC36
+D --> UC37
+D --> UC38
+D --> UC39
+D --> UC40
+D --> UC41
+D --> UC42
+D --> UC43
+D --> UC44
+D --> UC45
 
 ' ==========================================
-' ASSOCIATIONS - CITOYEN
+' INCLUSION DE L'AUTHENTIFICATION
 ' ==========================================
-Citizen --> SubmitReport
-Citizen --> ViewProfile
-Citizen --> ViewHistory
-Citizen --> ViewNotifications
-Citizen --> MarkNotifsRead
-Citizen --> ViewInboxSubjects
-Citizen --> ApplyWatcher
-Citizen --> ViewOwnReports
-Citizen --> ViewPublications
+
+UC01 ..> AUTH : <<inclus>>
+UC02 ..> AUTH : <<inclus>>
+UC03 ..> AUTH : <<inclus>>
+UC04 ..> AUTH : <<inclus>>
+UC05 ..> AUTH : <<inclus>>
+UC06 ..> AUTH : <<inclus>>
+UC07 ..> AUTH : <<inclus>>
+UC08 ..> AUTH : <<inclus>>
+UC09 ..> AUTH : <<inclus>>
+UC10 ..> AUTH : <<inclus>>
+UC11 ..> AUTH : <<inclus>>
+UC12 ..> AUTH : <<inclus>>
+UC20 ..> AUTH : <<inclus>>
+UC21 ..> AUTH : <<inclus>>
+UC22 ..> AUTH : <<inclus>>
+UC23 ..> AUTH : <<inclus>>
+UC24 ..> AUTH : <<inclus>>
+UC25 ..> AUTH : <<inclus>>
+UC26 ..> AUTH : <<inclus>>
+UC27 ..> AUTH : <<inclus>>
+UC28 ..> AUTH : <<inclus>>
+UC30 ..> AUTH : <<inclus>>
+UC31 ..> AUTH : <<inclus>>
+UC32 ..> AUTH : <<inclus>>
+UC33 ..> AUTH : <<inclus>>
+UC34 ..> AUTH : <<inclus>>
+UC35 ..> AUTH : <<inclus>>
+UC36 ..> AUTH : <<inclus>>
+UC37 ..> AUTH : <<inclus>>
+UC38 ..> AUTH : <<inclus>>
+UC39 ..> AUTH : <<inclus>>
+UC40 ..> AUTH : <<inclus>>
+UC41 ..> AUTH : <<inclus>>
+UC42 ..> AUTH : <<inclus>>
+UC43 ..> AUTH : <<inclus>>
+UC44 ..> AUTH : <<inclus>>
+UC45 ..> AUTH : <<inclus>>
 
 ' ==========================================
-' ASSOCIATIONS - VIGIE (extension citoyen)
+' DEPENDANCES METIER
 ' ==========================================
-Citizen --> SubmitEvidence
-Citizen --> ViewInvestigationsForEvidence
 
-' ==========================================
-' ASSOCIATIONS - JOURNALISTE
-' ==========================================
-Journalist --> ViewAvailableReports
-Journalist --> PickReport
-Journalist --> UpdateInvestigationDraft
-Journalist --> SubmitForReview
-Journalist --> CorrectInvestigation
-Journalist --> ViewOwnInvestigations
-Journalist --> ViewJournalistInbox
-Journalist --> ViewProfile
-Journalist --> ViewHistory
-Journalist --> ViewNotifications
-Journalist --> MarkNotifsRead
-Journalist --> ViewPublications
+UC22 ..> UC20 : <<inclus>>
+UC28 ..> UC25 : <<inclus>>
+UC32 ..> UC28 : <<inclus>>
+UC24 ..> UC23 : <<étend>>
+UC36 ..> UC32 : <<étend>>
+UC12 ..> UC33 : <<étend>>
 
 ' ==========================================
-' ASSOCIATIONS - DIRECTEUR
+' NOTES
 ' ==========================================
-Director --> ViewPendingInvestigations
-Director --> ValidateInvestigation
-Director --> RejectInvestigation
-Director --> ApproveInvestigation
-Director --> MarkUnverifiable
-Director --> PublishInvestigation
-Director --> ViewUsers
-Director --> BanCitizen
-Director --> DisableCitizen
-Director --> ActivateCitizen
-Director --> BanJournalist
-Director --> DisableJournalist
-Director --> ActivateJournalist
-Director --> ViewWatcherApplications
-Director --> ApproveWatcherApplication
-Director --> RejectWatcherApplication
-Director --> CreateInboxSubject
-Director --> ArchiveInboxSubject
-Director --> ViewDashboard
-Director --> ViewProfile
-Director --> ViewHistory
-Director --> ViewNotifications
-Director --> MarkNotifsRead
-Director --> ViewPublications
-Director --> CreateCorrection
-Director --> ViewAuthoritySources
 
-' ==========================================
-' DÉPENDANCES FONCTIONNELLES
-' ==========================================
-PickReport ..> ViewAvailableReports : <<include>>
-UpdateInvestigationDraft ..> PickReport : <<include>>
-SubmitForReview ..> UpdateInvestigationDraft : <<include>>
-CorrectInvestigation ..> SubmitForReview : <<include>>
+note bottom of U
+  Seule la sonde technique `GET /health` est accessible sans session.
+  Tout cas d'utilisation fonctionnel exige une session better-auth valide :
+  d'où l'inclusion systématique de « S'authentifier ».
+end note
 
-SubmitEvidence ..> ViewInvestigationsForEvidence : <<include>>
+note bottom of V
+  La vigie est un citoyen promu (typeCitoyen = WATCHER) après candidature
+  approuvée par un directeur. Elle conserve tous les cas du citoyen.
+end note
 
-ApproveInvestigation ..> ValidateInvestigation : <<extend>>
-RejectInvestigation ..> ValidateInvestigation : <<extend>>
-MarkUnverifiable ..> ValidateInvestigation : <<extend>>
+note bottom of UC12
+  Contribution possible uniquement sur une enquête renvoyée en révision.
+end note
 
-PublishInvestigation ..> ApproveInvestigation : <<include>>
+note bottom of UC28
+  Refusé tant que les médias sources ne sont pas tous classés
+  (catégorie, fiabilité, justification).
+end note
 
-ApproveWatcherApplication ..> ViewWatcherApplications : <<include>>
-RejectWatcherApplication ..> ViewWatcherApplications : <<include>>
+note bottom of UC32
+  Verdict TRUE, FALSE ou MISLEADING seulement. Un verdict UNVERIFIABLE
+  ne se publie pas : il passe par « Archiver une enquête invérifiable ».
+end note
 
-ArchiveInboxSubject ..> CreateInboxSubject : <<include>>
-
-CreateCorrection ..> ViewPublications : <<include>>
-
-' ==========================================
-' EXTENSIONS DE RÔLE
-' ==========================================
-note right of Citizen : "Le citoyen peut devenir Vigie\naprès approbation de sa candidature"
-note right of Journalist : "Le journaliste peut gérer\nune seule enquête active à la fois"
-note right of Director : "Le directeur a tous les droits\nde modération et publication"
+note bottom of UC31
+  Supprime aussi les médias du sujet dans le bucket de stockage.
+end note
 
 @enduml

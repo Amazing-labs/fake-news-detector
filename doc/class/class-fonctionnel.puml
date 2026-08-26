@@ -1,0 +1,169 @@
+@startuml class-fonctionnel
+
+skinparam shadowless true
+skinparam defaultFontName "Arial"
+skinparam RoundCorner 10
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+skinparam nodesep 35
+skinparam ranksep 50
+hide circle
+
+title Fake News Detector — Vue fonctionnelle\nUne classe, une responsabilité
+
+abstract class Acteur {
+  # id : string
+  # nom : string
+  # role : Role
+  # statut : StatutCompte
+  # scoreEngagement : int
+  --
+  + estActif() : boolean
+  + consulterProfil() : Profil
+  + consulterPublication() : Publication
+  + suivreSesNotification() : Notification
+  + gererUtilisateurs() : void
+}
+
+class Citoyen {
+  - nombreSignalementsOuverts : int
+  - maxSignalementsOuverts : int = 3
+  --
+  + peutSignaler() : boolean
+  + peutPostulerVigie() : boolean
+}
+
+class Vigie {
+  + peutContribuer() : boolean
+}
+
+class Journaliste {
+  - nombreEnquetesActives : int
+  - maxEnquetesActives : int = 1
+  --
+  + peutMenerEnquete() : boolean
+}
+
+class Directeur {
+  + peutArbitrer() : boolean
+}
+
+class Signalement {
+  - id : string
+  - theme : string
+  - statut : StatutSignalement
+  --
+  + deposer() : Signalement
+}
+
+class SujetBoiteReception {
+  - id : string
+  - theme : string
+  - origine : OrigineSujet
+  - statut : StatutSujet
+  --
+  + ouvrirDepuisSignalement() : SujetBoiteReception
+  + ouvrirParDirecteur() : SujetBoiteReception
+  + estDisponible() : boolean
+  + marquerPrisEnCharge() : void
+  + supprimerSujet() : void
+}
+
+class Enquete {
+  - id : string
+  - verdictProvisoire : Verdict
+  - nombreTentatives : int
+  - statut : StatutEnquete
+  --
+  + ouvrirSurSujet() : Enquete
+  + enregistrerBrouillon() : void
+  + soumettrePourRevue() : void
+  + approuver() : void
+  + demanderRevision() : StatutEnquete
+  + archiver() : void
+  + annuler() : void
+}
+
+class Preuve {
+  - id : string
+  - titre : string
+  - contenu : string
+  --
+  + apporter() : Preuve
+}
+
+class JournalAudit {
+  - id : string
+  - statutPrecedent : StatutEnquete
+  - nouveauStatut : StatutEnquete
+  - motif : string
+  --
+  + enregistrer() : JournalAudit
+}
+
+class Publication {
+  - id : string
+  - verdictFinal : Verdict
+  - datePublication : DateTime
+  - estCorrection : boolean
+  --
+  + publier() : Publication
+}
+
+class Rectification {
+  - id : string
+  - titre : string
+  - contenu : string
+  --
+  + rectifier() : Rectification
+}
+
+class Notification {
+  - id : string
+  - type : TypeNotification
+  - message : string
+  - estLue : boolean
+  --
+  + adresser() : Notification
+  + marquerCommeLue() : void
+}
+
+class CandidatureVigie {
+  - id : string
+  - motivation : string
+  - statut : StatutCandidature
+  --
+  + deposer() : CandidatureVigie
+  + approuver() : void
+  + rejeter() : void
+}
+
+Acteur <|-- Citoyen
+Acteur <|-- Journaliste
+Acteur <|-- Directeur
+Citoyen <|-- Vigie
+
+Signalement "0..1" -- "0..1" SujetBoiteReception : alimente >
+SujetBoiteReception "1" -- "0..1" Enquete : instruit par >
+Enquete "1" *-- "0..*" Preuve : rassemble >
+Enquete "1" *-- "0..*" JournalAudit : journalise >
+Acteur "1" -- "0..*" JournalAudit : auteur de la décision >
+
+Enquete "1" -- "0..1" Publication : aboutit à >
+Publication "1" -- "0..*" Rectification : rectifiée par >
+Publication "0..1" -- "0..*" Notification : annonce >
+Notification "1" -- "0..1" Rectification : porte >
+Acteur "1" -- "0..*" Notification : destinataire >
+
+Citoyen ..> Signalement : <<crée>>
+Citoyen ..> CandidatureVigie : <<crée>>
+Vigie ..> Preuve : <<crée>>
+Journaliste ..> Enquete : <<crée, déclenche>>
+Directeur ..> SujetBoiteReception : <<crée, déclenche>>
+Directeur ..> Publication : <<crée>>
+Directeur ..> Rectification : <<crée>>
+Directeur ..> Enquete : <<déclenche>>
+Directeur ..> CandidatureVigie : <<déclenche>>
+Directeur ..> Acteur : <<déclenche>>
+
+@enduml

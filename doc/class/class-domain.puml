@@ -1,0 +1,613 @@
+@startuml class-domain
+' =============================================================================
+' Fake News Detector — Diagramme de classes du domaine
+' Source de vérité : app/server/src/domain/** + schéma Prisma (models/*.prisma)
+' Noms des classes/attributs/méthodes = noms réels du code (anglais).
+' Commentaires et libellés de relations = français (lecture parties prenantes).
+' =============================================================================
+
+title Fake News Detector — Modèle du domaine\nDe l'alerte citoyenne au verdict publié
+
+skinparam backgroundColor #FFFFFF
+skinparam defaultFontName "Segoe UI"
+skinparam defaultFontSize 12
+skinparam shadowing false
+skinparam roundCorner 8
+skinparam linetype ortho
+skinparam nodesep 45
+skinparam ranksep 55
+hide circle
+
+skinparam class {
+  BorderColor #4A5568
+  BackgroundColor #FFFFFF
+  ArrowColor #4A5568
+  FontColor #1A202C
+  AttributeFontColor #2D3748
+  StereotypeFontColor #6B46C1
+}
+skinparam package {
+  BorderColor #A0AEC0
+  FontStyle bold
+  FontSize 14
+}
+skinparam note {
+  BackgroundColor #FFFBEA
+  BorderColor #D69E2E
+  FontSize 11
+}
+
+' =============================================================================
+' 1. ACTEURS — qui agit sur la plateforme
+' =============================================================================
+package "1 · Acteurs" #EBF4FF {
+
+  abstract class Actor <<socle commun>> {
+    + id : string
+    + name : string
+    + email : string
+    + role : Role
+    + status : AccountStatus
+    + lastInboxRead : Date
+    + createdAt / updatedAt : Date
+    --
+    + isActive() : boolean
+    + markInboxAsRead() : void
+  }
+
+  class Citizen <<agrégat>> {
+    + citizenType : CitizenType
+    + engagementScore : int
+    + openReportsCount : int
+    + maxOpenReports : int = 3
+    + statusReason : StatusReason?
+    + statusReasonDetails : string?
+    -- Droits --
+    + canLogin() : boolean
+    + isWatcher() : boolean
+    + canSubmitReport() : boolean
+    + canSubmitEvidence() : boolean
+    + canApplyForWatcher() : boolean
+    -- Actions --
+    + submitReport(theme, title, content) : Report
+    + submitEvidence(investigationId, title, content) : Evidence
+    + submitWatcherApplication(motivation) : WatcherApplication
+    + promoteToWatcher() : void
+    + reportResolved() : void
+    + incrementEngagementScore(points = 1) : void
+    -- Modération (subie) --
+    + ban(reason, details) / disable(reason, details) / activate()
+    + getStatusHistory() / getProfile()
+  }
+
+  class Journalist <<agrégat>> {
+    + engagementScore : int
+    + activeInvestigationsCount : int
+    + maxActiveInvestigations : int = 1
+    + statusReason : StatusReason?
+    + statusReasonDetails : string?
+    -- Droits --
+    + canLogin() : boolean
+    + canAnalyze() : boolean
+    + canPickReport() : boolean
+    -- Actions --
+    + pickInboxSubject(subject) : Investigation
+    + submitInvestigationDraft(investigation, category, verdict, notes) : void
+    + submitForReview(investigation) : void
+    + correctInvestigation(investigation, notes) : void
+    + onInvestigationFinalized(investigation) : void
+    + incrementEngagementScore(points = 1) : void
+    -- Modération (subie) --
+    + ban(reason, details) / disable(reason, details) / activate()
+    + getStatusHistory() / getProfile()
+  }
+
+  class Director <<agrégat>> {
+    + scoreInvestigation : int
+    -- Arbitrage éditorial --
+    + validateInvestigation(investigation) : void
+    + publishInvestigation(investigation) : void
+    + rejectInvestigation(investigation, newStatus) : InvestigationStatus
+    + markAsArchived(investigation) : void
+    + cancelInvestigation(investigation) : void
+    -- Fil éditorial --
+    + createInboxSubject(theme, description) : InboxSubject
+    + archiveInboxSubject(subject) : void
+    -- Communauté --
+    + approveWatcherApplication(application) : void
+    + rejectWatcherApplication(application) : void
+    + banCitizen / disableCitizen / activateCitizen
+    + banJournalist / disableJournalist / activateJournalist
+    -- Compte --
+    + incrementScoreInvestigation(point = 1) : void
+    + disable() / activate()
+  }
+
+  Actor <|-- Citizen
+  Actor <|-- Journalist
+  Actor <|-- Director
+}
+
+note right of Actor
+  **Lecture développeur**
+  `Actor` n'existe pas comme classe TypeScript :
+  `Citizen`, `Journalist` et `Director` sont trois
+  classes indépendantes du domaine. En base, elles
+  partagent **une seule table `actors`**, discriminée
+  par `role`. L'héritage ci-contre matérialise ce
+  socle commun, il ne le duplique pas dans le code.
+end note
+
+' =============================================================================
+' 2. CHAÎNE ÉDITORIALE — le cœur métier
+' =============================================================================
+package "2 · Chaîne éditoriale (cœur métier)" #F0FFF4 {
+
+  class Report <<entité>> {
+    + id : string
+    + citizenId : string
+    + theme : string
+    + title : string?
+    + content : string?
+    + status : ReportStatus
+    --
+    + isOpen() : boolean
+    + canBeArchived() : boolean
+    + changeStatus(newStatus) : void
+    + updateContent(title, content, theme) : void
+  }
+
+  class InboxSubject <<entité>> {
+    + id : string
+    + theme : string
+    + description : string
+    + createdById : string
+    + reportId : string?
+    + status : InboxSubjectStatus
+    + origin : InboxSubjectOrigin
+    --
+    + isOpen() : boolean
+    + isArchived() : boolean
+    + startProgress() : void
+    + archive() : void
+    + changeStatus(newStatus) : void
+    + updateContent(theme, description) : void
+  }
+
+  class Investigation <<agrégat>> {
+    + id : string
+    + inboxSubjectId : string
+    + journalistId : string
+    + mediaCategory : MediaCategory?
+    + draftVerdict : Verdict
+    + investigationNotes : string
+    + attemptCount : int
+    + status : InvestigationStatus
+    -- Lecture d'état --
+    + isDraft() / isPendingReview() / isPublished()
+    + isCanceled() / isTerminal() : boolean
+    + canBeEdited() : boolean
+    + canReceiveWatcherEvidence() : boolean
+    + canMarkAsArchived() : boolean
+    -- Transitions --
+    + updateDraft(category, verdict, notes) : void
+    + submitForReview() : void
+    + requestRevision(newStatus) : InvestigationStatus
+    + approve() : void
+    + markAsArchived() : void
+    + cancelManually() : void
+  }
+
+  class Evidence <<entité>> {
+    + id : string
+    + investigationId : string
+    + watcherId : string
+    + title : string
+    + content : string
+    + media : EvidenceMedia[]
+    --
+    + updateContent(title, content) : void
+  }
+
+  class Publication <<agrégat>> {
+    + id : string
+    + investigationId : string
+    + approvedById : string
+    + finalVerdict : Verdict
+    + publicationNotes : string?
+    + publishedAt : Date
+    + isCorrection : boolean
+    + verifiedLinks : VerifiedLink[]
+    + verifiedMedia : VerifiedMedia[]
+    --
+    + markAsCorrection() : void
+    + hasVerifiedEvidence() : boolean
+    + generateBadgeNotification() : string
+  }
+
+  class Correction <<entité>> {
+    + id : string
+    + publicationId : string
+    + notificationId : string
+    + correctedById : string
+    + title : string
+    + content : string
+    --
+    + updateContent(title, content) : void
+  }
+
+  class WorkflowAudit <<entité>> {
+    + id : string
+    + investigationId : string
+    + actorId : string
+    + previousStatus : InvestigationStatus?
+    + newStatus : InvestigationStatus
+    + comment : string?
+    + createdAt : Date
+    --
+    + isApproval() / isRejection() : boolean
+    + isArchived() / isCanceled() : boolean
+    + getDescription() : string
+  }
+}
+
+' =============================================================================
+' 3. MÉDIAS & SOURCES — les pièces du dossier
+' =============================================================================
+package "3 · Médias & sources (pièces du dossier)" #FFF5F5 {
+
+  class ReportMedia <<objet-valeur>> {
+    + id : int
+    + url : string
+    + type : MediaType
+    + order : int
+    + reportId / uploadedById : string
+  }
+
+  class InboxSubjectMedia <<objet-valeur>> {
+    + id : int
+    + url : string
+    + type : MediaType
+    + order : int
+    + origin : InboxSubjectMediaOrigin
+    + inboxSubjectId / uploadedById : string
+  }
+
+  class InvestigationMedia <<objet-valeur>> {
+    + id : int
+    + url : string
+    + type : MediaType
+    + order : int
+    + origin : MediaOrigin
+    + category : MediaCategory?
+    + reliability : Verdict?
+    + justification : string?
+    + authoritySourceId : string?
+    -- Règles --
+    + requiresJournalistClassification() : boolean
+    + isFromJournalistProof() : boolean
+    -- Classement par le journaliste --
+    + submitCategory(category) : void
+    + submitReliabilityVerdict(reliability) : void
+    + submitJustification(justification) : void
+    + submitAuthoritySource(authoritySourceId) : void
+    + updateInvestigationMedia(...) : InvestigationMedia
+  }
+
+  class EvidenceMedia <<objet-valeur>> {
+    + id : int
+    + url : string
+    + type : MediaType
+    + order : int
+    + category : MediaCategory?
+    + reliability : Verdict?
+    + justification : string?
+    --
+    + changeCategory / changeReliability / changeJustification
+    + changeUrl / changeType / changeOrder
+  }
+
+  class VerifiedMedia <<objet-valeur>> {
+    + id : int
+    + url : string
+    + type : MediaType
+    + order : int
+    + publicationId / addedById : string
+    + authoritySourceId : string?
+    --
+    + changeAuthoritySourceId / changeUrl / changeType / changeOrder
+  }
+
+  class VerifiedLink <<objet-valeur>> {
+    + id : int
+    + url : string
+    + publicationId / addedById : string
+    + authoritySourceId : string?
+    --
+    + changeAuthoritySourceId / changeUrl
+  }
+
+  class AuthoritySource <<référentiel>> {
+    + id : string
+    + name : string
+    + type : SourceType
+    --
+    + isOfficial() : boolean
+    + isMedia() : boolean
+  }
+}
+
+' =============================================================================
+' 4. COMMUNAUTÉ & DIFFUSION
+' =============================================================================
+package "4 · Communauté & diffusion" #FAF5FF {
+
+  class WatcherApplication <<entité>> {
+    + id : string
+    + actorId : string
+    + motivation : string
+    + status : WatcherApplicationStatus
+    --
+    + approve() : void
+    + reject() : void
+    + changeStatus(newStatus) : void
+  }
+
+  class Notification <<entité>> {
+    + id : string
+    + type : NotificationType
+    + level : NotificationLevel
+    + theme : string
+    + message : string
+    + actorId : string
+    + isRead : boolean
+    + publicationId : string?
+    + investigationId : string?
+    --
+    + markAsRead() / markAsUnread() : void
+    + isPublicationNotification() : boolean
+    + isCorrectionNotification() : boolean
+    + isAlertNotification() : boolean
+    + isArchivedPublicationNotification() : boolean
+    -- Fabriques (invariants garantis) --
+    + {static} create(type, theme, message, actorId, ...) : Notification
+    + {static} createPublicationNotification(...) : Notification
+    + {static} createCorrectionNotification(...) : Notification
+    + {static} createAlertNotification(...) : Notification
+    + {static} createArchivedPublicationNotification(...) : Notification
+  }
+}
+
+' =============================================================================
+' RELATIONS — le parcours d'une information
+' =============================================================================
+
+' --- Signalement citoyen -> fil éditorial ---
+Citizen "1" --> "0..*" Report : dépose\n(max 3 ouverts)
+' 0..1 côté Report : un sujet DIRECTOR_INITIATED n'a pas de signalement (reportId nullable).
+' 0..1 côté Director : un sujet d'origine REPORT a pour createdBy le citoyen, pas un directeur.
+Report "0..1" -- "0..1" InboxSubject : alimente\n(origin = REPORT, créé\nautomatiquement au dépôt)
+Director "0..1" --> "0..*" InboxSubject : crée\n(origin = DIRECTOR_INITIATED)
+
+' --- Prise en charge journalistique ---
+InboxSubject "1" -- "0..1" Investigation : instruit par
+Journalist "1" --> "0..*" Investigation : mène\n(1 seule active à la fois)
+
+' --- Contribution des vigies ---
+Citizen "1" --> "0..*" Evidence : apporte\n(WATCHER uniquement)
+Investigation "1" *-- "0..*" Evidence : rassemble
+
+' --- Arbitrage et publication ---
+' Dépendance : l'enquête ne stocke que son journaliste. L'arbitrage du directeur
+' n'est persisté que dans WorkflowAudit (auteur) et Publication (signataire).
+Director ..> Investigation : arbitre\n(approuve / rejette / archive / annule)
+Investigation "1" -- "0..1" Publication : aboutit à
+Director "1" --> "0..*" Publication : approuve et signe
+Publication "1" --> "0..*" Correction : rectifie
+Director "1" --> "0..*" Correction : rédige
+
+' --- Traçabilité ---
+Investigation "1" *-- "0..*" WorkflowAudit : journalise
+Actor "1" --> "0..*" WorkflowAudit : auteur du changement
+
+' --- Diffusion ---
+' publicationId et investigationId sont nullables : une ALERT ne référence ni l'un ni l'autre.
+Publication "0..1" --> "0..*" Notification : diffuse\n(PUBLICATION / CORRECTION)
+Investigation "0..1" --> "0..*" Notification : diffuse\n(ARCHIVED_PUBLICATION)
+Notification "1" -- "0..1" Correction : porte
+Actor "1" --> "0..*" Notification : destinataire
+
+' --- Promotion vigie ---
+Citizen "1" --> "0..*" WatcherApplication : candidate\n(1 active max, historique conservé)
+Director ..> WatcherApplication : approuve / rejette\n(décision non tracée\nsur la candidature)
+
+' --- Médias ---
+Report "1" *-- "0..*" ReportMedia
+InboxSubject "1" *-- "0..*" InboxSubjectMedia
+Investigation "1" *-- "0..*" InvestigationMedia
+Evidence "1" *-- "0..*" EvidenceMedia
+Publication "1" *-- "0..*" VerifiedMedia
+Publication "1" *-- "0..*" VerifiedLink
+' authoritySourceId est nullable partout : un média peut n'être attesté par aucune source.
+AuthoritySource "0..1" <-- "0..*" InvestigationMedia : atteste
+AuthoritySource "0..1" <-- "0..*" VerifiedMedia : atteste
+AuthoritySource "0..1" <-- "0..*" VerifiedLink : atteste
+
+' =============================================================================
+' RÈGLES MÉTIER — les invariants que le code fait respecter
+' =============================================================================
+
+note bottom of Investigation
+  **Cycle de vie & invariants**
+  OPEN → IN_PROGRESS → PENDING_REVIEW → PUBLISHED
+                                      → ARCHIVED (verdict UNVERIFIABLE)
+                                      → NEEDS_REVISION → (correction) → PENDING_REVIEW
+                                      → CANCELED
+  • `submitForReview()` exige un `mediaCategory` renseigné.
+  • `approve()` exige PENDING_REVIEW **et** un verdict TRUE / FALSE / MISLEADING.
+  • `markAsArchived()` exige PENDING_REVIEW **et** le verdict UNVERIFIABLE
+    (un dossier UNVERIFIABLE n'est jamais publié).
+  • `requestRevision()` n'est possible que depuis PENDING_REVIEW, incrémente
+    `attemptCount`, et bascule en CANCELED au-delà de MAX_REVISION_ATTEMPTS
+    (garde-fou fixé à 1000).
+  • `cancelManually()` est refusé sur un statut terminal.
+  • Une vigie ne peut contribuer que si le statut est **NEEDS_REVISION**
+    (`canReceiveWatcherEvidence()`) : le dossier ne s'ouvre à l'extérieur
+    qu'au moment où la rédaction redemande de la matière.
+end note
+
+note bottom of InvestigationMedia
+  **Classement des médias**
+  • Médias sources (`CITIZEN_REPORT`, `DIRECTOR_INITIATED`) : le journaliste
+    doit renseigner `category`, `reliability` et une `justification` non vide
+    avant de soumettre à validation.
+  • Preuves journaliste (`JOURNALIST_PROOF`) : `authoritySourceId` obligatoire,
+    et `category` / `reliability` / `justification` interdits.
+  • Les médias du signalement ou du sujet directeur sont **recopiés** dans
+    l'enquête à la prise en charge (`copySourceMediaToInvestigationMedia`),
+    en conservant leur `order` et en marquant leur `origin`.
+end note
+
+note bottom of Notification
+  **Invariants par type**
+  • PUBLICATION / CORRECTION → `publicationId` requis, `investigationId` interdit
+  • ARCHIVED_PUBLICATION → `investigationId` requis, `publicationId` interdit
+  • ALERT → aucun des deux
+  `level` (SUCCESS / WARNING / INFO) est orthogonal au type : c'est le ton visuel.
+end note
+
+note bottom of Citizen
+  **Quotas et promotion**
+  • 3 signalements ouverts maximum (`MAX_REPORTING_PER_CITIZEN_AT_A_TIME`).
+  • Seul un citoyen de type WATCHER peut déposer des preuves (+2 points
+    d'engagement ; un signalement en rapporte 1).
+  • Le passage REGULAR → WATCHER se fait uniquement par candidature
+    approuvée par un directeur.
+end note
+
+note bottom of Journalist
+  **Quota d'instruction**
+  1 enquête active maximum (`MAX_INVESTIGATIONS_PER_JOURNALIST_AT_A_TIME`).
+  Le compteur se libère quand l'enquête devient PUBLISHED, ARCHIVED ou CANCELED
+  (+2 points d'engagement, sauf en cas d'annulation).
+end note
+
+' =============================================================================
+' NOMENCLATURES — vocabulaire métier (non relié, pour rester lisible)
+' =============================================================================
+package "5 · Nomenclatures (énumérations)" #F7FAFC {
+
+  enum Role {
+    CITIZEN
+    JOURNALIST
+    EDITORIAL_DIRECTOR
+  }
+  enum AccountStatus {
+    ACTIVE
+    DISABLED
+    BANNED
+  }
+  enum CitizenType {
+    REGULAR
+    WATCHER
+  }
+  enum StatusReason {
+    SPAM
+    ABUSE
+    FRAUD
+    INACTIVITY
+    USER_REQUEST
+    OTHER
+  }
+  enum ReportStatus {
+    OPEN
+    ARCHIVED
+  }
+  enum InboxSubjectStatus {
+    OPEN
+    IN_PROGRESS
+    ARCHIVED
+  }
+  enum InboxSubjectOrigin {
+    REPORT
+    DIRECTOR_INITIATED
+  }
+  enum InvestigationStatus {
+    OPEN
+    IN_PROGRESS
+    PENDING_REVIEW
+    NEEDS_REVISION
+    PUBLISHED
+    ARCHIVED
+    CANCELED
+  }
+  enum WatcherApplicationStatus {
+    PENDING
+    APPROVED
+    REJECTED
+  }
+  enum Verdict {
+    TRUE
+    FALSE
+    MISLEADING
+    UNVERIFIABLE
+  }
+  enum MediaCategory {
+    == Tromperie ==
+    CONTEXT_COLLAPSE
+    MANIPULATED
+    FABRICATED
+    SATIRE
+    MISLEADING
+    IMPOSTOR
+    OTHER
+    == Fiabilité ==
+    AUTHENTIC
+    CORROBORATED
+    OFFICIAL_SOURCE
+  }
+  enum MediaType {
+    IMAGE
+    VIDEO
+    AUDIO
+    DOCUMENT
+    LINK
+    TEXT
+  }
+  enum MediaOrigin {
+    CITIZEN_REPORT
+    JOURNALIST_PROOF
+    DIRECTOR_INITIATED
+  }
+  enum SourceType {
+    OFFICIAL_DECREE
+    ORIGINAL_RETRACTION
+    DIRECT_EVIDENCE
+    MEDIA_CROSSCHECK
+    AUTHORITY_STATEMENT
+  }
+  enum NotificationType {
+    PUBLICATION
+    CORRECTION
+    ALERT
+    ARCHIVED_PUBLICATION
+  }
+  enum NotificationLevel {
+    SUCCESS
+    WARNING
+    INFO
+  }
+}
+
+legend bottom
+  |= Symbole |= Lecture métier |
+  | <<agrégat>> | Objet pivot : porte les règles et protège sa cohérence |
+  | <<entité>> | Objet identifié qui vit dans le temps |
+  | <<objet-valeur>> | Pièce jointe décrite par son contenu (média, lien) |
+  | Trait à losange plein | **Composition** : la partie n'existe pas sans le tout (supprimée avec lui) |
+  | Trait à triangle creux | **Héritage** : socle d'attributs et de comportements partagés |
+  | Trait pointillé | **Dépendance** : agit sur l'objet sans en conserver la trace |
+  | <b>1</b>, <b>0..1</b>, <b>0..*</b> | Combien d'objets participent à la relation |
+endlegend
+
+@enduml

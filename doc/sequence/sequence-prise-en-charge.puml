@@ -1,0 +1,52 @@
+@startuml sequence-prise-en-charge
+autonumber
+
+actor "Journaliste" as Journaliste
+
+participant "Application" as App
+
+database "Base de données" as DB
+
+ref over Journaliste, DB
+  **Préconditions**
+  S'authentifier — session valide, rôle JOURNALISTE
+  Compte au statut ACTIF
+  Aucune enquête active en cours (1 au maximum)
+  Au moins un sujet au statut OUVERT dans la boîte à sujets
+end ref
+
+== Le journaliste ouvre une enquête sur un sujet ==
+
+Journaliste -> App : Consulte la boîte à sujets
+activate App
+
+App -> DB : Récupère les sujets au statut OUVERT
+activate DB
+DB --> App : Liste des sujets disponibles
+deactivate DB
+
+App --> Journaliste : Affiche les sujets disponibles
+deactivate App
+
+Journaliste -> App : Prend en charge un sujet
+activate App
+
+App -> DB : Crée l'enquête (statut OUVERTE)\net passe le sujet EN COURS
+activate DB
+DB --> App : Enquête créée
+deactivate DB
+
+App -> DB : Recopie les médias du signalement\nou du sujet directeur dans l'enquête
+activate DB
+DB --> App : Médias recopiés
+deactivate DB
+
+App -> DB : Incrémente le compteur d'enquêtes actives\net le score d'engagement
+activate DB
+DB --> App : Journaliste mis à jour
+deactivate DB
+
+App --> Journaliste : « Sujet pris en charge »
+deactivate App
+
+@enduml
