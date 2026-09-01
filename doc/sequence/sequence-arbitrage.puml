@@ -8,10 +8,7 @@ participant "Application" as App
 database "Base de données" as DB
 
 ref over Directeur, DB
-  **Préconditions**
-  S'authentifier — session valide, rôle DIRECTEUR DE PUBLICATION
-  Compte au statut ACTIF
-  Au moins une enquête au statut EN ATTENTE DE VALIDATION
+  S'authentifier
 end ref
 
 == Le Directeur examine l'enquête ==

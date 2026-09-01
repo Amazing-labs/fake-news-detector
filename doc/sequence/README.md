@@ -8,8 +8,14 @@
 
 ## Conventions
 
-Chaque diagramme s'ouvre sur un fragment `ref` qui énonce ses **préconditions** :
-ce qui doit déjà être vrai pour que le cas d'utilisation puisse démarrer.
+Chaque diagramme s'ouvre sur un fragment `ref`. Conformément à la sémantique
+UML de l'_interaction use_, ce fragment ne décrit rien : il **renvoie à une autre
+interaction**. Les trois scénarios métier référencent ainsi _S'authentifier_,
+dont le diagramme est donné en premier. Le lecteur sait que la séquence
+d'authentification s'exécute d'abord, sans qu'elle soit redessinée trois fois.
+
+Seul `sequence-authentification` porte une précondition dans son `ref`, car il
+n'en référence aucun autre : l'utilisateur possède un compte.
 
 Seuls les acteurs qui pilotent l'IHM ont une ligne de vie. Ceux qui subissent
 les conséquences d'une décision — le journaliste notifié d'un renvoi, les
