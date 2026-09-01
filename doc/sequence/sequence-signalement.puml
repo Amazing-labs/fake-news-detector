@@ -8,10 +8,7 @@ participant "Application" as App
 database "Base de données" as DB
 
 ref over Citoyen, DB
-  **Préconditions**
-  S'authentifier — session valide
-  Compte au statut ACTIF
-  Moins de 3 signalements ouverts
+  S'authentifier
 end ref
 
 == Le citoyen signale un contenu suspect ==

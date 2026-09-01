@@ -48,7 +48,3 @@ skills-lock.json
 # Notes
 notes/
 
-
-# generated UML / Merise renders (regenerate them from the .puml sources)
-doc/**/*.png
-doc/**/*.svg

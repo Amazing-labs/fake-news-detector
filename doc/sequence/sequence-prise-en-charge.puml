@@ -8,11 +8,7 @@ participant "Application" as App
 database "Base de données" as DB
 
 ref over Journaliste, DB
-  **Préconditions**
-  S'authentifier — session valide, rôle JOURNALISTE
-  Compte au statut ACTIF
-  Aucune enquête active en cours (1 au maximum)
-  Au moins un sujet au statut OUVERT dans la boîte à sujets
+  S'authentifier
 end ref
 
 == Le journaliste ouvre une enquête sur un sujet ==

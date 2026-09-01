@@ -20,15 +20,16 @@ One figure per family, each sized to stay legible on a printed A4 page. The
 alternate variants that used to sit beside them were removed: they duplicated
 this content at a size no printer could resolve.
 
-| Diagram                                                              | Purpose                                           | Render      | Print legibility |
-| -------------------------------------------------------------------- | ------------------------------------------------- | ----------- | ---------------- |
-| [`usecase-essentiel`](usecase/usecase-essentiel.puml)                | 13 use cases plus `S'authentifier`, by role.      | 994 × 1593  | ~5,3 pt          |
-| [`class-fonctionnel`](class/class-fonctionnel.puml)                  | 14 classes, one responsibility each.              | 1113 × 1613 | ~5,2 pt          |
-| [`mpd-essentiel`](mpd/mpd-essentiel.puml)                            | 10 PostgreSQL tables of the editorial circuit.    | 977 × 1416  | ~5,9 pt          |
-| [`sequence-signalement`](sequence/sequence-signalement.puml)         | A citizen files a report.                         | 668 × 673   | ~8,7 pt          |
-| [`sequence-prise-en-charge`](sequence/sequence-prise-en-charge.puml) | A journalist opens an investigation on a subject. | 610 × 749   | ~9,5 pt          |
-| [`sequence-arbitrage`](sequence/sequence-arbitrage.puml)             | The director arbitrates and publishes.            | 775 × 1838  | ~4,6 pt          |
-| [`activity-arbitrage`](activity/activity-arbitrage.puml)             | The same arbitration, as a workflow.              | 1012 × 984  | ~5,7 pt          |
+| Diagram                                                                | Purpose                                           | Render      | Print legibility |
+| ---------------------------------------------------------------------- | ------------------------------------------------- | ----------- | ---------------- |
+| [`usecase-essentiel`](usecase/usecase-essentiel.puml)                  | 13 use cases plus `S'authentifier`, by role.      | 994 × 1593  | ~5,3 pt          |
+| [`class-fonctionnel`](class/class-fonctionnel.puml)                    | 14 classes, one responsibility each.              | 1113 × 1613 | ~5,2 pt          |
+| [`mpd-essentiel`](mpd/mpd-essentiel.puml)                              | 10 PostgreSQL tables of the editorial circuit.    | 977 × 1416  | ~5,9 pt          |
+| [`sequence-authentification`](sequence/sequence-authentification.puml) | A user signs in. Referenced by the three others.  | 603 x 600   | ~9,6 pt          |
+| [`sequence-signalement`](sequence/sequence-signalement.puml)           | A citizen files a report.                         | 668 x 628   | ~8,7 pt          |
+| [`sequence-prise-en-charge`](sequence/sequence-prise-en-charge.puml)   | A journalist opens an investigation on a subject. | 610 x 689   | ~9,5 pt          |
+| [`sequence-arbitrage`](sequence/sequence-arbitrage.puml)               | The director arbitrates and publishes.            | 775 x 1793  | ~4,7 pt          |
+| [`activity-arbitrage`](activity/activity-arbitrage.puml)               | The same arbitration, as a workflow.              | 1012 × 984  | ~5,7 pt          |
 
 Legibility is the height of a 12 px glyph once the figure is scaled to a full A4
 portrait page (17 × 24,7 cm of usable area).
@@ -49,5 +50,7 @@ defense document.
 ## Rendering
 
 Render the `.puml` files with any PlantUML tool (the VS Code extension, or
-`plantuml file.puml`). Generated `.png` / `.svg` files next to a `.puml` are
-build artifacts — regenerate them rather than editing them.
+`plantuml file.puml`). The `.png` / `.svg` next to each `.puml` are committed so
+the figures are readable straight from GitHub and from the defense document, but
+the `.puml` remains the source: edit it and re-render, never touch a render by
+hand.

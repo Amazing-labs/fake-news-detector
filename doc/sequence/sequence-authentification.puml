@@ -1,0 +1,41 @@
+@startuml sequence-authentification
+autonumber
+
+actor "Utilisateur" as User
+
+participant "Application" as App
+
+database "Base de données" as DB
+
+ref over User, DB
+  **Précondition**
+  L'utilisateur possède un compte
+end ref
+
+== L'utilisateur s'authentifie ==
+
+User -> App : Saisit son e-mail et son mot de passe
+activate App
+
+App -> DB : Vérifie les identifiants
+activate DB
+DB --> App : Résultat de la vérification
+deactivate DB
+
+alt Identifiants valides
+
+  App -> DB : Ouvre une session\net récupère le rôle de l'acteur
+  activate DB
+  DB --> App : Session ouverte, rôle identifié
+  deactivate DB
+
+  App --> User : Donne accès à l'espace\ncorrespondant à son rôle
+
+else Identifiants incorrects
+
+  App --> User : « Identifiants incorrects »\nAccès refusé
+
+end
+deactivate App
+
+@enduml
