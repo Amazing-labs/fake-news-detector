@@ -120,9 +120,8 @@ async function derivePbkdf2Key(
 
 export async function hashWorkerPassword(password: string): Promise<string> {
   try {
-    logBetterAuthDebug('hashWorkerPassword:start', {
-      passwordLength: password.length,
-    })
+    // Nothing derived from the password is logged, not even its length.
+    logBetterAuthDebug('hashWorkerPassword:start')
 
     const salt = crypto.getRandomValues(new Uint8Array(PBKDF2_SALT_BYTES))
     const derivedKey = await derivePbkdf2Key(password, salt, PBKDF2_ITERATIONS)

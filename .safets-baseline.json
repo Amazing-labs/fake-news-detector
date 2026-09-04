@@ -1,21 +1,8 @@
 {
-  "version": "1.0.3",
-  "date": "2026-07-11T20:02:02.158Z",
+  "version": "1.0.2",
+  "date": "2026-09-04T15:19:26.659Z",
   "options": {
     "includeTests": false
   },
-  "crashes": [
-    {
-      "file": "app/server/src/application/services/fact-checking/directorWorkflowService.ts",
-      "line": 237,
-      "expr": "report.id",
-      "pattern": "Unsafe access after await"
-    },
-    {
-      "file": "app/server/src/application/services/fact-checking/directorWorkflowService.ts",
-      "line": 238,
-      "expr": "report.citizenId",
-      "pattern": "Unsafe access after await"
-    }
-  ]
+  "crashes": []
 }

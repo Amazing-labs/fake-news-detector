@@ -68,11 +68,13 @@ async function main() {
     )
   }
 
+  const userId = user.id
+
   const hash = await hashWorkerPassword(input.password)
 
   const credentialAccount = await prisma.account.findFirst({
     where: {
-      userId: user.id,
+      userId,
       providerId: CREDENTIAL_PROVIDER_ID,
     },
     select: { id: true },
@@ -91,9 +93,9 @@ async function main() {
   await prisma.account.create({
     data: {
       id: randomUUID(),
-      accountId: user.id,
+      accountId: userId,
       providerId: CREDENTIAL_PROVIDER_ID,
-      userId: user.id,
+      userId,
       password: hash,
     },
   })

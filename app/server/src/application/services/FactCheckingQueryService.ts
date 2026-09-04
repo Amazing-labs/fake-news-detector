@@ -619,6 +619,10 @@ export class FactCheckingQueryService {
       throw new NotFoundError('Investigation', publication.investigationId)
     }
 
+    // Read off the narrowed entity before awaiting: what the dossier reports
+    // is the investigation as it was loaded.
+    const investigationNotes = investigation.investigationNotes
+
     const [
       inboxSubject,
       authoritySourceNames,
@@ -644,7 +648,7 @@ export class FactCheckingQueryService {
         authoritySourceNames,
       },
       subject: inboxSubject?.description ?? null,
-      investigationNotes: investigation.investigationNotes,
+      investigationNotes,
       media,
       evidence,
       credits: {
