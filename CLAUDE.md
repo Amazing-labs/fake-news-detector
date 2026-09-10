@@ -57,9 +57,9 @@ bun run sweep             # dry-run orphaned-media reconciliation; --apply to ex
 `.github/workflows/ci.yml` runs, per app: ESLint, `tsc --noEmit`, Prettier check,
 build, plus Prisma generate/validate and the domain tests on the server side. A
 separate `safets doctor --fail-on-new` job compares runtime-safety findings
-against `.safets-baseline.json` — it fails on _new_ findings only, so the two
-pre-existing entries in that baseline are expected. `ddd-review.yml` runs a
-multi-agent DDD review when a PR is opened.
+against `.safets-baseline.json` — it fails on _new_ findings only, and that
+baseline is now empty, so any finding the job reports is one to fix.
+`ddd-review.yml` runs a multi-agent DDD review when a PR is opened.
 
 ## Architecture
 

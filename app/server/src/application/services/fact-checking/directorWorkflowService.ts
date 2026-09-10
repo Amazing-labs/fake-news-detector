@@ -228,12 +228,12 @@ export class DirectorWorkflowService {
       const report = await this.reportRepository.findById(subjectReportId)
       if (!report) throw new NotFoundError('Report', subjectReportId)
 
+      const reportId = report.id
+      const citizenId = report.citizenId
+
       const reportMedia =
         await this.reportMediaRepository.findByReportId(subjectReportId)
       mediaUrls.push(...reportMedia.map((item) => item.url))
-
-      const reportId = report.id
-      const citizenId = report.citizenId
       const citizen = await this.citizenRepository.findById(citizenId)
       if (citizen) {
         citizen.reportResolved()

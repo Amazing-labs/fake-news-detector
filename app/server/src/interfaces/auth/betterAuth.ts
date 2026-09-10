@@ -1,28 +1,17 @@
 import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { customSession } from 'better-auth/plugins'
-import { scryptSync, timingSafeEqual } from 'node:crypto'
 import { prisma } from '../../infrastructure/config/database'
 import { hasProcessEnv, readProcessEnv } from '../../shared'
 import {
   provisionCitizenActorForAuthUser,
   resolveSessionActorForAuthUser,
 } from './authLinking'
+import { hashWorkerPassword, verifyWorkerPassword } from './passwordHashing'
 import { readTrustedOrigins } from './trustedOrigins'
 
 const DEFAULT_SECRET = 'development-better-auth-secret-please-change-me'
 const DEFAULT_BASE_URL = 'http://localhost:3000/api/auth'
-const PBKDF2_PREFIX = 'pbkdf2'
-const PBKDF2_DIGEST = 'SHA-256'
-const PBKDF2_ITERATIONS = 120_000
-const PBKDF2_SALT_BYTES = 16
-const PBKDF2_KEY_BYTES = 32
-const LEGACY_SCRYPT_PARAMS = {
-  N: 16_384,
-  r: 16,
-  p: 1,
-  dkLen: 64,
-}
 
 function logBetterAuthDebug(
   message: string,
@@ -59,193 +48,11 @@ function logBetterAuthError(
   )
 }
 
-function encodeBase64(buffer: ArrayBuffer | Uint8Array): string {
-  const bytes = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer)
-  return Buffer.from(bytes).toString('base64')
-}
-
-function decodeBase64(value: string): Uint8Array {
-  return new Uint8Array(Buffer.from(value, 'base64'))
-}
-
 function isProduction(): boolean {
   const nodeEnv = readProcessEnv('NODE_ENV')
   return (
     nodeEnv === 'production' || (!hasProcessEnv() && nodeEnv !== 'development')
   )
-}
-
-function toArrayBuffer(bytes: Uint8Array): ArrayBuffer {
-  return bytes.buffer.slice(
-    bytes.byteOffset,
-    bytes.byteOffset + bytes.byteLength,
-  ) as ArrayBuffer
-}
-
-async function derivePbkdf2Key(
-  password: string,
-  salt: Uint8Array,
-  iterations: number,
-): Promise<Uint8Array> {
-  const passwordKey = await crypto.subtle.importKey(
-    'raw',
-    toArrayBuffer(new TextEncoder().encode(password)),
-    'PBKDF2',
-    false,
-    ['deriveBits'],
-  )
-
-  const derivedBits = await crypto.subtle.deriveBits(
-    {
-      name: 'PBKDF2',
-      hash: PBKDF2_DIGEST,
-      salt: toArrayBuffer(salt),
-      iterations,
-    },
-    passwordKey,
-    PBKDF2_KEY_BYTES * 8,
-  )
-
-  return new Uint8Array(derivedBits)
-}
-
-async function hashWorkerPassword(password: string): Promise<string> {
-  try {
-    logBetterAuthDebug('hashWorkerPassword:start', {
-      passwordLength: password.length,
-    })
-
-    const salt = crypto.getRandomValues(new Uint8Array(PBKDF2_SALT_BYTES))
-    const derivedKey = await derivePbkdf2Key(password, salt, PBKDF2_ITERATIONS)
-    const hash = [
-      PBKDF2_PREFIX,
-      PBKDF2_DIGEST.toLowerCase(),
-      String(PBKDF2_ITERATIONS),
-      encodeBase64(salt),
-      encodeBase64(derivedKey),
-    ].join('$')
-
-    logBetterAuthDebug('hashWorkerPassword:success', {
-      hashPrefix: PBKDF2_PREFIX,
-    })
-
-    return hash
-  } catch (error) {
-    logBetterAuthError('hashWorkerPassword:failed', error)
-    throw error
-  }
-}
-
-function isLegacyScryptHash(hash: string): boolean {
-  const [saltHex, keyHex] = hash.split(':')
-  return Boolean(
-    saltHex &&
-    keyHex &&
-    saltHex.length === PBKDF2_SALT_BYTES * 2 &&
-    keyHex.length === LEGACY_SCRYPT_PARAMS.dkLen * 2,
-  )
-}
-
-function verifyLegacyScryptPassword({
-  hash,
-  password,
-}: {
-  hash: string
-  password: string
-}): boolean {
-  try {
-    logBetterAuthDebug('verifyLegacyScryptPassword:start')
-
-    const [saltHex, keyHex] = hash.split(':')
-
-    if (!saltHex || !keyHex) {
-      logBetterAuthDebug('verifyLegacyScryptPassword:invalid-format')
-      return false
-    }
-
-    const targetKey = scryptSync(password.normalize('NFKC'), saltHex, 64, {
-      N: LEGACY_SCRYPT_PARAMS.N,
-      r: LEGACY_SCRYPT_PARAMS.r,
-      p: LEGACY_SCRYPT_PARAMS.p,
-      maxmem: 128 * LEGACY_SCRYPT_PARAMS.N * LEGACY_SCRYPT_PARAMS.r * 2,
-    })
-
-    const isValid = timingSafeEqual(targetKey, Buffer.from(keyHex, 'hex'))
-
-    logBetterAuthDebug('verifyLegacyScryptPassword:success', {
-      isValid,
-    })
-
-    return isValid
-  } catch (error) {
-    logBetterAuthError('verifyLegacyScryptPassword:failed', error)
-    throw error
-  }
-}
-
-async function verifyWorkerPassword({
-  hash,
-  password,
-}: {
-  hash: string
-  password: string
-}): Promise<boolean> {
-  try {
-    logBetterAuthDebug('verifyWorkerPassword:start', {
-      hashFormat: hash.startsWith(`${PBKDF2_PREFIX}$`) ? 'pbkdf2' : 'legacy',
-    })
-
-    const [algorithm, digest, iterations, saltBase64, expectedBase64] =
-      hash.split('$')
-
-    if (
-      algorithm !== PBKDF2_PREFIX ||
-      digest !== PBKDF2_DIGEST.toLowerCase() ||
-      !iterations ||
-      !saltBase64 ||
-      !expectedBase64
-    ) {
-      return isLegacyScryptHash(hash)
-        ? verifyLegacyScryptPassword({ hash, password })
-        : false
-    }
-
-    const numIterations = Number(iterations)
-
-    if (!Number.isInteger(numIterations) || numIterations <= 0) {
-      logBetterAuthDebug('verifyWorkerPassword:invalid-iterations', {
-        iterations,
-      })
-      return false
-    }
-
-    const salt = decodeBase64(saltBase64)
-    const expected = decodeBase64(expectedBase64)
-    const derivedKey = await derivePbkdf2Key(password, salt, numIterations)
-
-    if (expected.length !== derivedKey.length) {
-      logBetterAuthDebug('verifyWorkerPassword:length-mismatch', {
-        expectedLength: expected.length,
-        derivedLength: derivedKey.length,
-      })
-      return false
-    }
-
-    const isValid = timingSafeEqual(
-      Buffer.from(expected),
-      Buffer.from(derivedKey),
-    )
-
-    logBetterAuthDebug('verifyWorkerPassword:success', {
-      isValid,
-      hashFormat: 'pbkdf2',
-    })
-
-    return isValid
-  } catch (error) {
-    logBetterAuthError('verifyWorkerPassword:failed', error)
-    throw error
-  }
 }
 
 function resolveBetterAuthSecret(): string {

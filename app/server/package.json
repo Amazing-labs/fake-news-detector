@@ -8,6 +8,7 @@
     "auth:generate": "bunx @better-auth/cli@latest generate --config src/interfaces/auth/betterAuth.ts --yes",
     "auth:secret": "bunx @better-auth/cli@latest secret",
     "create:director": "bun run src/scripts/createDirector.ts",
+    "reset:password": "bun run src/scripts/resetPassword.ts",
     "sweep": "bun run src/scripts/sweepStorage.ts",
     "sweep:apply": "bun run src/scripts/sweepStorage.ts --apply",
     "sweep:force": "bun run src/scripts/sweepStorage.ts --apply --force",
