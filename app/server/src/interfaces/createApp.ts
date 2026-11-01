@@ -13,19 +13,33 @@ import { createPublicationRoutes } from './routes/publicationRoutes'
 import { createReportRoutes } from './routes/reportRoutes'
 import { createWatcherApplicationRoutes } from './routes/watcherApplicationRoutes'
 import { toErrorResponse } from './http/responses'
-import { runWithPrismaConnectionString } from '../infrastructure/config/database'
+import { runWithRequestScopedPrisma } from '../infrastructure/config/database'
 import { auth } from './auth/betterAuth'
 import { isTrustedOrigin } from './auth/trustedOrigins'
 import { readProcessEnv } from '../shared'
+
+// Hono's `executionCtx` getter throws outside Workers (Bun dev, tests); there
+// the disconnect is simply awaited inline.
+function resolveWaitUntil(c: {
+  executionCtx: { waitUntil: (promise: Promise<unknown>) => void }
+}): ((promise: Promise<unknown>) => void) | undefined {
+  try {
+    const executionCtx = c.executionCtx
+    return (promise) => executionCtx.waitUntil(promise)
+  } catch {
+    return undefined
+  }
+}
 
 export function createApp(dependencies: AppDependencies) {
   const app = new Hono()
 
   app.use('*', async (c, next) => {
     const env = c.env as { DATABASE_URL?: string } | undefined
-    await runWithPrismaConnectionString(
+    await runWithRequestScopedPrisma(
       env?.DATABASE_URL ?? readProcessEnv('DATABASE_URL'),
       next,
+      resolveWaitUntil(c),
     )
   })
 

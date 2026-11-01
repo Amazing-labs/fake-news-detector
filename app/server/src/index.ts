@@ -1,6 +1,6 @@
 import { createApp } from './interfaces/createApp'
 import { createAppDependencies } from './interfaces/createAppDependencies'
-import { runWithPrismaConnectionString } from './infrastructure/config/database'
+import { runWithRequestScopedPrisma } from './infrastructure/config/database'
 import { readProcessEnv } from './shared'
 
 const dependencies = createAppDependencies()
@@ -15,7 +15,7 @@ export default {
     ctx: { waitUntil: (promise: Promise<unknown>) => void },
   ) => {
     ctx.waitUntil(
-      runWithPrismaConnectionString(
+      runWithRequestScopedPrisma(
         env?.DATABASE_URL ?? readProcessEnv('DATABASE_URL'),
         () => dependencies.storageMaintenanceService.sweepOrphans(),
       ).catch((error) => {
