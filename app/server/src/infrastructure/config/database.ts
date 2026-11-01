@@ -24,6 +24,12 @@ interface PrismaRequestScope {
 
 const prismaRequestScope = new AsyncLocalStorage<PrismaRequestScope>()
 
+// A Worker invocation may hold at most six simultaneous outbound connections
+// (database sockets and fetches alike), and pg keeps idle sockets open until
+// the request-scoped client is disconnected. Capping the pool keeps room for
+// the Supabase fetches and lets parallel queries queue instead of stalling.
+const REQUEST_SCOPED_POOL_MAX_CONNECTIONS = 3
+
 function resolveConnectionString(scopedConnectionString?: string): string {
   return (
     scopedConnectionString ??
@@ -35,9 +41,13 @@ function resolveConnectionString(scopedConnectionString?: string): string {
   )
 }
 
-function createPrismaClient(connectionString: string): PrismaClient {
+function createPrismaClient(
+  connectionString: string,
+  maxConnections?: number,
+): PrismaClient {
   const adapter = new PrismaPg({
     connectionString,
+    ...(maxConnections === undefined ? {} : { max: maxConnections }),
   })
 
   return new PrismaClient({
@@ -52,6 +62,7 @@ function getRootPrisma(): PrismaClient {
   if (scope) {
     scope.client ??= createPrismaClient(
       resolveConnectionString(scope.connectionString),
+      REQUEST_SCOPED_POOL_MAX_CONNECTIONS,
     )
     return scope.client
   }
