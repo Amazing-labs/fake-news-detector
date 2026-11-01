@@ -11,13 +11,22 @@ const globalForPrisma = globalThis as unknown as {
 
 globalForPrisma.prismaClients ??= new Map()
 
-const prismaConnectionStringContext = new AsyncLocalStorage<
-  string | undefined
->()
+// Cloudflare Workers forbid sharing I/O objects (sockets, streams) between
+// requests: a `pg` connection opened while serving request A cannot be awaited
+// from request B, and the runtime cancels B as "hung". The process-wide client
+// cache below is therefore only safe for long-lived processes (scripts, local
+// Bun). Every HTTP request and cron run gets its own client through this scope,
+// created lazily and disconnected once the work is done.
+interface PrismaRequestScope {
+  connectionString: string | undefined
+  client?: PrismaClient
+}
 
-function resolveConnectionString(): string {
+const prismaRequestScope = new AsyncLocalStorage<PrismaRequestScope>()
+
+function resolveConnectionString(scopedConnectionString?: string): string {
   return (
-    prismaConnectionStringContext.getStore() ??
+    scopedConnectionString ??
     globalForPrisma.defaultDatabaseUrl ??
     readProcessEnv('DATABASE_URL') ??
     (() => {
@@ -38,6 +47,15 @@ function createPrismaClient(connectionString: string): PrismaClient {
 }
 
 function getRootPrisma(): PrismaClient {
+  const scope = prismaRequestScope.getStore()
+
+  if (scope) {
+    scope.client ??= createPrismaClient(
+      resolveConnectionString(scope.connectionString),
+    )
+    return scope.client
+  }
+
   const connectionString = resolveConnectionString()
   const cachedClient = globalForPrisma.prismaClients?.get(connectionString)
 
@@ -82,11 +100,38 @@ export function setPrismaConnectionString(connectionString?: string): void {
   globalForPrisma.defaultDatabaseUrl = connectionString
 }
 
-export function runWithPrismaConnectionString<T>(
+/**
+ * Runs `work` with a Prisma client private to this request (or cron run), so no
+ * database connection outlives the request that opened it.
+ *
+ * `deferDisconnect` lets the caller hand the teardown to `ctx.waitUntil` so the
+ * response is not held back by it; without it the teardown is awaited inline.
+ */
+export async function runWithRequestScopedPrisma<T>(
   connectionString: string | undefined,
   work: () => Promise<T>,
+  deferDisconnect?: (teardown: Promise<unknown>) => void,
 ): Promise<T> {
-  return prismaConnectionStringContext.run(connectionString, work)
+  const scope: PrismaRequestScope = { connectionString }
+
+  try {
+    return await prismaRequestScope.run(scope, work)
+  } finally {
+    if (scope.client) {
+      const teardown = scope.client.$disconnect().catch((error: unknown) => {
+        console.error(
+          '[database] failed to disconnect the request-scoped Prisma client:',
+          error instanceof Error ? error.message : String(error),
+        )
+      })
+
+      if (deferDisconnect) {
+        deferDisconnect(teardown)
+      } else {
+        await teardown
+      }
+    }
+  }
 }
 
 if (typeof process !== 'undefined' && typeof process.on === 'function') {
